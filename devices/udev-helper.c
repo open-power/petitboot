@@ -14,13 +14,7 @@
 #include <asm/byteorder.h>
 
 #include "udev-helper.h"
-
-#define parser_dir "."
-
-#define tmp_dir "/var/tmp/petitboot"
-#define socket_file "/var/tmp/petitboot-dev"
-#define mount_bin "/bin/mount"
-#define umount_bin "/bin/umount"
+#include "petitboot-paths.h"
 
 extern struct parser native_parser;
 static FILE *logf;
@@ -205,7 +199,7 @@ int connect_to_socket()
 	}
 
 	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, socket_file);
+	strcpy(addr.sun_path, PBOOT_DEVICE_SOCKET);
 
 	if (connect(fd, (struct sockaddr *)&addr, sizeof(addr))) {
 		log("can't connect to %s: %s\n",
@@ -235,12 +229,12 @@ static int mount_device(const char *dev_path, char *mount_path)
 	int pid, status, rc = -1;
 
 	/* create a unique mountpoint */
-	dir = malloc(strlen(tmp_dir) + 2 + strlen(template));
-	sprintf(dir, "%s/%s", tmp_dir, template);
+	dir = malloc(strlen(TMP_DIR) + 2 + strlen(template));
+	sprintf(dir, "%s/%s", TMP_DIR, template);
 
 	if (!mkdtemp(dir)) {
 		log("failed to create temporary directory in %s: %s",
-				tmp_dir, strerror(errno));
+				TMP_DIR, strerror(errno));
 		goto out;
 	}
 
@@ -251,7 +245,7 @@ static int mount_device(const char *dev_path, char *mount_path)
 	}
 
 	if (pid == 0) {
-		execl(mount_bin, mount_bin, dev_path, dir, "-o", "ro", NULL);
+		execl(MOUNT_BIN, MOUNT_BIN, dev_path, dir, "-o", "ro", NULL);
 		exit(EXIT_FAILURE);
 	}
 
@@ -282,7 +276,7 @@ static int unmount_device(const char *dev_path)
 	}
 
 	if (pid == 0) {
-		execl(umount_bin, umount_bin, dev_path, NULL);
+		execl(UMOUNT_BIN, UMOUNT_BIN, dev_path, NULL);
 		exit(EXIT_FAILURE);
 	}
 
@@ -300,16 +294,16 @@ const char *generic_icon_file(enum generic_icon_type type)
 {
 	switch (type) {
 	case ICON_TYPE_DISK:
-		return "artwork/hdd.png";
+		return artwork_pathname("hdd.png");
 	case ICON_TYPE_USB:
-		return "artwork/usbpen.png";
+		return artwork_pathname("usbpen.png");
 	case ICON_TYPE_OPTICAL:
-		return "artwork/cdrom.png";
+		return artwork_pathname("cdrom.png");
 	case ICON_TYPE_NETWORK:
 	case ICON_TYPE_UNKNOWN:
 		break;
 	}
-	return "artwork/hdd.png";
+	return artwork_pathname("hdd.png");
 }
 
 static const struct device fake_boot_devices[] =
@@ -317,12 +311,12 @@ static const struct device fake_boot_devices[] =
 	{
 		.id		= "fakeDisk0",
 		.name		= "Hard Disk",
-		.icon_file	= "artwork/hdd.png",
+		.icon_file	= artwork_pathname("hdd.png"),
 	},
 	{
 		.id		= "fakeDisk1",
 		.name		= "PinkCat Linux CD",
-		.icon_file	= "artwork/cdrom.png",
+		.icon_file	= artwork_pathname("cdrom.png"),
 	}
 };
 
@@ -332,25 +326,25 @@ static const struct boot_option fake_boot_options[] =
 		.id		= "fakeBoot0",
 		.name		= "Bloobuntu Linux",
 		.description	= "Boot Bloobuntu Linux",
-		.icon_file	= "artwork/hdd.png",
+		.icon_file	= artwork_pathname("hdd.png"),
 	},
 	{
 		.id		= "fakeBoot1",
 		.name		= "Pendora Gore 6",
 		.description	= "Boot Pendora Gora 6",
-		.icon_file	= "artwork/hdd.png",
+		.icon_file	= artwork_pathname("hdd.png"),
 	},
 	{
 		.id		= "fakeBoot2",
 		.name		= "Genfoo Minux",
 		.description	= "Boot Genfoo Minux",
-		.icon_file	= "artwork/hdd.png",
+		.icon_file	= artwork_pathname("hdd.png"),
 	},
 	{
 		.id		= "fakeBoot3",
 		.name		= "PinkCat Linux",
 		.description	= "Install PinkCat Linux - Graphical install",
-		.icon_file	= "artwork/cdrom.png",
+		.icon_file	= artwork_pathname("cdrom.png"),
 	},
 };
 

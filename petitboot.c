@@ -14,6 +14,7 @@
 #include <libtwin/twin_png.h>
 
 #include "petitboot.h"
+#include "petitboot-paths.h"
 
 #define _USE_X11
 
@@ -845,6 +846,7 @@ static void sigint(int sig)
 int main(int argc, char **argv)
 {
 	twin_pixmap_t *pic;
+	const char *background_path;
 
 	atexit(exitfunc);
 	signal(SIGINT, sigint);
@@ -868,7 +870,8 @@ int main(int argc, char **argv)
 #endif
 
 	if (pboot_fbdev != NULL) {
-		pboot_cursor = twin_load_X_cursor("artwork/cursor", 2,
+		char *cursor_path = artwork_pathname("cursor");
+		pboot_cursor = twin_load_X_cursor(cursor_path, 2,
 						  &pboot_cursor_hx,
 						  &pboot_cursor_hy);
 		if (pboot_cursor == NULL)
@@ -878,8 +881,9 @@ int main(int argc, char **argv)
 	}
 
 	/* Set background pixmap */
-	LOG("loading background...");
-	pic = twin_png_to_pixmap("artwork/background.png", TWIN_ARGB32);
+	background_path = artwork_pathname("background.png");
+	LOG("loading background: %s...", background_path);
+	pic = twin_png_to_pixmap(background_path, TWIN_ARGB32);
 	LOG("%s\n", pic ? "ok" : "failed");
 	if (pic)
 		twin_screen_set_background(pboot_screen, pic);

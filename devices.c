@@ -9,12 +9,12 @@
 
 #include <libtwin/twin_png.h>
 #include "petitboot.h"
+#include "petitboot-paths.h"
 #include "devices/message.h"
 
-#define PBOOT_DEVICE_SOCKET	"/var/tmp/petitboot-dev"
-#define PBOOT_DEFAULT_ICON	"artwork/usbpen.png"
+#define PBOOT_DEFAULT_ICON	"usbpen.png"
 
-static const char *default_icon = PBOOT_DEFAULT_ICON;
+static const char *default_icon = artwork_pathname(PBOOT_DEFAULT_ICON);
 
 struct discovery_context {
 	/* nothing at present */
