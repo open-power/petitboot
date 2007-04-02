@@ -152,21 +152,22 @@ out:
 
 static int read_option(int fd, struct device_context *dev_ctx)
 {
-	struct boot_option opt;
+	struct boot_option *opt = malloc(sizeof(*opt));
 	twin_pixmap_t *icon;
 	int index = -1;
 
-	if (!read_strings(fd, opt))
+	if (!opt)
 		return TWIN_FALSE;
 
-	LOG("got option: '%s'\n", opt.name);
-	icon = get_icon(opt.icon_file);
+	if (!read_strings(fd, (*opt)))
+		return TWIN_FALSE;
+
+	LOG("got option: '%s'\n", opt->name);
+	icon = get_icon(opt->icon_file);
 
 	if (icon)
-		index = pboot_add_option(dev_ctx->device_idx, opt.name,
-				opt.description, icon);
-
-	free_strings(opt);
+		index = pboot_add_option(dev_ctx->device_idx, opt->name,
+					 opt->description, icon, opt);
 
 	return index != -1;
 }
@@ -270,3 +271,27 @@ int pboot_start_device_discovery(void)
 	return TWIN_TRUE;
 }
 
+void pboot_exec_option(void *data)
+{
+	struct boot_option *opt = data;
+	char *kexec_opts[10];
+	int nr_opts = 2;
+
+	kexec_opts[0] = "/sbin/kexec";
+	kexec_opts[1] = "-f";
+	if (opt->initrd_file) {
+		kexec_opts[nr_opts] = malloc(10 + strlen(opt->initrd_file));
+		sprintf(kexec_opts[nr_opts], "--initrd=%s", opt->initrd_file);
+		nr_opts++;
+	}
+	if (opt->boot_args)  {
+		kexec_opts[nr_opts] = malloc(10 + strlen(opt->boot_args));
+		sprintf(kexec_opts[nr_opts], "--command-line=%s",
+			opt->boot_args);
+		nr_opts++;
+	}
+
+	kexec_opts[nr_opts++] = opt->boot_image_file;
+	kexec_opts[nr_opts] = NULL;
+	execv(kexec_opts[0], kexec_opts);
+}

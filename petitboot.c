@@ -76,6 +76,7 @@ struct _pboot_option
 	twin_pixmap_t	*badge;
 	twin_pixmap_t	*cache;
 	twin_rect_t	box;
+	void		*data;
 };
 
 struct _pboot_device
@@ -400,6 +401,17 @@ static void pboot_rpane_mousetrack(twin_coord_t x, twin_coord_t y)
 	pboot_rpane->mouse_target = candidate;
 }
 
+static void pboot_choose_option(void)
+{
+	pboot_device_t *dev = pboot_devices[pboot_dev_sel];
+	pboot_option_t *opt = &dev->options[pboot_rpane->focus_curindex];
+
+	LOG("Selected device %s\n", opt->title);
+
+	/* Give user feedback, make sure errors and panics will be seen */
+	pboot_exec_option(opt->data);
+}
+
 static twin_bool_t pboot_rpane_event (twin_window_t	    *window,
 				      twin_event_t	    *event)
 {
@@ -412,6 +424,9 @@ static twin_bool_t pboot_rpane_event (twin_window_t	    *window,
 		pboot_rpane_mousetrack(event->u.pointer.x, event->u.pointer.y);
 		return TWIN_TRUE;
 	case TwinEventButtonDown:
+		pboot_select_rpane();
+		pboot_rpane_mousetrack(event->u.pointer.x, event->u.pointer.y);
+		pboot_choose_option();
 	case TwinEventButtonUp:
 		return TWIN_TRUE;
 	case TwinEventKeyDown:
@@ -425,6 +440,8 @@ static twin_bool_t pboot_rpane_event (twin_window_t	    *window,
 		case KEY_LEFT:
 			pboot_select_lpane();
 			return TWIN_TRUE;
+		case KEY_ENTER:
+			pboot_choose_option();
 		default:
 			break;
 		}
@@ -437,7 +454,7 @@ static twin_bool_t pboot_rpane_event (twin_window_t	    *window,
 
 
 int pboot_add_option(int devindex, const char *title,
-			    const char *subtitle, twin_pixmap_t *badge)
+		     const char *subtitle, twin_pixmap_t *badge, void *data)
 {
 	pboot_device_t	*dev;
 	pboot_option_t	*opt;
@@ -474,6 +491,7 @@ int pboot_add_option(int devindex, const char *title,
 		index * PBOOT_RIGHT_OPTION_STRIDE;
 	opt->box.bottom = opt->box.top + PBOOT_RIGHT_OPTION_HEIGHT;
 
+	opt->data = data;
 	return index;
 }
 
