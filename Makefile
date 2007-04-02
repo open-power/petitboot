@@ -1,4 +1,6 @@
 PREFIX?=/usr
+VERSION=0.0.1
+PACKAGE=petitboot
 CC=gcc
 INSTALL=install
 TWIN_CFLAGS=$(shell pkg-config --cflags libtwin)
@@ -30,6 +32,18 @@ install: all
 	$(INSTALL) -Dd $(PREFIX)/share/petitboot/artwork/
 	$(INSTALL) -t $(PREFIX)/share/petitboot/artwork/ \
 		$(foreach a,$(ARTWORK),artwork/$(a))
+
+dist:	$(PACKAGE)-$(VERSION).tar.gz
+
+$(PACKAGE)-$(VERSION).tar.gz: $(PACKAGE)-$(VERSION)
+	tar czvf $@ $^
+
+$(PACKAGE)-$(VERSION): clean
+	mkdir $@ $@/devices
+	cp -a artwork $@
+	cp *.[ch] $@
+	cp -a devices/*.[ch] $@/devices/
+	cp Makefile $@
 
 clean:
 	rm -f petitboot
