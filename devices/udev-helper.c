@@ -17,12 +17,14 @@
 #include "petitboot-paths.h"
 
 extern struct parser native_parser;
+extern struct parser yaboot_parser;
 static FILE *logf;
 static int sock;
 
 /* array of parsers, ordered by priority */
 static struct parser *parsers[] = {
 	&native_parser,
+	&yaboot_parser,
 	NULL
 };
 
@@ -48,13 +50,14 @@ static void print_boot_option(const struct boot_option *opt)
 	log("\tname: %s\n", opt->name);
 	log("\tdescription: %s\n", opt->description);
 	log("\tboot_image: %s\n", opt->boot_image_file);
+	log("\tinitrd: %s\n", opt->initrd_file);
 	log("\tboot_args: %s\n", opt->boot_args);
 
 }
 
 static void print_device(const struct device *dev)
 {
-	log("\tid: %s\n", dev->name);
+	log("\tid: %s\n", dev->id);
 	log("\tname: %s\n", dev->name);
 	log("\tdescription: %s\n", dev->description);
 	log("\tboot_image: %s\n", dev->icon_file);
@@ -221,16 +224,21 @@ int connect_to_socket()
 #endif
 }
 
-#define template "mnt-XXXXXX"
-
-static int mount_device(const char *dev_path, char *mount_path)
+int mount_device(const char *dev_path, char *mount_path)
 {
 	char *dir;
+	const char *basename;
 	int pid, status, rc = -1;
 
-	/* create a unique mountpoint */
-	dir = malloc(strlen(TMP_DIR) + 2 + strlen(template));
-	sprintf(dir, "%s/%s", TMP_DIR, template);
+ 	basename = strrchr(dev_path, '/');
+ 	if (basename)
+ 		basename++;
+ 	else
+		basename = dev_path;
+ 
+ 	/* create a unique mountpoint */
+ 	dir = malloc(strlen(TMP_DIR) + 13 + strlen(basename));
+ 	sprintf(dir, "%s/mnt-%s-XXXXXX", TMP_DIR, basename);
 
 	if (!mkdtemp(dir)) {
 		log("failed to create temporary directory in %s: %s",
@@ -414,7 +422,9 @@ int main(int argc, char **argv)
 
 		remove_device(dev_path);
 
-		unmount_device(dev_path);
+		/* Unmount it repeatedly, if needs be */
+		while (!unmount_device(dev_path))
+			;
 
 	} else {
 		log("invalid action '%s'\n", action);

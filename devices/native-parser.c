@@ -102,6 +102,7 @@ static int parameter(char *param_name, char *param_value)
 int parse(const char *devicepath, const char *_mountpoint)
 {
 	char *filepath;
+	int rc;
 
 	mountpoint = _mountpoint;
 
@@ -112,7 +113,9 @@ int parse(const char *devicepath, const char *_mountpoint)
 	memset(dev, 0, sizeof(*dev));
 	dev->id = strdup(devicepath);
 
-	pm_process(filepath, section, parameter);
+	rc = pm_process(filepath, section, parameter);
+	if (!rc)
+		return 0;
 
 	if (cur_opt) {
 		add_boot_option(cur_opt);

@@ -9,7 +9,7 @@ TWIN_LDFLAGS=$(shell pkg-config --libs libtwin)
 LDFLAGS = 
 CFLAGS = -O0 -ggdb -Wall '-DPREFIX="$(PREFIX)"'
 
-PARSERS = native
+PARSERS = native yaboot
 ARTWORK = background.png cdrom.png hdd.png usbpen.png cursor
 
 all: petitboot udev-helper
@@ -20,7 +20,7 @@ petitboot: petitboot.o devices.o
 petitboot: LDFLAGS+=$(TWIN_LDFLAGS)
 petitboot: CFLAGS+=$(TWIN_CFLAGS)
 
-udev-helper: devices/udev-helper.o devices/params.o \
+udev-helper: devices/udev-helper.o devices/params.o devices/yaboot-cfg.o \
 		$(foreach p,$(PARSERS),devices/$(p)-parser.o)
 	$(CC) $(LDFLAGS) -o $@ $^
 
