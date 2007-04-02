@@ -27,10 +27,10 @@ udev-helper: devices/udev-helper.o devices/params.o devices/yaboot-cfg.o \
 devices/%: CFLAGS+=-I.
 
 install: all
-	$(INSTALL) -D petitboot $(PREFIX)/sbin/petitboot
-	$(INSTALL) -D udev-helper $(PREFIX)/sbin/udev-helper
-	$(INSTALL) -Dd $(PREFIX)/share/petitboot/artwork/
-	$(INSTALL) -t $(PREFIX)/share/petitboot/artwork/ \
+	$(INSTALL) -D petitboot $(DESTDIR)$(PREFIX)/sbin/petitboot
+	$(INSTALL) -D udev-helper $(DESTDIR)$(PREFIX)/sbin/udev-helper
+	$(INSTALL) -Dd $(DESTDIR)$(PREFIX)/share/petitboot/artwork/
+	$(INSTALL) -t $(DESTDIR)$(PREFIX)/share/petitboot/artwork/ \
 		$(foreach a,$(ARTWORK),artwork/$(a))
 
 dist:	$(PACKAGE)-$(VERSION).tar.gz
