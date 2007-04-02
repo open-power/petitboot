@@ -16,9 +16,13 @@
 #include <sys/ioctl.h>
 
 #include "udev-helper.h"
-#define REMOVABLE_SLEEP_DELAY	2
-
 #include "petitboot-paths.h"
+
+/* Define below to operate without the frontend */
+#undef USE_FAKE_SOCKET
+
+/* Delay in seconds between polling of removable devices */
+#define REMOVABLE_SLEEP_DELAY	2
 
 extern struct parser native_parser;
 extern struct parser yaboot_parser;
@@ -195,7 +199,7 @@ int remove_device(const char *dev_path)
 
 int connect_to_socket()
 {
-#if 1
+#ifndef USE_FAKE_SOCKET
 	int fd;
 	struct sockaddr_un addr;
 
