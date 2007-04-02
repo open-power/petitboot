@@ -3,8 +3,8 @@ VERSION=0.0.1
 PACKAGE=petitboot
 CC=gcc
 INSTALL=install
-TWIN_CFLAGS=$(shell pkg-config --cflags libtwin)
-TWIN_LDFLAGS=$(shell pkg-config --libs libtwin)
+TWIN_CFLAGS?=$(shell pkg-config --cflags libtwin)
+TWIN_LDFLAGS?=$(shell pkg-config --libs libtwin)
 
 LDFLAGS = 
 CFLAGS = -O0 -ggdb -Wall '-DPREFIX="$(PREFIX)"'
