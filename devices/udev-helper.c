@@ -12,8 +12,12 @@
 #include <errno.h>
 #include <string.h>
 #include <asm/byteorder.h>
+#include <linux/cdrom.h>
+#include <sys/ioctl.h>
 
 #include "udev-helper.h"
+#define REMOVABLE_SLEEP_DELAY	2
+
 #include "petitboot-paths.h"
 
 extern struct parser native_parser;
@@ -358,7 +362,10 @@ static const struct boot_option fake_boot_options[] =
 
 enum generic_icon_type guess_device_type(void)
 {
+	const char *type = getenv("ID_TYPE");
 	const char *bus = getenv("ID_BUS");
+	if (type && streq(type, "cd"))
+		return ICON_TYPE_OPTICAL;
 	if (streq(bus, "usb"))
 		return ICON_TYPE_USB;
 	if (streq(bus, "ata") || streq(bus, "scsi"))
@@ -366,9 +373,138 @@ enum generic_icon_type guess_device_type(void)
 	return ICON_TYPE_UNKNOWN;
 }
 
-int main(int argc, char **argv)
+
+static int is_removable_device(const char *sysfs_path) 
+{
+	char full_path[PATH_MAX];
+	char buf[80];
+	int fd, buf_len;
+
+	sprintf(full_path, "/sys/%s/removable", sysfs_path);	
+	fd = open(full_path, O_RDONLY);
+	printf(" -> removable check on %s, fd=%d\n", full_path, fd);
+	if (fd < 0)
+		return 0;
+	buf_len = read(fd, buf, 79);
+	close(fd);
+	if (buf_len < 0)
+		return 0;
+	buf[buf_len] = 0;
+	return strtol(buf, NULL, 10);
+}
+
+static int found_new_device(const char *dev_path)
 {
 	char mountpoint[PATH_MAX];
+
+	if (mount_device(dev_path, mountpoint)) {
+		log("failed to mount %s\n", dev_path);
+		return EXIT_FAILURE;
+	}
+
+	log("mounted %s at %s\n", dev_path, mountpoint);
+
+	iterate_parsers(dev_path, mountpoint);
+
+	return EXIT_SUCCESS;
+}
+
+static int poll_device_plug(const char *dev_path,
+			    int *optical)
+{
+	int rc, fd;
+
+	/* Polling loop for optical drive */
+	for (; (*optical) != 0; ) {
+		printf("poll for optical drive insertion ...\n");
+		fd = open(dev_path, O_RDONLY|O_NONBLOCK);
+		if (fd < 0)
+			return EXIT_FAILURE;
+		rc = ioctl(fd, CDROM_DRIVE_STATUS, CDSL_CURRENT);
+		close(fd);
+		if (rc == -1) {
+			printf("not an optical drive, fallback...\n");
+			break;
+		}
+		*optical = 1;
+		if (rc == CDS_DISC_OK)
+			return EXIT_SUCCESS;
+
+		printf("no... waiting\n");
+		sleep(REMOVABLE_SLEEP_DELAY);
+	}
+
+	/* Fall back to bare open() */
+	*optical = 0;
+	for (;;) {
+		printf("poll for non-optical drive insertion ...\n");
+		fd = open(dev_path, O_RDONLY);
+		if (fd < 0 && errno != ENOMEDIUM)
+			return EXIT_FAILURE;
+		close(fd);
+		if (fd >= 0)
+			return EXIT_SUCCESS;
+		printf("no... waiting\n");
+		sleep(REMOVABLE_SLEEP_DELAY);
+	}
+}
+
+static int poll_device_unplug(const char *dev_path, int optical)
+{
+	int rc, fd;
+
+	for (;optical;) {
+		printf("poll for optical drive removal ...\n");
+		fd = open(dev_path, O_RDONLY|O_NONBLOCK);
+		if (fd < 0)
+			return EXIT_FAILURE;
+		rc = ioctl(fd, CDROM_DRIVE_STATUS, CDSL_CURRENT);
+		close(fd);
+		if (rc != CDS_DISC_OK)
+			return EXIT_SUCCESS;
+		printf("no... waiting\n");
+		sleep(REMOVABLE_SLEEP_DELAY);
+	}
+
+	/* Fall back to bare open() */
+	for (;;) {
+		printf("poll for non-optical drive removal ...\n");
+		fd = open(dev_path, O_RDONLY);
+		if (fd < 0 && errno != ENOMEDIUM)
+			return EXIT_FAILURE;
+		close(fd);
+		if (fd < 0)
+			return EXIT_SUCCESS;
+		printf("no... waiting\n");
+		sleep(REMOVABLE_SLEEP_DELAY);
+	}
+}
+
+static int poll_removable_device(const char *sysfs_path,
+				 const char *dev_path)
+{
+	int rc, mounted, optical = -1;
+       
+	for (;;) {
+		rc = poll_device_plug(dev_path, &optical);
+		if (rc == EXIT_FAILURE)
+			return rc;
+		rc = found_new_device(dev_path);
+		mounted = (rc == EXIT_SUCCESS);
+
+		poll_device_unplug(dev_path, optical);
+
+		remove_device(dev_path);
+
+		/* Unmount it repeatedly, if needs be */
+		while (mounted && !unmount_device(dev_path))
+			;
+		sleep(1);
+	}
+}
+
+int main(int argc, char **argv)
+{
 	char *dev_path, *action;
 	int rc;
 
@@ -408,15 +544,11 @@ int main(int argc, char **argv)
 	}
 
 	if (streq(action, "add")) {
-		if (mount_device(dev_path, mountpoint)) {
-			log("failed to mount %s\n", dev_path);
-			return EXIT_FAILURE;
-		}
-
-		log("mounted %s at %s\n", dev_path, mountpoint);
-
-		iterate_parsers(dev_path, mountpoint);
-
+		char *sysfs_path = getenv("DEVPATH");
+		if (sysfs_path && is_removable_device(sysfs_path))
+			rc = poll_removable_device(sysfs_path, dev_path);
+		else
+			rc = found_new_device(dev_path);
 	} else if (streq(action, "remove")) {
 		log("%s removed\n", dev_path);
 
