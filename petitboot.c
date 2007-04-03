@@ -7,19 +7,23 @@
 
 #include <linux/input.h>
 
+#undef _USE_X11
+
 #include <libtwin/twin.h>
-#include <libtwin/twin_fbdev.h>
-#include <libtwin/twin_x11.h>
 #include <libtwin/twin_linux_mouse.h>
 #include <libtwin/twin_png.h>
 
 #include "petitboot.h"
 #include "petitboot-paths.h"
 
-#define _USE_X11
-
-static twin_fbdev_t *pboot_fbdev;
+#ifdef _USE_X11
+#include <libtwin/twin_x11.h>
 static twin_x11_t *pboot_x11;
+#else
+#include <libtwin/twin_fbdev.h>
+static twin_fbdev_t *pboot_fbdev;
+#endif
+
 static twin_screen_t *pboot_screen;
 
 #define PBOOT_LEFT_PANE_SIZE		200
@@ -850,9 +854,11 @@ int pboot_remove_device(const char *dev_id)
 
 static void exitfunc(void)
 {
+#ifndef _USE_X11
 	if (pboot_fbdev)
 		twin_fbdev_destroy(pboot_fbdev);
 	pboot_fbdev = NULL;
+#endif
 }
 
 static void sigint(int sig)
@@ -885,7 +891,6 @@ int main(int argc, char **argv)
 	}
 	pboot_screen = pboot_fbdev->screen;
 	twin_linux_mouse_create(NULL, pboot_screen);
-#endif
 
 	if (pboot_fbdev != NULL) {
 		char *cursor_path = artwork_pathname("cursor");
@@ -897,6 +902,7 @@ int main(int argc, char **argv)
 				twin_get_default_cursor(&pboot_cursor_hx,
 							&pboot_cursor_hy);
 	}
+#endif
 
 	/* Set background pixmap */
 	background_path = artwork_pathname("background.png");
@@ -921,8 +927,10 @@ int main(int argc, char **argv)
 	pboot_screen->event_filter = pboot_event_filter;
 
 	/* Console switch */
+#ifndef _USE_X11
 	if (pboot_fbdev)
 		twin_fbdev_activate(pboot_fbdev);
+#endif
 
 	/* Process events */
 	twin_dispatch ();
