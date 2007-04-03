@@ -13,6 +13,7 @@
 #include <libtwin/twin.h>
 #include <libtwin/twin_linux_mouse.h>
 #include <libtwin/twin_png.h>
+#include <libtwin/twin_jpeg.h>
 
 #include "petitboot.h"
 #include "petitboot-paths.h"
@@ -853,6 +854,51 @@ int pboot_remove_device(const char *dev_id)
 	return TWIN_TRUE;
 }
 
+static void pboot_make_background(void)
+{
+	twin_pixmap_t	*filepic, *scaledpic;
+	const char	*background_path;
+
+	/* Set background pixmap */
+	LOG("loading background...");
+	background_path = artwork_pathname("background.jpg");
+	filepic = twin_jpeg_to_pixmap(background_path, TWIN_ARGB32);
+	LOG("%s\n", filepic ? "ok" : "failed");
+
+	if (filepic == NULL)
+		return;
+
+	if (pboot_screen->height == filepic->height &&
+	    pboot_screen->width == filepic->width)
+		scaledpic = filepic;
+	else {
+		twin_fixed_t	sx, sy;
+		twin_operand_t	srcop;
+
+		scaledpic = twin_pixmap_create(TWIN_ARGB32,
+					       pboot_screen->width,
+					       pboot_screen->height);
+		if (scaledpic == NULL) {
+			twin_pixmap_destroy(filepic);
+			return;
+		}
+		sx = twin_fixed_div(twin_int_to_fixed(filepic->width),
+				    twin_int_to_fixed(pboot_screen->width));
+		sy = twin_fixed_div(twin_int_to_fixed(filepic->height),
+				    twin_int_to_fixed(pboot_screen->height));
+		
+		twin_matrix_scale(&filepic->transform, sx, sy);
+		srcop.source_kind = TWIN_PIXMAP;
+		srcop.u.pixmap = filepic;
+		twin_composite(scaledpic, 0, 0, &srcop, 0, 0,
+			       NULL, 0, 0, TWIN_SOURCE,
+			       pboot_screen->width, pboot_screen->height);
+		twin_pixmap_destroy(filepic);
+			       
+	}
+	twin_screen_set_background(pboot_screen, scaledpic);
+}
+
 static void exitfunc(void)
 {
 #ifndef _USE_X11
@@ -870,9 +916,6 @@ static void sigint(int sig)
 
 int main(int argc, char **argv)
 {
-	twin_pixmap_t *pic;
-	const char *background_path;
-
 	atexit(exitfunc);
 	signal(SIGINT, sigint);
 
@@ -906,12 +949,7 @@ int main(int argc, char **argv)
 #endif
 
 	/* Set background pixmap */
-	background_path = artwork_pathname("background.png");
-	LOG("loading background: %s...", background_path);
-	pic = twin_png_to_pixmap(background_path, TWIN_ARGB32);
-	LOG("%s\n", pic ? "ok" : "failed");
-	if (pic)
-		twin_screen_set_background(pboot_screen, pic);
+	pboot_make_background();
 
 	/* Init more stuffs */
 	pboot_create_panels();

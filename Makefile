@@ -10,7 +10,7 @@ LDFLAGS =
 CFLAGS = -O0 -ggdb -Wall '-DPREFIX="$(PREFIX)"'
 
 PARSERS = native yaboot
-ARTWORK = background.png cdrom.png hdd.png usbpen.png cursor
+ARTWORK = background.jpg cdrom.png hdd.png usbpen.png cursor
 
 all: petitboot udev-helper
 
