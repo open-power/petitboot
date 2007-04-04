@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <syscall.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 #include <linux/input.h>
 
@@ -28,7 +30,8 @@ static twin_fbdev_t *pboot_fbdev;
 
 static twin_screen_t *pboot_screen;
 
-#define PBOOT_INITIAL_MESSAGE		"Petitboot v0.0.1"
+#define PBOOT_INITIAL_MESSAGE		\
+	"video hack: 0=default 1=720p 2=1080i 3=1080p"	
 
 #define PBOOT_LEFT_PANE_SIZE		160
 #define PBOOT_LEFT_PANE_COLOR		0x80000000
@@ -137,6 +140,8 @@ typedef struct _pboot_spane {
 static pboot_lpane_t	*pboot_lpane;
 static pboot_rpane_t	*pboot_rpane;
 static pboot_spane_t	*pboot_spane;
+
+static int pboot_vmode_change = -1;
 
 /* XXX move to twin */
 static inline twin_bool_t twin_rect_intersect(twin_rect_t r1,
@@ -686,6 +691,11 @@ static twin_bool_t pboot_lpane_event (twin_window_t	    *window,
 	return TWIN_FALSE;
 }
 
+static void pboot_quit(void)
+{
+	kill(0, SIGINT);
+}
+
 twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 			       twin_event_t	    *event)
 {
@@ -701,6 +711,25 @@ twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 					       pboot_cursor_hy);
 		break;
 	case TwinEventKeyDown:
+		/* Gross hack for video modes, need something better ! */
+		switch(event->u.key.key) {
+		case KEY_0:
+			pboot_vmode_change = 0; /* auto */
+			pboot_quit();
+			return TWIN_TRUE;
+		case KEY_1:
+			pboot_vmode_change = 3; /* 720p */
+			pboot_quit();
+			return TWIN_TRUE;
+		case KEY_2:
+			pboot_vmode_change = 4; /* 1080i */
+			pboot_quit();
+			return TWIN_TRUE;
+		case KEY_3:
+			pboot_vmode_change = 5; /* 1080p */
+			pboot_quit();
+			return TWIN_TRUE;
+		}
 	case TwinEventKeyUp:
 		twin_screen_set_cursor(pboot_screen, NULL, 0, 0);
 		break;
@@ -978,12 +1007,22 @@ static void pboot_make_background(void)
 	twin_screen_set_background(pboot_screen, scaledpic);
 }
 
+#define PS3FB_IOCTL_SETMODE          _IOW('r',  1, int)
+#define PS3FB_IOCTL_GETMODE          _IOR('r',  2, int)
+
 static void exitfunc(void)
 {
 #ifndef _USE_X11
 	if (pboot_fbdev)
 		twin_fbdev_destroy(pboot_fbdev);
 	pboot_fbdev = NULL;
+	if (pboot_vmode_change != -1) {
+		int fd = open("/dev/fb0", O_RDWR);
+		if (fd >= 0)
+			ioctl(fd, PS3FB_IOCTL_SETMODE,
+			      (unsigned long)&pboot_vmode_change);
+		close(fd);
+	}
 #endif
 }
 
