@@ -993,8 +993,35 @@ static void sigint(int sig)
 	syscall(__NR_exit);
 }
 
+static void usage(const char *progname)
+{
+	fprintf(stderr, "Usage: %s [-u] [-h]\n", progname);
+}
+
 int main(int argc, char **argv)
 {
+	int c;
+	int udev_trigger = 0;
+
+	for (;;) {
+		c = getopt(argc, argv, "u::h");
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case 'u':
+			udev_trigger = 1;
+			break;
+		case 'h':
+			usage(argv[0]);
+			return EXIT_SUCCESS;
+		default:
+			fprintf(stderr, "Unknown option '%c'\n", c);
+			usage(argv[0]);
+			return EXIT_FAILURE;
+		}
+	}
+
 	atexit(exitfunc);
 	signal(SIGINT, sigint);
 
@@ -1035,7 +1062,7 @@ int main(int argc, char **argv)
 	pboot_create_rpane();
 	pboot_create_spane();
 
-	if (!pboot_start_device_discovery()) {
+	if (!pboot_start_device_discovery(udev_trigger)) {
 		LOG("Couldn't start device discovery!\n");
 		return 1;
 	}
