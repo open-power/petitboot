@@ -28,14 +28,16 @@ static twin_fbdev_t *pboot_fbdev;
 
 static twin_screen_t *pboot_screen;
 
-#define PBOOT_LEFT_PANE_SIZE		200
+#define PBOOT_INITIAL_MESSAGE		"Petitboot v0.0.1"
+
+#define PBOOT_LEFT_PANE_SIZE		160
 #define PBOOT_LEFT_PANE_COLOR		0x80000000
 #define PBOOT_LEFT_LINE_COLOR		0xff000000
 
 #define PBOOT_LEFT_FOCUS_WIDTH		80
 #define PBOOT_LEFT_FOCUS_HEIGHT		80
-#define PBOOT_LEFT_FOCUS_XOFF		60
-#define PBOOT_LEFT_FOCUS_YOFF		60
+#define PBOOT_LEFT_FOCUS_XOFF		40
+#define PBOOT_LEFT_FOCUS_YOFF		40
 #define PBOOT_LEFT_FOCUS_XRAD		(6 * TWIN_FIXED_ONE)
 #define PBOOT_LEFT_FOCUS_YRAD		(6 * TWIN_FIXED_ONE)
 
@@ -47,8 +49,8 @@ static twin_screen_t *pboot_screen;
 
 #define PBOOT_LEFT_ICON_WIDTH		64
 #define PBOOT_LEFT_ICON_HEIGHT		64
-#define PBOOT_LEFT_ICON_XOFF		70
-#define PBOOT_LEFT_ICON_YOFF		70
+#define PBOOT_LEFT_ICON_XOFF		50
+#define PBOOT_LEFT_ICON_YOFF		50
 #define PBOOT_LEFT_ICON_STRIDE		100
 
 #define PBOOT_RIGHT_OPTION_LMARGIN	30
@@ -60,7 +62,7 @@ static twin_screen_t *pboot_screen;
 #define PBOOT_RIGHT_SUBTITLE_TEXT_SIZE	(18 * TWIN_FIXED_ONE)
 #define PBOOT_RIGHT_TITLE_XOFFSET	80
 #define PBOOT_RIGHT_TITLE_YOFFSET	30
-#define PBOOT_RIGHT_SUBTITLE_XOFFSET	200
+#define PBOOT_RIGHT_SUBTITLE_XOFFSET	100
 #define PBOOT_RIGHT_SUBTITLE_YOFFSET	50
 #define PBOOT_RIGHT_BADGE_XOFFSET	2
 #define PBOOT_RIGHT_BADGE_YOFFSET	0
@@ -71,6 +73,12 @@ static twin_screen_t *pboot_screen;
 
 #define PBOOT_FOCUS_COLOR		0x10404040
 
+#define PBOOT_STATUS_PANE_COLOR		0x60606060
+#define PBOOT_STATUS_PANE_HEIGHT	20
+#define PBOOT_STATUS_PANE_XYMARGIN	20
+#define PBOOT_STATUS_TEXT_MARGIN	10
+#define PBOOT_STATUS_TEXT_SIZE		(16 * TWIN_FIXED_ONE)
+#define PBOOT_STATUS_TEXT_COLOR		0xff000000
 
 typedef struct _pboot_option pboot_option_t;
 typedef struct _pboot_device pboot_device_t;
@@ -121,8 +129,14 @@ typedef struct _pboot_rpane {
 	int		mouse_target;
 } pboot_rpane_t;
 
+typedef struct _pboot_spane {
+	twin_window_t	*window;
+	char		*text;
+} pboot_spane_t;
+
 static pboot_lpane_t	*pboot_lpane;
 static pboot_rpane_t	*pboot_rpane;
+static pboot_spane_t	*pboot_spane;
 
 /* XXX move to twin */
 static inline twin_bool_t twin_rect_intersect(twin_rect_t r1,
@@ -519,6 +533,36 @@ static void pboot_set_device_select(int sel)
 	twin_window_queue_paint(pboot_rpane->window);
 }
 
+static void pboot_create_rpane(void)
+{
+	pboot_rpane = calloc(1, sizeof(pboot_rpane_t));
+	assert(pboot_rpane);
+
+	pboot_rpane->window = twin_window_create(pboot_screen, TWIN_ARGB32,
+						 TwinWindowPlain,
+						 PBOOT_LEFT_PANE_SIZE, 0,
+						 pboot_screen->width -
+						   PBOOT_LEFT_PANE_SIZE,
+						 pboot_screen->height);
+	assert(pboot_rpane->window);
+
+	pboot_rpane->window->draw = pboot_rpane_draw;
+	pboot_rpane->window->event = pboot_rpane_event;
+	pboot_rpane->window->client_data = pboot_rpane;
+
+	pboot_rpane->focus_curindex = -1;
+	pboot_rpane->focus_box.left = PBOOT_RIGHT_FOCUS_XOFF;
+	pboot_rpane->focus_box.top = -2*PBOOT_RIGHT_FOCUS_HEIGHT;
+	pboot_rpane->focus_box.right = pboot_rpane->window->pixmap->width -
+		2 * PBOOT_RIGHT_FOCUS_XOFF;
+	pboot_rpane->focus_box.bottom = pboot_rpane->focus_box.top +
+		PBOOT_RIGHT_FOCUS_HEIGHT;
+	pboot_rpane->mouse_target = -1;
+	twin_window_show(pboot_rpane->window);
+	twin_window_queue_paint(pboot_rpane->window);
+}
+
+
 static twin_time_t pboot_lfocus_timeout (twin_time_t now, void *closure)
 {
 	int dir = 1, dist, pos;
@@ -732,9 +776,8 @@ static void pboot_lpane_draw(twin_window_t *window)
 	twin_path_destroy(path);
 }
 
-static void pboot_create_panels(void)
+static void pboot_create_lpane(void)
 {
-	/* left pane */
 	pboot_lpane = calloc(1, sizeof(pboot_lpane_t));
 	assert(pboot_lpane);
 
@@ -756,32 +799,56 @@ static void pboot_create_panels(void)
 		PBOOT_LEFT_FOCUS_HEIGHT;
 	pboot_lpane->mouse_target = -1;
 	twin_window_show(pboot_lpane->window);
+	twin_window_queue_paint(pboot_lpane->window);
+}
 
-	/* right pane */
-	pboot_rpane = calloc(1, sizeof(pboot_rpane_t));
-	assert(pboot_rpane);
+static void pboot_spane_draw(twin_window_t *window)
+{
+	twin_pixmap_t	*px = window->pixmap;
+	pboot_spane_t	*spane = window->client_data;
+	twin_path_t	*path;
+	twin_fixed_t	tx, ty;
 
-	pboot_rpane->window = twin_window_create(pboot_screen, TWIN_ARGB32,
+	/* Fill background */
+	twin_fill(px, PBOOT_STATUS_PANE_COLOR, TWIN_SOURCE,
+		  0, 0, px->width, px->height);
+
+	path = twin_path_create();
+	assert(path);
+
+	twin_path_set_font_size(path, PBOOT_STATUS_TEXT_SIZE);
+	twin_path_set_font_style(path, TWIN_TEXT_UNHINTED);
+	tx = twin_int_to_fixed(PBOOT_STATUS_TEXT_MARGIN);
+	ty = twin_int_to_fixed(PBOOT_STATUS_PANE_HEIGHT - 2);
+	twin_path_move (path, tx, ty);
+	twin_path_utf8 (path, spane->text);
+	twin_paint_path (px, PBOOT_STATUS_TEXT_COLOR, path);
+
+	twin_path_destroy(path);
+}
+
+static void pboot_create_spane(void)
+{
+	pboot_spane = calloc(1, sizeof(pboot_spane_t));
+	assert(pboot_spane);
+
+	pboot_spane->window = twin_window_create(pboot_screen, TWIN_ARGB32,
 						 TwinWindowPlain,
-						 PBOOT_LEFT_PANE_SIZE, 0,
+						 PBOOT_LEFT_PANE_SIZE +
+						  PBOOT_STATUS_PANE_XYMARGIN,
+						 pboot_screen->height - 
+						  PBOOT_STATUS_PANE_HEIGHT,
 						 pboot_screen->width -
-						   PBOOT_LEFT_PANE_SIZE,
-						 pboot_screen->height);
-	assert(pboot_rpane->window);
+						  PBOOT_LEFT_PANE_SIZE -
+						  2*PBOOT_STATUS_PANE_XYMARGIN,
+						 PBOOT_STATUS_PANE_HEIGHT);
+	assert(pboot_spane->window);
 
-	pboot_rpane->window->draw = pboot_rpane_draw;
-	pboot_rpane->window->event = pboot_rpane_event;
-	pboot_rpane->window->client_data = pboot_rpane;
-
-	pboot_rpane->focus_curindex = -1;
-	pboot_rpane->focus_box.left = PBOOT_RIGHT_FOCUS_XOFF;
-	pboot_rpane->focus_box.top = -2*PBOOT_RIGHT_FOCUS_HEIGHT;
-	pboot_rpane->focus_box.right = pboot_rpane->window->pixmap->width -
-		2 * PBOOT_RIGHT_FOCUS_XOFF;
-	pboot_rpane->focus_box.bottom = pboot_rpane->focus_box.top +
-		PBOOT_RIGHT_FOCUS_HEIGHT;
-	pboot_rpane->mouse_target = -1;
-	twin_window_show(pboot_rpane->window);
+	pboot_spane->window->draw = pboot_spane_draw;
+	pboot_spane->window->client_data = pboot_spane;
+	pboot_spane->text = PBOOT_INITIAL_MESSAGE;
+	twin_window_show(pboot_spane->window);
+	twin_window_queue_paint(pboot_spane->window);
 }
 
 int pboot_add_device(const char *dev_id, const char *name,
@@ -952,9 +1019,9 @@ int main(int argc, char **argv)
 	pboot_make_background();
 
 	/* Init more stuffs */
-	pboot_create_panels();
-	twin_window_queue_paint(pboot_lpane->window);
-	twin_window_queue_paint(pboot_rpane->window);
+	pboot_create_lpane();
+	pboot_create_rpane();
+	pboot_create_spane();
 
 	if (!pboot_start_device_discovery()) {
 		LOG("Couldn't start device discovery!\n");
