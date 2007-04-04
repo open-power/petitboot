@@ -6,6 +6,8 @@ int add_device(const struct device *dev);
 int add_boot_option(const struct boot_option *opt);
 void free_boot_option(struct boot_option *opt);
 
+char *join_paths(const char *a, const char *b);
+
 int mount_device(const char *dev_path, char *mount_path);
 
 struct parser {

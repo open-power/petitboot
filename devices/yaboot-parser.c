@@ -86,20 +86,6 @@ make_params(char *label, char *params)
      return buffer;
 }
 
-static char *prepend_mountpoint(const char *path)
-{
-	char *full_path;
-
-	full_path = malloc(strlen(path) + strlen(mountpoint) + 2);
-
-	strcpy(full_path, mountpoint);
-	if (path[0] != '/')
-		strcat(full_path, "/");
-	strcat(full_path, path);
-
-	return full_path;
-}
-
 static int check_and_add_device(struct device *dev)
 {
 	if (!dev->icon_file)
@@ -117,13 +103,13 @@ void process_image(char *label)
 
 	opt.name = label;
 	cfgopt = cfg_get_strg(label, "image");
-	opt.boot_image_file = prepend_mountpoint(cfgopt);
+	opt.boot_image_file = join_paths(mountpoint, cfgopt);
 	if (cfgopt == defimage)
 		printf("This one is default. What do we do about it?\n");
 
 	cfgopt = cfg_get_strg(label, "initrd");
 	if (cfgopt)
-		opt.initrd_file = prepend_mountpoint(cfgopt);
+		opt.initrd_file = join_paths(mountpoint, cfgopt);
 
 	opt.boot_args = make_params(label, NULL);
 
@@ -145,12 +131,12 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 
 	mountpoint = _mountpoint;
 
-	filepath = prepend_mountpoint("/etc/yaboot.conf");
+	filepath = join_paths(mountpoint, "/etc/yaboot.conf");
 
 	fd = open(filepath, O_RDONLY);
 	if (fd < 0) {
 		free(filepath);
-		filepath = prepend_mountpoint("/yaboot.conf");
+		filepath = join_paths(mountpoint, "/yaboot.conf");
 		fd = open(filepath, O_RDONLY);
 		
 		if (fd < 0)

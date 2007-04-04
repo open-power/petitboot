@@ -13,20 +13,6 @@ static struct device *dev;
 static const char *mountpoint;
 int device_added;
 
-static char *prepend_mountpoint(const char *path)
-{
-	char *full_path;
-
-	full_path = malloc(strlen(path) + strlen(mountpoint) + 2);
-
-	strcpy(full_path, mountpoint);
-	if (path[0] != '/')
-		strcat(full_path, "/");
-	strcat(full_path, path);
-
-	return full_path;
-}
-
 int check_and_add_device(struct device *dev)
 {
 	if (!dev->icon_file)
@@ -61,13 +47,13 @@ static void set_boot_option_parameter(struct boot_option *opt,
 		opt->description = strdup(value);
 
 	else if (streq(name, "image"))
-		opt->boot_image_file = prepend_mountpoint(value);
+		opt->boot_image_file = join_paths(mountpoint, value);
 
 	else if (streq(name, "icon"))
-		opt->icon_file = prepend_mountpoint(value);
+		opt->icon_file = join_paths(mountpoint, value);
 
 	else if (streq(name, "initrd"))
-		opt->initrd_file = prepend_mountpoint(value);
+		opt->initrd_file = join_paths(mountpoint, value);
 
 	else if (streq(name, "args"))
 		opt->boot_args = strdup(value);
@@ -86,7 +72,7 @@ static void set_device_parameter(struct device *dev,
 		dev->description = strdup(value);
 
 	else if (streq(name, "icon"))
-		dev->icon_file = prepend_mountpoint(value);
+		dev->icon_file = join_paths(mountpoint, value);
 }
 
 static int parameter(char *param_name, char *param_value)
@@ -106,7 +92,7 @@ int parse(const char *devicepath, const char *_mountpoint)
 
 	mountpoint = _mountpoint;
 
-	filepath = prepend_mountpoint(conf_filename);
+	filepath = join_paths(mountpoint, conf_filename);
 
 	cur_opt = NULL;
 	dev = malloc(sizeof(*dev));

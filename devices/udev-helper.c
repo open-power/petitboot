@@ -568,3 +568,19 @@ int main(int argc, char **argv)
 	}
 	return rc;
 }
+
+/* convenience function for parsers */
+char *join_paths(const char *a, const char *b)
+{
+	char *full_path;
+
+	full_path = malloc(strlen(a) + strlen(b) + 2);
+
+	strcpy(full_path, a);
+	if (b[0] != '/')
+		strcat(full_path, "/");
+	strcat(full_path, b);
+
+	return full_path;
+}
+
