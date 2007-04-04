@@ -238,7 +238,7 @@ static twin_bool_t pboot_proc_server_sock(int sock, twin_file_op_t ops,
 	return TWIN_TRUE;
 }
 
-int pboot_start_device_discovery(void)
+int pboot_start_device_discovery(int udev_trigger)
 {
 	int sock;
 	struct sockaddr_un addr;
@@ -268,6 +268,12 @@ int pboot_start_device_discovery(void)
 	LOG("listening on %s\n", addr.sun_path);
 
 	twin_set_file(pboot_proc_server_sock, sock, TWIN_READ, &_ctx);
+
+	if (udev_trigger) {
+		int rc = system("udevtrigger");
+		if (rc)
+			LOG("udevtrigger failed, rc %d\n", rc);
+	}
 
 	return TWIN_TRUE;
 }

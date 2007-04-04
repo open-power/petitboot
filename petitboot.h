@@ -12,5 +12,5 @@ int pboot_add_option(int devindex, const char *title,
 		     const char *subtitle, twin_pixmap_t *badge, void *data);
 int pboot_remove_device(const char *dev_id);
 
-int pboot_start_device_discovery(void);
+int pboot_start_device_discovery(int udev_trigger);
 void pboot_exec_option(void *data);
