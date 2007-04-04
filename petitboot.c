@@ -827,6 +827,18 @@ static void pboot_spane_draw(twin_window_t *window)
 	twin_path_destroy(path);
 }
 
+void pboot_message(const char *message)
+{
+	if (pboot_spane->text)
+		free(pboot_spane->text);
+	pboot_spane->text = strdup(message);
+	twin_window_damage(pboot_spane->window,
+			   0, 0,
+			   pboot_spane->window->pixmap->width,
+			   pboot_spane->window->pixmap->height);
+	twin_window_queue_paint(pboot_spane->window);
+}
+
 static void pboot_create_spane(void)
 {
 	pboot_spane = calloc(1, sizeof(pboot_spane_t));
@@ -846,7 +858,7 @@ static void pboot_create_spane(void)
 
 	pboot_spane->window->draw = pboot_spane_draw;
 	pboot_spane->window->client_data = pboot_spane;
-	pboot_spane->text = PBOOT_INITIAL_MESSAGE;
+	pboot_spane->text = strdup(PBOOT_INITIAL_MESSAGE);
 	twin_window_show(pboot_spane->window);
 	twin_window_queue_paint(pboot_spane->window);
 }
