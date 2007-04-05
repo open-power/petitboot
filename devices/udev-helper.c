@@ -33,7 +33,7 @@ void pb_log(const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	fprintf(logf, fmt, ap);
+	vfprintf(logf, fmt, ap);
 	va_end(ap);
 }
 
