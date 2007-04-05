@@ -31,7 +31,8 @@ static twin_fbdev_t *pboot_fbdev;
 static twin_screen_t *pboot_screen;
 
 #define PBOOT_INITIAL_MESSAGE		\
-	"video hack: 0=default 1=720p 2=1080i 3=1080p"	
+	"video hack: 0=default 1=720p 2=1080i 3=1080p    " \
+	"BACKSPACE=return to GameOS"
 
 #define PBOOT_LEFT_PANE_SIZE		160
 #define PBOOT_LEFT_PANE_COLOR		0x80000000
@@ -521,12 +522,30 @@ int pboot_add_option(int devindex, const char *title,
 }
 
 
-static void pboot_set_device_select(int sel)
+static void pboot_set_device_select(int sel, int force)
 {
 	LOG("%s: %d -> %d\n", __FUNCTION__, pboot_dev_sel, sel);
-	if (sel == pboot_dev_sel || sel >= pboot_dev_count)
+	if (!force && sel == pboot_dev_sel)
+		return;
+	if (sel >= pboot_dev_count)
 		return;
 	pboot_dev_sel = sel;
+	if (force) {
+		pboot_lpane->focus_curindex = sel;
+		if (sel < 0)
+			pboot_lpane->focus_target = 0 - PBOOT_LEFT_FOCUS_HEIGHT;
+		else
+			pboot_lpane->focus_target = PBOOT_LEFT_FOCUS_YOFF +
+				PBOOT_LEFT_ICON_STRIDE * sel;
+		pboot_rpane->focus_box.bottom = pboot_lpane->focus_target;
+		pboot_rpane->focus_box.bottom = pboot_rpane->focus_box.top +
+			PBOOT_RIGHT_FOCUS_HEIGHT;
+		twin_window_damage(pboot_lpane->window,
+				   0, 0,
+				   pboot_lpane->window->pixmap->width,
+				   pboot_lpane->window->pixmap->height);
+		twin_window_queue_paint(pboot_lpane->window);
+	}
 	pboot_rpane->focus_curindex = -1;
 	pboot_rpane->mouse_target = -1;
 	pboot_rpane->focus_box.top = -2*PBOOT_RIGHT_FOCUS_HEIGHT;
@@ -574,9 +593,10 @@ static twin_time_t pboot_lfocus_timeout (twin_time_t now, void *closure)
 	const int accel[11] = { 7, 4, 2, 1, 1, 1, 1, 1, 2, 2, 3 };
 
 	dist = abs(pboot_lpane->focus_target - pboot_lpane->focus_start);
+	dir = dist > 2 ? 2 : dist;
 	pos = pboot_lpane->focus_target - (int)pboot_lpane->focus_box.top;
 	if (pos == 0) {
-		pboot_set_device_select(pboot_lpane->focus_curindex);
+		pboot_set_device_select(pboot_lpane->focus_curindex, 0);
 		return -1;
 	}
 	if (pos < 0) {
@@ -711,8 +731,8 @@ twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 					       pboot_cursor_hy);
 		break;
 	case TwinEventKeyDown:
-		/* Gross hack for video modes, need something better ! */
 		switch(event->u.key.key) {
+		/* Gross hack for video modes, need something better ! */
 		case KEY_0:
 			pboot_vmode_change = 0; /* auto */
 			pboot_quit();
@@ -729,6 +749,12 @@ twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 			pboot_vmode_change = 5; /* 1080p */
 			pboot_quit();
 			return TWIN_TRUE;
+
+		/* Another gross hack for booting back to gameos */
+		case KEY_BACKSPACE:
+		case KEY_DELETE:
+			system("boot-game-os");
+			pboot_quit();
 		}
 	case TwinEventKeyUp:
 		twin_screen_set_cursor(pboot_screen, NULL, 0, 0);
@@ -926,8 +952,8 @@ int pboot_add_device(const char *dev_id, const char *name,
 
 int pboot_remove_device(const char *dev_id)
 {
-	int		i, new_dev_index;
 	pboot_device_t	*dev = NULL;
+	int		i, newsel = pboot_dev_sel;
 
 	/* find the matching device */
 	for (i = 0; i < pboot_dev_count; i++) {
@@ -940,22 +966,16 @@ int pboot_remove_device(const char *dev_id)
 	if (!dev)
 		return TWIN_FALSE;
 
-	/* select the newly-focussed device */
-	if (i == pboot_dev_count - 1)
-		new_dev_index = i - 1;
-	else
-		new_dev_index = i + 1;
-
 	memmove(pboot_devices + i, pboot_devices + i + 1,
 			sizeof(*pboot_devices) * (pboot_dev_count + i - 1));
-
 	pboot_devices[--pboot_dev_count] = NULL;
 
-	pboot_set_device_select(new_dev_index);
-	twin_window_damage(pboot_lpane->window,
-			   dev->box.left, dev->box.top,
-			   dev->box.right, dev->box.bottom);
-	twin_window_queue_paint(pboot_lpane->window);
+	/* select the newly-focussed device */
+	if (pboot_dev_sel > i)
+		newsel = pboot_dev_sel - 1;
+	else if (pboot_dev_sel == i && i >= pboot_dev_count)
+			newsel = pboot_dev_count - 1;
+	pboot_set_device_select(newsel, 1);
 
 	/* todo: free device & options */
 
