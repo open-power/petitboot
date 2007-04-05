@@ -1,0 +1,8 @@
+
+Todo for petitboot:
+
+ * PS3 controller support
+ * Saving settings in nvram
+   - default boot option
+   - video mode (can we read gameos' video settings instead?)
+ * i18n
