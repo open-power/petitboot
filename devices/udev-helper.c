@@ -417,6 +417,31 @@ static int found_new_device(const char *dev_path)
 	return EXIT_SUCCESS;
 }
 
+static void detach_and_sleep(int sec)
+{
+	static int forked = 0;
+	int rc = 0;
+
+	if (sec <= 0)
+		return;
+
+	if (!forked) {
+		log("running in background...");
+		rc = fork();
+		forked = 1;
+	}
+
+	if (rc == 0) {
+		sleep(sec);
+
+	} else if (rc == -1) {
+		perror("fork()");
+		exit(EXIT_FAILURE);
+	} else {
+		exit(EXIT_SUCCESS);
+	}
+}
+
 static int poll_device_plug(const char *dev_path,
 			    int *optical)
 {
@@ -439,7 +464,7 @@ static int poll_device_plug(const char *dev_path,
 			return EXIT_SUCCESS;
 
 		printf("no... waiting\n");
-		sleep(REMOVABLE_SLEEP_DELAY);
+		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 
 	/* Fall back to bare open() */
@@ -453,7 +478,7 @@ static int poll_device_plug(const char *dev_path,
 		if (fd >= 0)
 			return EXIT_SUCCESS;
 		printf("no... waiting\n");
-		sleep(REMOVABLE_SLEEP_DELAY);
+		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 }
 
@@ -471,7 +496,7 @@ static int poll_device_unplug(const char *dev_path, int optical)
 		if (rc != CDS_DISC_OK)
 			return EXIT_SUCCESS;
 		printf("no... waiting\n");
-		sleep(REMOVABLE_SLEEP_DELAY);
+		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 
 	/* Fall back to bare open() */
@@ -484,7 +509,7 @@ static int poll_device_unplug(const char *dev_path, int optical)
 		if (fd < 0)
 			return EXIT_SUCCESS;
 		printf("no... waiting\n");
-		sleep(REMOVABLE_SLEEP_DELAY);
+		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 }
 
@@ -507,7 +532,7 @@ static int poll_removable_device(const char *sysfs_path,
 		/* Unmount it repeatedly, if needs be */
 		while (mounted && !unmount_device(dev_path))
 			;
-		sleep(1);
+		detach_and_sleep(1);
 	}
 }
 
@@ -516,9 +541,6 @@ int main(int argc, char **argv)
 	char *dev_path, *action;
 	int rc;
 
-	/*if (fork())
-		return EXIT_SUCCESS;
-		*/
 	action = getenv("ACTION");
 
 	logf = stdout;
