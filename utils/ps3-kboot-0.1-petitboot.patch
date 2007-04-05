@@ -1,0 +1,307 @@
+Patch for the Ubuntu (feisty) ps3-kboot package, to add petitboot support.
+
+Just apply this patch, download libtwin-0.0.1.tar.gz and petitboot-0.0.1.tar.gz
+to the dl/ directory, and build.
+
+More info at http://ozlabs.org/~jk/projects/petitboot/
+
+--- ps3-kboot.orig/ps3-kboot-0.1/Makefile	2007-04-05 20:10:44.000000000 +1000
++++ ps3-kboot/ps3-kboot-0.1/Makefile	2007-04-04 20:54:40.000000000 +1000
+@@ -20,6 +20,8 @@
+ LOCAL_KERNEL_CONFIG=$(PWD)/config/kernel-config
+ LOCAL_KBOOT_CONF=$(PWD)/config/kboot.conf
+ LOCAL_FSTAB=$(PWD)/config/fstab
++LOCAL_UDEV_RULES=$(PWD)/config/65-persistent-storage.rules \
++		 $(PWD)/config/99-petitboot.rules
+ KBOOT_MESSAGE=$(PWD)/config/message
+ KBOOT_FEATURES=$(PWD)/config/kboot-features
+ 
+@@ -38,6 +40,14 @@
+ BUSYBOX_DIR=busybox-$(BUSYBOX_VERSION)
+ BUSYBOX_PACKAGE=busybox-$(BUSYBOX_VERSION).tar.bz2
+ 
++TWIN_VERSION=0.0.2
++TWIN_DIR=libtwin-$(TWIN_VERSION)
++TWIN_PACKAGE=libtwin-$(TWIN_VERSION).tar.gz
++
++PETITBOOT_VERSION=0.0.1
++PETITBOOT_DIR=petitboot-$(PETITBOOT_VERSION)
++PETITBOOT_PACKAGE=petitboot-$(PETITBOOT_VERSION).tar.gz
++
+ # ----- General settings ------------------------------------------------------
+ 
+ all: otheros.bld
+@@ -48,14 +58,21 @@
+ root: root-meta/installed/userspace \
+ 		root-meta/installed/kexec-tools \
+ 		root-meta/installed/busybox \
+-		Makefile scripts/kboot \
++		root-meta/installed/twin \
++		root-meta/installed/petitboot \
++		Makefile scripts/kboot scripts/petitboot-init \
+ 		utils/readline utils/getctty \
+ 		$(LOCAL_KBOOT_CONF) $(KBOOT_MESSAGE) \
+-		$(KBOOT_FEATURES) $(LOCAL_FSTAB)
++		$(KBOOT_FEATURES) $(LOCAL_FSTAB) \
++		$(LOCAL_UDEV_RULES)
+ 	rm -f root/etc/{hosts,passwd,kboot.conf,message}
+ 	rm -rf root/tmp root/dev
++	rm -rf root/include root/usr/include
++	find root/ -name '*.a' -o -name '*.la' -exec rm {} \;
+ 	mkdir -p root/etc root/tmp root/proc root/dev root/sys
+ 	mkdir -p root/mnt/tmp root/mnt/root root/bin root/sbin
++	mkdir -p root/var/tmp
++	mkdir -p root/etc/udev/rules.d
+ 	[ -e root/dev/console ] || mknod root/dev/console c 5 1
+ 	[ -e root/dev/null ] || mknod root/dev/null c 1 3
+ 	[ -e root/dev/tty ] || mknod root/dev/tty c 5 0
+@@ -66,15 +83,18 @@
+ 	cp "$(KBOOT_MESSAGE)" root/etc/
+ 	cp "$(LOCAL_FSTAB)" root/etc/
+ 	cp "$(KBOOT_FEATURES)" root/etc/
++	cp $(LOCAL_UDEV_RULES) root/etc/udev/rules.d/
+ 	touch root/etc/mtab
+ 	install -D -m755  scripts/kboot root/sbin/kboot
++	install -D -m755  scripts/petitboot-init root/sbin/petitboot-init
+ 	install -D -s -m755 utils/readline root/bin/readline
+ 	install -D -s -m755 utils/getctty root/sbin/getctty
+-	ln -sf /sbin/kboot root/init
+-	for FILE in $$( find root/bin root/sbin \
++	ln -sf /sbin/petitboot-init root/init
++	for FILE in $$( find root/bin root/sbin root/lib/udev \
+ 	    -type f -perm -100 ) ; do \
+ 	    LIBS=$$( ldd $$FILE | awk '/=>.*\.so/ { print $$3 }' | grep -v fakeroot ) ; \
+ 	    for LIB in $$LIBS ; do \
++		[ -e root/$$LIB ] && continue; \
+ 		LIB_PATH=$$( echo $$LIB | sed -e 's/[^/]*$$//' ) ; \
+ 	        mkdir -p root/$$LIB_PATH ; \
+ 	        cp $$LIB root/$$LIB_PATH ; \
+@@ -133,6 +153,10 @@
+ 	install -m755 -D /sbin/udevtrigger root/sbin/udevtrigger
+ 	install -m755 -D /sbin/udevsettle root/sbin/udevsettle
+ 	install -m644 -D /etc/udev/udev.conf root/etc/udev/udev.conf
++	# udev helpers
++	while read helper; do install -m755 -D /lib/udev/$$helper \
++		root/lib/udev/$$helper; done < config/udev-helpers
++	cp -a /lib/udev/devices root/lib/udev/
+ 	# ps3pf-utils stuff
+ 	install -m755 -D /sbin/other-os-flash-util \
+ 		$(PWD)/root/sbin/other-os-flash-util
+@@ -199,6 +223,57 @@
+ 		root/sbin/kexec
+ 	touch $@
+ 
++# ----- twin library ----------------------------------------------------------
++
++$(TWIN_DIR)/.twin-extracted: \
++	  dl/$(TWIN_PACKAGE)
++	tar xfz dl/$(TWIN_PACKAGE)
++	for i in `ls patches/twin/$(TWIN_VERSION)/*patch*` ; do \
++	  patch -d $(TWIN_DIR) -p1 < $$i ; \
++	done
++	touch $@
++
++$(TWIN_DIR)/.twin-configured: \
++	  $(TWIN_DIR)/.twin-extracted
++	( cd $(TWIN_DIR) && \
++	  ./configure --prefix=/ $(GNU_ARCH); )
++	touch $@
++
++$(TWIN_DIR)/.twin-built: \
++	  $(TWIN_DIR)/.twin-configured
++	make -C $(TWIN_DIR)
++	touch $@
++
++root-meta/installed/twin: \
++	  $(TWIN_DIR)/.twin-built
++	mkdir -p root root-meta/installed
++	make -C $(TWIN_DIR) DESTDIR=$(PWD)/root install
++	strip root/lib/libtwin.so
++	rm root/lib/libtwin.a
++	touch $@
++
++# ----- petitboot GUI ----------------------------------------------------------
++
++$(PETITBOOT_DIR)/.petitboot-extracted: \
++	  dl/$(PETITBOOT_PACKAGE)
++	tar xfz dl/$(PETITBOOT_PACKAGE)
++	for i in `ls patches/petitboot/$(PETITBOOT_VERSION)/*patch*` ; do \
++	  patch -d $(PETITBOOT_DIR) -p1 < $$i ; \
++	done
++	touch $@
++
++$(PETITBOOT_DIR)/.petitboot-built: \
++	  $(PETITBOOT_DIR)/.petitboot-extracted root-meta/installed/twin
++	make -C $(PETITBOOT_DIR) PREFIX=/ "TWIN_CFLAGS=-I$(PWD)/root/include" \
++		"TWIN_LDFLAGS=-L$(PWD)/root/lib -ltwin -ljpeg -lpng -lz"
++	touch $@
++
++root-meta/installed/petitboot: \
++	  $(PETITBOOT_DIR)/.petitboot-built
++	mkdir -p root root-meta/installed
++	make -C $(PETITBOOT_DIR) PREFIX=/ DESTDIR=$(PWD)/root/ install
++	strip root/sbin/petitboot root/sbin/udev-helper
++	touch $@
+ 
+ # ----- kboot's utilities -----------------------------------------------------
+ 
+@@ -213,6 +288,7 @@
+ # ---- Cleanup ----------------------------------------------------------------
+ 
+ clean:
+-	rm -rf $(KERNEL_DIR) $(KEXEC_TOOLS_DIR) $(BUSYBOX_DIR)
++	rm -rf $(KERNEL_DIR) $(KEXEC_TOOLS_DIR) $(BUSYBOX_DIR) $(TWIN_DIR) \
++		$(PETITBOOT_DIR)
+ 	rm -rf root root-meta otheros.bld initrd.bin
+ 	rm -f otheros.bld initrd.bin utils/getctty utils/readline
+diff -urN ps3-kboot.orig/ps3-kboot-0.1/config/65-persistent-storage.rules ps3-kboot/ps3-kboot-0.1/config/65-persistent-storage.rules
+--- ps3-kboot.orig/ps3-kboot-0.1/config/65-persistent-storage.rules	1970-01-01 10:00:00.000000000 +1000
++++ ps3-kboot/ps3-kboot-0.1/config/65-persistent-storage.rules	2007-04-03 10:08:03.000000000 +1000
+@@ -0,0 +1,61 @@
++# persistent storage links: /dev/{disk,tape}/{by-id,by-uuid,by-label,by-path,by-name}
++# scheme based on "Linux persistent device names", 2004, Hannes Reinecke <hare@suse.de>
++
++SUBSYSTEM!="block", GOTO="persistent_storage_end"
++
++KERNEL=="md*", ACTION=="add|change", PROGRAM="watershed -i udev-mdadm true", GOTO="persistent_storage_path_uuid"
++
++KERNEL=="dm-*", ACTION=="add|change", PROGRAM="devmap_name %M %m", NAME="mapper/$result", GOTO="persistent_storage_identify"
++KERNEL=="dm-*", ACTION=="add|change", NAME=""
++
++ACTION!="add", GOTO="persistent_storage_end"
++
++# skip rules for inappropriate block devices
++KERNEL=="ram*|loop*|fd*|nbd*|gnbd*", GOTO="persistent_storage_end"
++
++# never access non-cdrom removable ide devices, the drivers are causing event loops on open()
++KERNEL=="hd*[!0-9]", ATTRS{removable}=="1", DRIVERS=="ide-cs|ide-floppy", GOTO="persistent_storage_end"
++KERNEL=="hd*[0-9]", ATTRS{removable}=="1", GOTO="persistent_storage_end"
++
++# never add uuid information for whole disk
++ATTR{whole_disk}=="", GOTO="persistent_storage_end"
++
++# for partitions import parent information
++KERNEL=="*[0-9]", IMPORT{parent}="ID_*"
++
++# by-id (hardware serial number)
++KERNEL=="hd*[!0-9]", IMPORT{program}="ata_id --export $tempnode"
++KERNEL=="hd*[!0-9]", ENV{ID_SERIAL}=="?*", SYMLINK+="disk/by-id/ata-$env{ID_MODEL}_$env{ID_SERIAL}"
++KERNEL=="hd*[0-9]", SYMLINK+="disk/by-id/ata-$env{ID_MODEL}_$env{ID_SERIAL}-part%n"
++
++KERNEL=="sd*[!0-9]|sr*|st*", ATTRS{ieee1394_id}=="?*", ENV{ID_SERIAL}="$attr{ieee1394_id}", ENV{ID_BUS}="ieee1394"
++KERNEL=="sd*[!0-9]|sr*|st*", ENV{ID_SERIAL}=="", IMPORT{program}="usb_id -x"
++KERNEL=="sd*[!0-9]|sr*|st*", ENV{ID_SERIAL}=="", IMPORT{program}="scsi_id -g -x -s %p -d $tempnode"
++KERNEL=="sd*[!0-9]|sr*|st*", ENV{ID_SERIAL}=="", IMPORT{program}="scsi_id -g -x -a -s %p -d $tempnode"
++KERNEL=="dasd*[!0-9]", IMPORT{program}="dasd_id --export $tempnode"
++KERNEL=="sd*[!0-9]|sr*|dasd*[!0-9]", ENV{ID_SERIAL}=="?*", SYMLINK+="disk/by-id/$env{ID_BUS}-$env{ID_SERIAL}"
++KERNEL=="sd*[0-9]|dasd*[0-9]", ENV{ID_SERIAL}=="?*", SYMLINK+="disk/by-id/$env{ID_BUS}-$env{ID_SERIAL}-part%n"
++KERNEL=="st*", ENV{ID_SERIAL}=="?*", SYMLINK+="tape/by-id/$env{ID_BUS}-$env{ID_SERIAL}"
++
++LABEL="persistent_storage_path_uuid"
++
++# by-path (shortest physical path)
++KERNEL=="*[!0-9]|sr*", IMPORT{program}="path_id %p", SYMLINK+="disk/by-path/$env{ID_PATH}"
++KERNEL=="st*", IMPORT{program}="path_id %p", SYMLINK+="tape/by-path/$env{ID_PATH}"
++KERNEL=="sr*|st*", GOTO="persistent_storage_end"
++KERNEL=="*[0-9]", ENV{ID_PATH}=="?*", SYMLINK+="disk/by-path/$env{ID_PATH}-part%n"
++
++LABEL="persistent_storage_identify"
++
++# by-label/by-uuid (filesystem properties)
++KERNEL=="*[!0-9]", ATTR{removable}=="1", GOTO="persistent_storage_end"
++IMPORT{program}="vol_id --export $tempnode"
++ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID}=="?*", SYMLINK+="disk/by-uuid/$env{ID_FS_UUID}"
++ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_SAFE}=="?*", SYMLINK+="disk/by-label/$env{ID_FS_LABEL_SAFE}"
++
++# BIOS Enhanced Disk Device
++KERNEL=="*[!0-9]", IMPORT{program}="edd_id --export $tempnode"
++KERNEL=="*[!0-9]", ENV{ID_EDD}=="?*", SYMLINK+="disk/by-id/edd-$env{ID_EDD}"
++KERNEL=="*[0-9]", ENV{ID_EDD}=="?*", SYMLINK+="disk/by-id/edd-$env{ID_EDD}-part%n"
++
++LABEL="persistent_storage_end"
+diff -urN ps3-kboot.orig/ps3-kboot-0.1/config/99-petitboot.rules ps3-kboot/ps3-kboot-0.1/config/99-petitboot.rules
+--- ps3-kboot.orig/ps3-kboot-0.1/config/99-petitboot.rules	1970-01-01 10:00:00.000000000 +1000
++++ ps3-kboot/ps3-kboot-0.1/config/99-petitboot.rules	2007-04-03 16:07:23.000000000 +1000
+@@ -0,0 +1,2 @@
++# tell petitboot when we see new block devices ...
++SUBSYSTEM=="block",RUN+="/sbin/udev-helper"
+diff -urN ps3-kboot.orig/ps3-kboot-0.1/config/udev-helpers ps3-kboot/ps3-kboot-0.1/config/udev-helpers
+--- ps3-kboot.orig/ps3-kboot-0.1/config/udev-helpers	1970-01-01 10:00:00.000000000 +1000
++++ ps3-kboot/ps3-kboot-0.1/config/udev-helpers	2007-04-05 14:21:52.000000000 +1000
+@@ -0,0 +1,12 @@
++devmap_name
++set_hwclock
++cdrom_id
++ata_id
++path_id
++scsi_id
++usb_id
++usb_device_name
++ide_media
++iftab_helper
++watershed
++vol_id
+diff -urN ps3-kboot.orig/ps3-kboot-0.1/scripts/petitboot-init ps3-kboot/ps3-kboot-0.1/scripts/petitboot-init
+--- ps3-kboot.orig/ps3-kboot-0.1/scripts/petitboot-init	1970-01-01 10:00:00.000000000 +1000
++++ ps3-kboot/ps3-kboot-0.1/scripts/petitboot-init	2007-04-05 15:37:48.000000000 +1000
+@@ -0,0 +1,49 @@
++#!/bin/sh
++#
++# kboot - Kboot initialization and command-line interface
++#
++# Written 2005, 2006 by Werner Almesberger
++#
++
++if [ "x$0" = x/init ]; then
++    __sysinit=true
++else
++    __sysinit=false
++fi
++
++###############################################################################
++#
++# System setup and internal initialization
++#
++
++if $__sysinit; then
++    if [ ! -f /proc/partitions ]; then
++	mount -n -t proc none /proc
++    fi
++    if [ ! -d /sys/block ]; then
++	mount -n -t sysfs none /sys
++
++	# Borrowed from initramfs tools. No more hard coded sleep
++	echo "" > /proc/sys/kernel/hotplug
++	udevd --daemon
++	udevtrigger
++	udevsettle --timeout=15
++    fi
++fi
++
++while /bin/true;
++do
++	/sbin/petitboot -u
++
++	# clean up after petitboot
++	for dir in /var/tmp/mnt-*;
++	do
++		umount "$dir"
++		rmdir "$dir"
++	done
++done &
++
++while /bin/true;
++do
++	/sbin/getctty /dev/console /bin/sh
++done
+--- ps3-kboot.orig/ps3-kboot-0.1/debian/control	2007-04-05 20:10:44.000000000 +1000
++++ ps3-kboot/ps3-kboot-0.1/debian/control	2007-04-03 15:54:04.000000000 +1000
+@@ -2,7 +2,7 @@
+ Section: base
+ Priority: optional
+ Maintainer: Ben Collins <bcollins@ubuntu.com>
+-Build-Depends: debhelper (>= 4.1.67), bzip2, cdbs, fakeroot, udev, ps3pf-utils, libc6-dev-ppc64, lib64z1-dev
++Build-Depends: debhelper (>= 4.1.67), bzip2, cdbs, fakeroot, udev, ps3pf-utils, libc6-dev-ppc64, lib64z1-dev, libpng12-dev, libjpeg62-dev, pkg-config
+ Standards-Version: 3.6.1
+ 
+ Package: ps3-kboot
