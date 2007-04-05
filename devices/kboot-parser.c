@@ -147,7 +147,7 @@ static int parse_option(struct boot_option *opt, char *config)
 		cmdline = tmp;
 	}
 
-	printf("kboot cmdline: %s", cmdline);
+	pb_log("kboot cmdline: %s", cmdline);
 	opt->boot_args = cmdline;
 
 	asprintf(&opt->description, "%s %s", config, cmdline);
@@ -165,7 +165,7 @@ static void parse_buf(struct device *dev, char *buf)
 
 		pos = get_param_pair(pos, &name, &value, '\n');
 
-		printf("kboot param: '%s' = '%s'\n", name, value);
+		pb_log("kboot param: '%s' = '%s'\n", name, value);
 
 		if (name == NULL || param_is_ignored(name))
 			continue;

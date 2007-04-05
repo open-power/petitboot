@@ -105,7 +105,7 @@ void process_image(char *label)
 	cfgopt = cfg_get_strg(label, "image");
 	opt.boot_image_file = join_paths(mountpoint, cfgopt);
 	if (cfgopt == defimage)
-		printf("This one is default. What do we do about it?\n");
+		pb_log("This one is default. What do we do about it?\n");
 
 	cfgopt = cfg_get_strg(label, "initrd");
 	if (cfgopt)
@@ -164,7 +164,7 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 	close(fd);
 	
 	if (cfg_parse(filepath, conf_file, conf_len)) {
-		printf("Error parsing yaboot.conf\n");
+		pb_log("Error parsing yaboot.conf\n");
 		return 0;
 	}
 
@@ -207,7 +207,7 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 			   yet. And on removal, unmount_device() only unmounts
 			   it once, while in fact it may be mounted twice. */
 			if (mount_device(new_dev, partition_mntpoint)) {
-				printf("Error mounting image partition\n");
+				pb_log("Error mounting image partition\n");
 				return 0;
 			}
 			mountpoint = partition_mntpoint;

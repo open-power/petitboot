@@ -323,7 +323,7 @@ static int is_removable_device(const char *sysfs_path)
 
 	sprintf(full_path, "/sys/%s/removable", sysfs_path);	
 	fd = open(full_path, O_RDONLY);
-	printf(" -> removable check on %s, fd=%d\n", full_path, fd);
+	pb_log(" -> removable check on %s, fd=%d\n", full_path, fd);
 	if (fd < 0)
 		return 0;
 	buf_len = read(fd, buf, 79);
@@ -394,35 +394,35 @@ static int poll_device_plug(const char *dev_path,
 
 	/* Polling loop for optical drive */
 	for (; (*optical) != 0; ) {
-		printf("poll for optical drive insertion ...\n");
+		pb_log("poll for optical drive insertion ...\n");
 		fd = open(dev_path, O_RDONLY|O_NONBLOCK);
 		if (fd < 0)
 			return EXIT_FAILURE;
 		rc = ioctl(fd, CDROM_DRIVE_STATUS, CDSL_CURRENT);
 		close(fd);
 		if (rc == -1) {
-			printf("not an optical drive, fallback...\n");
+			pb_log("not an optical drive, fallback...\n");
 			break;
 		}
 		*optical = 1;
 		if (rc == CDS_DISC_OK)
 			return EXIT_SUCCESS;
 
-		printf("no... waiting\n");
+		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 
 	/* Fall back to bare open() */
 	*optical = 0;
 	for (;;) {
-		printf("poll for non-optical drive insertion ...\n");
+		pb_log("poll for non-optical drive insertion ...\n");
 		fd = open(dev_path, O_RDONLY);
 		if (fd < 0 && errno != ENOMEDIUM)
 			return EXIT_FAILURE;
 		close(fd);
 		if (fd >= 0)
 			return EXIT_SUCCESS;
-		printf("no... waiting\n");
+		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 }
@@ -432,7 +432,7 @@ static int poll_device_unplug(const char *dev_path, int optical)
 	int rc, fd;
 
 	for (;optical;) {
-		printf("poll for optical drive removal ...\n");
+		pb_log("poll for optical drive removal ...\n");
 		fd = open(dev_path, O_RDONLY|O_NONBLOCK);
 		if (fd < 0)
 			return EXIT_FAILURE;
@@ -440,20 +440,20 @@ static int poll_device_unplug(const char *dev_path, int optical)
 		close(fd);
 		if (rc != CDS_DISC_OK)
 			return EXIT_SUCCESS;
-		printf("no... waiting\n");
+		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 
 	/* Fall back to bare open() */
 	for (;;) {
-		printf("poll for non-optical drive removal ...\n");
+		pb_log("poll for non-optical drive removal ...\n");
 		fd = open(dev_path, O_RDONLY);
 		if (fd < 0 && errno != ENOMEDIUM)
 			return EXIT_FAILURE;
 		close(fd);
 		if (fd < 0)
 			return EXIT_SUCCESS;
-		printf("no... waiting\n");
+		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 }
@@ -489,6 +489,8 @@ int main(int argc, char **argv)
 	action = getenv("ACTION");
 
 	logf = fopen("/var/tmp/petitboot-udev-helpers.log", "a");
+	if (!logf)
+		logf = stdout;
 	pb_log("%d started\n", getpid());
 	rc = EXIT_SUCCESS;
 
