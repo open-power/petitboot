@@ -1082,7 +1082,7 @@ int main(int argc, char **argv)
 	twin_linux_mouse_create(NULL, pboot_screen);
 
 	if (pboot_fbdev != NULL) {
-		char *cursor_path = artwork_pathname("cursor");
+		char *cursor_path = artwork_pathname("cursor.gz");
 		pboot_cursor = twin_load_X_cursor(cursor_path, 2,
 						  &pboot_cursor_hx,
 						  &pboot_cursor_hy);
