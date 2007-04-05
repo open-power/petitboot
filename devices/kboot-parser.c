@@ -121,6 +121,7 @@ static int parse_option(struct boot_option *opt, char *config)
 			root = value;
 
 		} else {
+			strcat(cmdline, " ");
 			*(value - 1) = '=';
 			strcat(cmdline, name);
 		}
@@ -149,7 +150,7 @@ static int parse_option(struct boot_option *opt, char *config)
 	printf("kboot cmdline: %s", cmdline);
 	opt->boot_args = cmdline;
 
-	asprintf(&opt->description, "%s %s", opt->boot_image_file, cmdline);
+	asprintf(&opt->description, "%s %s", config, cmdline);
 
 	return 1;
 }
