@@ -290,7 +290,7 @@ static void pboot_rpane_draw(twin_window_t *window)
 static twin_time_t pboot_rfocus_timeout (twin_time_t now, void *closure)
 {
 	int dir = 1, dist, pos;
-	const int accel[11] = { 7, 4, 2, 1, 1, 1, 1, 2, 3, 4, 5 };
+	const int accel[11] = { 7, 4, 2, 1, 1, 1, 1, 1, 2, 2, 3 };
 
 	dist = abs(pboot_rpane->focus_target - pboot_rpane->focus_start);
 	dir = dist > 5 ? 5 : dist;
@@ -571,7 +571,7 @@ static void pboot_create_rpane(void)
 static twin_time_t pboot_lfocus_timeout (twin_time_t now, void *closure)
 {
 	int dir = 1, dist, pos;
-	const int accel[11] = { 7, 4, 2, 1, 1, 1, 1, 2, 3, 4, 5 };
+	const int accel[11] = { 7, 4, 2, 1, 1, 1, 1, 1, 2, 2, 3 };
 
 	dist = abs(pboot_lpane->focus_target - pboot_lpane->focus_start);
 	pos = pboot_lpane->focus_target - (int)pboot_lpane->focus_box.top;
