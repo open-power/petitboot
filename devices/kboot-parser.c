@@ -171,6 +171,9 @@ static void parse_buf(struct device *dev, char *buf)
 		if (name == NULL || param_is_ignored(name))
 			continue;
 
+		if (*name == '#')
+			continue;
+
 		memset(&opt, 0, sizeof(opt));
 		opt.name = strdup(name);
 
