@@ -9,7 +9,7 @@ TWIN_LDFLAGS?=$(shell pkg-config --libs libtwin)
 LDFLAGS = 
 CFLAGS = -O0 -ggdb -Wall '-DPREFIX="$(PREFIX)"'
 
-PARSERS = native yaboot
+PARSERS = native yaboot kboot
 ARTWORK = background.jpg cdrom.png hdd.png usbpen.png cursor
 
 all: petitboot udev-helper

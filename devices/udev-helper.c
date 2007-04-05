@@ -26,6 +26,7 @@
 
 extern struct parser native_parser;
 extern struct parser yaboot_parser;
+extern struct parser kboot_parser;
 static FILE *logf;
 static int sock;
 
@@ -33,6 +34,7 @@ static int sock;
 static struct parser *parsers[] = {
 	&native_parser,
 	&yaboot_parser,
+	&kboot_parser,
 	NULL
 };
 
@@ -48,7 +50,7 @@ static void iterate_parsers(const char *devpath, const char *mountpoint)
 		log("\ttrying parser '%s'\n", parsers[i]->name);
 		/* just use a dummy device path for now */
 		if (parsers[i]->parse(devpath, mountpoint))
-			return;
+			/*return*/;
 	}
 	log("\tno boot_options found\n");
 }
