@@ -31,8 +31,7 @@ static twin_fbdev_t *pboot_fbdev;
 static twin_screen_t *pboot_screen;
 
 #define PBOOT_INITIAL_MESSAGE		\
-	"video hack: 0=default 1=720p 2=1080i 3=1080p    " \
-	"BACKSPACE=return to GameOS"
+	"keys: 0=safe 1=720p 2=1080i 3=1080p del=GameOS"
 
 #define PBOOT_LEFT_PANE_SIZE		160
 #define PBOOT_LEFT_PANE_COLOR		0x80000000
