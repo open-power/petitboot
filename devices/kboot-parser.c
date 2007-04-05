@@ -106,6 +106,7 @@ static int parse_option(struct boot_option *opt, char *config)
 	opt->boot_image_file = join_paths(mountpoint, config);
 
 	cmdline = malloc(buf_size);
+	*cmdline = 0;
 
 	for (pos++; pos;) {
 		pos = get_param_pair(pos, &name, &value, ' ');
