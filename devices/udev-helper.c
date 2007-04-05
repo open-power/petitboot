@@ -401,6 +401,18 @@ static int is_removable_device(const char *sysfs_path)
 	return strtol(buf, NULL, 10);
 }
 
+static int is_ignored_device(const char *devname)
+{
+	static const char *ignored_devices[] = { "/dev/ram", NULL };
+	const char **dev;
+
+	for (dev = ignored_devices; *dev; dev++)
+		if (!strncmp(devname, *dev, strlen(*dev)))
+			return 1;
+
+	return 0;
+}
+
 static int found_new_device(const char *dev_path)
 {
 	char mountpoint[PATH_MAX];
@@ -572,6 +584,9 @@ int main(int argc, char **argv)
 		log("missing environment?\n");
 		return EXIT_FAILURE;
 	}
+
+	if (is_ignored_device(dev_path))
+		return EXIT_SUCCESS;
 
 	if (streq(action, "add")) {
 		char *sysfs_path = getenv("DEVPATH");
