@@ -50,6 +50,7 @@ $(PACKAGE)-$(VERSION): clean
 	cp *.[ch] $@
 	cp -a devices/*.[ch] $@/devices/
 	cp Makefile $@
+	cp TODO COPYING $@
 
 clean:
 	rm -f petitboot
