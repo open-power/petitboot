@@ -372,6 +372,8 @@ enum generic_icon_type guess_device_type(void)
 	const char *bus = getenv("ID_BUS");
 	if (type && streq(type, "cd"))
 		return ICON_TYPE_OPTICAL;
+	if (!bus)
+		return ICON_TYPE_UNKNOWN;
 	if (streq(bus, "usb"))
 		return ICON_TYPE_USB;
 	if (streq(bus, "ata") || streq(bus, "scsi"))
