@@ -13,7 +13,7 @@
 #include "petitboot-paths.h"
 #include "devices/message.h"
 
-#define PBOOT_DEFAULT_ICON	"usbpen.png"
+#define PBOOT_DEFAULT_ICON	"tux.png"
 
 static const char *default_icon = artwork_pathname(PBOOT_DEFAULT_ICON);
 
