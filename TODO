@@ -1,8 +1,37 @@
 
-Todo for petitboot:
+Todo for petitboot (LOTS !):
 
+ * GUI code is still based on the original mockup hack. Needs to be completely
+   refactored. We need to define some useable canvas/widget classes in twin and
+   use them
+ * Add some useable GUI for graphic modes selection and return to GameOS instead
+   of the current hacks
+ * Rework keyboard handling. twin needs a proper input method support, including
+   at least a way to use the kernel keymaps and modifiers key handling. Remove
+   some of the keyboard hacks from twin_fbdev and move console switching to
+   petitboot
  * PS3 controller support
+ * Mouse support (twin/petitboot supports it somewhat but it's not working,
+   check why, probably an udev issue or missing kernel driver)
  * Saving settings in nvram
    - default boot option
+   - default language (when language support is in)
    - video mode (can we read gameos' video settings instead?)
- * i18n
+ * uncrappify focus box animation code (do it differently so it doesn't totally
+   sucks on the left pane due to the time needed for the alpha blending when the
+   box "touches" an icon)
+ * Fix issues with yaboot.conf parsing and kboot.conf parsing. Add a proper native
+   file format instead of the current hack (or make yaboot.conf native ?), add
+   icon support to all formats
+ * Fixup issues with races vs. udev-helper. Maybe have a global way to keep track
+   of present devices, properly make sure add/remove are ordered, etc...
+ * Get rid of libm by building libpng without floating point support (and build it
+   without write support while at it, to save more space)
+ * Define a proper binary format for converted twin fonts and use a proper font
+   with multiple language support rather than the stroke font which does US ASCII
+   only at the moment
+ * i18n support in config files
+
+PATCHES WELCOME !
+
+
