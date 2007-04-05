@@ -1,4 +1,7 @@
 
+#ifndef _MESSAGE_H
+#define _MESSAGE_H
+
 enum device_action {
 	DEV_ACTION_ADD_DEVICE = 0,
 	DEV_ACTION_ADD_OPTION = 1,
@@ -24,3 +27,4 @@ struct boot_option {
 };
 
 
+#endif /* _MESSAGE_H */

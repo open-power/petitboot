@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -15,7 +16,7 @@
 #include <linux/cdrom.h>
 #include <sys/ioctl.h>
 
-#include "udev-helper.h"
+#include "parser.h"
 #include "petitboot-paths.h"
 
 /* Define below to operate without the frontend */
@@ -24,88 +25,34 @@
 /* Delay in seconds between polling of removable devices */
 #define REMOVABLE_SLEEP_DELAY	2
 
-extern struct parser native_parser;
-extern struct parser yaboot_parser;
-extern struct parser kboot_parser;
 static FILE *logf;
 static int sock;
 
-/* array of parsers, ordered by priority */
-static struct parser *parsers[] = {
-	&native_parser,
-	&yaboot_parser,
-	&kboot_parser,
-	NULL
-};
-
-#define log(...) fprintf(logf, __VA_ARGS__)
-
-static void iterate_parsers(const char *devpath, const char *mountpoint)
+void pb_log(const char *fmt, ...)
 {
-	int i;
+	va_list ap;
 
-	log("trying parsers for %s@%s\n", devpath, mountpoint);
-
-	for (i = 0; parsers[i]; i++) {
-		log("\ttrying parser '%s'\n", parsers[i]->name);
-		/* just use a dummy device path for now */
-		if (parsers[i]->parse(devpath, mountpoint))
-			/*return*/;
-	}
-	log("\tno boot_options found\n");
+	va_start(ap, fmt);
+	fprintf(logf, fmt, ap);
+	va_end(ap);
 }
 
 static void print_boot_option(const struct boot_option *opt)
 {
-	log("\tname: %s\n", opt->name);
-	log("\tdescription: %s\n", opt->description);
-	log("\tboot_image: %s\n", opt->boot_image_file);
-	log("\tinitrd: %s\n", opt->initrd_file);
-	log("\tboot_args: %s\n", opt->boot_args);
+	pb_log("\tname: %s\n", opt->name);
+	pb_log("\tdescription: %s\n", opt->description);
+	pb_log("\tboot_image: %s\n", opt->boot_image_file);
+	pb_log("\tinitrd: %s\n", opt->initrd_file);
+	pb_log("\tboot_args: %s\n", opt->boot_args);
 
 }
 
 static void print_device(const struct device *dev)
 {
-	log("\tid: %s\n", dev->id);
-	log("\tname: %s\n", dev->name);
-	log("\tdescription: %s\n", dev->description);
-	log("\tboot_image: %s\n", dev->icon_file);
-}
-
-
-void free_device(struct device *dev)
-{
-	if (!dev)
-		return;
-	if (dev->id)
-		free(dev->id);
-	if (dev->name)
-		free(dev->name);
-	if (dev->description)
-		free(dev->description);
-	if (dev->icon_file)
-		free(dev->icon_file);
-	free(dev);
-}
-
-void free_boot_option(struct boot_option *opt)
-{
-	if (!opt)
-		return;
-	if (opt->name)
-		free(opt->name);
-	if (opt->description)
-		free(opt->description);
-	if (opt->icon_file)
-		free(opt->icon_file);
-	if (opt->boot_image_file)
-		free(opt->boot_image_file);
-	if (opt->initrd_file)
-		free(opt->initrd_file);
-	if (opt->boot_args)
-		free(opt->boot_args);
-	free(opt);
+	pb_log("\tid: %s\n", dev->id);
+	pb_log("\tname: %s\n", dev->name);
+	pb_log("\tdescription: %s\n", dev->description);
+	pb_log("\tboot_image: %s\n", dev->icon_file);
 }
 
 static int write_action(int fd, enum device_action action)
@@ -122,7 +69,7 @@ static int write_string(int fd, const char *str)
 	if (!str) {
 		len_buf = 0;
 		if (write(fd, &len_buf, sizeof(len_buf)) != sizeof(len_buf)) {
-			log("write failed: %s\n", strerror(errno));
+			pb_log("write failed: %s\n", strerror(errno));
 			return -1;
 		}
 		return 0;
@@ -130,20 +77,20 @@ static int write_string(int fd, const char *str)
 
 	len = strlen(str);
 	if (len > (1ull << (sizeof(len_buf) * 8 - 1))) {
-		log("string too large\n");
+		pb_log("string too large\n");
 		return -1;
 	}
 
 	len_buf = __cpu_to_be32(len);
 	if (write(fd, &len_buf, sizeof(len_buf)) != sizeof(len_buf)) {
-		log("write failed: %s\n", strerror(errno));
+		pb_log("write failed: %s\n", strerror(errno));
 		return -1;
 	}
 
 	while (pos < len) {
 		int rc = write(fd, str, len - pos);
 		if (rc <= 0) {
-			log("write failed: %s\n", strerror(errno));
+			pb_log("write failed: %s\n", strerror(errno));
 			return -1;
 		}
 		pos += rc;
@@ -157,7 +104,7 @@ int add_device(const struct device *dev)
 {
 	int rc;
 
-	log("device added:\n");
+	pb_log("device added:\n");
 	print_device(dev);
 	rc = write_action(sock, DEV_ACTION_ADD_DEVICE) ||
 		write_string(sock, dev->id) ||
@@ -166,7 +113,7 @@ int add_device(const struct device *dev)
 		write_string(sock, dev->icon_file);
 
 	if (rc)
-		log("error writing device %s to socket\n", dev->name);
+		pb_log("error writing device %s to socket\n", dev->name);
 
 	return rc;
 }
@@ -175,7 +122,7 @@ int add_boot_option(const struct boot_option *opt)
 {
 	int rc;
 
-	log("boot option added:\n");
+	pb_log("boot option added:\n");
 	print_boot_option(opt);
 
 	rc = write_action(sock, DEV_ACTION_ADD_OPTION) ||
@@ -188,7 +135,7 @@ int add_boot_option(const struct boot_option *opt)
 		write_string(sock, opt->boot_args);
 
 	if (rc)
-		log("error writing boot option %s to socket\n", opt->name);
+		pb_log("error writing boot option %s to socket\n", opt->name);
 
 	return rc;
 }
@@ -207,7 +154,7 @@ int connect_to_socket()
 
 	fd = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (fd == -1) {
-		log("can't create socket: %s\n", strerror(errno));
+		pb_log("can't create socket: %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -215,7 +162,7 @@ int connect_to_socket()
 	strcpy(addr.sun_path, PBOOT_DEVICE_SOCKET);
 
 	if (connect(fd, (struct sockaddr *)&addr, sizeof(addr))) {
-		log("can't connect to %s: %s\n",
+		pb_log("can't connect to %s: %s\n",
 				addr.sun_path, strerror(errno));
 		return -1;
 	}
@@ -226,7 +173,7 @@ int connect_to_socket()
 	int fd;
 	fd = open("./debug_socket", O_WRONLY | O_CREAT, 0640);
 	if (fd < 0) {
-		log("can't create output file: %s\n", strerror(errno));
+		pb_log("can't create output file: %s\n", strerror(errno));
 		return -1;
 	}
 	sock = fd;
@@ -251,14 +198,14 @@ int mount_device(const char *dev_path, char *mount_path)
  	sprintf(dir, "%s/mnt-%s-XXXXXX", TMP_DIR, basename);
 
 	if (!mkdtemp(dir)) {
-		log("failed to create temporary directory in %s: %s",
+		pb_log("failed to create temporary directory in %s: %s",
 				TMP_DIR, strerror(errno));
 		goto out;
 	}
 
 	pid = fork();
 	if (pid == -1) {
-		log("%s: fork failed: %s\n", __FUNCTION__, strerror(errno));
+		pb_log("%s: fork failed: %s\n", __FUNCTION__, strerror(errno));
 		goto out;
 	}
 
@@ -268,7 +215,8 @@ int mount_device(const char *dev_path, char *mount_path)
 	}
 
 	if (waitpid(pid, &status, 0) == -1) {
-		log("%s: waitpid failed: %s\n", __FUNCTION__, strerror(errno));
+		pb_log("%s: waitpid failed: %s\n", __FUNCTION__,
+				strerror(errno));
 		goto out;
 	}
 
@@ -289,7 +237,7 @@ static int unmount_device(const char *dev_path)
 	pid = fork();
 
 	if (pid == -1) {
-		log("%s: fork failed: %s\n", __FUNCTION__, strerror(errno));
+		pb_log("%s: fork failed: %s\n", __FUNCTION__, strerror(errno));
 		return -1;
 	}
 
@@ -299,29 +247,14 @@ static int unmount_device(const char *dev_path)
 	}
 
 	if (waitpid(pid, &status, 0) == -1) {
-		log("%s: waitpid failed: %s\n", __FUNCTION__, strerror(errno));
+		pb_log("%s: waitpid failed: %s\n", __FUNCTION__,
+				strerror(errno));
 		return -1;
 	}
 
 	rc = !WIFEXITED(status) || WEXITSTATUS(status) != 0;
 
 	return rc;
-}
-
-const char *generic_icon_file(enum generic_icon_type type)
-{
-	switch (type) {
-	case ICON_TYPE_DISK:
-		return artwork_pathname("hdd.png");
-	case ICON_TYPE_USB:
-		return artwork_pathname("usbpen.png");
-	case ICON_TYPE_OPTICAL:
-		return artwork_pathname("cdrom.png");
-	case ICON_TYPE_NETWORK:
-	case ICON_TYPE_UNKNOWN:
-		break;
-	}
-	return artwork_pathname("hdd.png");
 }
 
 static const struct device fake_boot_devices[] =
@@ -418,11 +351,11 @@ static int found_new_device(const char *dev_path)
 	char mountpoint[PATH_MAX];
 
 	if (mount_device(dev_path, mountpoint)) {
-		log("failed to mount %s\n", dev_path);
+		pb_log("failed to mount %s\n", dev_path);
 		return EXIT_FAILURE;
 	}
 
-	log("mounted %s at %s\n", dev_path, mountpoint);
+	pb_log("mounted %s at %s\n", dev_path, mountpoint);
 
 	iterate_parsers(dev_path, mountpoint);
 
@@ -438,7 +371,7 @@ static void detach_and_sleep(int sec)
 		return;
 
 	if (!forked) {
-		log("running in background...");
+		pb_log("running in background...");
 		rc = fork();
 		forked = 1;
 	}
@@ -555,11 +488,12 @@ int main(int argc, char **argv)
 
 	action = getenv("ACTION");
 
-	logf = stdout;
+	logf = fopen("/var/tmp/petitboot-udev-helpers.log", "a");
+	pb_log("%d started\n", getpid());
 	rc = EXIT_SUCCESS;
 
 	if (!action) {
-		log("missing environment?\n");
+		pb_log("missing environment?\n");
 		return EXIT_FAILURE;
 	}
 
@@ -567,7 +501,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 
 	if (streq(action, "fake")) {
-		log("fake mode");
+		pb_log("fake mode");
 
 		add_device(&fake_boot_devices[0]);
 		add_boot_option(&fake_boot_options[0]);
@@ -581,7 +515,7 @@ int main(int argc, char **argv)
 
 	dev_path = getenv("DEVNAME");
 	if (!dev_path) {
-		log("missing environment?\n");
+		pb_log("missing environment?\n");
 		return EXIT_FAILURE;
 	}
 
@@ -595,7 +529,7 @@ int main(int argc, char **argv)
 		else
 			rc = found_new_device(dev_path);
 	} else if (streq(action, "remove")) {
-		log("%s removed\n", dev_path);
+		pb_log("%s removed\n", dev_path);
 
 		remove_device(dev_path);
 
@@ -604,24 +538,8 @@ int main(int argc, char **argv)
 			;
 
 	} else {
-		log("invalid action '%s'\n", action);
+		pb_log("invalid action '%s'\n", action);
 		rc = EXIT_FAILURE;
 	}
 	return rc;
 }
-
-/* convenience function for parsers */
-char *join_paths(const char *a, const char *b)
-{
-	char *full_path;
-
-	full_path = malloc(strlen(a) + strlen(b) + 2);
-
-	strcpy(full_path, a);
-	if (b[0] != '/')
-		strcat(full_path, "/");
-	strcat(full_path, b);
-
-	return full_path;
-}
-
