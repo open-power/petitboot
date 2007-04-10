@@ -34,6 +34,7 @@ Todo for petitboot (LOTS !):
  * fix title/subtitles "leaking" out of the right side focus box
  * get YDL to fix their config file on their install CD or add a hack to
    recognize it and fix it up
+ * kboot parser: parse (or remove?) device prefixes from kernel paths
 
 PATCHES WELCOME !
 
