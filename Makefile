@@ -7,7 +7,7 @@ TWIN_CFLAGS?=$(shell pkg-config --cflags libtwin)
 TWIN_LDFLAGS?=$(shell pkg-config --libs libtwin)
 
 LDFLAGS = 
-CFLAGS = --std=c99 -O0 -ggdb -Wall '-DPREFIX="$(PREFIX)"'
+CFLAGS = --std=gnu99 -O0 -ggdb -Wall '-DPREFIX="$(PREFIX)"'
 
 PARSERS = native yaboot kboot
 ARTWORK = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
