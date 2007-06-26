@@ -76,6 +76,47 @@ static char *get_param_pair(char *str, char **name_out, char **value_out,
 	return tmp ? tmp + 1 : NULL;
 }
 
+struct global_option {
+	char *name;
+	char *value;
+};
+
+
+struct global_option global_options[] = {
+	{ .name = "root" },
+	{ .name = "initrd" },
+	{ .name = "video" },
+	{ .name = NULL }
+};
+
+/*
+ * Check if an option (name=value) is a global option. If so, store it in
+ * the global options table, and return 1. Otherwise, return 0.
+ */
+static int check_for_global_option(const char *name, const char *value)
+{
+	int i;
+
+	for (i = 0; global_options[i].name ;i++) {
+		if (!strcmp(name, global_options[i].name)) {
+			global_options[i].value = strdup(value);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static char *get_global_option(const char *name)
+{
+	int i;
+
+	for (i = 0; global_options[i].name ;i++)
+		if (!strcmp(name, global_options[i].name))
+			return global_options[i].value;
+
+	return NULL;
+}
+
 static int parse_option(struct boot_option *opt, char *config)
 {
 	char *pos, *name, *value, *root, *initrd, *cmdline, *tmp;
@@ -128,6 +169,11 @@ static int parse_option(struct boot_option *opt, char *config)
 		}
 	}
 
+	if (!root)
+		root = get_global_option("root");
+	if (!initrd)
+		initrd = get_global_option("initrd");
+
 	if (initrd) {
 		asprintf(&tmp, "initrd=%s %s", initrd, cmdline);
 		free(cmdline);
@@ -141,14 +187,14 @@ static int parse_option(struct boot_option *opt, char *config)
 		free(cmdline);
 		cmdline = tmp;
 
-	} else if (!initrd) {
+	} else if (initrd) {
 		/* if there's an initrd but no root, fake up /dev/ram0 */
 		asprintf(&tmp, "root=/dev/ram0 %s", cmdline);
 		free(cmdline);
 		cmdline = tmp;
 	}
 
-	pb_log("kboot cmdline: %s", cmdline);
+	pb_log("kboot cmdline: %s\n", cmdline);
 	opt->boot_args = cmdline;
 
 	asprintf(&opt->description, "%s %s", config, cmdline);
@@ -172,6 +218,9 @@ static void parse_buf(struct device *dev, char *buf)
 			continue;
 
 		if (*name == '#')
+			continue;
+
+		if (check_for_global_option(name, value))
 			continue;
 
 		memset(&opt, 0, sizeof(opt));
