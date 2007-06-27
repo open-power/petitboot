@@ -104,7 +104,7 @@ More info at http://ozlabs.org/~jk/projects/petitboot/
 +$(TWIN_DIR)/.twin-configured: \
 +	  $(TWIN_DIR)/.twin-extracted
 +	( cd $(TWIN_DIR) && \
-+	  ./configure --prefix=/ $(GNU_ARCH); )
++	  ./configure --prefix=/ --disable-x11 $(GNU_ARCH); )
 +	touch $@
 +
 +$(TWIN_DIR)/.twin-built: \
