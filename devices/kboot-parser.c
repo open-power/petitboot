@@ -138,13 +138,13 @@ static int parse_option(struct boot_option *opt, char *config)
 
 	/* if there's no space, it's only a kernel image with no params */
 	if (!pos) {
-		opt->boot_image_file = join_paths(mountpoint, config);
+		opt->boot_image_file = resolve_path(config, mountpoint);
 		opt->description = strdup(config);
 		return 1;
 	}
 
 	*pos = 0;
-	opt->boot_image_file = join_paths(mountpoint, config);
+	opt->boot_image_file = resolve_path(config, mountpoint);
 
 	cmdline = malloc(buf_size);
 	*cmdline = 0;
@@ -179,7 +179,7 @@ static int parse_option(struct boot_option *opt, char *config)
 		free(cmdline);
 		cmdline = tmp;
 
-		opt->initrd_file = join_paths(mountpoint, initrd);
+		opt->initrd_file = resolve_path(initrd, mountpoint);
 	}
 
 	if (root) {
@@ -197,7 +197,8 @@ static int parse_option(struct boot_option *opt, char *config)
 	pb_log("kboot cmdline: %s\n", cmdline);
 	opt->boot_args = cmdline;
 
-	asprintf(&opt->description, "%s %s", config, cmdline);
+	asprintf(&opt->description, "%s %s",
+			config, opt->boot_args);
 
 	return 1;
 }

@@ -35,7 +35,10 @@ const char *generic_icon_file(enum generic_icon_type type);
 /* functions provided by udev-helper or the test wrapper */
 void pb_log(const char *fmt, ...);
 
-int mount_device(const char *dev_path, char *mount_path);
+int mount_device(const char *dev_path);
+
+char *resolve_path(const char *path, const char *default_mountpoint);
+const char *mountpoint_for_device(const char *dev_path);
 
 enum generic_icon_type guess_device_type(void);
 

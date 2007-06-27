@@ -1,8 +1,10 @@
+#define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "parser.h"
 
@@ -16,10 +18,10 @@ void pb_log(const char *fmt, ...)
 }
 
 
-int mount_device(const char *dev_path, char *mount_path)
+int mount_device(const char *dev_path)
 {
 	pb_log("attempt to mount device (%s) not supported\n", dev_path);
-	return -1;
+	return 0;
 }
 
 int add_device(const struct device *dev)
@@ -48,16 +50,49 @@ enum generic_icon_type guess_device_type(void)
 	return ICON_TYPE_UNKNOWN;
 }
 
+static char *mountpoint;
+
+const char *mountpoint_for_device(const char *dev_path)
+{
+	char *tmp, *dev;
+	dev = strrchr(dev_path, '/');
+	if (dev)
+		dev_path = dev + 1;
+	asprintf(&tmp, "%s/%s", mountpoint, dev_path);
+	return tmp;
+}
+
+char *resolve_path(const char *path, const char *default_mountpoint)
+{
+	char *sep, *ret;
+	const char *devpath;
+
+	sep = strchr(path, ':');
+	if (!sep) {
+		devpath = default_mountpoint;
+		asprintf(&ret, "%s/%s", devpath, path);
+	} else {
+		char *tmp = strndup(path, sep - path);
+		devpath = mountpoint_for_device(path);
+		asprintf(&ret, "%s/%s", devpath, sep + 1);
+		free(tmp);
+	}
+
+	return ret;
+}
+
 int main(int argc, char **argv)
 {
-	const char *dev = "/dev/null";
+	const char *dev = "sda1";
 
 	if (argc != 2) {
 		fprintf(stderr, "usage: %s <fake-mountpoint>\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 
-	iterate_parsers(dev, argv[1]);
+	mountpoint = argv[1];
+
+	iterate_parsers(dev, mountpoint);
 
 	return EXIT_SUCCESS;
 }

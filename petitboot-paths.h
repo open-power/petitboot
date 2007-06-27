@@ -10,7 +10,7 @@
 #endif
 
 #ifndef TMP_DIR
-#define TMP_DIR "/var/tmp"
+#define TMP_DIR "/var/tmp/mnt/"
 #endif
 
 #define PBOOT_DEVICE_SOCKET "/var/tmp/petitboot-dev"

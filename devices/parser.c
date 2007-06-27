@@ -21,12 +21,12 @@ void iterate_parsers(const char *devpath, const char *mountpoint)
 {
 	int i;
 
-	pb_log("trying parsers for %s@%s\n", devpath, mountpoint);
+	pb_log("trying parsers for %s\n", devpath);
 
 	for (i = 0; parsers[i]; i++) {
 		pb_log("\ttrying parser '%s'\n", parsers[i]->name);
 		/* just use a dummy device path for now */
-		if (parsers[i]->parse(devpath, mountpoint))
+		if (parsers[i]->parse(devpath, mountpoint_for_device(devpath)))
 			return;
 	}
 	pb_log("\tno boot_options found\n");

@@ -15,7 +15,6 @@
 
 static struct device *dev;
 static const char *mountpoint;
-static char partition_mntpoint[PATH_MAX];
 static char *defimage;
 
 char *
@@ -103,13 +102,13 @@ void process_image(char *label)
 
 	opt.name = label;
 	cfgopt = cfg_get_strg(label, "image");
-	opt.boot_image_file = join_paths(mountpoint, cfgopt);
+	opt.boot_image_file = resolve_path(cfgopt, mountpoint);
 	if (cfgopt == defimage)
 		pb_log("This one is default. What do we do about it?\n");
 
 	cfgopt = cfg_get_strg(label, "initrd");
 	if (cfgopt)
-		opt.initrd_file = join_paths(mountpoint, cfgopt);
+		opt.initrd_file = resolve_path(cfgopt, mountpoint);
 
 	opt.boot_args = make_params(label, NULL);
 
@@ -182,8 +181,8 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 	}
 	dev->icon_file = strdup(generic_icon_file(guess_device_type()));
 
-	/* Mount the 'partition' which is what all the image filenames
-	   are relative to */
+	/* If we have a 'partiton=' directive, update the default mountpoint
+	 * to use that instead of the current mountpoint */
 	tmpstr = cfg_get_strg(0, "partition");
 	if (tmpstr) {
 		char *endp;
@@ -203,16 +202,9 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 			/* and add our own... */
 			sprintf(endp+1, "%d", partnr);
 
-			/* FIXME: udev may not have created the device node
-			   yet. And on removal, unmount_device() only unmounts
-			   it once, while in fact it may be mounted twice. */
-			if (mount_device(new_dev, partition_mntpoint)) {
-				pb_log("Error mounting image partition\n");
-				return 0;
-			}
-			mountpoint = partition_mntpoint;
+			mountpoint = mountpoint_for_device(new_dev);
 			dev->id = new_dev;
-		}				
+		}
 	}
 
 	defimage = cfg_get_default();

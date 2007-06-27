@@ -1,4 +1,6 @@
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -181,27 +183,91 @@ int connect_to_socket()
 #endif
 }
 
-int mount_device(const char *dev_path, char *mount_path)
+struct device_map {
+	char *dev, *mnt;
+};
+
+#define DEVICE_MAP_SIZE 32
+static struct device_map device_map[DEVICE_MAP_SIZE];
+
+const char *mountpoint_for_device(const char *dev_path)
 {
-	char *dir;
+	int i;
 	const char *basename;
-	int pid, status, rc = -1;
 
- 	basename = strrchr(dev_path, '/');
- 	if (basename)
- 		basename++;
- 	else
+	/* shorten '/dev/foo' to 'foo' */
+	basename = strrchr(dev_path, '/');
+	if (basename)
+		basename++;
+	else
 		basename = dev_path;
- 
- 	/* create a unique mountpoint */
- 	dir = malloc(strlen(TMP_DIR) + 13 + strlen(basename));
- 	sprintf(dir, "%s/mnt-%s-XXXXXX", TMP_DIR, basename);
 
-	if (!mkdtemp(dir)) {
-		pb_log("failed to create temporary directory in %s: %s",
-				TMP_DIR, strerror(errno));
-		goto out;
+	/* check existing entries in the map */
+	for (i = 0; (i < DEVICE_MAP_SIZE) && device_map[i].dev; i++)
+		if (!strcmp(device_map[i].dev, basename))
+			return device_map[i].mnt;
+
+	if (i == DEVICE_MAP_SIZE)
+		return NULL;
+
+	device_map[i].dev = strdup(dev_path);
+	asprintf(&device_map[i].mnt, "%s/%s", TMP_DIR, basename);
+	return device_map[i].mnt;
+}
+
+/**
+ * Resolve a path given in a config file, to a path in the local filesystem.
+ * Paths may be of the form:
+ *  device:path (eg /dev/sda:/boot/vmlinux)
+ *
+ * or just a path:
+ *  /boot/vmlinux
+ * - in this case, the default mountpoint is used.
+ *
+ * Returns a newly-allocated string containing a full path to the file in path
+ */
+char *resolve_path(const char *path, const char *default_mountpoint)
+{
+	char *ret;
+	const char *devpath, *sep;
+
+	sep = strchr(path, ':');
+	if (!sep) {
+		devpath = default_mountpoint;
+		asprintf(&ret, "%s/%s", devpath, path);
+	} else {
+		/* copy just the device name into tmp */
+		char *dev = strndup(path, sep - path);
+		devpath = mountpoint_for_device(dev);
+		asprintf(&ret, "%s/%s", devpath, sep + 1);
+		free(dev);
 	}
+
+	return ret;
+}
+
+int mount_device(const char *dev_path)
+{
+	const char *dir;
+	int pid, status, rc = -1;
+	struct stat statbuf;
+
+	dir = mountpoint_for_device(dev_path);
+
+	if (stat(dir, &statbuf)) {
+		if (mkdir(dir, 0755)) {
+			pb_log("couldn't create directory %s: %s\n",
+					dir, strerror(errno));
+			goto out;
+		}
+	} else {
+		if (!S_ISDIR(statbuf.st_mode)) {
+			pb_log("mountpoint %s exists, "
+					"but isn't a directory\n", dir);
+			goto out;
+		}
+	}
+
 
 	pid = fork();
 	if (pid == -1) {
@@ -220,13 +286,10 @@ int mount_device(const char *dev_path, char *mount_path)
 		goto out;
 	}
 
-	if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-		strcpy(mount_path, dir);
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		rc = 0;
-	}
 
 out:
-	free(dir);
 	return rc;
 }
 
@@ -348,9 +411,9 @@ static int is_ignored_device(const char *devname)
 
 static int found_new_device(const char *dev_path)
 {
-	char mountpoint[PATH_MAX];
+	const char *mountpoint = mountpoint_for_device(dev_path);
 
-	if (mount_device(dev_path, mountpoint)) {
+	if (mount_device(dev_path)) {
 		pb_log("failed to mount %s\n", dev_path);
 		return EXIT_FAILURE;
 	}

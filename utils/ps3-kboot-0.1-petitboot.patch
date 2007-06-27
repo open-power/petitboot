@@ -50,7 +50,7 @@ More info at http://ozlabs.org/~jk/projects/petitboot/
 +	find root/ -name '*.a' -o -name '*.la' -exec rm {} \;
  	mkdir -p root/etc root/tmp root/proc root/dev root/sys
  	mkdir -p root/mnt/tmp root/mnt/root root/bin root/sbin
-+	mkdir -p root/var/tmp
++	mkdir -p root/var/tmp/mnt
 +	mkdir -p root/etc/udev/rules.d
  	[ -e root/dev/console ] || mknod root/dev/console c 5 1
  	[ -e root/dev/null ] || mknod root/dev/null c 1 3
@@ -283,7 +283,7 @@ diff -urN ps3-kboot.orig/ps3-kboot-0.1/scripts/petitboot-init ps3-kboot/ps3-kboo
 +	/sbin/petitboot -u
 +
 +	# clean up after petitboot
-+	for dir in /var/tmp/mnt-*;
++	for dir in /var/tmp/mnt/*;
 +	do
 +		umount "$dir"
 +		rmdir "$dir"
