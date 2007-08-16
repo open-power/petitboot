@@ -47,6 +47,7 @@ $(PACKAGE)-$(VERSION).tar.gz: $(PACKAGE)-$(VERSION)
 $(PACKAGE)-$(VERSION): clean
 	mkdir $@ $@/devices
 	cp -a artwork $@
+	cp -a utils $@
 	cp *.[ch] $@
 	cp -a devices/*.[ch] $@/devices/
 	cp Makefile $@
