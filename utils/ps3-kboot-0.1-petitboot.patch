@@ -7,12 +7,13 @@ More info at http://ozlabs.org/~jk/projects/petitboot/
 
 --- ps3-kboot.orig/ps3-kboot-0.1/Makefile	2007-04-05 20:10:44.000000000 +1000
 +++ ps3-kboot/ps3-kboot-0.1/Makefile	2007-04-04 20:54:40.000000000 +1000
-@@ -20,6 +20,8 @@
+@@ -20,6 +20,9 @@
  LOCAL_KERNEL_CONFIG=$(PWD)/config/kernel-config
  LOCAL_KBOOT_CONF=$(PWD)/config/kboot.conf
  LOCAL_FSTAB=$(PWD)/config/fstab
 +LOCAL_UDEV_RULES=$(PWD)/config/65-persistent-storage.rules \
-+		 $(PWD)/config/99-petitboot.rules
++		 $(PWD)/config/99-petitboot.rules \
++		$(PWD)/config/20-input-names.rules
  KBOOT_MESSAGE=$(PWD)/config/message
  KBOOT_FEATURES=$(PWD)/config/kboot-features
  
@@ -305,3 +306,38 @@ diff -urN ps3-kboot.orig/ps3-kboot-0.1/scripts/petitboot-init ps3-kboot/ps3-kboo
  Standards-Version: 3.6.1
  
  Package: ps3-kboot
+--- ps3-kboot.orig/config/kernel-config	2007-06-27 14:25:08.000000000 +1000
++++ ps3-kboot/config/kernel-config 7-06-27 14:28:28.000000000 +1000
+@@ -449,10 +449,13 @@
+ #
+ # Userland interfaces
+ #
+-# CONFIG_INPUT_MOUSEDEV is not set
+-# CONFIG_INPUT_JOYDEV is not set
++CONFIG_INPUT_MOUSEDEV=y
++# CONFIG_INPUT_MOUSEDEV_PSAUX is not set
++CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
++CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
++CONFIG_INPUT_JOYDEV=y
+ # CONFIG_INPUT_TSDEV is not set
+-# CONFIG_INPUT_EVDEV is not set
++CONFIG_INPUT_EVDEV=y
+ # CONFIG_INPUT_EVBUG is not set
+ 
+ #
+@@ -668,6 +671,7 @@
+ # CONFIG_USB_STORAGE_SDDR55 is not set
+ # CONFIG_USB_STORAGE_JUMPSHOT is not set
+ # CONFIG_USB_STORAGE_ALAUDA is not set
++# CONFIG_USB_STORAGE_ONETOUCH is not set
+ # CONFIG_USB_LIBUSUAL is not set
+ 
+ #
+-- /dev/null   2007-04-18 20:56:03.000000000 +1000
++++ ps3-kboot-0.1/config/20-input-names.rules   2007-06-27 14:34:05.000000000 +1000
+@@ -0,0 +1,5 @@
++# Input devices, group under /dev/input
++KERNEL=="event[0-9]*",                 NAME="input/%k"
++KERNEL=="mice",                                NAME="input/%k"
++KERNEL=="mouse[0-9]*",                 NAME="input/%k"
++KERNEL=="js[0-9]*",                    NAME="input/%k"

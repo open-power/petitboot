@@ -14,6 +14,7 @@
 
 #include <libtwin/twin.h>
 #include <libtwin/twin_linux_mouse.h>
+#include <libtwin/twin_linux_js.h>
 #include <libtwin/twin_png.h>
 #include <libtwin/twin_jpeg.h>
 
@@ -140,6 +141,30 @@ typedef struct _pboot_spane {
 static pboot_lpane_t	*pboot_lpane;
 static pboot_rpane_t	*pboot_rpane;
 static pboot_spane_t	*pboot_spane;
+
+/* control to keyboard mappings for the sixaxis controller */
+uint8_t sixaxis_map[] = {
+	0,		/*   0  Select		*/
+	0,		/*   1  L3              */
+	0,		/*   2  R3              */
+	0,		/*   3  Start           */
+	KEY_UP,		/*   4  Dpad Up         */
+	KEY_RIGHT,	/*   5  Dpad Right      */
+	KEY_DOWN,	/*   6  Dpad Down       */
+	KEY_LEFT,	/*   7  Dpad Left       */
+	0,		/*   8  L2              */
+	0,		/*   9  R2              */
+	0,		/*  10  L1              */
+	0,		/*  11  R1              */
+	0,		/*  12  Triangle        */
+	KEY_ENTER,	/*  13  Circle          */
+	0,		/*  14  Cross           */
+	KEY_DELETE,	/*  15  Square          */
+	0,		/*  16  PS Button       */
+	0,		/*  17  nothing      */
+	0,		/*  18  nothing      */
+};
+
 
 static int pboot_vmode_change = -1;
 
@@ -729,6 +754,20 @@ twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 					       pboot_cursor_hx,
 					       pboot_cursor_hy);
 		break;
+	case TwinEventJoyButton:
+		/* map joystick events into key events */
+		if (event->u.js.control >= sizeof(sixaxis_map))
+			break;
+
+		event->u.key.key = sixaxis_map[event->u.js.control];
+		if (event->u.js.value == 0) {
+			event->kind = TwinEventKeyUp;
+			break;
+		} else {
+			event->kind = TwinEventKeyDown;
+		}
+
+		/* fall through.. */
 	case TwinEventKeyDown:
 		switch(event->u.key.key) {
 		/* Gross hack for video modes, need something better ! */
@@ -1099,6 +1138,7 @@ int main(int argc, char **argv)
 	}
 	pboot_screen = pboot_fbdev->screen;
 	twin_linux_mouse_create(NULL, pboot_screen);
+	twin_linux_js_create(pboot_screen);
 
 	if (pboot_fbdev != NULL) {
 		char *cursor_path = artwork_pathname("cursor.gz");
