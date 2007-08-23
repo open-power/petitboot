@@ -41,6 +41,13 @@ install: all
 
 dist:	$(PACKAGE)-$(VERSION).tar.gz
 
+check:	parser-test
+	devices/parser-test.sh
+
+distcheck: dist
+	tar -xvf $(PACKAGE)-$(VERSION).tar.gz
+	cd $(PACKAGE)-$(VERSION) && make check
+
 $(PACKAGE)-$(VERSION).tar.gz: $(PACKAGE)-$(VERSION)
 	tar czvf $@ $^
 
@@ -49,11 +56,13 @@ $(PACKAGE)-$(VERSION): clean
 	cp -a artwork $@
 	cp -a utils $@
 	cp *.[ch] $@
-	cp -a devices/*.[ch] $@/devices/
+	cp -a devices/*.{c,h,sh} $@/devices/
+	cp -a devices/parser-tests $@/devices/
 	cp Makefile $@
 	cp TODO COPYING $@
 
 clean:
+	rm -rf $(PACKAGE)-$(VERSION)
 	rm -f petitboot
 	rm -f udev-helper
 	rm -f *.o devices/*.o
