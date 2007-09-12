@@ -300,14 +300,14 @@ diff -urN ps3-kboot.orig/ps3-kboot-0.1/scripts/petitboot-init ps3-kboot/ps3-kboo
 @@ -2,7 +2,7 @@
  Section: base
  Priority: optional
- Maintainer: Ben Collins <bcollins@ubuntu.com>
--Build-Depends: debhelper (>= 4.1.67), bzip2, cdbs, fakeroot, udev, ps3pf-utils, libc6-dev-ppc64, lib64z1-dev
-+Build-Depends: debhelper (>= 4.1.67), bzip2, cdbs, fakeroot, udev, ps3pf-utils, libc6-dev-ppc64, lib64z1-dev, libpng12-dev, libjpeg62-dev, pkg-config
+ Maintainer: Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>
+-Build-Depends: debhelper (>= 4.1.67), bzip2, cdbs, fakeroot, udev, ps3pf-utils, zlib1g-dev
++Build-Depends: debhelper (>= 4.1.67), bzip2, cdbs, fakeroot, udev, ps3pf-utils, libc6-dev, zlib1g-dev, libpng12-dev, libjpeg62-dev, pkg-config
  Standards-Version: 3.6.1
  
  Package: ps3-kboot
---- ps3-kboot.orig/config/kernel-config	2007-06-27 14:25:08.000000000 +1000
-+++ ps3-kboot/config/kernel-config 7-06-27 14:28:28.000000000 +1000
+--- ps3-kboot.orig/ps3-kboot-0.1/config/kernel-config	2007-06-27 14:25:08.000000000 +1000
++++ ps3-kboot/ps3-kboot-0.1/config/kernel-config 7-06-27 14:28:28.000000000 +1000
 @@ -449,10 +449,13 @@
  #
  # Userland interfaces
@@ -333,8 +333,8 @@ diff -urN ps3-kboot.orig/ps3-kboot-0.1/scripts/petitboot-init ps3-kboot/ps3-kboo
  # CONFIG_USB_LIBUSUAL is not set
  
  #
--- /dev/null   2007-04-18 20:56:03.000000000 +1000
-+++ ps3-kboot-0.1/config/20-input-names.rules   2007-06-27 14:34:05.000000000 +1000
+--- /dev/null   2007-04-18 20:56:03.000000000 +1000
++++ ps3-kboot-0.1/ps3-kboot-0.1/config/20-input-names.rules   2007-06-27 14:34:05.000000000 +1000
 @@ -0,0 +1,5 @@
 +# Input devices, group under /dev/input
 +KERNEL=="event[0-9]*",                 NAME="input/%k"
