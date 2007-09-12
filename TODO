@@ -10,7 +10,6 @@ Todo for petitboot (LOTS !):
    at least a way to use the kernel keymaps and modifiers key handling. Remove
    some of the keyboard hacks from twin_fbdev and move console switching to
    petitboot
- * PS3 controller support
  * Mouse support (twin/petitboot supports it somewhat but it's not working,
    check why, probably an udev issue or missing kernel driver)
  * Saving settings in nvram
@@ -34,7 +33,6 @@ Todo for petitboot (LOTS !):
  * fix title/subtitles "leaking" out of the right side focus box
  * get YDL to fix their config file on their install CD or add a hack to
    recognize it and fix it up
- * kboot parser: parse (or remove?) device prefixes from kernel paths
 
 PATCHES WELCOME !
 
