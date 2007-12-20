@@ -1,2 +1,2 @@
 # tell petitboot when we see new block devices ...
-SUBSYSTEM=="block",RUN+="/sbin/udev-helper"
+SUBSYSTEM=="block",RUN+="/usr/sbin/udev-helper"
