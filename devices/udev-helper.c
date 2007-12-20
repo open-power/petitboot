@@ -551,7 +551,7 @@ int main(int argc, char **argv)
 
 	action = getenv("ACTION");
 
-	logf = fopen("/var/tmp/petitboot-udev-helpers.log", "a");
+	logf = fopen("/var/log/petitboot-udev-helpers.log", "a");
 	if (!logf)
 		logf = stdout;
 	pb_log("%d started\n", getpid());
