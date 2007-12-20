@@ -25,7 +25,6 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <libio.h>
 
 #define prom_printf printf
 #define prom_putchar putchar
