@@ -21,12 +21,12 @@ petitboot: LDFLAGS+=$(TWIN_LDFLAGS)
 petitboot: CFLAGS+=$(TWIN_CFLAGS)
 
 udev-helper: devices/udev-helper.o devices/params.o devices/parser.o \
-		devices/yaboot-cfg.o \
+		devices/paths.o devices/yaboot-cfg.o \
 		$(foreach p,$(PARSERS),devices/$(p)-parser.o)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 parser-test: devices/parser-test.o devices/params.o devices/parser.o \
-		devices/yaboot-cfg.o \
+		devices/paths.o devices/yaboot-cfg.o \
 		$(foreach p,$(PARSERS),devices/$(p)-parser.o)
 	$(CC) $(LDFLAGS) -o $@ $^
 

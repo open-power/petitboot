@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "parser.h"
+#include "paths.h"
 
 void pb_log(const char *fmt, ...)
 {
@@ -63,45 +64,22 @@ enum generic_icon_type guess_device_type(void)
 	return ICON_TYPE_UNKNOWN;
 }
 
-static char *mountpoint;
-
-/* pretend that all devices are mounted at our original mountpoint */
-const char *mountpoint_for_device(const char *dev_path)
-{
-	return mountpoint;
-}
-
-char *resolve_path(const char *path, const char *default_mountpoint)
-{
-	char *sep, *ret;
-	const char *devpath;
-
-	sep = strchr(path, ':');
-	if (!sep) {
-		devpath = default_mountpoint;
-		asprintf(&ret, "%s/%s", devpath, path);
-	} else {
-		char *tmp = strndup(path, sep - path);
-		devpath = mountpoint_for_device(path);
-		asprintf(&ret, "%s/%s", devpath, sep + 1);
-		free(tmp);
-	}
-
-	return ret;
-}
-
 int main(int argc, char **argv)
 {
-	const char *dev = "sda1";
+	char *mountpoint, *dev;
 
-	if (argc != 2) {
-		fprintf(stderr, "usage: %s <fake-mountpoint>\n", argv[0]);
+	if (argc != 3) {
+		fprintf(stderr, "usage: %s <basedir> <devname>\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 
 	mountpoint = argv[1];
+	dev = argv[2];
+
+	set_mount_base(mountpoint);
 
 	iterate_parsers(dev, mountpoint);
+
 
 	return EXIT_SUCCESS;
 }

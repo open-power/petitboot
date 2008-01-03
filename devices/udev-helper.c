@@ -19,6 +19,7 @@
 #include <sys/ioctl.h>
 
 #include "parser.h"
+#include "paths.h"
 #include "petitboot-paths.h"
 
 /* Define below to operate without the frontend */
@@ -181,69 +182,6 @@ int connect_to_socket()
 	sock = fd;
 	return 0;
 #endif
-}
-
-struct device_map {
-	char *dev, *mnt;
-};
-
-#define DEVICE_MAP_SIZE 32
-static struct device_map device_map[DEVICE_MAP_SIZE];
-
-const char *mountpoint_for_device(const char *dev_path)
-{
-	int i;
-	const char *basename;
-
-	/* shorten '/dev/foo' to 'foo' */
-	basename = strrchr(dev_path, '/');
-	if (basename)
-		basename++;
-	else
-		basename = dev_path;
-
-	/* check existing entries in the map */
-	for (i = 0; (i < DEVICE_MAP_SIZE) && device_map[i].dev; i++)
-		if (!strcmp(device_map[i].dev, basename))
-			return device_map[i].mnt;
-
-	if (i == DEVICE_MAP_SIZE)
-		return NULL;
-
-	device_map[i].dev = strdup(dev_path);
-	asprintf(&device_map[i].mnt, "%s/%s", TMP_DIR, basename);
-	return device_map[i].mnt;
-}
-
-/**
- * Resolve a path given in a config file, to a path in the local filesystem.
- * Paths may be of the form:
- *  device:path (eg /dev/sda:/boot/vmlinux)
- *
- * or just a path:
- *  /boot/vmlinux
- * - in this case, the default mountpoint is used.
- *
- * Returns a newly-allocated string containing a full path to the file in path
- */
-char *resolve_path(const char *path, const char *default_mountpoint)
-{
-	char *ret;
-	const char *devpath, *sep;
-
-	sep = strchr(path, ':');
-	if (!sep) {
-		devpath = default_mountpoint;
-		asprintf(&ret, "%s/%s", devpath, path);
-	} else {
-		/* copy just the device name into tmp */
-		char *dev = strndup(path, sep - path);
-		devpath = mountpoint_for_device(dev);
-		asprintf(&ret, "%s/%s", devpath, sep + 1);
-		free(dev);
-	}
-
-	return ret;
 }
 
 int mount_device(const char *dev_path)
@@ -561,6 +499,8 @@ int main(int argc, char **argv)
 		pb_log("missing environment?\n");
 		return EXIT_FAILURE;
 	}
+
+	set_mount_base(TMP_DIR);
 
 	if (connect_to_socket())
 		return EXIT_FAILURE;

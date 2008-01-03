@@ -1,11 +1,17 @@
 #!/bin/bash
 
 testdir=devices/parser-tests
+default_rootdev=ps3da1
 
 function test_dir()
 {
 	dir="$1"
-	./parser-test "$dir" 2>/dev/null |
+	rootdev=$default_rootdev
+	if [ -e "$dir/rootdev" ]
+	then
+		rootdev=$(cat "$dir/rootdev")
+	fi
+	./parser-test "$dir" $rootdev 2>/dev/null |
 		diff -u "$dir/expected-output" -
 }
 
