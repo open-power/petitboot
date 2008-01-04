@@ -203,7 +203,7 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 			sprintf(endp+1, "%d", partnr);
 
 			mountpoint = mountpoint_for_device(new_dev);
-			dev->id = new_dev;
+			free(new_dev);
 		}
 	}
 
