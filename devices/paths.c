@@ -15,7 +15,7 @@ struct device_map {
 #define DEVICE_MAP_SIZE 32
 static struct device_map device_map[DEVICE_MAP_SIZE];
 
-static char *encode_label(const char *label)
+char *encode_label(const char *label)
 {
 	char *str, *c;
 	int i;

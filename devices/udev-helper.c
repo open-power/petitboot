@@ -184,6 +184,97 @@ int connect_to_socket()
 #endif
 }
 
+static int mkdir_recursive(const char *dir)
+{
+	char *str, *sep;
+	int mode = 0755;
+	struct stat statbuf;
+
+	pb_log("mkdir_recursive(%s)\n", dir);
+
+	if (!*dir)
+		return 0;
+
+	if (!stat(dir, &statbuf)) {
+		if (!S_ISDIR(statbuf.st_mode)) {
+			pb_log("%s: %s exists, but isn't a directory\n",
+					__func__, dir);
+			return -1;
+		}
+		return 0;
+	}
+
+	str = strdup(dir);
+	sep = strchr(*str == '/' ? str + 1 : str, '/');
+
+	while (1) {
+
+		/* terminate the path at sep */
+		if (sep)
+			*sep = '\0';
+		pb_log("mkdir(%s)\n", str);
+
+		if (mkdir(str, mode) && errno != EEXIST) {
+			pb_log("mkdir(%s): %s\n", str, strerror(errno));
+			return -1;
+		}
+
+		if (!sep)
+			break;
+
+		/* reset dir to the full path */
+		strcpy(str, dir);
+		sep = strchr(sep + 1, '/');
+	}
+
+	free(str);
+
+	return 0;
+}
+
+static void setup_device_links(const char *device)
+{
+	struct link {
+		char *env, *dir;
+	} *link, links[] = {
+		{
+			.env = "ID_FS_UUID",
+			.dir = "disk/by-uuid"
+		},
+		{
+			.env = "ID_FS_LABEL",
+			.dir = "disk/by-label"
+		},
+		{
+			.env = NULL
+		}
+	};
+
+	for (link = links; link->env; link++) {
+		char *value, *dir, *path;
+
+		value = getenv(link->env);
+		if (!value)
+			continue;
+
+		value = encode_label(value);
+		dir = join_paths(TMP_DIR, link->dir);
+		path = join_paths(dir, value);
+
+		if (!mkdir_recursive(dir)) {
+			unlink(path);
+			if (symlink(mountpoint_for_device(device), path)) {
+				pb_log("symlink(%s): %s\n",
+						path, strerror(errno));
+			}
+		}
+
+		free(path);
+		free(dir);
+		free(value);
+	}
+}
+
 int mount_device(const char *dev_path)
 {
 	const char *dir;
@@ -224,8 +315,10 @@ int mount_device(const char *dev_path)
 		goto out;
 	}
 
-	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+		setup_device_links(dev_path);
 		rc = 0;
+	}
 
 out:
 	return rc;

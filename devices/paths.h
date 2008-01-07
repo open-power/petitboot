@@ -45,5 +45,9 @@ void set_mount_base(const char *path);
  */
 char *join_paths(const char *a, const char *b);
 
+/**
+ * encode a disk label (or uuid) for use in a symlink.
+ */
+char *encode_label(const char *label);
 
 #endif /* PATHS_H */
