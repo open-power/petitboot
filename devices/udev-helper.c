@@ -488,35 +488,30 @@ static int poll_device_plug(const char *dev_path,
 
 	/* Polling loop for optical drive */
 	for (; (*optical) != 0; ) {
-		pb_log("poll for optical drive insertion ...\n");
 		fd = open(dev_path, O_RDONLY|O_NONBLOCK);
 		if (fd < 0)
 			return EXIT_FAILURE;
 		rc = ioctl(fd, CDROM_DRIVE_STATUS, CDSL_CURRENT);
 		close(fd);
-		if (rc == -1) {
-			pb_log("not an optical drive, fallback...\n");
+		if (rc == -1)
 			break;
-		}
+
 		*optical = 1;
 		if (rc == CDS_DISC_OK)
 			return EXIT_SUCCESS;
 
-		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 
 	/* Fall back to bare open() */
 	*optical = 0;
 	for (;;) {
-		pb_log("poll for non-optical drive insertion ...\n");
 		fd = open(dev_path, O_RDONLY);
 		if (fd < 0 && errno != ENOMEDIUM)
 			return EXIT_FAILURE;
 		close(fd);
 		if (fd >= 0)
 			return EXIT_SUCCESS;
-		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 }
@@ -526,7 +521,6 @@ static int poll_device_unplug(const char *dev_path, int optical)
 	int rc, fd;
 
 	for (;optical;) {
-		pb_log("poll for optical drive removal ...\n");
 		fd = open(dev_path, O_RDONLY|O_NONBLOCK);
 		if (fd < 0)
 			return EXIT_FAILURE;
@@ -534,20 +528,17 @@ static int poll_device_unplug(const char *dev_path, int optical)
 		close(fd);
 		if (rc != CDS_DISC_OK)
 			return EXIT_SUCCESS;
-		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 
 	/* Fall back to bare open() */
 	for (;;) {
-		pb_log("poll for non-optical drive removal ...\n");
 		fd = open(dev_path, O_RDONLY);
 		if (fd < 0 && errno != ENOMEDIUM)
 			return EXIT_FAILURE;
 		close(fd);
 		if (fd < 0)
 			return EXIT_SUCCESS;
-		pb_log("no... waiting\n");
 		detach_and_sleep(REMOVABLE_SLEEP_DELAY);
 	}
 }
