@@ -1,6 +1,7 @@
 
 #include "parser.h"
 #include "params.h"
+#include "paths.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,7 +11,7 @@ const char *conf_filename = "/boot/petitboot.conf";
 
 static struct boot_option *cur_opt;
 static struct device *dev;
-static const char *mountpoint;
+static const char *devpath;
 int device_added;
 
 int check_and_add_device(struct device *dev)
@@ -47,13 +48,13 @@ static void set_boot_option_parameter(struct boot_option *opt,
 		opt->description = strdup(value);
 
 	else if (streq(name, "image"))
-		opt->boot_image_file = join_paths(mountpoint, value);
+		opt->boot_image_file = resolve_path(value, devpath);
 
 	else if (streq(name, "icon"))
-		opt->icon_file = join_paths(mountpoint, value);
+		opt->icon_file = resolve_path(value, devpath);
 
 	else if (streq(name, "initrd"))
-		opt->initrd_file = join_paths(mountpoint, value);
+		opt->initrd_file =resolve_path(value, devpath);
 
 	else if (streq(name, "args"))
 		opt->boot_args = strdup(value);
@@ -72,7 +73,7 @@ static void set_device_parameter(struct device *dev,
 		dev->description = strdup(value);
 
 	else if (streq(name, "icon"))
-		dev->icon_file = join_paths(mountpoint, value);
+		dev->icon_file = resolve_path(value, devpath);
 }
 
 static int parameter(char *param_name, char *param_value)
@@ -85,19 +86,17 @@ static int parameter(char *param_name, char *param_value)
 }
 
 
-int parse(const char *devicepath, const char *_mountpoint)
+int parse(const char *device)
 {
 	char *filepath;
 	int rc;
 
-	mountpoint = _mountpoint;
-
-	filepath = join_paths(mountpoint, conf_filename);
+	filepath = resolve_path(conf_filename, device);
 
 	cur_opt = NULL;
 	dev = malloc(sizeof(*dev));
 	memset(dev, 0, sizeof(*dev));
-	dev->id = strdup(devicepath);
+	dev->id = strdup(device);
 
 	rc = pm_process(filepath, section, parameter);
 	if (!rc)

@@ -26,7 +26,7 @@ void iterate_parsers(const char *devpath, const char *mountpoint)
 	for (i = 0; parsers[i]; i++) {
 		pb_log("\ttrying parser '%s'\n", parsers[i]->name);
 		/* just use a dummy device path for now */
-		if (parsers[i]->parse(devpath, mountpoint_for_device(devpath)))
+		if (parsers[i]->parse(devpath))
 			return;
 	}
 	pb_log("\tno boot_options found\n");
@@ -65,20 +65,6 @@ void free_boot_option(struct boot_option *opt)
 	if (opt->boot_args)
 		free(opt->boot_args);
 	free(opt);
-}
-
-char *join_paths(const char *a, const char *b)
-{
-	char *full_path;
-
-	full_path = malloc(strlen(a) + strlen(b) + 2);
-
-	strcpy(full_path, a);
-	if (b[0] != '/')
-		strcat(full_path, "/");
-	strcat(full_path, b);
-
-	return full_path;
 }
 
 const char *generic_icon_file(enum generic_icon_type type)

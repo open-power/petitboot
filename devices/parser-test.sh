@@ -11,7 +11,7 @@ function test_dir()
 	then
 		rootdev=$(cat "$dir/rootdev")
 	fi
-	./parser-test "$dir" $rootdev 2>/dev/null |
+	./parser-test "$dir" /dev/$rootdev 2>/dev/null |
 		diff -u "$dir/expected-output" -
 }
 

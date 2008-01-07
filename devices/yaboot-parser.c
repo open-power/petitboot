@@ -1,6 +1,7 @@
 
 #include "parser.h"
 #include "params.h"
+#include "paths.h"
 #include "yaboot-cfg.h"
 
 #include <stdlib.h>
@@ -14,7 +15,7 @@
 #include <sys/param.h>
 
 static struct device *dev;
-static const char *mountpoint;
+static char *devpath;
 static char *defimage;
 
 char *
@@ -102,13 +103,13 @@ void process_image(char *label)
 
 	opt.name = label;
 	cfgopt = cfg_get_strg(label, "image");
-	opt.boot_image_file = resolve_path(cfgopt, mountpoint);
+	opt.boot_image_file = resolve_path(cfgopt, devpath);
 	if (cfgopt == defimage)
 		pb_log("This one is default. What do we do about it?\n");
 
 	cfgopt = cfg_get_strg(label, "initrd");
 	if (cfgopt)
-		opt.initrd_file = resolve_path(cfgopt, mountpoint);
+		opt.initrd_file = resolve_path(cfgopt, devpath);
 
 	opt.boot_args = make_params(label, NULL);
 
@@ -118,7 +119,7 @@ void process_image(char *label)
 		free(opt.initrd_file);
 }
 
-static int yaboot_parse(const char *devicepath, const char *_mountpoint)
+static int yaboot_parse(const char *device)
 {
 	char *filepath;
 	char *conf_file;
@@ -128,14 +129,14 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 	struct stat st;
 	char *label;
 
-	mountpoint = _mountpoint;
+	devpath = strdup(device);
 
-	filepath = join_paths(mountpoint, "/etc/yaboot.conf");
+	filepath = resolve_path("/etc/yaboot.conf", devpath);
 
 	fd = open(filepath, O_RDONLY);
 	if (fd < 0) {
 		free(filepath);
-		filepath = join_paths(mountpoint, "/yaboot.conf");
+		filepath = resolve_path("/yaboot.conf", devpath);
 		fd = open(filepath, O_RDONLY);
 		
 		if (fd < 0)
@@ -171,7 +172,7 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 
 	dev = malloc(sizeof(*dev));
 	memset(dev, 0, sizeof(*dev));
-	dev->id = strdup(devicepath);
+	dev->id = strdup(devpath);
 	if (cfg_get_strg(0, "init-message")) {
 		char *newline;
 		dev->description = strdup(cfg_get_strg(0, "init-message"));
@@ -181,28 +182,32 @@ static int yaboot_parse(const char *devicepath, const char *_mountpoint)
 	}
 	dev->icon_file = strdup(generic_icon_file(guess_device_type()));
 
-	/* If we have a 'partiton=' directive, update the default mountpoint
-	 * to use that instead of the current mountpoint */
+	/* If we have a 'partiton=' directive, update the default devpath
+	 * to use that instead of the current device */
 	tmpstr = cfg_get_strg(0, "partition");
 	if (tmpstr) {
 		char *endp;
 		int partnr = strtol(tmpstr, &endp, 10);
 		if (endp != tmpstr && !*endp) {
-			char *new_dev = malloc(strlen(devicepath) + strlen(tmpstr) + 1);
+			char *new_dev, *tmp;
+
+			new_dev = malloc(strlen(devpath) + strlen(tmpstr) + 1);
 			if (!new_dev)
 				return 0;
 
-			strcpy(new_dev, devicepath);
+			strcpy(new_dev, devpath);
 
 			/* Strip digits (partition number) from string */
-			endp = &new_dev[strlen(devicepath) - 1];
+			endp = new_dev + strlen(devpath) - 1;
 			while (isdigit(*endp))
 				*(endp--) = 0;
 
 			/* and add our own... */
-			sprintf(endp+1, "%d", partnr);
+			sprintf(endp + 1, "%d", partnr);
 
-			mountpoint = mountpoint_for_device(new_dev);
+			tmp = devpath;
+			devpath = parse_device_path(new_dev, devpath);
+			free(tmp);
 			free(new_dev);
 		}
 	}

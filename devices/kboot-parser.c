@@ -15,7 +15,7 @@
 
 #define buf_size 1024
 
-static const char *mountpoint;
+static const char *devpath;
 
 static int param_is_ignored(const char *param)
 {
@@ -138,13 +138,13 @@ static int parse_option(struct boot_option *opt, char *config)
 
 	/* if there's no space, it's only a kernel image with no params */
 	if (!pos) {
-		opt->boot_image_file = resolve_path(config, mountpoint);
+		opt->boot_image_file = resolve_path(config, devpath);
 		opt->description = strdup(config);
 		return 1;
 	}
 
 	*pos = 0;
-	opt->boot_image_file = resolve_path(config, mountpoint);
+	opt->boot_image_file = resolve_path(config, devpath);
 
 	cmdline = malloc(buf_size);
 	*cmdline = 0;
@@ -179,7 +179,7 @@ static int parse_option(struct boot_option *opt, char *config)
 		free(cmdline);
 		cmdline = tmp;
 
-		opt->initrd_file = resolve_path(initrd, mountpoint);
+		opt->initrd_file = resolve_path(initrd, devpath);
 	}
 
 	if (root) {
@@ -236,16 +236,16 @@ static void parse_buf(struct device *dev, char *buf)
 	}
 }
 
-static int parse(const char *devicepath, const char *_mountpoint)
+static int parse(const char *device)
 {
 	char *filepath, *buf;
 	int fd, len, rc = 0;
 	struct stat stat;
 	struct device *dev;
 
-	mountpoint = _mountpoint;
+	devpath = device;
 
-	filepath = join_paths(mountpoint, "/etc/kboot.conf");
+	filepath = resolve_path("/etc/kboot.conf", devpath);
 
 	fd = open(filepath, O_RDONLY);
 	if (fd < 0)
@@ -265,7 +265,7 @@ static int parse(const char *devicepath, const char *_mountpoint)
 
 	dev = malloc(sizeof(*dev));
 	memset(dev, 0, sizeof(*dev));
-	dev->id = strdup(devicepath);
+	dev->id = strdup(device);
 	dev->icon_file = strdup(generic_icon_file(guess_device_type()));
 
 	parse_buf(dev, buf);

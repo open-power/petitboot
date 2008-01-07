@@ -8,7 +8,7 @@
 struct parser {
 	char *name;
 	int priority;
-	int (*parse)(const char *devicepath, const char *mountpoint);
+	int (*parse)(const char *device);
 	struct parser *next;
 };
 
@@ -28,8 +28,6 @@ void iterate_parsers(const char *devpath, const char *mountpoint);
 void free_device(struct device *dev);
 void free_boot_option(struct boot_option *opt);
 
-char *join_paths(const char *a, const char *b);
-
 const char *generic_icon_file(enum generic_icon_type type);
 
 /* functions provided by udev-helper or the test wrapper */
@@ -37,7 +35,7 @@ void pb_log(const char *fmt, ...);
 
 int mount_device(const char *dev_path);
 
-char *resolve_path(const char *path, const char *default_mountpoint);
+char *resolve_path(const char *path, const char *current_dev);
 const char *mountpoint_for_device(const char *dev_path);
 
 enum generic_icon_type guess_device_type(void);
