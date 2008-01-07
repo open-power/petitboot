@@ -82,7 +82,7 @@ struct global_option {
 };
 
 
-struct global_option global_options[] = {
+static struct global_option global_options[] = {
 	{ .name = "root" },
 	{ .name = "initrd" },
 	{ .name = "video" },
