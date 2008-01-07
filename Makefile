@@ -53,15 +53,11 @@ $(PACKAGE)-$(VERSION).tar.gz: $(PACKAGE)-$(VERSION)
 	tar czvf $@ $^
 
 $(PACKAGE)-$(VERSION): clean
-	mkdir $@ $@/devices
-	cp -a artwork $@
-	cp -a utils $@
-	cp *.[ch] $@
-	cp -a devices/*.{c,h,sh} $@/devices/
-	cp -a devices/parser-tests $@/devices/
-	cp Makefile $@
-	cp TODO COPYING $@
-
+	for f in $$(git-ls-files); do \
+		d=$@/$$(dirname $$f); \
+		mkdir -p $$d; \
+		cp -a $$f $$d; \
+	done
 clean:
 	rm -rf $(PACKAGE)-$(VERSION)
 	rm -f petitboot
