@@ -6,13 +6,13 @@ INSTALL=install
 TWIN_CFLAGS?=$(shell pkg-config --cflags libtwin)
 TWIN_LDFLAGS?=$(shell pkg-config --libs libtwin)
 
-LDFLAGS = 
+LDFLAGS =
 CFLAGS = --std=gnu99 -O0 -ggdb -Wall '-DPREFIX="$(PREFIX)"'
 
 PARSERS = native yaboot kboot
 ARTWORK = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
 
-all: petitboot udev-helper
+all: petitboot petitboot-udev-helper
 
 petitboot: petitboot.o devices.o
 	$(CC) $(LDFLAGS) -o $@ $^
@@ -20,8 +20,8 @@ petitboot: petitboot.o devices.o
 petitboot: LDFLAGS+=$(TWIN_LDFLAGS)
 petitboot: CFLAGS+=$(TWIN_CFLAGS)
 
-udev-helper: devices/udev-helper.o devices/params.o devices/parser.o \
-		devices/paths.o devices/yaboot-cfg.o \
+petitboot-udev-helper: devices/petitboot-udev-helper.o devices/params.o \
+		devices/parser.o devices/paths.o devices/yaboot-cfg.o \
 		$(foreach p,$(PARSERS),devices/$(p)-parser.o)
 	$(CC) $(LDFLAGS) -o $@ $^
 
@@ -34,7 +34,8 @@ devices/%: CFLAGS+=-I.
 
 install: all
 	$(INSTALL) -D petitboot $(DESTDIR)$(PREFIX)/sbin/petitboot
-	$(INSTALL) -D udev-helper $(DESTDIR)$(PREFIX)/sbin/udev-helper
+	$(INSTALL) -D petitboot-udev-helper \
+		$(DESTDIR)$(PREFIX)/sbin/petitboot-udev-helper
 	$(INSTALL) -Dd $(DESTDIR)$(PREFIX)/share/petitboot/artwork/
 	$(INSTALL) -t $(DESTDIR)$(PREFIX)/share/petitboot/artwork/ \
 		$(foreach a,$(ARTWORK),artwork/$(a))
@@ -64,5 +65,5 @@ $(PACKAGE)-$(VERSION): clean
 clean:
 	rm -rf $(PACKAGE)-$(VERSION)
 	rm -f petitboot
-	rm -f udev-helper
+	rm -f petitboot-udev-helper
 	rm -f *.o devices/*.o
