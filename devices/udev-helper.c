@@ -430,7 +430,8 @@ static int is_removable_device(const char *sysfs_path)
 
 static int is_ignored_device(const char *devname)
 {
-	static const char *ignored_devices[] = { "/dev/ram", NULL };
+	static const char *ignored_devices[] =
+		{ "/dev/ram", "/dev/loop", NULL };
 	const char **dev;
 
 	for (dev = ignored_devices; *dev; dev++)
