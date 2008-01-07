@@ -286,12 +286,12 @@ void pboot_exec_option(void *data)
 
 	kexec_opts[0] = "/usr/sbin/kexec";
 	kexec_opts[1] = "-f";
-	if (opt->initrd_file) {
+	if (opt->initrd_file && *opt->initrd_file) {
 		kexec_opts[nr_opts] = malloc(10 + strlen(opt->initrd_file));
 		sprintf(kexec_opts[nr_opts], "--initrd=%s", opt->initrd_file);
 		nr_opts++;
 	}
-	if (opt->boot_args)  {
+	if (opt->boot_args && *opt->boot_args)  {
 		kexec_opts[nr_opts] = malloc(10 + strlen(opt->boot_args));
 		sprintf(kexec_opts[nr_opts], "--command-line=%s",
 			opt->boot_args);
