@@ -282,9 +282,9 @@ void pboot_exec_option(void *data)
 {
 	struct boot_option *opt = data;
 	char *kexec_opts[10];
-	int nr_opts = 2;
+	int i, nr_opts = 2;
 
-	kexec_opts[0] = "/sbin/kexec";
+	kexec_opts[0] = "/usr/sbin/kexec";
 	kexec_opts[1] = "-f";
 	if (opt->initrd_file) {
 		kexec_opts[nr_opts] = malloc(10 + strlen(opt->initrd_file));
@@ -300,5 +300,14 @@ void pboot_exec_option(void *data)
 
 	kexec_opts[nr_opts++] = opt->boot_image_file;
 	kexec_opts[nr_opts] = NULL;
+
+	LOG("calling kexec:\n");
+	for (i = 0; i < nr_opts; i++) {
+		LOG("\t'%s'\n", kexec_opts[i]);
+	}
+	fflush(stdout);
+
 	execv(kexec_opts[0], kexec_opts);
+
+	LOG("kexec failed: %s", strerror(errno));
 }
