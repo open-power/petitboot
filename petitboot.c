@@ -797,7 +797,6 @@ twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 		case KEY_DELETE:
 			pboot_message("booting to GameOS");
 			system(BOOT_GAMEOS_BIN);
-			pboot_quit();
 		}
 	case TwinEventKeyUp:
 		twin_screen_set_cursor(pboot_screen, NULL, 0, 0);
@@ -942,7 +941,7 @@ void pboot_message(const char *fmt, ...)
 			   0, 0,
 			   pboot_spane->window->pixmap->width,
 			   pboot_spane->window->pixmap->height);
-	twin_window_queue_paint(pboot_spane->window);
+	twin_window_draw(pboot_spane->window);
 }
 
 static void pboot_create_spane(void)
