@@ -791,7 +791,7 @@ twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 		/* Another gross hack for booting back to gameos */
 		case KEY_BACKSPACE:
 		case KEY_DELETE:
-			system("boot-game-os");
+			system(BOOT_GAMEOS_BIN);
 			pboot_quit();
 		}
 	case TwinEventKeyUp:

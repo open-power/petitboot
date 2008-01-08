@@ -16,6 +16,7 @@
 #define PBOOT_DEVICE_SOCKET "/var/tmp/petitboot-dev"
 #define MOUNT_BIN "/bin/mount"
 #define UMOUNT_BIN "/bin/umount"
+#define BOOT_GAMEOS_BIN "/usr/bin/ps3-boot-game-os"
 
 /* at present, all default artwork strings are const. */
 #define artwork_pathname(s) (PKG_SHARE_DIR "/artwork/" s)
