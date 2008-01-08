@@ -308,6 +308,6 @@ void pboot_exec_option(void *data)
 	fflush(stdout);
 
 	execv(kexec_opts[0], kexec_opts);
-
-	LOG("kexec failed: %s", strerror(errno));
+	pboot_message("kexec failed: %s", strerror(errno));
+	LOG("execv() failed: %s", strerror(errno));
 }

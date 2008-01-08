@@ -1,3 +1,6 @@
+
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -457,6 +460,7 @@ static void pboot_choose_option(void)
 	pboot_option_t *opt = &dev->options[pboot_rpane->focus_curindex];
 
 	LOG("Selected device %s\n", opt->title);
+	pboot_message("booting %s...", opt->title);
 
 	/* Give user feedback, make sure errors and panics will be seen */
 	pboot_exec_option(opt->data);
@@ -791,6 +795,7 @@ twin_bool_t pboot_event_filter(twin_screen_t	    *screen,
 		/* Another gross hack for booting back to gameos */
 		case KEY_BACKSPACE:
 		case KEY_DELETE:
+			pboot_message("booting to GameOS");
 			system(BOOT_GAMEOS_BIN);
 			pboot_quit();
 		}
@@ -920,11 +925,19 @@ static void pboot_spane_draw(twin_window_t *window)
 	twin_path_destroy(path);
 }
 
-void pboot_message(const char *message)
+void pboot_message(const char *fmt, ...)
 {
+	va_list ap;
+	char *msg;
+
 	if (pboot_spane->text)
 		free(pboot_spane->text);
-	pboot_spane->text = strdup(message);
+
+	va_start(ap, fmt);
+	vasprintf(&msg, fmt, ap);
+	va_end(ap);
+
+	pboot_spane->text = msg;
 	twin_window_damage(pboot_spane->window,
 			   0, 0,
 			   pboot_spane->window->pixmap->width,

@@ -1,5 +1,6 @@
 
 #include <libtwin/twin.h>
+#include <stdarg.h>
 
 #define LOG(fmt...)	printf(fmt)
 
@@ -14,4 +15,4 @@ int pboot_remove_device(const char *dev_id);
 
 int pboot_start_device_discovery(int udev_trigger);
 void pboot_exec_option(void *data);
-void pboot_message(const char *message);
+void pboot_message(const char *fmt, ...);
