@@ -135,7 +135,7 @@ void cfg_warn (char *msg,...)
      prom_printf (" near line %d in file %s\n", line_num, file_name);
 }
 
-inline int cfg_getc ()
+int cfg_getc ()
 {
      if (currp == endp)
 	  return EOF;
