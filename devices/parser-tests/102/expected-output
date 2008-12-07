@@ -1,0 +1,24 @@
+[dev  0] id: /dev/ps3da1
+[dev  0] name: (null)
+[dev  0] description: (null)
+[dev  0] boot_image: /usr/share/petitboot/artwork/hdd.png
+[opt  0] name: live
+[opt  0] description: /casper/vmlinux root=/dev/ram0 initrd=/casper/initrd.gz   file=/cdrom/preseed/ubuntu.seed boot=casper quiet splash --
+[opt  0] boot_image: devices/parser-tests/102/ps3da1/casper/vmlinux
+[opt  0] initrd: devices/parser-tests/102/ps3da1/casper/initrd.gz
+[opt  0] boot_args: root=/dev/ram0 initrd=/casper/initrd.gz   file=/cdrom/preseed/ubuntu.seed boot=casper quiet splash --
+[opt  1] name: live_nosplash
+[opt  1] description: /casper/vmlinux root=/dev/ram0 initrd=/casper/initrd.gz   file=/cdrom/preseed/ubuntu.seed boot=casper quiet --
+[opt  1] boot_image: devices/parser-tests/102/ps3da1/casper/vmlinux
+[opt  1] initrd: devices/parser-tests/102/ps3da1/casper/initrd.gz
+[opt  1] boot_args: root=/dev/ram0 initrd=/casper/initrd.gz   file=/cdrom/preseed/ubuntu.seed boot=casper quiet --
+[opt  2] name: driverupdates
+[opt  2] description: /casper/vmlinux root=/dev/ram0 initrd=/casper/initrd.gz   file=/cdrom/preseed/ubuntu.seed boot=casper debian-installer/driver-update=true quiet splash --
+[opt  2] boot_image: devices/parser-tests/102/ps3da1/casper/vmlinux
+[opt  2] initrd: devices/parser-tests/102/ps3da1/casper/initrd.gz
+[opt  2] boot_args: root=/dev/ram0 initrd=/casper/initrd.gz   file=/cdrom/preseed/ubuntu.seed boot=casper debian-installer/driver-update=true quiet splash --
+[opt  3] name: check
+[opt  3] description: /casper/vmlinux root=/dev/ram0 initrd=/casper/initrd.gz   boot=casper integrity-check quiet splash --
+[opt  3] boot_image: devices/parser-tests/102/ps3da1/casper/vmlinux
+[opt  3] initrd: devices/parser-tests/102/ps3da1/casper/initrd.gz
+[opt  3] boot_args: root=/dev/ram0 initrd=/casper/initrd.gz   boot=casper integrity-check quiet splash --
