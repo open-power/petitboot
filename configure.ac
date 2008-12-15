@@ -30,6 +30,6 @@ AC_PROG_INSTALL
 
 PKG_CHECK_MODULES([twin], [libtwin])
 
-mkdir devices
+mkdir -p discover ui/test ui/common lib/talloc lib/pb-protocol lib/list
 
 AC_OUTPUT

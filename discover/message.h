@@ -14,16 +14,17 @@ struct device {
 	char *name;
 	char *description;
 	char *icon_file;
-};
 
-struct boot_option {
-	char *id;
-	char *name;
-	char *description;
-	char *icon_file;
-	char *boot_image_file;
-	char *initrd_file;
-	char *boot_args;
+	struct boot_option {
+		char *id;
+		char *name;
+		char *description;
+		char *icon_file;
+		char *boot_image_file;
+		char *initrd_file;
+		char *boot_args;
+	} *options;
+	int n_options;
 };
 
 

@@ -1,36 +1,56 @@
 
 VPATH = $(srcdir)
 
+CFLAGS += -I$(top_srcdir) -I$(top_srcdir)/lib -I$(builddir)
+
 # we need paths to be overridable at build-time
 DEFS += '-DPREFIX="$(prefix)"' '-DPKG_SHARE_DIR="$(pkgdatadir)"'
 
+#uis = ui/twin/pb-twin
+uis = ui/test/pb-test
 parsers = native yaboot kboot
 artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
 
-petitboot_objs = petitboot.o devices.o
 
-parser_objs = devices/params.o devices/parser.o devices/paths.o \
-	      devices/yaboot-cfg.o \
-	      $(foreach p,$(parsers),devices/$(p)-parser.o)
+talloc_objs = lib/talloc/talloc.o
+list_objs = lib/list/list.o
+server_objs = lib/pb-protocol/pb-protocol.o
 
-petitboot_udev_helper_objs = devices/petitboot-udev-helper.o $(parser_objs)
 parser_test_objs = parser-test.o $(parser_objs)
 
-all: petitboot petitboot-udev-helper
+all: $(uis) discover/pb-discover
 
-petitboot: LDFLAGS+=$(twin_LDFLAGS)
-petitboot: CFLAGS+=$(twin_CFLAGS)
+# twin gui
+ui/twin/pb-twin: LDFLAGS+=$(twin_LDFLAGS)
+ui/twin/pb-twin: CFLAGS+=$(twin_CFLAGS)
 
-petitboot: $(petitboot_objs)
+pb_twin_objs = ui/twin/pb-twin.o ui/common/devices.o
+
+ui/twin/pb-twin: $(pb_twin_objs)
 	$(LINK.o) -o $@ $^
 
-petitboot-udev-helper: $(petitboot_udev_helper_objs)
+# test ui
+pb_test_objs = ui/test/pb-test.o ui/common/discover-client.o \
+	$(talloc_objs) $(server_objs)
+
+ui/test/pb-test: $(pb_test_objs)
 	$(LINK.o) -o $@ $^
+
+# discovery daemon
+#pb_discover_objs = discover/params.o discover/parser.o discover/paths.o \
+#	      discover/yaboot-cfg.o \
+#	      $(foreach p,$(parsers),discover/$(p)-parser.o)
+
+pb_discover_objs = discover/pb-discover.o discover/udev.o discover/log.o \
+		   discover/waiter.o discover/discover-server.o \
+		   $(talloc_objs) $(server_objs) $(list_objs)
+
+discover/pb-discover: $(pb_discover_objs)
+	$(LINK.o) -o $@ $^
+
 
 parser-test: $(parser_test_objs)
 	$(LINK.o) -o $@ $^
-
-petitboot-udev-helper: CFLAGS+=-I$(top_srcdir)
 
 install: all
 	$(INSTALL) -D petitboot $(DESTDIR)$(sbindir)/petitboot
@@ -60,6 +80,9 @@ $(PACKAGE)-$(VERSION): clean
 	done
 clean:
 	rm -rf $(PACKAGE)-$(VERSION)
-	rm -f petitboot
-	rm -f petitboot-udev-helper
-	rm -f *.o devices/*.o
+	rm -f $(uis)
+	rm -f $(pb_twin_objs) $(pb_test_objs)
+	rm -f $(pb_discover_objs)
+	rm -f discover/pb-discover
+	rm -f ui/test/pb-test
+
