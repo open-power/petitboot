@@ -43,6 +43,7 @@ ui/test/pb-test: $(pb_test_objs)
 
 pb_discover_objs = discover/pb-discover.o discover/udev.o discover/log.o \
 		   discover/waiter.o discover/discover-server.o \
+		   discover/device-handler.o \
 		   $(talloc_objs) $(server_objs) $(list_objs)
 
 discover/pb-discover: $(pb_discover_objs)

@@ -18,11 +18,13 @@
 
 #include "log.h"
 #include "waiter.h"
+#include "device-handler.h"
 
 struct discover_server {
 	int socket;
 	struct waiter *waiter;
 	struct list clients;
+	struct device_handler *device_handler;
 };
 
 struct client {
@@ -36,7 +38,7 @@ static int server_destructor(void *arg)
 	struct discover_server *server = arg;
 
 	if (server->waiter)
-		waiter_unregister(server->waiter);
+		waiter_remove(server->waiter);
 
 	if (server->socket >= 0)
 		close(server->socket);
@@ -73,25 +75,6 @@ static void print_clients(struct discover_server *server)
 				client->list.prev, client->list.next,
 				client->fd);
 }
-
-static struct boot_option options[] = {
-	{
-		.id = "1.1",
-		.name = "meep one",
-		.description = "meep description one",
-		.icon_file = "meep.one.png",
-		.boot_args = "root=/dev/sda1",
-	},
-};
-
-static struct device device = {
-	.id = "1",
-	.name = "meep",
-	.description = "meep description",
-	.icon_file = "meep.png",
-	.n_options = 1,
-	.options = options,
-};
 
 static int client_write_message(struct discover_server *server,
 		struct client *client, struct pb_protocol_message *message)
@@ -144,11 +127,9 @@ static int write_remove_message(struct discover_server *server,
 static int discover_server_process(void *arg)
 {
 	struct discover_server *server = arg;
+	struct device *devices;
 	struct client *client;
-	int fd;
-
-
-	len = sizeof(addr);
+	int fd, i, n_devices;
 
 	/* accept the incoming connection */
 	fd = accept(server->socket, NULL, 0);
@@ -166,13 +147,18 @@ static int discover_server_process(void *arg)
 	client->fd = fd;
 
 	/* send existing devices to client */
-	write_add_message(server, client, &device);
-
-	sleep(2);
-
-	write_remove_message(server, client, "1");
+	n_devices = device_handler_get_current_devices(server->device_handler,
+			&devices);
+	for (i = 0; i < n_devices; i++)
+		write_add_message(server, client, &devices[i]);
 
 	return 0;
+}
+
+void discover_server_set_device_source(struct discover_server *server,
+		struct device_handler *handler)
+{
+	server->device_handler = handler;
 }
 
 struct discover_server *discover_server_init(void)
