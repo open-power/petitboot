@@ -18,8 +18,9 @@ struct udev_event {
 };
 
 struct udev;
+struct device_handler;
 
-struct udev *udev_init(void);
+struct udev *udev_init(struct device_handler *handler);
 
 void udev_destroy(struct udev *udev);
 

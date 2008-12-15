@@ -15,12 +15,14 @@
 #include "log.h"
 #include "waiter.h"
 #include "pb-discover.h"
+#include "device-handler.h"
 
 #define PBOOT_DEVICE_SOCKET "/tmp/petitboot.udev"
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
 struct udev {
+	struct device_handler *handler;
 	int socket;
 };
 
@@ -132,6 +134,8 @@ static void handle_udev_message(struct udev *udev, char *buf, int len)
 
 	print_event(event);
 
+	device_handler_event(udev->handler, event);
+
 	talloc_free(event);
 
 	return;
@@ -168,7 +172,7 @@ static int udev_destructor(void *p)
 	return 0;
 }
 
-struct udev *udev_init(void)
+struct udev *udev_init(struct device_handler *handler)
 {
 	struct sockaddr_un addr;
 	struct udev *udev;
@@ -176,6 +180,8 @@ struct udev *udev_init(void)
 	unlink(PBOOT_DEVICE_SOCKET);
 
 	udev = talloc(NULL, struct udev);
+
+	udev->handler = handler;
 
 	udev->socket = socket(PF_UNIX, SOCK_DGRAM, 0);
 	if (udev->socket < 0) {
