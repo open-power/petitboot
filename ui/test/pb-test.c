@@ -29,7 +29,7 @@ static int print_device_add(struct device *device)
 	return 0;
 }
 
-static void print_device_remove(const char *dev_id)
+static void print_device_remove(char *dev_id)
 {
 	printf("removed device:\n");
 	printf("\tid:   %s\n", dev_id);
