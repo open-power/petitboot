@@ -44,8 +44,6 @@ int main(void)
 {
 	struct discover_client *client;
 
-	printf("pid: %d\n", getpid());
-
 	client = discover_client_init(&client_ops);
 	if (!client)
 		return -1;
