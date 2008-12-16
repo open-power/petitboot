@@ -27,7 +27,7 @@ int main(void)
 
 	discover_server_set_device_source(server, handler);
 
-	udev = udev_init();
+	udev = udev_init(handler);
 	if (!udev)
 		return EXIT_FAILURE;
 
