@@ -24,6 +24,8 @@ struct device_handler {
 
 	struct device *devices;
 	int n_devices;
+
+	struct list contexts;
 };
 
 struct discover_context {
@@ -43,7 +45,6 @@ struct mount_map {
 	char *mount_point;
 };
 
-static struct list contexts;
 
 static struct boot_option options[] = {
 	{
@@ -280,11 +281,12 @@ static int umount_device(struct discover_context *ctx)
 	return 0;
 }
 
-static struct discover_context *find_context(const char *id)
+static struct discover_context *find_context(struct device_handler *handler,
+		const char *id)
 {
 	struct discover_context *ctx;
 
-	list_for_each_entry(&contexts, ctx, list) {
+	list_for_each_entry(&handler->contexts, ctx, list) {
 		if (!strcmp(ctx->id, id))
 			return ctx;
 	}
@@ -311,7 +313,7 @@ static int handle_add_event(struct device_handler *handler,
 	int rc;
 
 	/* create our context */
-	ctx = talloc(NULL, struct discover_context);
+	ctx = talloc(handler, struct discover_context);
 	ctx->event = event;
 	ctx->mount_path = NULL;
 	ctx->links = NULL;
@@ -334,7 +336,7 @@ static int handle_add_event(struct device_handler *handler,
 		return 0;
 	}
 
-	list_add(&contexts, &ctx->list);
+	list_add(&handler->contexts, &ctx->list);
 
 	talloc_set_destructor(ctx, destroy_context);
 
@@ -346,7 +348,7 @@ static int handle_remove_event(struct device_handler *handler,
 {
 	struct discover_context *ctx;
 
-	ctx = find_context(event->device);
+	ctx = find_context(handler, event->device);
 	if (!ctx)
 		return 0;
 
@@ -381,7 +383,7 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	handler->devices = NULL;
 	handler->n_devices = 0;
 
-	list_init(&contexts);
+	list_init(&handler->contexts);
 
 	/* set up our mount point base */
 	mkdir_recursive(mount_base());
@@ -389,13 +391,8 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	return handler;
 }
 
-void device_handler_destroy(struct device_handler *devices)
+void device_handler_destroy(struct device_handler *handler)
 {
-	struct discover_context *ctx, *n;
-
-	talloc_free(devices);
-
-	list_for_each_entry_safe(&contexts, ctx, n, list)
-		talloc_free(ctx);
+	talloc_free(handler);
 }
 
