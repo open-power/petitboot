@@ -11,7 +11,8 @@
  *
  * Returns a newly-allocated string.
  */
-char *parse_device_path(const char *dev_str, const char *current_device);
+char *parse_device_path(void *alloc_ctx,
+		const char *dev_str, const char *current_device);
 
 /**
  * Get the mountpoint for a device.
@@ -29,13 +30,8 @@ const char *mountpoint_for_device(const char *dev);
  *
  * Returns a newly-allocated string containing a full path to the file in path
  */
-char *resolve_path(const char *path, const char *current_device);
-
-
-/**
- * Set the base directory for newly-created mountpoints
- */
-void set_mount_base(const char *path);
+char *resolve_path(void *alloc_ctx,
+		const char *path, const char *current_device);
 
 /**
  * Utility function for joining two paths. Adds a / between a and b if
@@ -43,11 +39,16 @@ void set_mount_base(const char *path);
  *
  * Returns a newly-allocated string.
  */
-char *join_paths(const char *a, const char *b);
+char *join_paths(void *alloc_ctx, const char *a, const char *b);
 
 /**
  * encode a disk label (or uuid) for use in a symlink.
  */
-char *encode_label(const char *label);
+char *encode_label(void *alloc_ctx, const char *label);
+
+/**
+ * Returns the base path for mount points
+ */
+const char *mount_base(void);
 
 #endif /* PATHS_H */

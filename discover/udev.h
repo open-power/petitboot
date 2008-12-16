@@ -24,4 +24,5 @@ struct udev *udev_init(struct device_handler *handler);
 
 void udev_destroy(struct udev *udev);
 
+const char *udev_event_param(struct udev_event *event, const char *name);
 #endif /* _UDEV_H */

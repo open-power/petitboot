@@ -60,7 +60,7 @@ static void parse_event_params(struct udev_event *event, char *buf, int len)
 	}
 }
 
-static const char *event_param(struct udev_event *event, const char *name)
+const char *udev_event_param(struct udev_event *event, const char *name)
 {
 	int i;
 
@@ -86,7 +86,7 @@ static void print_event(struct udev_event *event)
 
 	for (i = 0; params[i]; i++)
 		printf("\t%-12s => %s\n",
-				params[i], event_param(event, params[i]));
+				params[i], udev_event_param(event, params[i]));
 
 }
 

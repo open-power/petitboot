@@ -4,7 +4,8 @@ VPATH = $(srcdir)
 CFLAGS += -I$(top_srcdir) -I$(top_srcdir)/lib -I$(builddir)
 
 # we need paths to be overridable at build-time
-DEFS += '-DPREFIX="$(prefix)"' '-DPKG_SHARE_DIR="$(pkgdatadir)"'
+DEFS += '-DPREFIX="$(prefix)"' '-DPKG_SHARE_DIR="$(pkgdatadir)"' \
+	'-DLOCAL_STATE_DIR="$(localstatedir)"'
 
 #uis = ui/twin/pb-twin
 uis = ui/test/pb-test
@@ -43,7 +44,7 @@ ui/test/pb-test: $(pb_test_objs)
 
 pb_discover_objs = discover/pb-discover.o discover/udev.o discover/log.o \
 		   discover/waiter.o discover/discover-server.o \
-		   discover/device-handler.o \
+		   discover/device-handler.o discover/paths.o \
 		   $(talloc_objs) $(server_objs) $(list_objs)
 
 discover/pb-discover: $(pb_discover_objs)
