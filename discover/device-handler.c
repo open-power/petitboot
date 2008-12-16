@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 
 #include <talloc/talloc.h>
+#include <list/list.h>
 #include <pb-protocol/pb-protocol.h>
 
 #include "device-handler.h"
@@ -16,6 +17,8 @@
 
 #define MOUNT_BIN "/bin/mount"
 
+#define UMOUNT_BIN "/bin/umount"
+
 struct device_handler {
 	struct discover_server *server;
 
@@ -24,12 +27,15 @@ struct device_handler {
 };
 
 struct discover_context {
+	char *id;
 	char *device_path;
 	char *mount_path;
 	struct udev_event *event;
 	struct device *device;
 	char **links;
 	int n_links;
+
+	struct list_item list;
 };
 
 struct mount_map {
@@ -37,6 +43,7 @@ struct mount_map {
 	char *mount_point;
 };
 
+static struct list contexts;
 
 static struct boot_option options[] = {
 	{
@@ -110,6 +117,33 @@ static int mkdir_recursive(const char *dir)
 	return 0;
 }
 
+static int rmdir_recursive(const char *base, const char *dir)
+{
+	char *cur, *pos;
+
+	/* sanity check: make sure that dir is within base */
+	if (strncmp(base, dir, strlen(base)))
+		return -1;
+
+	cur = talloc_strdup(NULL, dir);
+
+	while (strcmp(base, dir)) {
+
+		rmdir(dir);
+
+		/* null-terminate at the last slash */
+		pos = strrchr(dir, '/');
+		if (!pos)
+			break;
+
+		*pos = '\0';
+	}
+
+	talloc_free(cur);
+
+	return 0;
+}
+
 static void setup_device_links(struct discover_context *ctx)
 {
 	struct link {
@@ -133,7 +167,7 @@ static void setup_device_links(struct discover_context *ctx)
 		const char *value;
 
 		value = udev_event_param(ctx->event, link->env);
-		if (!value)
+		if (!value || !*value)
 			continue;
 
 		enc = encode_label(ctx, value);
@@ -162,10 +196,17 @@ static void setup_device_links(struct discover_context *ctx)
 	}
 }
 
+static void remove_device_links(struct discover_context *ctx)
+{
+	int i;
+
+	for (i = 0; i < ctx->n_links; i++)
+		unlink(ctx->links[i]);
+}
+
 static int mount_device(struct discover_context *ctx)
 {
 	const char *mountpoint;
-	struct stat statbuf;
 	int status;
 	pid_t pid;
 
@@ -174,19 +215,45 @@ static int mount_device(struct discover_context *ctx)
 		ctx->mount_path = talloc_strdup(ctx, mountpoint);
 	}
 
-	if (stat(ctx->mount_path, &statbuf)) {
-		if (mkdir(ctx->mount_path, 0755)) {
-			pb_log("couldn't create mount directory %s: %s\n",
-					ctx->mount_path, strerror(errno));
-			return -1;
-		}
-	} else {
-		if (!S_ISDIR(statbuf.st_mode)) {
-			pb_log("mountpoint %s exists, but isn't a directory\n",
-					ctx->mount_path);
-			return -1;
-		}
+	if (mkdir_recursive(ctx->mount_path))
+		pb_log("couldn't create mount directory %s: %s\n",
+				ctx->mount_path, strerror(errno));
+
+	pid = fork();
+	if (pid == -1) {
+		pb_log("%s: fork failed: %s\n", __func__, strerror(errno));
+		goto out_rmdir;
 	}
+
+	if (pid == 0) {
+		execl(MOUNT_BIN, MOUNT_BIN, ctx->device_path, ctx->mount_path,
+				"-o", "ro", NULL);
+		exit(EXIT_FAILURE);
+	}
+
+	if (waitpid(pid, &status, 0) == -1) {
+		pb_log("%s: waitpid failed: %s\n", __func__,
+				strerror(errno));
+		goto out_rmdir;
+	}
+
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+		goto out_rmdir;
+
+	setup_device_links(ctx);
+	return 0;
+
+out_rmdir:
+	rmdir_recursive(mount_base(), ctx->mount_path);
+	return -1;
+}
+
+static int umount_device(struct discover_context *ctx)
+{
+	int status;
+	pid_t pid;
+
+	remove_device_links(ctx);
 
 	pid = fork();
 	if (pid == -1) {
@@ -195,8 +262,7 @@ static int mount_device(struct discover_context *ctx)
 	}
 
 	if (pid == 0) {
-		execl(MOUNT_BIN, MOUNT_BIN, ctx->device_path, ctx->mount_path,
-				"-o", "ro", NULL);
+		execl(UMOUNT_BIN, UMOUNT_BIN, ctx->mount_path, NULL);
 		exit(EXIT_FAILURE);
 	}
 
@@ -209,7 +275,31 @@ static int mount_device(struct discover_context *ctx)
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
 		return -1;
 
-	setup_device_links(ctx);
+	rmdir_recursive(mount_base(), ctx->mount_path);
+
+	return 0;
+}
+
+static struct discover_context *find_context(const char *id)
+{
+	struct discover_context *ctx;
+
+	list_for_each_entry(&contexts, ctx, list) {
+		if (!strcmp(ctx->id, id))
+			return ctx;
+	}
+
+	return NULL;
+}
+
+
+static int destroy_context(void *arg)
+{
+	struct discover_context *ctx = arg;
+
+	list_remove(&ctx->list);
+	umount_device(ctx);
+
 	return 0;
 }
 
@@ -227,6 +317,8 @@ static int handle_add_event(struct device_handler *handler,
 	ctx->links = NULL;
 	ctx->n_links = 0;
 
+	ctx->id = talloc_strdup(ctx, event->device);
+
 	devname = udev_event_param(ctx->event, "DEVNAME");
 	if (!devname) {
 		pb_log("no devname for %s?\n", event->device);
@@ -242,7 +334,9 @@ static int handle_add_event(struct device_handler *handler,
 		return 0;
 	}
 
-	talloc_free(ctx);
+	list_add(&contexts, &ctx->list);
+
+	talloc_set_destructor(ctx, destroy_context);
 
 	return 0;
 }
@@ -250,6 +344,14 @@ static int handle_add_event(struct device_handler *handler,
 static int handle_remove_event(struct device_handler *handler,
 		struct udev_event *event)
 {
+	struct discover_context *ctx;
+
+	ctx = find_context(event->device);
+	if (!ctx)
+		return 0;
+
+	talloc_free(ctx);
+
 	return 0;
 }
 
@@ -279,6 +381,8 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	handler->devices = NULL;
 	handler->n_devices = 0;
 
+	list_init(&contexts);
+
 	/* set up our mount point base */
 	mkdir_recursive(mount_base());
 
@@ -287,6 +391,11 @@ struct device_handler *device_handler_init(struct discover_server *server)
 
 void device_handler_destroy(struct device_handler *devices)
 {
+	struct discover_context *ctx, *n;
+
 	talloc_free(devices);
+
+	list_for_each_entry_safe(&contexts, ctx, n, list)
+		talloc_free(ctx);
 }
 

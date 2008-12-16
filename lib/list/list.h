@@ -30,6 +30,13 @@ struct list {
 	     &pos->member != &(list)->head; 	\
 	     pos = list_entry(pos->member.next, typeof(*pos), member))
 
+#define list_for_each_entry_safe(list, pos, n, member)			\
+	for (pos = list_entry((list)->head.next, typeof(*pos), member),	\
+		n = list_entry(pos->member.next, typeof(*pos), member);	\
+	     &pos->member != &(list)->head;				\
+	     pos = n, n = list_entry(n->member.next, typeof(*n), member))
+
+
 void list_init(struct list *list);
 
 void list_add(struct list *list, struct list_item *item);

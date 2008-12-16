@@ -8,6 +8,13 @@
 #include "waiter.h"
 #include "log.h"
 
+static int running;
+
+void sigint_handler(int signum)
+{
+	running = 0;
+}
+
 int main(void)
 {
 	struct device_handler *handler;
@@ -16,6 +23,8 @@ int main(void)
 
 	/* we look for closed sockets when we write, so ignore SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
+
+	signal(SIGINT, sigint_handler);
 
 	server = discover_server_init();
 	if (!server)
@@ -31,10 +40,12 @@ int main(void)
 	if (!udev)
 		return EXIT_FAILURE;
 
-	for (;;) {
+	for (running = 1; running;) {
 		if (waiter_poll())
-			return EXIT_FAILURE;
+			break;
 	}
+
+	device_handler_destroy(handler);
 
 
 	return EXIT_SUCCESS;
