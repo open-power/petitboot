@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "ui/common/discover-client.h"
-#include "ui/common/device.h"
 
 static int print_device_add(struct device *device)
 {

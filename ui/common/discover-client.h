@@ -2,7 +2,6 @@
 #define _DISCOVER_CLIENT_H
 
 #include <pb-protocol/pb-protocol.h>
-#include "ui/common/device.h"
 
 struct discover_client;
 

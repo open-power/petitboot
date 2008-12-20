@@ -12,7 +12,6 @@
 
 #include <talloc/talloc.h>
 
-#include "ui/common/device.h"
 #include "pb-protocol/pb-protocol.h"
 #include "list/list.h"
 

@@ -11,7 +11,6 @@
 #include <talloc/talloc.h>
 
 #include "ui/common/discover-client.h"
-#include "ui/common/device.h"
 #include "pb-protocol/pb-protocol.h"
 
 struct discover_client {
