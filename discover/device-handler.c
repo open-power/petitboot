@@ -395,6 +395,8 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	for (i = 0; i < sizeof(options) / sizeof(options[0]); i++)
 		list_add(&device.boot_options, &options[i].list);
 
+	parser_init();
+
 	return handler;
 }
 

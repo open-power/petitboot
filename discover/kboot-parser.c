@@ -290,8 +290,4 @@ out:
 	return rc;
 }
 
-struct parser kboot_parser = {
-	.name	  = "kboot.conf parser",
-	.priority = 98,
-	.parse	  = parse
-};
+define_parser(kboot, 98, parse);

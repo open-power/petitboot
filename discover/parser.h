@@ -20,6 +20,8 @@ enum generic_icon_type {
 
 #define streq(a,b) (!strcasecmp((a),(b)))
 
+void parser_init(void);
+
 void iterate_parsers(struct discover_context *ctx);
 
 #endif /* _PARSER_H */
