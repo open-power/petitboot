@@ -10,12 +10,28 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "parser.h"
+#include <talloc/talloc.h>
+
+#include "log.h"
+#include "pb-protocol/pb-protocol.h"
+#include "paths.h"
 #include "params.h"
+#include "parser-utils.h"
+#include "device-handler.h"
 
 #define buf_size 1024
 
-static const char *devpath;
+struct kboot_context {
+	struct discover_context *discover;
+
+	char *buf;
+
+	struct global_option {
+		char *name;
+		char *value;
+	} *global_options;
+	int n_global_options;
+};
 
 static int param_is_ignored(const char *param)
 {
@@ -76,12 +92,6 @@ static char *get_param_pair(char *str, char **name_out, char **value_out,
 	return tmp ? tmp + 1 : NULL;
 }
 
-struct global_option {
-	char *name;
-	char *value;
-};
-
-
 static struct global_option global_options[] = {
 	{ .name = "root" },
 	{ .name = "initrd" },
@@ -93,20 +103,21 @@ static struct global_option global_options[] = {
  * Check if an option (name=value) is a global option. If so, store it in
  * the global options table, and return 1. Otherwise, return 0.
  */
-static int check_for_global_option(const char *name, const char *value)
+static int check_for_global_option(struct kboot_context *ctx,
+		const char *name, const char *value)
 {
 	int i;
 
-	for (i = 0; global_options[i].name ;i++) {
-		if (!strcmp(name, global_options[i].name)) {
+	for (i = 0; i < ctx->n_global_options; i++) {
+		if (!strcmp(name, ctx->global_options[i].name)) {
 			global_options[i].value = strdup(value);
-			return 1;
+			break;
 		}
 	}
 	return 0;
 }
 
-static char *get_global_option(const char *name)
+static char *get_global_option(struct kboot_context *ctx, const char *name)
 {
 	int i;
 
@@ -117,9 +128,11 @@ static char *get_global_option(const char *name)
 	return NULL;
 }
 
-static int parse_option(struct boot_option *opt, char *config)
+static int parse_option(struct kboot_context *kboot_ctx, char *opt_name,
+		char *config)
 {
 	char *pos, *name, *value, *root, *initrd, *cmdline, *tmp;
+	struct boot_option *opt;
 
 	root = initrd = cmdline = NULL;
 
@@ -136,17 +149,24 @@ static int parse_option(struct boot_option *opt, char *config)
 
 	pos = strchr(config, ' ');
 
+	opt = talloc_zero(kboot_ctx, struct boot_option);
+	opt->id = talloc_asprintf(opt, "%s#%s",
+			kboot_ctx->discover->device->id, opt_name);
+	opt->name = talloc_strdup(opt, opt_name);
+
 	/* if there's no space, it's only a kernel image with no params */
 	if (!pos) {
-		opt->boot_image_file = resolve_path(config, devpath);
-		opt->description = strdup(config);
-		return 1;
+		opt->boot_image_file = resolve_path(opt, config,
+				kboot_ctx->discover->device_path);
+		opt->description = talloc_strdup(opt, config);
+		goto out_add;
 	}
 
 	*pos = 0;
-	opt->boot_image_file = resolve_path(config, devpath);
+	opt->boot_image_file = resolve_path(opt, config,
+			kboot_ctx->discover->device_path);
 
-	cmdline = malloc(buf_size);
+	cmdline = talloc_array(opt, char, buf_size);
 	*cmdline = 0;
 
 	for (pos++; pos;) {
@@ -170,50 +190,47 @@ static int parse_option(struct boot_option *opt, char *config)
 	}
 
 	if (!root)
-		root = get_global_option("root");
+		root = get_global_option(kboot_ctx, "root");
 	if (!initrd)
-		initrd = get_global_option("initrd");
+		initrd = get_global_option(kboot_ctx, "initrd");
 
 	if (initrd) {
-		asprintf(&tmp, "initrd=%s %s", initrd, cmdline);
-		free(cmdline);
+		tmp = talloc_asprintf(opt, "initrd=%s %s", initrd, cmdline);
+		talloc_free(cmdline);
 		cmdline = tmp;
 
-		opt->initrd_file = resolve_path(initrd, devpath);
+		opt->initrd_file = resolve_path(opt, initrd,
+				kboot_ctx->discover->device_path);
 	}
 
 	if (root) {
-		asprintf(&tmp, "root=%s %s", root, cmdline);
-		free(cmdline);
+		tmp = talloc_asprintf(opt, "root=%s %s", root, cmdline);
+		talloc_free(cmdline);
 		cmdline = tmp;
 
 	} else if (initrd) {
 		/* if there's an initrd but no root, fake up /dev/ram0 */
-		asprintf(&tmp, "root=/dev/ram0 %s", cmdline);
-		free(cmdline);
+		tmp = talloc_asprintf(opt, "root=/dev/ram0 %s", cmdline);
+		talloc_free(cmdline);
 		cmdline = tmp;
 	}
 
-	pb_log("kboot cmdline: %s\n", cmdline);
 	opt->boot_args = cmdline;
 
-	asprintf(&opt->description, "%s %s",
+	opt->description = talloc_asprintf(opt, "%s %s",
 			config, opt->boot_args);
 
+out_add:
+	device_add_boot_option(kboot_ctx->discover->device, opt);
 	return 1;
 }
 
-static void parse_buf(struct device *dev, char *buf)
+static void parse_buf(struct kboot_context *kboot_ctx)
 {
 	char *pos, *name, *value;
-	int sent_device = 0;
 
-	for (pos = buf; pos;) {
-		struct boot_option opt;
-
+	for (pos = kboot_ctx->buf; pos;) {
 		pos = get_param_pair(pos, &name, &value, '\n');
-
-		pb_log("kboot param: '%s' = '%s'\n", name, value);
 
 		if (name == NULL || param_is_ignored(name))
 			continue;
@@ -221,68 +238,60 @@ static void parse_buf(struct device *dev, char *buf)
 		if (*name == '#')
 			continue;
 
-		if (check_for_global_option(name, value))
+		if (check_for_global_option(kboot_ctx, name, value))
 			continue;
 
-		memset(&opt, 0, sizeof(opt));
-		opt.name = strdup(name);
-
-		if (parse_option(&opt, value))
-			if (!sent_device++)
-				add_device(dev);
-			add_boot_option(&opt);
-
-		free(opt.name);
+		parse_option(kboot_ctx, name, value);
 	}
 }
 
-static int parse(const char *device)
+
+static int parse(struct discover_context *ctx)
 {
-	char *filepath, *buf;
-	int fd, len, rc = 0;
+	struct kboot_context *kboot_ctx;
+	char *filepath;
+	int fd, len, rc;
 	struct stat stat;
-	struct device *dev;
 
-	devpath = device;
+	rc = 0;
+	fd = -1;
 
-	filepath = resolve_path("/etc/kboot.conf", devpath);
+	kboot_ctx = talloc_zero(ctx, struct kboot_context);
+	kboot_ctx->discover = ctx;
+
+	filepath = resolve_path(kboot_ctx, "/etc/kboot.conf", ctx->device_path);
 
 	fd = open(filepath, O_RDONLY);
 	if (fd < 0)
-		goto out_free_path;
+		goto out;
 
 	if (fstat(fd, &stat))
-		goto out_close;
+		goto out;
 
-	buf = malloc(stat.st_size + 1);
-	if (!buf)
-		goto out_close;;
+	kboot_ctx->buf = talloc_array(kboot_ctx, char, stat.st_size + 1);
 
-	len = read(fd, buf, stat.st_size);
+	len = read(fd, kboot_ctx->buf, stat.st_size);
 	if (len < 0)
-		goto out_free_buf;
-	buf[len] = 0;
+		goto out;
+	kboot_ctx->buf[len] = 0;
 
-	dev = malloc(sizeof(*dev));
-	memset(dev, 0, sizeof(*dev));
-	dev->id = strdup(device);
-	dev->icon_file = strdup(generic_icon_file(guess_device_type()));
+	if (!ctx->device->icon_file)
+		ctx->device->icon_file = talloc_strdup(ctx,
+				generic_icon_file(guess_device_type(ctx)));
 
-	parse_buf(dev, buf);
+	parse_buf(kboot_ctx);
 
 	rc = 1;
 
-out_free_buf:
-	free(buf);
-out_close:
-	close(fd);
-out_free_path:
-	free(filepath);
+out:
+	if (fd >= 0)
+		close(fd);
+	talloc_free(kboot_ctx);
 	return rc;
 }
 
 struct parser kboot_parser = {
-	.name = "kboot.conf parser",
+	.name	  = "kboot.conf parser",
 	.priority = 98,
 	.parse	  = parse
 };

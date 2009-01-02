@@ -154,6 +154,26 @@ static int discover_server_process(void *arg)
 	return 0;
 }
 
+void discover_server_notify_add(struct discover_server *server,
+		struct device *device)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_add_message(server, client, device);
+
+}
+
+void discover_server_notify_remove(struct discover_server *server,
+		struct device *device)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_remove_message(server, client, device->id);
+
+}
+
 void discover_server_set_device_source(struct discover_server *server,
 		struct device_handler *handler)
 {

@@ -9,13 +9,16 @@ DEFS += '-DPREFIX="$(prefix)"' '-DPKG_SHARE_DIR="$(pkgdatadir)"' \
 
 #uis = ui/twin/pb-twin
 uis = ui/test/pb-test
-parsers = native yaboot kboot
+#parsers = native yaboot kboot
+parsers = kboot
 artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
 
 
 talloc_objs = lib/talloc/talloc.o
 list_objs = lib/list/list.o
 server_objs = lib/pb-protocol/pb-protocol.o
+parser_objs = discover/parser.o discover/parser-utils.o \
+	      $(foreach p, $(parsers), discover/$(p)-parser.o)
 
 parser_test_objs = parser-test.o $(parser_objs)
 
@@ -45,7 +48,7 @@ ui/test/pb-test: $(pb_test_objs)
 pb_discover_objs = discover/pb-discover.o discover/udev.o discover/log.o \
 		   discover/waiter.o discover/discover-server.o \
 		   discover/device-handler.o discover/paths.o \
-		   $(talloc_objs) $(server_objs) $(list_objs)
+		   $(talloc_objs) $(server_objs) $(parser_objs) $(list_objs)
 
 discover/pb-discover: $(pb_discover_objs)
 	$(LINK.o) -o $@ $^

@@ -11,6 +11,8 @@
 #include <pb-protocol/pb-protocol.h>
 
 #include "device-handler.h"
+#include "discover-server.h"
+#include "parser.h"
 #include "udev.h"
 #include "log.h"
 #include "paths.h"
@@ -26,18 +28,6 @@ struct device_handler {
 	int n_devices;
 
 	struct list contexts;
-};
-
-struct discover_context {
-	char *id;
-	char *device_path;
-	char *mount_path;
-	struct udev_event *event;
-	struct device *device;
-	char **links;
-	int n_links;
-
-	struct list_item list;
 };
 
 struct mount_map {
@@ -335,8 +325,17 @@ static int handle_add_event(struct device_handler *handler,
 	}
 
 	list_add(&handler->contexts, &ctx->list);
-
 	talloc_set_destructor(ctx, destroy_context);
+
+	/* set up the top-level device */
+	ctx->device = talloc_zero(ctx, struct device);
+	ctx->device->id = talloc_strdup(ctx->device, ctx->id);
+	list_init(&ctx->device->boot_options);
+
+	/* run the parsers */
+	iterate_parsers(ctx);
+
+	discover_server_notify_add(handler->server, ctx->device);
 
 	return 0;
 }
@@ -349,6 +348,8 @@ static int handle_remove_event(struct device_handler *handler,
 	ctx = find_context(handler, event->device);
 	if (!ctx)
 		return 0;
+
+	discover_server_notify_remove(handler->server, ctx->device);
 
 	talloc_free(ctx);
 
@@ -381,6 +382,7 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	handler = talloc(NULL, struct device_handler);
 	handler->devices = NULL;
 	handler->n_devices = 0;
+	handler->server = server;
 
 	list_init(&handler->contexts);
 
