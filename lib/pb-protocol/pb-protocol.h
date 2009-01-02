@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <list/list.h>
+
 #define PB_SOCKET_PATH "/tmp/petitboot.ui"
 
 #define PB_PROTOCOL_MAX_PAYLOAD_SIZE 4096
@@ -24,16 +26,19 @@ struct device {
 	char *description;
 	char *icon_file;
 
-	struct boot_option {
-		char *id;
-		char *name;
-		char *description;
-		char *icon_file;
-		char *boot_image_file;
-		char *initrd_file;
-		char *boot_args;
-	} *options;
-	int n_options;
+	struct list boot_options;
+};
+
+struct boot_option {
+	char *id;
+	char *name;
+	char *description;
+	char *icon_file;
+	char *boot_image_file;
+	char *initrd_file;
+	char *boot_args;
+
+	struct list_item list;
 };
 
 int pb_protocol_device_len(struct device *dev);

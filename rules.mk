@@ -32,7 +32,7 @@ ui/twin/pb-twin: $(pb_twin_objs)
 
 # test ui
 pb_test_objs = ui/test/pb-test.o ui/common/discover-client.o \
-	$(talloc_objs) $(server_objs)
+	$(talloc_objs) $(server_objs) $(list_objs)
 
 ui/test/pb-test: $(pb_test_objs)
 	$(LINK.o) -o $@ $^

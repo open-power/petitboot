@@ -5,7 +5,7 @@
 
 static int print_device_add(struct device *device)
 {
-	int i;
+	struct boot_option *opt;
 
 	printf("new device:\n");
 	printf("\tid:   %s\n", device->id);
@@ -13,9 +13,8 @@ static int print_device_add(struct device *device)
 	printf("\tdesc: %s\n", device->description);
 	printf("\ticon: %s\n", device->icon_file);
 
-	printf("\t%d boot options:\n", device->n_options);
-	for (i = 0; i < device->n_options; i++) {
-		struct boot_option *opt = &device->options[i];
+	printf("\tboot options:\n");
+	list_for_each_entry(&device->boot_options, opt, list) {
 		printf("\t\tid:   %s\n", opt->id);
 		printf("\t\tname: %s\n", opt->name);
 		printf("\t\tdesc: %s\n", opt->description);

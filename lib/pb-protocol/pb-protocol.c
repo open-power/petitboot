@@ -4,6 +4,7 @@
 #include <asm/byteorder.h>
 
 #include <talloc/talloc.h>
+#include <list/list.h>
 
 #include "pb-protocol.h"
 
@@ -115,7 +116,8 @@ static int optional_strlen(const char *str)
 
 int pb_protocol_device_len(struct device *dev)
 {
-	int len, i;
+	struct boot_option *opt;
+	int len;
 
 	len =	4 + optional_strlen(dev->id) +
 		4 + optional_strlen(dev->name) +
@@ -123,8 +125,7 @@ int pb_protocol_device_len(struct device *dev)
 		4 + optional_strlen(dev->icon_file) +
 		4;
 
-	for (i = 0; i < dev->n_options; i++) {
-		struct boot_option *opt = &dev->options[i];
+	list_for_each_entry(&dev->boot_options, opt, list) {
 		len +=	4 + optional_strlen(opt->id) +
 			4 + optional_strlen(opt->name) +
 			4 + optional_strlen(opt->description) +
@@ -139,8 +140,9 @@ int pb_protocol_device_len(struct device *dev)
 
 int pb_protocol_serialise_device(struct device *dev, char *buf, int buf_len)
 {
+	struct boot_option *opt;
+	uint32_t n;
 	char *pos;
-	int i;
 
 	pos = buf;
 
@@ -151,12 +153,16 @@ int pb_protocol_serialise_device(struct device *dev, char *buf, int buf_len)
 	pos += pb_protocol_serialise_string(pos, dev->icon_file);
 
 	/* write option count */
-	*(uint32_t *)pos = __cpu_to_be32(dev->n_options);
+	n = 0;
+
+	list_for_each_entry(&dev->boot_options, opt, list)
+		n++;
+
+	*(uint32_t *)pos = __cpu_to_be32(n);
 	pos += sizeof(uint32_t);
 
 	/* write each option */
-	for (i = 0; i < dev->n_options; i++) {
-		struct boot_option *opt = &dev->options[i];
+	list_for_each_entry(&dev->boot_options, opt, list) {
 		pos += pb_protocol_serialise_string(pos, opt->id);
 		pos += pb_protocol_serialise_string(pos, opt->name);
 		pos += pb_protocol_serialise_string(pos, opt->description);
@@ -252,7 +258,7 @@ struct device *pb_protocol_deserialise_device(void *ctx,
 {
 	struct device *dev;
 	char *pos;
-	int i, len;
+	int i, n_options, len;
 
 	len = message->payload_len;
 	pos = message->payload;
@@ -271,12 +277,15 @@ struct device *pb_protocol_deserialise_device(void *ctx,
 	if (read_string(dev, &pos, &len, &dev->icon_file))
 		goto out_err;
 
-	dev->n_options = __be32_to_cpu(*(uint32_t *)pos);
-	dev->options = talloc_array(dev, struct boot_option, dev->n_options);
+	n_options = __be32_to_cpu(*(uint32_t *)pos);
 	pos += sizeof(uint32_t);
 
-	for (i = 0; i < dev->n_options; i++) {
-		struct boot_option *opt = &dev->options[i];
+	list_init(&dev->boot_options);
+
+	for (i = 0; i < n_options; i++) {
+		struct boot_option *opt;
+
+		opt = talloc(dev, struct boot_option);
 
 		if (read_string(opt, &pos, &len, &opt->id))
 			goto out_err;
@@ -297,6 +306,8 @@ struct device *pb_protocol_deserialise_device(void *ctx,
 		if (read_string(opt, &pos, &len,
 					&opt->boot_args))
 			goto out_err;
+
+		list_add(&dev->boot_options, &opt->list);
 	}
 
 	return dev;

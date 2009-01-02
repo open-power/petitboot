@@ -61,8 +61,6 @@ static struct device device = {
 	.name = "meep",
 	.description = "meep description",
 	.icon_file = "meep.png",
-	.n_options = 1,
-	.options = options,
 };
 
 int device_handler_get_current_devices(struct device_handler *handler,
@@ -378,6 +376,7 @@ int device_handler_event(struct device_handler *handler,
 struct device_handler *device_handler_init(struct discover_server *server)
 {
 	struct device_handler *handler;
+	int i;
 
 	handler = talloc(NULL, struct device_handler);
 	handler->devices = NULL;
@@ -387,6 +386,12 @@ struct device_handler *device_handler_init(struct discover_server *server)
 
 	/* set up our mount point base */
 	mkdir_recursive(mount_base());
+
+	/* setup out test objects */
+	list_init(&device.boot_options);
+
+	for (i = 0; i < sizeof(options) / sizeof(options[0]); i++)
+		list_add(&device.boot_options, &options[i].list);
 
 	return handler;
 }
