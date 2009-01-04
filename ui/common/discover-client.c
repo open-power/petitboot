@@ -81,7 +81,7 @@ int discover_client_process(struct discover_client *client)
 	message = pb_protocol_read_message(client, client->fd);
 
 	if (!message)
-		return 0;
+		return -1;
 
 	switch (message->action) {
 	case PB_PROTOCOL_ACTION_ADD:
