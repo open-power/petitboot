@@ -19,7 +19,8 @@ AC_INIT([petitboot], [0.2], [Jeremy Kerr <jk@ozlabs.org>])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
 
-default_CFLAGS='--std=gnu99 -O2 -Wall -g'
+default_CFLAGS="--std=gnu99 -O2 -g -Wall -W -Wunused -Wstrict-prototypes \
+-Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Winline"
 
 if test "x$CFLAGS" = "x"; then
     CFLAGS="$default_CFLAGS"
