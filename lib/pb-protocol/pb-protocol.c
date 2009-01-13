@@ -201,7 +201,7 @@ int pb_protocol_write_message(int fd, struct pb_protocol_message *message)
 }
 
 struct pb_protocol_message *pb_protocol_create_message(void *ctx,
-		int action, int payload_len)
+		enum pb_protocol_action action, int payload_len)
 {
 	struct pb_protocol_message *message;
 
