@@ -58,12 +58,11 @@ parser-test: $(parser_test_objs)
 	$(LINK.o) -o $@ $^
 
 install: all
-	$(INSTALL) -D petitboot $(DESTDIR)$(sbindir)/petitboot
-	$(INSTALL) -D petitboot-udev-helper \
-		$(DESTDIR)$(sbindir)/petitboot-udev-helper
-	$(INSTALL) -Dd $(DESTDIR)$(pkgdatadir)/artwork/
-	$(INSTALL) -t $(DESTDIR)$(pkgdatadir)/artwork/ \
-		$(foreach a,$(artwork),$(top_srcdir)/artwork/$(a))
+	$(INSTALL) -d $(DESTDIR)$(sbindir)/
+	$(INSTALL) discover/pb-discover $(uis) $(DESTDIR)$(sbindir)/
+	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/artwork/
+	$(INSTALL) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
+		$(DESTDIR)$(pkgdatadir)/artwork/
 
 dist:	$(PACKAGE)-$(VERSION).tar.gz
 
