@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <string.h>
 #include <stdint.h>
 #include <asm/byteorder.h>
@@ -65,7 +66,7 @@ int pb_protocol_serialise_string(char *pos, const char *str)
  * @param[out] str	Pointer to resuling string
  * @return		zero on success, non-zero on failure
  */
-static int read_string(void *ctx, char **pos, int *len, char **str)
+static int read_string(void *ctx, char **pos, unsigned int *len, char **str)
 {
 	uint32_t str_len, read_len;
 
@@ -96,7 +97,7 @@ char *pb_protocol_deserialise_string(void *ctx,
 		struct pb_protocol_message *message)
 {
 	char *buf, *str;
-	int len;
+	unsigned int len;
 
 	len = message->payload_len;
 	buf = message->payload;
@@ -172,6 +173,8 @@ int pb_protocol_serialise_device(struct device *dev, char *buf, int buf_len)
 		pos += pb_protocol_serialise_string(pos, opt->boot_args);
 	}
 
+	assert(pos <= buf + buf_len);
+
 	return 0;
 }
 
@@ -221,7 +224,8 @@ struct pb_protocol_message *pb_protocol_create_message(void *ctx,
 struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 {
 	struct pb_protocol_message *message, m;
-	int rc, len;
+	int rc;
+	unsigned int len;
 
 	/* use the stack for the initial 8-byte read */
 
@@ -258,7 +262,8 @@ struct device *pb_protocol_deserialise_device(void *ctx,
 {
 	struct device *dev;
 	char *pos;
-	int i, n_options, len;
+	int i, n_options;
+	unsigned int len;
 
 	len = message->payload_len;
 	pos = message->payload;

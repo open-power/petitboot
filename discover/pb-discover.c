@@ -10,7 +10,7 @@
 
 static int running;
 
-void sigint_handler(int signum)
+static void sigint_handler(int __attribute__((unused)) signum)
 {
 	running = 0;
 }

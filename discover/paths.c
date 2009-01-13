@@ -35,7 +35,7 @@ const char *mount_base(void)
 char *encode_label(void *alloc_ctx, const char *label)
 {
 	char *str, *c;
-	int i;
+	unsigned int i;
 
 	/* the label can be expanded by up to four times */
 	str = talloc_size(alloc_ctx, strlen(label) * 4 + 1);

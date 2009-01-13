@@ -377,7 +377,7 @@ int device_handler_event(struct device_handler *handler,
 struct device_handler *device_handler_init(struct discover_server *server)
 {
 	struct device_handler *handler;
-	int i;
+	unsigned int i;
 
 	handler = talloc(NULL, struct device_handler);
 	handler->devices = NULL;

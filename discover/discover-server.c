@@ -18,6 +18,7 @@
 #include "log.h"
 #include "waiter.h"
 #include "device-handler.h"
+#include "discover-server.h"
 
 struct discover_server {
 	int socket;
