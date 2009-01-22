@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#include <waiter/waiter.h>
+
 #include "udev.h"
 #include "discover-server.h"
 #include "device-handler.h"
-#include "waiter.h"
 #include "log.h"
 
 static int running;

@@ -16,6 +16,7 @@ artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
 
 talloc_objs = lib/talloc/talloc.o
 list_objs = lib/list/list.o
+waiter_objs = lib/waiter/waiter.o
 server_objs = lib/pb-protocol/pb-protocol.o
 parser_objs = discover/parser.o discover/parser-utils.o \
 	      $(foreach p, $(parsers), discover/$(p)-parser.o)
@@ -46,9 +47,9 @@ ui/test/pb-test: $(pb_test_objs)
 #	      $(foreach p,$(parsers),discover/$(p)-parser.o)
 
 pb_discover_objs = discover/pb-discover.o discover/udev.o discover/log.o \
-		   discover/waiter.o discover/discover-server.o \
-		   discover/device-handler.o discover/paths.o \
-		   $(talloc_objs) $(server_objs) $(parser_objs) $(list_objs)
+		   discover/discover-server.o discover/device-handler.o \
+		   discover/paths.o $(talloc_objs) $(server_objs) \
+		   $(parser_objs) $(list_objs) $(waiter_objs)
 
 discover/pb-discover: $(pb_discover_objs)
 	$(LINK.o) -o $@ $^

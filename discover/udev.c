@@ -10,10 +10,10 @@
 #include <sys/un.h>
 
 #include <talloc/talloc.h>
+#include <waiter/waiter.h>
 
 #include "udev.h"
 #include "log.h"
-#include "waiter.h"
 #include "pb-discover.h"
 #include "device-handler.h"
 
