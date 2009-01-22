@@ -1,4 +1,5 @@
 
+#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,6 +10,7 @@
 #include <asm/byteorder.h>
 
 #include <talloc/talloc.h>
+#include <log.h>
 
 #include "ui/common/discover-client.h"
 #include "pb-protocol/pb-protocol.h"
@@ -41,7 +43,7 @@ struct discover_client* discover_client_init(struct discover_client_ops *ops)
 
 	client->fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (!client->fd < 0) {
-		perror("socket");
+		pb_log("%s: socket: %s\n", __func__, strerror(errno));
 		goto out_err;
 	}
 
@@ -51,7 +53,7 @@ struct discover_client* discover_client_init(struct discover_client_ops *ops)
 	strcpy(addr.sun_path, PB_SOCKET_PATH);
 
 	if (connect(client->fd, (struct sockaddr *)&addr, sizeof(addr))) {
-		perror("connect");
+		pb_log("%s: connect: %s\n", __func__, strerror(errno));
 		goto out_err;
 	}
 
@@ -87,7 +89,7 @@ int discover_client_process(struct discover_client *client)
 	case PB_PROTOCOL_ACTION_ADD:
 		dev = pb_protocol_deserialise_device(client, message);
 		if (!dev) {
-			printf("no device?\n");
+			pb_log("%s: no device?\n", __func__);
 			return 0;
 		}
 		client->ops.add_device(dev);
@@ -96,13 +98,13 @@ int discover_client_process(struct discover_client *client)
 	case PB_PROTOCOL_ACTION_REMOVE:
 		dev_id = pb_protocol_deserialise_string(client, message);
 		if (!dev_id) {
-			printf("no device id?\n");
+			pb_log("%s: no device id?\n", __func__);
 			return 0;
 		}
 		client->ops.remove_device(dev_id);
 		break;
 	default:
-		printf("unknown action %d\n", message->action);
+		pb_log("%s: unknown action %d\n", __func__, message->action);
 	}
 
 
