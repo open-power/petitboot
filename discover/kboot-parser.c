@@ -11,8 +11,8 @@
 #include <sys/stat.h>
 
 #include <talloc/talloc.h>
+#include <log/log.h>
 
-#include "log.h"
 #include "pb-protocol/pb-protocol.h"
 #include "paths.h"
 #include "params.h"

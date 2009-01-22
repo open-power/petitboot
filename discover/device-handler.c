@@ -8,13 +8,13 @@
 
 #include <talloc/talloc.h>
 #include <list/list.h>
+#include <log/log.h>
 #include <pb-protocol/pb-protocol.h>
 
 #include "device-handler.h"
 #include "discover-server.h"
 #include "parser.h"
 #include "udev.h"
-#include "log.h"
 #include "paths.h"
 
 #define MOUNT_BIN "/bin/mount"

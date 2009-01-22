@@ -11,9 +11,9 @@
 
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
+#include <log/log.h>
 
 #include "udev.h"
-#include "log.h"
 #include "pb-discover.h"
 #include "device-handler.h"
 

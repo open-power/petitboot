@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 #include "pb-protocol/pb-protocol.h"
+#include <log/log.h>
 
 #include "device-handler.h"
-#include "log.h"
 #include "parser.h"
 #include "parser-utils.h"
 

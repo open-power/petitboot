@@ -32,6 +32,6 @@ AC_PROG_INSTALL
 PKG_CHECK_MODULES([twin], [libtwin])
 
 mkdir -p discover ui/test ui/common lib/talloc lib/pb-protocol lib/list \
-	      lib/waiter
+	      lib/waiter lib/log
 
 AC_OUTPUT

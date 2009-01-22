@@ -12,11 +12,11 @@
 
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
+#include <log/log.h>
 
 #include "pb-protocol/pb-protocol.h"
 #include "list/list.h"
 
-#include "log.h"
 #include "device-handler.h"
 #include "discover-server.h"
 

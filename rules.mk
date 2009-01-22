@@ -1,4 +1,5 @@
 
+
 VPATH = $(srcdir)
 
 CPPFLAGS += -I$(top_srcdir) -I$(top_srcdir)/lib -I$(builddir)
@@ -13,7 +14,7 @@ uis = ui/test/pb-test
 parsers = kboot
 artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
 
-
+log_objs = lib/log/log.o
 talloc_objs = lib/talloc/talloc.o
 list_objs = lib/list/list.o
 waiter_objs = lib/waiter/waiter.o
@@ -36,7 +37,7 @@ ui/twin/pb-twin: $(pb_twin_objs)
 
 # test ui
 pb_test_objs = ui/test/pb-test.o ui/common/discover-client.o \
-	$(talloc_objs) $(server_objs) $(list_objs)
+	$(log_objs) $(talloc_objs) $(server_objs) $(list_objs)
 
 ui/test/pb-test: $(pb_test_objs)
 	$(LINK.o) -o $@ $^
@@ -46,10 +47,10 @@ ui/test/pb-test: $(pb_test_objs)
 #	      discover/yaboot-cfg.o \
 #	      $(foreach p,$(parsers),discover/$(p)-parser.o)
 
-pb_discover_objs = discover/pb-discover.o discover/udev.o discover/log.o \
+pb_discover_objs = discover/pb-discover.o discover/udev.o \
 		   discover/discover-server.o discover/device-handler.o \
 		   discover/paths.o $(talloc_objs) $(server_objs) \
-		   $(parser_objs) $(list_objs) $(waiter_objs)
+		   $(parser_objs) $(list_objs) $(waiter_objs) $(log_objs)
 
 discover/pb-discover: $(pb_discover_objs)
 	$(LINK.o) -o $@ $^
