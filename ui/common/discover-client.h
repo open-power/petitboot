@@ -5,9 +5,17 @@
 
 struct discover_client;
 
+/**
+ * struct discover_client_ops - Application supplied client info.
+ * @add_device: PB_PROTOCOL_ACTION_ADD event callback.
+ * @remove_device: PB_PROTOCOL_ACTION_REMOVE event callback.
+ * @cb_arg: Client managed convenience variable passed to callbacks.
+ */
+
 struct discover_client_ops {
-	int	(*add_device)(struct device *);
-	void	(*remove_device)(char *);
+	int (*add_device)(struct device *device, void *arg);
+	void (*remove_device)(char *dev_id, void *arg);
+	void *cb_arg;
 };
 
 struct discover_client *discover_client_init(struct discover_client_ops *ops);

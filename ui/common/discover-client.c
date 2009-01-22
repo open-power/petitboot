@@ -92,7 +92,7 @@ int discover_client_process(struct discover_client *client)
 			pb_log("%s: no device?\n", __func__);
 			return 0;
 		}
-		client->ops.add_device(dev);
+		client->ops.add_device(dev, client->ops.cb_arg);
 		talloc_free(dev);
 		break;
 	case PB_PROTOCOL_ACTION_REMOVE:
@@ -101,7 +101,7 @@ int discover_client_process(struct discover_client *client)
 			pb_log("%s: no device id?\n", __func__);
 			return 0;
 		}
-		client->ops.remove_device(dev_id);
+		client->ops.remove_device(dev_id, client->ops.cb_arg);
 		break;
 	default:
 		pb_log("%s: unknown action %d\n", __func__, message->action);
