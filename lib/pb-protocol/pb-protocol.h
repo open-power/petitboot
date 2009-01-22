@@ -41,6 +41,8 @@ struct boot_option {
 	struct list_item list;
 };
 
+struct boot_option *boot_option_copy(void* ctx, const struct boot_option *opt);
+
 int pb_protocol_device_len(struct device *dev);
 
 int pb_protocol_serialise_string(char *pos, const char *str);
