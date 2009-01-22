@@ -13,14 +13,15 @@ struct discover_client;
  */
 
 struct discover_client_ops {
-	int (*add_device)(struct device *device, void *arg);
-	void (*remove_device)(char *dev_id, void *arg);
+	int (*add_device)(const struct device *device, void *arg);
+	void (*remove_device)(const char *dev_id, void *arg);
 	void *cb_arg;
 };
 
-struct discover_client *discover_client_init(struct discover_client_ops *ops);
+struct discover_client *discover_client_init(
+	const struct discover_client_ops *ops);
 
-int discover_client_get_fd(struct discover_client *client);
+int discover_client_get_fd(const struct discover_client *client);
 
 void discover_client_destroy(struct discover_client *client);
 

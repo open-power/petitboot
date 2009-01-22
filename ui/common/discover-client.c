@@ -30,7 +30,8 @@ static int discover_client_destructor(void *arg)
 	return 0;
 }
 
-struct discover_client* discover_client_init(struct discover_client_ops *ops)
+struct discover_client* discover_client_init(
+	const struct discover_client_ops *ops)
 {
 	struct discover_client *client;
 	struct sockaddr_un addr;
@@ -64,7 +65,7 @@ out_err:
 	return NULL;
 }
 
-int discover_client_get_fd(struct discover_client *client)
+int discover_client_get_fd(const struct discover_client *client)
 {
 	return client->fd;
 }

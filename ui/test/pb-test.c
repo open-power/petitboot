@@ -3,7 +3,7 @@
 
 #include "ui/common/discover-client.h"
 
-static int print_device_add(struct device *device,
+static int print_device_add(const struct device *device,
 	void __attribute__((unused)) *arg)
 {
 	struct boot_option *opt;
@@ -28,7 +28,8 @@ static int print_device_add(struct device *device,
 	return 0;
 }
 
-static void print_device_remove(char *dev_id, void __attribute__((unused)) *arg)
+static void print_device_remove(const char *dev_id,
+	void __attribute__((unused)) *arg)
 {
 	printf("removed device:\n");
 	printf("\tid:   %s\n", dev_id);
