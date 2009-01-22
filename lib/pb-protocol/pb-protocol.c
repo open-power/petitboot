@@ -85,7 +85,8 @@ int pb_protocol_serialise_string(char *pos, const char *str)
  * @param[out] str	Pointer to resuling string
  * @return		zero on success, non-zero on failure
  */
-static int read_string(void *ctx, char **pos, unsigned int *len, char **str)
+static int read_string(void *ctx, const char **pos, unsigned int *len,
+	char **str)
 {
 	uint32_t str_len, read_len;
 
@@ -113,9 +114,10 @@ static int read_string(void *ctx, char **pos, unsigned int *len, char **str)
 }
 
 char *pb_protocol_deserialise_string(void *ctx,
-		struct pb_protocol_message *message)
+		const struct pb_protocol_message *message)
 {
-	char *buf, *str;
+	const char *buf;
+	char *str;
 	unsigned int len;
 
 	len = message->payload_len;
@@ -134,7 +136,7 @@ static int optional_strlen(const char *str)
 	return strlen(str);
 }
 
-int pb_protocol_device_len(struct device *dev)
+int pb_protocol_device_len(const struct device *dev)
 {
 	struct boot_option *opt;
 	int len;
@@ -158,7 +160,7 @@ int pb_protocol_device_len(struct device *dev)
 	return len;
 }
 
-int pb_protocol_serialise_device(struct device *dev, char *buf, int buf_len)
+int pb_protocol_serialise_device(const struct device *dev, char *buf, int buf_len)
 {
 	struct boot_option *opt;
 	uint32_t n;
@@ -277,10 +279,10 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 
 
 struct device *pb_protocol_deserialise_device(void *ctx,
-		struct pb_protocol_message *message)
+		const struct pb_protocol_message *message)
 {
 	struct device *dev;
-	char *pos;
+	const char *pos;
 	int i, n_options;
 	unsigned int len;
 

@@ -43,13 +43,13 @@ struct boot_option {
 
 struct boot_option *boot_option_copy(void* ctx, const struct boot_option *opt);
 
-int pb_protocol_device_len(struct device *dev);
+int pb_protocol_device_len(const struct device *dev);
 
 int pb_protocol_serialise_string(char *pos, const char *str);
 char *pb_protocol_deserialise_string(void *ctx,
-		struct pb_protocol_message *message);
+		const struct pb_protocol_message *message);
 
-int pb_protocol_serialise_device(struct device *dev, char *buf, int buf_len);
+int pb_protocol_serialise_device(const struct device *dev, char *buf, int buf_len);
 
 int pb_protocol_write_message(int fd, struct pb_protocol_message *message);
 
@@ -59,6 +59,6 @@ struct pb_protocol_message *pb_protocol_create_message(void *ctx,
 struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd);
 
 struct device *pb_protocol_deserialise_device(void *ctx,
-		struct pb_protocol_message *message);
+		const struct pb_protocol_message *message);
 
 #endif /* _PB_PROTOCOL_H */

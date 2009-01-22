@@ -55,7 +55,7 @@ static struct device device = {
 
 int device_handler_get_current_devices(
 		struct device_handler *handler __attribute__((unused)),
-		struct device **devices)
+		const struct device **devices)
 
 {
 	*devices = &device;

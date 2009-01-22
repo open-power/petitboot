@@ -90,7 +90,7 @@ static int client_write_message(
 }
 
 static int write_add_message(struct discover_server *server,
-		struct client *client, struct device *dev)
+		struct client *client, const struct device *dev)
 {
 	struct pb_protocol_message *message;
 	int len;
@@ -128,7 +128,7 @@ static int write_remove_message(struct discover_server *server,
 static int discover_server_process(void *arg)
 {
 	struct discover_server *server = arg;
-	struct device *devices;
+	const struct device *devices;
 	struct client *client;
 	int fd, i, n_devices;
 
