@@ -54,9 +54,10 @@ int waiter_poll(void)
 	static int n_pollfds;
 	int i, rc;
 
-	if (n_waiters > n_pollfds) {
+	if (n_waiters != n_pollfds) {
 		pollfds = talloc_realloc(NULL, pollfds,
 				struct pollfd, n_waiters);
+		n_pollfds = n_waiters;
 	}
 
 	for (i = 0; i < n_waiters; i++) {
