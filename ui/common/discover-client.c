@@ -107,10 +107,6 @@ static void remove_device(struct discover_client *client, const char *id)
 	if (!device)
 		return;
 
-	client->ops.remove_device(device, client->ops.cb_arg);
-
-	talloc_free(device);
-
 	/* remove the device from the client's device array */
 	client->n_devices--;
 	memmove(&client->devices[i], &client->devices[i+1],
@@ -118,6 +114,10 @@ static void remove_device(struct discover_client *client, const char *id)
 	client->devices = talloc_realloc(client, client->devices,
 			struct device *, client->n_devices);
 
+	/* notify the UI */
+	client->ops.remove_device(device, client->ops.cb_arg);
+
+	talloc_free(device);
 }
 
 int discover_client_process(struct discover_client *client)
