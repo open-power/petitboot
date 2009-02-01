@@ -76,7 +76,8 @@ static void print_clients(struct discover_server *server)
 				client->fd);
 }
 
-static int client_write_message(struct discover_server *server,
+static int client_write_message(
+		struct discover_server *server __attribute__((unused)),
 		struct client *client, struct pb_protocol_message *message)
 {
 	int rc;

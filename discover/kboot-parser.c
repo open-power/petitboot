@@ -117,7 +117,9 @@ static int check_for_global_option(struct kboot_context *ctx,
 	return 0;
 }
 
-static char *get_global_option(struct kboot_context *ctx, const char *name)
+static char *get_global_option(
+		struct kboot_context *ctx __attribute__((unused)),
+		const char *name)
 {
 	int i;
 

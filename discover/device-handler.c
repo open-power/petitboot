@@ -53,7 +53,8 @@ static struct device device = {
 	.icon_file = "meep.png",
 };
 
-int device_handler_get_current_devices(struct device_handler *handler,
+int device_handler_get_current_devices(
+		struct device_handler *handler __attribute__((unused)),
 		struct device **devices)
 
 {
