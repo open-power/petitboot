@@ -34,4 +34,21 @@ void discover_client_destroy(struct discover_client *client);
  */
 int discover_client_process(struct discover_client *client);
 
+/**
+ * Get the number of devices that the discover client has stored. This
+ * is the set of devices that have been added and not removed
+ *
+ * @param client The discover client
+ * @return	 The number of devices that have been added.
+ */
+int discover_client_device_count(struct discover_client *client);
+
+/**
+ * Get the device at a specific index.
+ * @param client A pointer to the discover client
+ * @param index  The index of the device to retrieve
+ * @return	 The device at the specified index, or NULL if none exists
+ */
+struct device *discover_client_get_device(struct discover_client *client,
+		int index);
 #endif

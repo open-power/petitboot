@@ -156,3 +156,18 @@ int discover_client_process(struct discover_client *client)
 
 	return 0;
 }
+
+/* accessors for discovered devices */
+int discover_client_device_count(struct discover_client *client)
+{
+	return client->n_devices;
+}
+
+struct device *discover_client_get_device(struct discover_client *client,
+		int index)
+{
+	if (index < 0 || index >= client->n_devices)
+		return NULL;
+
+	return client->devices[index];
+}
