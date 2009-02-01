@@ -27,6 +27,8 @@ struct device {
 	char *icon_file;
 
 	struct list boot_options;
+
+	void *ui_info;
 };
 
 struct boot_option {
@@ -39,6 +41,8 @@ struct boot_option {
 	char *boot_args;
 
 	struct list_item list;
+
+	void *ui_info;
 };
 
 struct boot_option *boot_option_copy(void* ctx, const struct boot_option *opt);
