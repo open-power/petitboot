@@ -28,11 +28,12 @@ static int print_device_add(const struct device *device,
 	return 0;
 }
 
-static void print_device_remove(const char *dev_id,
+static void print_device_remove(const struct device *device,
 	void __attribute__((unused)) *arg)
 {
 	printf("removed device:\n");
-	printf("\tid:   %s\n", dev_id);
+	printf("\tid:   %s\n", device->id);
+	printf("\tname: %s\n", device->name);
 }
 
 static struct discover_client_ops client_ops = {
