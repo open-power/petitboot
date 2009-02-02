@@ -10,7 +10,7 @@
 #include <asm/byteorder.h>
 
 #include <talloc/talloc.h>
-#include <log.h>
+#include <log/log.h>
 
 #include "ui/common/discover-client.h"
 #include "pb-protocol/pb-protocol.h"
