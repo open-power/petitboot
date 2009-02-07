@@ -58,6 +58,17 @@ struct boot_option *boot_option_copy(void* ctx, const struct boot_option *opt)
 	return new;
 }
 
+int pb_protocol_device_cmp(const struct device *a, const struct device *b)
+{
+	return !strcmp(a->id, b->id);
+}
+
+int pb_protocol_boot_option_cmp(const struct boot_option *a,
+	const struct boot_option *b)
+{
+	return !strcmp(a->id, b->id);
+}
+
 /* Write a string into the buffer, starting at pos.
  *
  * Returns the total length used for the write, including length header.
