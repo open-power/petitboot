@@ -38,26 +38,6 @@
  *   4-byte len, id
  */
 
-/* Deep copy a boot_option.
-*/
-struct boot_option *boot_option_copy(void* ctx, const struct boot_option *opt)
-{
-	struct boot_option *new = talloc(ctx, struct boot_option);
-
-	if (new) {
-		new->id = talloc_strdup(new, opt->id);
-		new->name = talloc_strdup(new, opt->name);
-		new->description = talloc_strdup(new, opt->description);
-		new->icon_file = talloc_strdup(new, opt->icon_file);
-		new->boot_image_file = talloc_strdup(new, opt->boot_image_file);
-		new->initrd_file = talloc_strdup(new, opt->initrd_file);
-		new->boot_args = talloc_strdup(new, opt->boot_args);
-		memset(&new->list, 0, sizeof(new->list));
-	}
-
-	return new;
-}
-
 int pb_protocol_device_cmp(const struct device *a, const struct device *b)
 {
 	return !strcmp(a->id, b->id);

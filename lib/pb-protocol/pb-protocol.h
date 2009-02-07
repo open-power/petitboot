@@ -45,8 +45,6 @@ struct boot_option {
 	void *ui_info;
 };
 
-struct boot_option *boot_option_copy(void* ctx, const struct boot_option *opt);
-
 int pb_protocol_device_len(const struct device *dev);
 int pb_protocol_device_cmp(const struct device *a, const struct device *b);
 
