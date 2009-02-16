@@ -19,7 +19,7 @@ struct discover_client_ops {
 };
 
 struct discover_client *discover_client_init(
-	const struct discover_client_ops *ops);
+	const struct discover_client_ops *ops, void *cb_arg);
 
 int discover_client_get_fd(const struct discover_client *client);
 

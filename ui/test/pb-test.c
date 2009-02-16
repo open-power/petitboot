@@ -45,7 +45,7 @@ int main(void)
 {
 	struct discover_client *client;
 
-	client = discover_client_init(&client_ops);
+	client = discover_client_init(&client_ops, NULL);
 	if (!client)
 		return -1;
 

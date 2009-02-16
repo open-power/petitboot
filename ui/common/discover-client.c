@@ -33,7 +33,7 @@ static int discover_client_destructor(void *arg)
 }
 
 struct discover_client* discover_client_init(
-	const struct discover_client_ops *ops)
+	const struct discover_client_ops *ops, void *cb_arg)
 {
 	struct discover_client *client;
 	struct sockaddr_un addr;
@@ -43,6 +43,7 @@ struct discover_client* discover_client_init(
 		return NULL;
 
 	memcpy(&client->ops, ops, sizeof(client->ops));
+	client->ops.cb_arg = cb_arg;
 
 	client->fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (!client->fd < 0) {
