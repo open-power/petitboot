@@ -98,3 +98,14 @@ clean:
 	rm -f discover/pb-discover
 	rm -f ui/test/pb-test
 
+maintainer-clean: clean
+	-rm -f $(top_srcdir)/aclocal.m4
+	-rm -rf $(top_srcdir)/autom4te.cache
+	-rm -f $(top_srcdir)/config.h.in
+	-rm -f $(top_srcdir)/configure
+	-rm -f config.h
+	-rm -f config.log
+	-rm -f config.status
+	-rm -f Makefile
+	-rm -f $(PACKAGE)-$(VERSION).tar.gz
+
