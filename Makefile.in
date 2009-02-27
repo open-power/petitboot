@@ -18,6 +18,7 @@ twin_LDFLAGS = @twin_LIBS@
 
 # other programs
 INSTALL = @INSTALL@
+SHELL = @SHELL@
 
 # paths
 prefix = @prefix@
