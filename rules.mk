@@ -62,12 +62,15 @@ discover/pb-discover: $(pb_discover_objs)
 parser-test: $(parser_test_objs)
 	$(LINK.o) -o $@ $^
 
-install: all
+install: all utils/99-petitboot.rules
 	$(INSTALL) -d $(DESTDIR)$(sbindir)/
 	$(INSTALL) discover/pb-discover $(uis) $(DESTDIR)$(sbindir)/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
 		$(DESTDIR)$(pkgdatadir)/artwork/
+	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/utils
+	$(INSTALL) $(top_srcdir)/utils/99-petitboot.rules \
+		 $(DESTDIR)$(pkgdatadir)/utils
 
 dist:	$(PACKAGE)-$(VERSION).tar.gz
 
