@@ -11,6 +11,8 @@ DEFS = @DEFS@
 CPPFLAGS = @CPPFLAGS@ $(DEFS)
 
 # dependencies
+PBTWIN = @PBTWIN@
+LIBTWIN = @LIBTWIN@
 twin_CFLAGS = @twin_CFLAGS@
 twin_LDFLAGS = @twin_LIBS@
 

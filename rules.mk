@@ -8,11 +8,14 @@ CPPFLAGS += -I$(top_srcdir) -I$(top_srcdir)/lib -I$(builddir)
 DEFS += '-DPREFIX="$(prefix)"' '-DPKG_SHARE_DIR="$(pkgdatadir)"' \
 	'-DLOCAL_STATE_DIR="$(localstatedir)"'
 
-#uis = ui/twin/pb-twin
 uis = ui/test/pb-test
 #parsers = native yaboot kboot
 parsers = kboot
 artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
+
+ifeq ($(PBTWIN),y)
+	uis += ui/twin/pb-twin
+endif
 
 log_objs = lib/log/log.o
 talloc_objs = lib/talloc/talloc.o
@@ -27,7 +30,7 @@ parser_test_objs = parser-test.o $(parser_objs)
 all: $(uis) discover/pb-discover
 
 # twin gui
-ui/twin/pb-twin: LDFLAGS+=$(twin_LDFLAGS)
+ui/twin/pb-twin: LDFLAGS+=$(twin_LDFLAGS) $(LIBTWIN)
 ui/twin/pb-twin: CFLAGS+=$(twin_CFLAGS)
 
 pb_twin_objs = ui/twin/pb-twin.o ui/common/devices.o

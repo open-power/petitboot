@@ -35,6 +35,7 @@ AC_ARG_WITH([twin],
 	[],
 	[with_twin=check])
 
+PBTWIN=
 LIBTWIN=
 AS_IF([test "x$with_twin" != xno],
 	[PKG_CHECK_MODULES([twin], [libtwin], [],
@@ -42,12 +43,12 @@ AS_IF([test "x$with_twin" != xno],
 		AC_MSG_RESULT([Consider adjusting PKG_CONFIG_PATH environment variable])])
 	AC_CHECK_LIB([twin], [main],
 		[AC_SUBST([LIBTWIN], ["-ltwin"])
+			AC_SUBST([PBTWIN], ["y"])
 			AC_DEFINE([HAVE_LIBTWIN], [1], [Define if you have libtwin])],
 		[if test "x$with_twin" != xcheck; then
 			AC_MSG_FAILURE([--with-twin was given, but test for twin failed])
 		fi],
 		[${twin_LIBS}])])
-
 
 mkdir -p discover ui/test ui/common lib/talloc lib/pb-protocol lib/list \
 	      lib/waiter lib/log
