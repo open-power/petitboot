@@ -7,20 +7,20 @@ void list_init(struct list *list)
 	list->head.prev = &list->head;
 }
 
-void list_insert_before(struct list_item *next, struct list_item *new)
+void list_insert_before(struct list_item *next, struct list_item *item)
 {
-	new->next = next;
-	new->prev = next->prev;
-	next->prev->next = new;
-	next->prev = new;
+	item->next = next;
+	item->prev = next->prev;
+	next->prev->next = item;
+	next->prev = item;
 }
 
-void list_insert_after(struct list_item *prev, struct list_item *new)
+void list_insert_after(struct list_item *prev, struct list_item *item)
 {
-	new->next = prev->next;
-	new->prev = prev;
-	prev->next->prev = new;
-	prev->next = new;
+	item->next = prev->next;
+	item->prev = prev;
+	prev->next->prev = item;
+	prev->next = item;
 }
 
 void list_remove(struct list_item *item)

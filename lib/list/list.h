@@ -35,17 +35,17 @@ struct list {
 		_pos = list_entry(_pos->_member.next, typeof(*_pos), _member))
 
 void list_init(struct list *list);
-void list_insert_before(struct list_item *next, struct list_item *new);
-void list_insert_after(struct list_item *prev, struct list_item *new);
+void list_insert_before(struct list_item *next, struct list_item *item);
+void list_insert_after(struct list_item *prev, struct list_item *item);
 void list_remove(struct list_item *item);
 
-static inline void list_add(struct list *list, struct list_item *new)
+static inline void list_add(struct list *list, struct list_item *item)
 {
-	list_insert_after(&list->head, new);
+	list_insert_after(&list->head, item);
 }
-static inline void list_add_tail(struct list *list, struct list_item *new)
+static inline void list_add_tail(struct list *list, struct list_item *item)
 {
-	list_insert_before(&list->head, new);
+	list_insert_before(&list->head, item);
 }
 
 #endif /* _LIST_H */
