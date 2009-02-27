@@ -30,6 +30,10 @@ struct list {
 	     &pos->member != &(list)->head; 	\
 	     pos = list_entry(pos->member.next, typeof(*pos), member))
 
+#define list_for_each_entry_continue(_list, _pos, _member) \
+	for (; &_pos->_member != &(_list)->head; \
+		_pos = list_entry(_pos->_member.next, typeof(*_pos), _member))
+
 void list_init(struct list *list);
 void list_insert_before(struct list_item *next, struct list_item *new);
 void list_insert_after(struct list_item *prev, struct list_item *new);
