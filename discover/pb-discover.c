@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdlib.h>
 #include <signal.h>
 
@@ -21,6 +22,16 @@ int main(void)
 	struct device_handler *handler;
 	struct discover_server *server;
 	struct udev *udev;
+	FILE *log;
+
+	log = fopen("pb-discover.log", "a");
+	assert(log);
+	pb_log_set_stream(log);
+
+#if defined(DEBUG)
+	pb_log_always_flush(1);
+#endif
+	pb_log("--- pb-discover ---\n");
 
 	/* we look for closed sockets when we write, so ignore SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
@@ -48,6 +59,7 @@ int main(void)
 
 	device_handler_destroy(handler);
 
+	pb_log("--- end ---\n");
 
 	return EXIT_SUCCESS;
 }

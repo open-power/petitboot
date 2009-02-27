@@ -66,12 +66,12 @@ static void print_clients(struct discover_server *server)
 {
 	struct client *client;
 
-	printf("current clients [%p,%p,%p]:\n",
+	pb_log("current clients [%p,%p,%p]:\n",
 			&server->clients.head,
 			server->clients.head.prev,
 			server->clients.head.next);
 	list_for_each_entry(&server->clients, client, list)
-		printf("\t[%p,%p,%p] client: %d\n", &client->list,
+		pb_log("\t[%p,%p,%p] client: %d\n", &client->list,
 				client->list.prev, client->list.next,
 				client->fd);
 }

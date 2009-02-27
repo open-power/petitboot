@@ -82,10 +82,10 @@ static void print_event(struct udev_event *event)
 	action = event->action == UDEV_ACTION_ADD ? "add" : "remove";
 
 	pb_log("udev %s event:\n", action);
-	printf("\tdevice: %s\n", event->device);
+	pb_log("\tdevice: %s\n", event->device);
 
 	for (i = 0; params[i]; i++)
-		printf("\t%-12s => %s\n",
+		pb_log("\t%-12s => %s\n",
 				params[i], udev_event_param(event, params[i]));
 
 }

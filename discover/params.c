@@ -28,10 +28,10 @@
 #define realloc_array(ptr, type, num) \
 	((type *)_realloc_array((ptr), sizeof(type), (num)))
 
-#define rprintf(x, ...) do { fprintf(stderr, ##__VA_ARGS__);	\
-				fprintf(stderr, "\n"); } while (0)
-#define rsyserr(x, y, ...) do { fprintf(stderr, ##__VA_ARGS__);	\
-				fprintf(stderr, "\n"); } while (0)
+#define rprintf(x, ...) do { pb_log(stderr, ##__VA_ARGS__);	\
+				pb_log(stderr, "\n"); } while (0)
+#define rsyserr(x, y, ...) do { pb_log(stderr, ##__VA_ARGS__);	\
+				pb_log(stderr, "\n"); } while (0)
 
 #define MALLOC_MAX 0x40000000
 #define False 0
