@@ -47,6 +47,9 @@ ui_common_objs = ui/common/discover-client.o
 ncurses_objs =
 twin_objs = ui/twin/pb-twin.o
 
+# Makefiles
+makefiles = Makefile $(top_srcdir)/rules.mk
+
 # object collections
 lib_objs = $(list_objs) $(log_objs) $(protocol_objs) $(talloc_objs) \
 	$(waiter_objs)
@@ -59,6 +62,7 @@ all: $(uis) $(daemons)
 
 # ncurses cui
 pb_cui_objs = $(client_objs) $(ncurses_objs) ui/ncurses/ps3-cui.o
+$(pb_cui_objs): $(makefiles)
 
 $(pb_cui): LDFLAGS += -lncurses
 
@@ -67,12 +71,14 @@ $(pb_cui): $(pb_cui_objs)
 
 # test ui
 pb_test_objs = $(client_objs) ui/test/pb-test.o
+$(pb_test_objs): $(makefiles)
 
 $(pb_test): $(pb_test_objs)
 	$(LINK.o) -o $@ $^
 
 # twin gui
 pb_twin_objs = $(client_objs) $(twin_objs) ui/twin/ps3-twin.o
+$(pb_twin_objs): $(makefiles)
 
 $(pb_twin): LDFLAGS+=$(twin_LDFLAGS) $(LIBTWIN)
 $(pb_twin): CFLAGS+=$(twin_CFLAGS)
@@ -82,12 +88,14 @@ $(pb_twin): $(pb_twin_objs)
 
 # discovery daemon
 pb_discover_objs = $(daemon_objs) discover/pb-discover.o
+$(pb_discover_objs): $(makefiles)
 
 $(pb_discover): $(pb_discover_objs)
 	$(LINK.o) -o $@ $^
 
 # parser-test
 parser_test_objs = $(parser_objs) test/parser-test.o
+$(parser_test_objs): $(makefiles)
 
 $(parser_test): $(parser_test_objs)
 	$(LINK.o) -o $@ $^
