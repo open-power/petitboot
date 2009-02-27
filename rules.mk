@@ -124,10 +124,10 @@ $(PACKAGE)-$(VERSION).tar.gz: $(PACKAGE)-$(VERSION)
 	tar czvf $@ $^
 
 $(PACKAGE)-$(VERSION): clean
-	for f in $$(git-ls-files); do \
+	for f in $$(git --git-dir=$(top_srcdir)/.git ls-files); do \
 		d=$@/$$(dirname $$f); \
 		mkdir -p $$d; \
-		cp -a $$f $$d; \
+		cp -a $(top_srcdir)/$$f $$d; \
 	done
 
 clean:
