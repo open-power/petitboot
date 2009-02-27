@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 /* this is only needed for compatibility with the old talloc */
 typedef void TALLOC_CTX;
