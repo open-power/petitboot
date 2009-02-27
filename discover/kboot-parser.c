@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -248,11 +249,15 @@ static void parse_buf(struct kboot_context *kboot_ctx)
 }
 
 
-static int parse(struct discover_context *ctx)
+static int kboot_parse(struct discover_context *ctx)
 {
+	static const char *const conf_names[] = {
+		"/etc/kboot.conf",
+		"/etc/kboot.cnf",
+	};
 	struct kboot_context *kboot_ctx;
-	char *filepath;
 	int fd, len, rc;
+	unsigned int i;
 	struct stat stat;
 
 	rc = 0;
@@ -261,21 +266,39 @@ static int parse(struct discover_context *ctx)
 	kboot_ctx = talloc_zero(ctx, struct kboot_context);
 	kboot_ctx->discover = ctx;
 
-	filepath = resolve_path(kboot_ctx, "/etc/kboot.conf", ctx->device_path);
+	for (i = 0, len = 0; i < sizeof(conf_names) / sizeof(conf_names[0]);
+		i++) {
+		char *filepath = resolve_path(kboot_ctx, conf_names[i],
+			ctx->device_path);
 
-	fd = open(filepath, O_RDONLY);
-	if (fd < 0)
+		pb_log("%s: try: %s\n", __func__, filepath);
+
+		fd = open(filepath, O_RDONLY);
+		if (fd < 0) {
+			pb_log("%s: open failed: %s : %s\n", __func__, filepath,
+				strerror(errno));
+			continue;
+		}
+		if (fstat(fd, &stat)) {
+			pb_log("%s: fstat failed: %s : %s\n", __func__,
+				filepath, strerror(errno));
+			continue;
+		}
+
+		kboot_ctx->buf = talloc_array(kboot_ctx, char,
+			stat.st_size + 1);
+
+		len = read(fd, kboot_ctx->buf, stat.st_size);
+		if (len < 0) {
+			pb_log("%s: read failed: %s : %s\n", __func__, filepath,
+				strerror(errno));
+			continue;
+		}
+		kboot_ctx->buf[len] = 0;
+	}
+
+	if (len <= 0)
 		goto out;
-
-	if (fstat(fd, &stat))
-		goto out;
-
-	kboot_ctx->buf = talloc_array(kboot_ctx, char, stat.st_size + 1);
-
-	len = read(fd, kboot_ctx->buf, stat.st_size);
-	if (len < 0)
-		goto out;
-	kboot_ctx->buf[len] = 0;
 
 	if (!ctx->device->icon_file)
 		ctx->device->icon_file = talloc_strdup(ctx,
@@ -286,10 +309,12 @@ static int parse(struct discover_context *ctx)
 	rc = 1;
 
 out:
+	pb_log("%s: %s\n", __func__, (rc ? "ok" : "failed"));
+
 	if (fd >= 0)
 		close(fd);
 	talloc_free(kboot_ctx);
 	return rc;
 }
 
-define_parser(kboot, 98, parse);
+define_parser(kboot, 98, kboot_parse);
