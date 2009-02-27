@@ -1,5 +1,4 @@
 
-
 VPATH = $(srcdir)
 
 CPPFLAGS += -I$(top_srcdir) -I$(top_srcdir)/lib -I$(builddir)
@@ -8,74 +7,106 @@ CPPFLAGS += -I$(top_srcdir) -I$(top_srcdir)/lib -I$(builddir)
 DEFS += '-DPREFIX="$(prefix)"' '-DPKG_SHARE_DIR="$(pkgdatadir)"' \
 	'-DLOCAL_STATE_DIR="$(localstatedir)"'
 
-uis = ui/test/pb-test
-#parsers = native yaboot kboot
+# programs
+pb_discover = discover/pb-discover
+pb_cui = ui/ncurses/pb-cui
+pb_test = ui/test/pb-test
+pb_twin = ui/twin/pb-twin
+parser_test = test/parser-test
+
+# install targets and components
+daemons = $(pb_discover)
+#parsers = kboot native yaboot (todo)
 parsers = kboot
-artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
+uis = $(pb_test)
+tests = $(parser_test)
 
 ifeq ($(PBTWIN),y)
-	uis += ui/twin/pb-twin
+	uis += $(pb_twin)
 endif
 
-log_objs = lib/log/log.o
-talloc_objs = lib/talloc/talloc.o
+# other to install
+artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
+rules = utils/99-petitboot.rules
+
+# client/daemon lib objs
 list_objs = lib/list/list.o
+log_objs = lib/log/log.o
+protocol_objs = lib/pb-protocol/pb-protocol.o
+talloc_objs = lib/talloc/talloc.o
 waiter_objs = lib/waiter/waiter.o
-server_objs = lib/pb-protocol/pb-protocol.o
+
+# daemon objs
 parser_objs = discover/parser.o discover/parser-utils.o \
-	      $(foreach p, $(parsers), discover/$(p)-parser.o)
+	$(foreach p, $(parsers), discover/$(p)-parser.o)
+discover_objs = discover/udev.o discover/discover-server.o \
+	discover/device-handler.o discover/paths.o
 
-parser_test_objs = parser-test.o $(parser_objs)
+# client objs
+ui_common_objs = ui/common/discover-client.o
+ncurses_objs =
+twin_objs = ui/twin/pb-twin.o
 
-all: $(uis) discover/pb-discover
+# object collections
+lib_objs = $(list_objs) $(log_objs) $(protocol_objs) $(talloc_objs) \
+	$(waiter_objs)
 
-# twin gui
-ui/twin/pb-twin: LDFLAGS+=$(twin_LDFLAGS) $(LIBTWIN)
-ui/twin/pb-twin: CFLAGS+=$(twin_CFLAGS)
+daemon_objs = $(lib_objs) $(parser_objs) $(discover_objs)
 
-pb_twin_objs = ui/twin/pb-twin.o ui/common/devices.o
+client_objs = $(lib_objs) $(ui_common_objs)
 
-ui/twin/pb-twin: $(pb_twin_objs)
+all: $(uis) $(daemons)
+
+# ncurses cui
+pb_cui_objs = $(client_objs) $(ncurses_objs) ui/ncurses/ps3-cui.o
+
+$(pb_cui): LDFLAGS += -lncurses
+
+$(pb_cui): $(pb_cui_objs)
 	$(LINK.o) -o $@ $^
 
 # test ui
-pb_test_objs = ui/test/pb-test.o ui/common/discover-client.o \
-	$(log_objs) $(talloc_objs) $(server_objs) $(list_objs)
+pb_test_objs = $(client_objs) ui/test/pb-test.o
 
-ui/test/pb-test: $(pb_test_objs)
+$(pb_test): $(pb_test_objs)
+	$(LINK.o) -o $@ $^
+
+# twin gui
+pb_twin_objs = $(client_objs) $(twin_objs) ui/twin/ps3-twin.o
+
+$(pb_twin): LDFLAGS+=$(twin_LDFLAGS) $(LIBTWIN)
+$(pb_twin): CFLAGS+=$(twin_CFLAGS)
+
+$(pb_twin): $(pb_twin_objs)
 	$(LINK.o) -o $@ $^
 
 # discovery daemon
-#pb_discover_objs = discover/params.o discover/parser.o discover/paths.o \
-#	      discover/yaboot-cfg.o \
-#	      $(foreach p,$(parsers),discover/$(p)-parser.o)
+pb_discover_objs = $(daemon_objs) discover/pb-discover.o
 
-pb_discover_objs = discover/pb-discover.o discover/udev.o \
-		   discover/discover-server.o discover/device-handler.o \
-		   discover/paths.o $(talloc_objs) $(server_objs) \
-		   $(parser_objs) $(list_objs) $(waiter_objs) $(log_objs)
-
-discover/pb-discover: $(pb_discover_objs)
+$(pb_discover): $(pb_discover_objs)
 	$(LINK.o) -o $@ $^
 
+# parser-test
+parser_test_objs = $(parser_objs) test/parser-test.o
 
-parser-test: $(parser_test_objs)
+$(parser_test): $(parser_test_objs)
 	$(LINK.o) -o $@ $^
 
-install: all utils/99-petitboot.rules
+parser-test: $(parser_test)
+
+install: all $(rules)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)/
-	$(INSTALL) discover/pb-discover $(uis) $(DESTDIR)$(sbindir)/
+	$(INSTALL) $(daemons) $(uis) $(DESTDIR)$(sbindir)/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
 		$(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/utils
-	$(INSTALL) $(top_srcdir)/utils/99-petitboot.rules \
-		 $(DESTDIR)$(pkgdatadir)/utils
+	$(INSTALL) $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
 
-dist:	$(PACKAGE)-$(VERSION).tar.gz
+dist: $(PACKAGE)-$(VERSION).tar.gz
 
-check:	parser-test
-	devices/parser-test.sh
+check: parser-test
+	$(SHELL) test/parser-test.sh
 
 distcheck: dist
 	tar -xvf $(PACKAGE)-$(VERSION).tar.gz
@@ -90,13 +121,17 @@ $(PACKAGE)-$(VERSION): clean
 		mkdir -p $$d; \
 		cp -a $$f $$d; \
 	done
+
 clean:
 	rm -rf $(PACKAGE)-$(VERSION)
 	rm -f $(uis)
-	rm -f $(pb_twin_objs) $(pb_test_objs)
+	rm -f $(pb_cui_objs)
+	rm -f $(pb_test_objs)
+	rm -f $(pb_twin_objs)
+	rm -f $(daemons)
 	rm -f $(pb_discover_objs)
-	rm -f discover/pb-discover
-	rm -f ui/test/pb-test
+	rm -f $(tests)
+	rm -f $(parser_test_objs)
 
 maintainer-clean: clean
 	-rm -f $(top_srcdir)/aclocal.m4
@@ -108,4 +143,3 @@ maintainer-clean: clean
 	-rm -f config.status
 	-rm -f Makefile
 	-rm -f $(PACKAGE)-$(VERSION).tar.gz
-
