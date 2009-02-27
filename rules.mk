@@ -2,6 +2,7 @@
 VPATH = $(srcdir)
 
 CPPFLAGS += -I$(top_srcdir) -I$(top_srcdir)/lib -I$(builddir)
+LDFLAGS += $(CFLAGS)
 
 # we need paths to be overridable at build-time
 DEFS += '-DPREFIX="$(prefix)"' '-DPKG_SHARE_DIR="$(pkgdatadir)"' \
