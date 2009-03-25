@@ -27,6 +27,11 @@ void pb_log_set_stream(FILE *stream)
 	logf = stream;
 }
 
+FILE * pb_log_get_stream(void)
+{
+	return logf;
+}
+
 void pb_log_always_flush(int state)
 {
 	always_flush = state;
