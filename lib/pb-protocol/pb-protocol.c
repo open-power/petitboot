@@ -1,11 +1,13 @@
 
 #include <assert.h>
+#include <errno.h>
 #include <string.h>
 #include <stdint.h>
 #include <asm/byteorder.h>
 
 #include <talloc/talloc.h>
 #include <list/list.h>
+#include <log/log.h>
 
 #include "pb-protocol.h"
 
@@ -212,7 +214,11 @@ int pb_protocol_write_message(int fd, struct pb_protocol_message *message)
 
 	talloc_free(message);
 
-	return total_len ? -1 : 0;
+	if (!total_len)
+		return 0;
+
+	pb_log("%s: failed: %s\n", __func__, strerror(errno));
+	return -1;
 }
 
 struct pb_protocol_message *pb_protocol_create_message(void *ctx,
@@ -220,8 +226,11 @@ struct pb_protocol_message *pb_protocol_create_message(void *ctx,
 {
 	struct pb_protocol_message *message;
 
-	if (payload_len > PB_PROTOCOL_MAX_PAYLOAD_SIZE)
+	if (payload_len > PB_PROTOCOL_MAX_PAYLOAD_SIZE) {
+		pb_log("%s: payload too big %u/%u\n", __func__, payload_len,
+			PB_PROTOCOL_MAX_PAYLOAD_SIZE);
 		return NULL;
+	}
 
 	message = talloc_size(ctx, sizeof(*message) + payload_len);
 
@@ -248,8 +257,11 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 	m.payload_len = __be32_to_cpu(m.payload_len);
 	m.action = __be32_to_cpu(m.action);
 
-	if (m.payload_len > PB_PROTOCOL_MAX_PAYLOAD_SIZE)
+	if (m.payload_len > PB_PROTOCOL_MAX_PAYLOAD_SIZE) {
+		pb_log("%s: payload too big %u/%u\n", __func__, m.payload_len,
+			PB_PROTOCOL_MAX_PAYLOAD_SIZE);
 		return NULL;
+	}
 
 	message = talloc_size(ctx, sizeof(m) + m.payload_len);
 	memcpy(message, &m, sizeof(m));
@@ -259,6 +271,8 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 
 		if (rc <= 0) {
 			talloc_free(message);
+			pb_log("%s: failed (%u): %s\n", __func__, len,
+				strerror(errno));
 			return NULL;
 		}
 
