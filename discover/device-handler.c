@@ -227,8 +227,11 @@ static int mount_device(struct discover_context *ctx)
 		goto out_rmdir;
 	}
 
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+		pb_log("%s: mount failed (%d): %s\n", __func__,
+			WEXITSTATUS(status), ctx->event->device);
 		goto out_rmdir;
+	}
 
 	setup_device_links(ctx);
 	return 0;
@@ -320,7 +323,6 @@ static int handle_add_event(struct device_handler *handler,
 
 	rc = mount_device(ctx);
 	if (rc) {
-		pb_log("mount_device failed for %s\n", event->device);
 		talloc_free(ctx);
 		return 0;
 	}
