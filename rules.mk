@@ -61,10 +61,11 @@ client_objs = $(lib_objs) $(ui_common_objs)
 all: $(uis) $(daemons)
 
 # ncurses cui
-pb_cui_objs = $(client_objs) $(ncurses_objs) ui/ncurses/ps3-cui.o
+pb_cui_objs = $(client_objs) $(ncurses_objs) ui/ncurses/ps3-cui.o \
+	ui/common/ps3.o
 $(pb_cui_objs): $(makefiles)
 
-$(pb_cui): LDFLAGS += -lncurses
+$(pb_cui): LDFLAGS += -lps3-utils -lmenu -lform -lncurses
 
 $(pb_cui): $(pb_cui_objs)
 	$(LINK.o) -o $@ $^
