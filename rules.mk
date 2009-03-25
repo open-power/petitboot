@@ -17,7 +17,7 @@ parser_test = test/parser-test
 
 # install targets and components
 daemons = $(pb_discover)
-parsers = kboot
+parsers = kboot yaboot
 uis = $(pb_test)
 tests = $(parser_test)
 

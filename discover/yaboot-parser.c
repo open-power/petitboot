@@ -1,235 +1,256 @@
+#define _GNU_SOURCE
 
-#include "parser.h"
-#include "params.h"
-#include "paths.h"
-#include "yaboot-cfg.h"
-
+#include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <ctype.h>
-#include <sys/param.h>
 
-static struct device *dev;
-static char *devpath;
-static char *defimage;
+#include "log/log.h"
+#include "talloc/talloc.h"
+#include "pb-protocol/pb-protocol.h"
+#include "parser-conf.h"
+#include "parser-utils.h"
+#include "paths.h"
 
-char *
-make_params(char *label, char *params)
-{
-     char *p, *q;
-     static char buffer[2048];
-
-     q = buffer;
-     *q = 0;
-
-     p = cfg_get_strg(label, "literal");
-     if (p) {
-          strcpy(q, p);
-          q = strchr(q, 0);
-          if (params) {
-               if (*p)
-                    *q++ = ' ';
-               strcpy(q, params);
-          }
-          return buffer;
-     }
-
-     p = cfg_get_strg(label, "root");
-     if (p) {
-          strcpy (q, "root=");
-          strcpy (q + 5, p);
-          q = strchr (q, 0);
-          *q++ = ' ';
-     }
-     if (cfg_get_flag(label, "read-only")) {
-          strcpy (q, "ro ");
-          q += 3;
-     }
-     if (cfg_get_flag(label, "read-write")) {
-          strcpy (q, "rw ");
-          q += 3;
-     }
-     p = cfg_get_strg(label, "ramdisk");
-     if (p) {
-          strcpy (q, "ramdisk=");
-          strcpy (q + 8, p);
-          q = strchr (q, 0);
-          *q++ = ' ';
-     }
-     p = cfg_get_strg(label, "initrd-size");
-     if (p) {
-          strcpy (q, "ramdisk_size=");
-          strcpy (q + 13, p);
-          q = strchr (q, 0);
-          *q++ = ' ';
-     }
-     if (cfg_get_flag(label, "novideo")) {
-          strcpy (q, "video=ofonly");
-          q = strchr (q, 0);
-          *q++ = ' ';
-     }
-     p = cfg_get_strg (label, "append");
-     if (p) {
-          strcpy (q, p);
-          q = strchr (q, 0);
-          *q++ = ' ';
-     }
-     *q = 0;
-     if (params)
-          strcpy(q, params);
-
-     return buffer;
-}
-
-static int check_and_add_device(struct device *dev)
-{
-	if (!dev->icon_file)
-		dev->icon_file = strdup(generic_icon_file(guess_device_type()));
-
-	return !add_device(dev);
-}
-
-void process_image(char *label)
-{
-	struct boot_option opt;
-	char *cfgopt;
-
-	memset(&opt, 0, sizeof(opt));
-
-	opt.name = label;
-	cfgopt = cfg_get_strg(label, "image");
-	opt.boot_image_file = resolve_path(cfgopt, devpath);
-	if (cfgopt == defimage)
-		pb_log("This one is default. What do we do about it?\n");
-
-	cfgopt = cfg_get_strg(label, "initrd");
-	if (cfgopt)
-		opt.initrd_file = resolve_path(cfgopt, devpath);
-
-	opt.boot_args = make_params(label, NULL);
-
-	add_boot_option(&opt);
-
-	if (opt.initrd_file)
-		free(opt.initrd_file);
-}
-
-static int yaboot_parse(const char *device)
-{
-	char *filepath;
-	char *conf_file;
-	char *tmpstr;
-	ssize_t conf_len;
-	int fd;
-	struct stat st;
-	char *label;
-
-	devpath = strdup(device);
-
-	filepath = resolve_path("/etc/yaboot.conf", devpath);
-
-	fd = open(filepath, O_RDONLY);
-	if (fd < 0) {
-		free(filepath);
-		filepath = resolve_path("/yaboot.conf", devpath);
-		fd = open(filepath, O_RDONLY);
-		
-		if (fd < 0)
-			return 0;
-	}
-
-	if (fstat(fd, &st)) {
-		close(fd);
-		return 0;
-	}
-
-	conf_file = malloc(st.st_size+1);
-	if (!conf_file) {
-		close(fd);
-		return 0;
-	}
-	
-	conf_len = read(fd, conf_file, st.st_size);
-	if (conf_len < 0) {
-		close(fd);
-		return 0;
-	}
-	conf_file[conf_len] = 0;
-
-	close(fd);
-	
-	if (cfg_parse(filepath, conf_file, conf_len)) {
-		pb_log("Error parsing yaboot.conf\n");
-		return 0;
-	}
-
-	free(filepath);
-
-	dev = malloc(sizeof(*dev));
-	memset(dev, 0, sizeof(*dev));
-	dev->id = strdup(devpath);
-	if (cfg_get_strg(0, "init-message")) {
-		char *newline;
-		dev->description = strdup(cfg_get_strg(0, "init-message"));
-		newline = strchr(dev->description, '\n');
-		if (newline)
-			*newline = 0;
-	}
-	dev->icon_file = strdup(generic_icon_file(guess_device_type()));
-
-	/* If we have a 'partiton=' directive, update the default devpath
-	 * to use that instead of the current device */
-	tmpstr = cfg_get_strg(0, "partition");
-	if (tmpstr) {
-		char *endp;
-		int partnr = strtol(tmpstr, &endp, 10);
-		if (endp != tmpstr && !*endp) {
-			char *new_dev, *tmp;
-
-			new_dev = malloc(strlen(devpath) + strlen(tmpstr) + 1);
-			if (!new_dev)
-				return 0;
-
-			strcpy(new_dev, devpath);
-
-			/* Strip digits (partition number) from string */
-			endp = new_dev + strlen(devpath) - 1;
-			while (isdigit(*endp))
-				*(endp--) = 0;
-
-			/* and add our own... */
-			sprintf(endp + 1, "%d", partnr);
-
-			tmp = devpath;
-			devpath = parse_device_path(new_dev, devpath);
-			free(tmp);
-			free(new_dev);
-		}
-	}
-
-	defimage = cfg_get_default();
-	if (!defimage)
-		return 0;
-	defimage = cfg_get_strg(defimage, "image");
-
-	label = cfg_next_image(NULL);
-	if (!label || !check_and_add_device(dev))
-		return 0;
-
-	do {
-		process_image(label);
-	} while ((label = cfg_next_image(label)));
-
-	return 1;
-}
-
-struct parser yaboot_parser = {
-	.name = "yaboot.conf parser",
-	.priority = 99,
-	.parse	  = yaboot_parse
+struct yaboot_state {
+	struct boot_option *opt;
+	const char *desc_image;
+	char *desc_initrd;
+	int found_suse;
+	int globals_done;
+	const char *const *known_names;
 };
+
+static void yaboot_finish(struct conf_context *conf)
+{
+	struct yaboot_state *state = conf->parser_info;
+
+	assert(state->desc_image);
+	assert(state->opt);
+	assert(state->opt->name);
+	assert(state->opt->boot_args);
+
+	state->opt->description = talloc_asprintf(state->opt, "%s %s %s",
+		state->desc_image,
+		(state->desc_initrd ? state->desc_initrd : ""),
+		state->opt->boot_args);
+
+	talloc_free(state->desc_initrd);
+	state->desc_initrd = NULL;
+
+	conf_strip_str(state->opt->boot_args);
+	conf_strip_str(state->opt->description);
+
+	/* opt is persistent, so must be associated with device */
+
+	device_add_boot_option(conf->dc->device, state->opt);
+	state->opt = talloc_zero(conf->dc->device, struct boot_option);
+	state->opt->boot_args = talloc_strdup(state->opt, "");
+}
+
+static void yaboot_process_pair(struct conf_context *conf, const char *name,
+		char *value)
+{
+	struct yaboot_state *state = conf->parser_info;
+
+	/* fixup for bare values */
+
+	if (!name)
+		name = value;
+
+	if (!state->globals_done && conf_set_global_option(conf, name, value))
+		return;
+
+	if (!conf_param_in_list(state->known_names, name))
+		return;
+
+	state->globals_done = 1;
+
+	/* image */
+
+	if (streq(name, "image")) {
+		if (state->opt->boot_image_file)
+			yaboot_finish(conf);
+
+		state->opt->boot_image_file = resolve_path(state->opt, value,
+			conf->dc->device_path);
+		state->desc_image = talloc_strdup(state->opt, value);
+		return;
+	}
+
+	if (streq(name, "image[32bit]") || streq(name, "image[64bit]")) {
+		state->found_suse = 1;
+
+		if (state->opt->boot_image_file)
+			yaboot_finish(conf);
+
+		if (*value == '/') {
+			state->opt->boot_image_file = resolve_path(state->opt,
+				value, conf->dc->device_path);
+			state->desc_image = talloc_strdup(state->opt, value);
+		} else {
+			char *s;
+			asprintf(&s, "/suseboot/%s", value);
+			state->opt->boot_image_file = resolve_path(state->opt,
+				s, conf->dc->device_path);
+			state->desc_image = talloc_strdup(state->opt, s);
+			free(s);
+		}
+
+		return;
+	}
+
+	if (!state->opt->boot_image_file) {
+		pb_log("%s: unknown name: %s\n", __func__, name);
+		return;
+	}
+
+	/* initrd */
+
+	if (streq(name, "initrd")) {
+		if (!state->found_suse || (*value == '/')) {
+			state->opt->initrd_file = resolve_path(state->opt,
+				value, conf->dc->device_path);
+			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
+				value);
+		} else {
+			char *s;
+			asprintf(&s, "/suseboot/%s", value);
+			state->opt->initrd_file = resolve_path(state->opt,
+				s, conf->dc->device_path);
+			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
+				s);
+			free(s);
+		}
+		return;
+	}
+
+	/* label */
+
+	if (streq(name, "label")) {
+		state->opt->id = talloc_asprintf(state->opt, "%s#%s",
+			conf->dc->device->id, value);
+		state->opt->name = talloc_strdup(state->opt, value);
+		return;
+	}
+
+	/* args */
+
+	if (streq(name, "append")) {
+		state->opt->boot_args = talloc_asprintf_append(
+			state->opt->boot_args, "%s ", value);
+		return;
+	}
+
+	if (streq(name, "initrd-size")) {
+		state->opt->boot_args = talloc_asprintf_append(
+			state->opt->boot_args, "ramdisk_size=%s ", value);
+		return;
+	}
+
+	if (streq(name, "literal")) {
+		if (*state->opt->boot_args) {
+			pb_log("%s: literal over writes '%s'\n", __func__,
+				state->opt->boot_args);
+			talloc_free(state->opt->boot_args);
+		}
+		talloc_asprintf(state->opt, "%s ", value);
+		return;
+	}
+
+	if (streq(name, "ramdisk")) {
+		state->opt->boot_args = talloc_asprintf_append(
+			state->opt->boot_args, "ramdisk=%s ", value);
+		return;
+	}
+
+	if (streq(name, "read-only")) {
+		state->opt->boot_args = talloc_asprintf_append(
+			state->opt->boot_args, "ro ");
+		return;
+	}
+
+	if (streq(name, "read-write")) {
+		state->opt->boot_args = talloc_asprintf_append(
+			state->opt->boot_args, "rw ");
+		return;
+	}
+
+	if (streq(name, "root")) {
+		state->opt->boot_args = talloc_asprintf_append(
+			state->opt->boot_args, "root=%s ", value);
+		return;
+	}
+
+	pb_log("%s: unknown name: %s\n", __func__, name);
+}
+
+static struct conf_global_option yaboot_global_options[] = {
+	{ .name = "boot" },
+	{ .name = "initrd" },
+	{ .name = "partition" },
+	{ .name = "video" },
+	{ .name = NULL },
+};
+
+static const char *const yaboot_conf_files[] = {
+	"/yaboot.conf",
+	"/yaboot.cnf",
+	"/etc/yaboot.conf",
+	"/etc/yaboot.cnf",
+	"/suseboot/yaboot.cnf",
+	"/YABOOT.CONF",
+	"/YABOOT.CNF",
+	"/ETC/YABOOT.CONF",
+	"/ETC/YABOOT.CNF",
+	"/SUSEBOOT/YABOOT.CNF",
+	NULL
+};
+
+static const char *yaboot_known_names[] = {
+	"append",
+	"image",
+	"image[64bit]", /* SUSE extension */
+	"image[32bit]", /* SUSE extension */
+	"initrd",
+	"initrd-size",
+	"label",
+	"literal",
+	"ramdisk",
+	"read-only",
+	"read-write",
+	"root",
+	NULL
+};
+
+static int yaboot_parse(struct discover_context *dc)
+{
+	struct conf_context *conf;
+	struct yaboot_state *state;
+	int rc;
+
+	conf = talloc_zero(dc, struct conf_context);
+
+	if (!conf)
+		return -1;
+
+	conf->dc = dc;
+	conf->global_options = yaboot_global_options,
+	conf->conf_files = yaboot_conf_files,
+	conf->process_pair = yaboot_process_pair;
+	conf->finish = yaboot_finish;
+	conf->parser_info = state = talloc_zero(conf, struct yaboot_state);
+
+	state->known_names = yaboot_known_names;
+
+	/* opt is persistent, so must be associated with device */
+
+	state->opt = talloc_zero(conf->dc->device, struct boot_option);
+	state->opt->boot_args = talloc_strdup(state->opt, "");
+
+	rc = conf_parse(conf);
+
+	talloc_free(conf);
+	return rc;
+}
+
+define_parser(yaboot, 99, yaboot_parse);
