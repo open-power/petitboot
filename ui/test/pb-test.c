@@ -37,8 +37,8 @@ static void print_device_remove(const struct device *device,
 }
 
 static struct discover_client_ops client_ops = {
-	.add_device = print_device_add,
-	.remove_device = print_device_remove,
+	.device_add = print_device_add,
+	.device_remove = print_device_remove,
 };
 
 int main(void)

@@ -968,7 +968,7 @@ static void pboot_create_spane(void)
 	twin_window_queue_paint(pboot_spane->window);
 }
 
-int pboot_add_device(const char *dev_id, const char *name,
+int pboot_device_add(const char *dev_id, const char *name,
 		twin_pixmap_t *pixmap)
 {
 	int		index;
@@ -1000,7 +1000,7 @@ int pboot_add_device(const char *dev_id, const char *name,
 	return index;
 }
 
-int pboot_remove_device(const char *dev_id)
+int pboot_device_remove(const char *dev_id)
 {
 	pboot_device_t	*dev = NULL;
 	int		i, newsel = pboot_dev_sel;

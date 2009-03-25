@@ -81,7 +81,7 @@ void discover_client_destroy(struct discover_client *client)
 	talloc_free(client);
 }
 
-static void add_device(struct discover_client *client, struct device *device)
+static void device_add(struct discover_client *client, struct device *device)
 {
 	client->n_devices++;
 	client->devices = talloc_realloc(client, client->devices,
@@ -90,10 +90,10 @@ static void add_device(struct discover_client *client, struct device *device)
 	client->devices[client->n_devices - 1] = device;
 	talloc_steal(client, device);
 
-	client->ops.add_device(device, client->ops.cb_arg);
+	client->ops.device_add(device, client->ops.cb_arg);
 }
 
-static void remove_device(struct discover_client *client, const char *id)
+static void device_remove(struct discover_client *client, const char *id)
 {
 	struct device *device = NULL;
 	int i;
@@ -116,7 +116,7 @@ static void remove_device(struct discover_client *client, const char *id)
 			struct device *, client->n_devices);
 
 	/* notify the UI */
-	client->ops.remove_device(device, client->ops.cb_arg);
+	client->ops.device_remove(device, client->ops.cb_arg);
 
 	talloc_free(device);
 }
@@ -140,7 +140,7 @@ int discover_client_process(struct discover_client *client)
 			return 0;
 		}
 
-		add_device(client, dev);
+		device_add(client, dev);
 		break;
 	case PB_PROTOCOL_ACTION_REMOVE:
 		dev_id = pb_protocol_deserialise_string(client, message);
@@ -148,7 +148,7 @@ int discover_client_process(struct discover_client *client)
 			pb_log("%s: no device id?\n", __func__);
 			return 0;
 		}
-		remove_device(client, dev_id);
+		device_remove(client, dev_id);
 		break;
 	default:
 		pb_log("%s: unknown action %d\n", __func__, message->action);

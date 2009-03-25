@@ -7,14 +7,14 @@ struct discover_client;
 
 /**
  * struct discover_client_ops - Application supplied client info.
- * @add_device: PB_PROTOCOL_ACTION_ADD event callback.
- * @remove_device: PB_PROTOCOL_ACTION_REMOVE event callback.
+ * @device_add: PB_PROTOCOL_ACTION_ADD event callback.
+ * @device_remove: PB_PROTOCOL_ACTION_REMOVE event callback.
  * @cb_arg: Client managed convenience variable passed to callbacks.
  */
 
 struct discover_client_ops {
-	int (*add_device)(const struct device *device, void *arg);
-	void (*remove_device)(const struct device *device, void *arg);
+	int (*device_add)(const struct device *device, void *arg);
+	void (*device_remove)(const struct device *device, void *arg);
 	void *cb_arg;
 };
 
@@ -28,7 +28,7 @@ void discover_client_destroy(struct discover_client *client);
 /**
  * Process data from the server.
  *
- * Will read from the client socket, and call add_device on any discovered
+ * Will read from the client socket, and call device_add on any discovered
  * devices.
  * 
  */
