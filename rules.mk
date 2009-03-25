@@ -110,7 +110,7 @@ install: all $(rules)
 	$(INSTALL) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
 		$(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/utils
-	$(INSTALL) $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
+	$(INSTALL) -m 644 $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
 
 dist: $(PACKAGE)-$(VERSION).tar.gz
 
