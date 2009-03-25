@@ -1,6 +1,7 @@
 #ifndef PARSER_UTILS_H
 #define PARSER_UTILS_H
 
+#include "pb-protocol/pb-protocol.h"
 #include "parser.h"
 
 #define streq(a,b) (!strcasecmp((a),(b)))
