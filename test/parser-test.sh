@@ -1,26 +1,25 @@
 #!/bin/bash
 
-testdir=devices/parser-tests
+testdir=parser
 default_rootdev=ps3da1
+mnt=${PREFIX}/var/petitboot/mnt
 
-function test_dir()
-{
-	dir="$1"
-	rootdev=$default_rootdev
-	if [ -e "$dir/rootdev" ]
-	then
-		rootdev=$(cat "$dir/rootdev")
-	fi
-	./parser-test "$dir" /dev/$rootdev 2>/dev/null |
-		diff -u "$dir/expected-output" -
-}
+#set -ex
 
-set -ex
+tests=$(ls ${mnt}/${testdir}/)
 
-for test in $testdir/*
+for test in $tests
 do
-	echo $test
-	test_dir "$test"
+	rootdev=$default_rootdev
+
+	if [ -e "${mnt}/${testdir}/$test/rootdev" ]; then
+		rootdev=$(cat "${mnt}/${testdir}/$test/rootdev")
+	fi
+
+	./test/parser-test "${testdir}/$test" $rootdev
+
+#	./test/parser-test "${testdir}/$test" $rootdev 2>/dev/null |
+#		diff -u "${mnt}/${testdir}/$test/expected-output" -
 done
 
 echo "All tests passed"

@@ -37,11 +37,10 @@ talloc_objs = lib/talloc/talloc.o
 waiter_objs = lib/waiter/waiter.o
 
 # daemon objs
-parser_objs = discover/parser.o discover/parser-utils.o \
-	discover/parser-conf.o\
+parser_objs = discover/parser.o discover/parser-conf.o discover/paths.o \
 	$(foreach p, $(parsers), discover/$(p)-parser.o)
-discover_objs = discover/udev.o discover/discover-server.o \
-	discover/device-handler.o discover/paths.o
+discover_objs =  discover/udev.o discover/discover-server.o \
+	discover/device-handler.o discover/paths.o discover/parser-utils.o
 
 # client objs
 ui_common_objs = ui/common/discover-client.o
@@ -95,7 +94,7 @@ $(pb_discover): $(pb_discover_objs)
 	$(LINK.o) -o $@ $^
 
 # parser-test
-parser_test_objs = $(parser_objs) test/parser-test.o
+parser_test_objs = $(lib_objs) $(parser_objs) test/parser-test.o
 $(parser_test_objs): $(makefiles)
 
 $(parser_test): $(parser_test_objs)
