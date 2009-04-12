@@ -13,8 +13,8 @@ struct discover_client;
  */
 
 struct discover_client_ops {
-	int (*device_add)(const struct device *device, void *arg);
-	void (*device_remove)(const struct device *device, void *arg);
+	int (*device_add)(struct device *device, void *arg);
+	void (*device_remove)(struct device *device, void *arg);
 	void *cb_arg;
 };
 
