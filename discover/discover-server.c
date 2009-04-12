@@ -128,7 +128,6 @@ static int write_remove_message(struct discover_server *server,
 static int discover_server_process(void *arg)
 {
 	struct discover_server *server = arg;
-	const struct device *devices;
 	struct client *client;
 	int fd, i, n_devices;
 
@@ -148,10 +147,13 @@ static int discover_server_process(void *arg)
 	client->fd = fd;
 
 	/* send existing devices to client */
-	n_devices = device_handler_get_current_devices(server->device_handler,
-			&devices);
-	for (i = 0; i < n_devices; i++)
-		write_add_message(server, client, &devices[i]);
+	n_devices = device_handler_get_device_count(server->device_handler);
+	for (i = 0; i < n_devices; i++) {
+		const struct device *device;
+
+		device = device_handler_get_device(server->device_handler, i);
+		write_add_message(server, client, device);
+	}
 
 	return 0;
 }

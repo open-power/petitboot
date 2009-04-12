@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -24,8 +25,8 @@
 struct device_handler {
 	struct discover_server *server;
 
-	struct device *devices;
-	int n_devices;
+	struct device **devices;
+	unsigned int n_devices;
 
 	struct list contexts;
 };
@@ -35,11 +36,86 @@ struct mount_map {
 	char *mount_point;
 };
 
-int device_handler_get_current_devices(struct device_handler *handler,
-	const struct device **devices)
+/**
+ * device_handler_add - Add a device to the handler device array.
+ */
+
+static void device_handler_add(struct device_handler *handler,
+	struct device *device)
 {
-	*devices = handler->devices;
+	handler->n_devices++;
+	handler->devices = talloc_realloc(handler, handler->devices,
+		struct device *, handler->n_devices);
+	handler->devices[handler->n_devices - 1] = device;
+}
+
+/**
+ * device_handler_remove - Remove a device from the handler device array.
+ */
+
+static void device_handler_remove(struct device_handler *handler,
+	struct device *device)
+{
+	unsigned int i;
+
+	for (i = 0; i < handler->n_devices; i++)
+		if (handler->devices[i] == device)
+			break;
+
+	if (i < handler->n_devices) {
+		assert(0 && "unknown device");
+		return;
+	}
+
+	handler->n_devices--;
+	memmove(&handler->devices[i], &handler->devices[i + 1],
+		(handler->n_devices - i) * sizeof(handler->devices[0]));
+	handler->devices = talloc_realloc(handler, handler->devices,
+		struct device *, handler->n_devices);
+}
+
+/**
+ * device_handler_find - Find a handler device by id.
+ */
+
+static struct device *device_handler_find(struct device_handler *handler,
+	const char *id)
+{
+	unsigned int i;
+
+	assert(id);
+
+	for (i = 0; i < handler->n_devices; i++)
+		if (handler->devices[i]->id
+			&& streq(handler->devices[i]->id, id))
+			return handler->devices[i];
+
+	assert(0 && "unknown device");
+	return NULL;
+}
+
+/**
+ * device_handler_get_device_count - Get the count of current handler devices.
+ */
+
+int device_handler_get_device_count(const struct device_handler *handler)
+{
 	return handler->n_devices;
+}
+
+/**
+ * device_handler_get_device - Get a handler device by index.
+ */
+
+const struct device *device_handler_get_device(
+	const struct device_handler *handler, unsigned int index)
+{
+	if (index >= handler->n_devices) {
+		assert(0 && "bad index");
+		return NULL;
+	}
+
+	return handler->devices[index];
 }
 
 static int mkdir_recursive(const char *dir)
@@ -317,6 +393,9 @@ static int handle_add_event(struct device_handler *handler,
 	/* run the parsers */
 	iterate_parsers(ctx);
 
+	/* add device to handler device array */
+	device_handler_add(handler, ctx->device);
+
 	discover_server_notify_add(handler->server, ctx->device);
 
 	return 0;
@@ -332,6 +411,9 @@ static int handle_remove_event(struct device_handler *handler,
 		return 0;
 
 	discover_server_notify_remove(handler->server, ctx->device);
+
+	/* remove device from handler device array */
+	device_handler_remove(handler, ctx->device);
 
 	talloc_free(ctx);
 

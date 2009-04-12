@@ -24,8 +24,9 @@ struct device_handler *device_handler_init(struct discover_server *server);
 
 void device_handler_destroy(struct device_handler *devices);
 
-int device_handler_get_current_devices(struct device_handler *handler,
-		const struct device **devices);
+int device_handler_get_device_count(const struct device_handler *handler);
+const struct device *device_handler_get_device(
+	const struct device_handler *handler, unsigned int index);
 
 int device_handler_event(struct device_handler *handler,
 		struct udev_event *event);
