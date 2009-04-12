@@ -40,7 +40,7 @@ waiter_objs = lib/waiter/waiter.o
 # daemon objs
 parser_objs = discover/parser.o discover/parser-conf.o discover/paths.o \
 	$(foreach p, $(parsers), discover/$(p)-parser.o)
-discover_objs =  discover/udev.o discover/discover-server.o \
+discover_objs = discover/event.o  discover/udev.o discover/discover-server.o \
 	discover/device-handler.o discover/paths.o discover/parser-utils.o
 
 # client objs

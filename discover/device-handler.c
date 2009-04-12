@@ -15,6 +15,7 @@
 
 #include "device-handler.h"
 #include "discover-server.h"
+#include "event.h"
 #include "parser.h"
 #include "udev.h"
 #include "paths.h"
@@ -63,7 +64,7 @@ static void device_handler_remove(struct device_handler *handler,
 		if (handler->devices[i] == device)
 			break;
 
-	if (i < handler->n_devices) {
+	if (i == handler->n_devices) {
 		assert(0 && "unknown device");
 		return;
 	}
@@ -91,7 +92,7 @@ static struct device *device_handler_find(struct device_handler *handler,
 			&& streq(handler->devices[i]->id, id))
 			return handler->devices[i];
 
-	assert(0 && "unknown device");
+	pb_log("%s: unknown device: %s\n", __func__, id);
 	return NULL;
 }
 
@@ -141,7 +142,7 @@ static void setup_device_links(struct discover_context *ctx)
 		char *enc, *dir, *path;
 		const char *value;
 
-		value = udev_event_param(ctx->event, link->env);
+		value = event_get_param(ctx->event, link->env);
 		if (!value || !*value)
 			continue;
 
@@ -266,8 +267,8 @@ static int destroy_context(void *arg)
 	return 0;
 }
 
-static int handle_add_event(struct device_handler *handler,
-		struct udev_event *event)
+static int handle_add_udev_event(struct device_handler *handler,
+		struct event *event)
 {
 	struct discover_context *ctx;
 	const char *devname;
@@ -282,7 +283,7 @@ static int handle_add_event(struct device_handler *handler,
 
 	ctx->id = talloc_strdup(ctx, event->device);
 
-	devname = udev_event_param(ctx->event, "DEVNAME");
+	devname = event_get_param(ctx->event, "DEVNAME");
 	if (!devname) {
 		pb_log("no devname for %s?\n", event->device);
 		return 0;
@@ -315,8 +316,8 @@ static int handle_add_event(struct device_handler *handler,
 	return 0;
 }
 
-static int handle_remove_event(struct device_handler *handler,
-		struct udev_event *event)
+static int handle_remove_udev_event(struct device_handler *handler,
+		struct event *event)
 {
 	struct discover_context *ctx;
 
@@ -335,17 +336,29 @@ static int handle_remove_event(struct device_handler *handler,
 }
 
 int device_handler_event(struct device_handler *handler,
-		struct udev_event *event)
+		struct event *event)
 {
-	int rc;
+	int rc = 0;
 
-	switch (event->action) {
-	case UDEV_ACTION_ADD:
-		rc = handle_add_event(handler, event);
+	switch (event->type) {
+	case EVENT_TYPE_UDEV:
+		switch (event->action) {
+		case EVENT_ACTION_ADD:
+			rc = handle_add_udev_event(handler, event);
+			break;
+		case EVENT_ACTION_REMOVE:
+			rc = handle_remove_udev_event(handler, event);
+			break;
+		default:
+			pb_log("%s unknown action: %d\n", __func__,
+				event->action);
+			break;
+		}
 		break;
-
-	case UDEV_ACTION_REMOVE:
-		rc = handle_remove_event(handler, event);
+	case EVENT_TYPE_USER:
+		break;
+	default:
+		pb_log("%s unknown type: %d\n", __func__, event->type);
 		break;
 	}
 

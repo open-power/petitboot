@@ -5,6 +5,7 @@
 #include <talloc/talloc.h>
 
 #include "pb-protocol/pb-protocol.h"
+#include "event.h"
 #include "udev.h"
 #include "device-handler.h"
 #include "parser-utils.h"
@@ -42,13 +43,13 @@ const char *generic_icon_file(enum generic_icon_type type)
 
 enum generic_icon_type guess_device_type(struct discover_context *ctx)
 {
-	struct udev_event *event;
+	struct event *event;
 	const char *type, *bus;
 
 	event = ctx->event;
 
-	type = udev_event_param(event, "ID_TYPE");
-	bus = udev_event_param(event, "ID_BUS");
+	type = event_get_param(event, "ID_TYPE");
+	bus = event_get_param(event, "ID_BUS");
 
 	if (type && streq(type, "cd"))
 		return ICON_TYPE_OPTICAL;

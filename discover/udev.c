@@ -13,6 +13,7 @@
 #include <waiter/waiter.h>
 #include <log/log.h>
 
+#include "event.h"
 #include "udev.h"
 #include "pb-discover.h"
 #include "device-handler.h"
@@ -26,52 +27,7 @@ struct udev {
 	int socket;
 };
 
-static void parse_event_params(struct udev_event *event, char *buf, int len)
-{
-	int param_len, name_len, value_len;
-	struct param *param;
-	char *sep;
-
-	for (; len > 0; len -= param_len + 1, buf += param_len + 1) {
-
-		/* find the length of the whole parameter */
-		param_len = strnlen(buf, len);
-		if (!param_len) {
-			/* multiple NULs? skip over */
-			param_len = 1;
-			continue;
-		}
-
-		/* find the separator */
-		sep = memchr(buf, '=', param_len);
-		if (!sep)
-			continue;
-
-		name_len = sep - buf;
-		value_len = param_len - name_len - 1;
-
-		/* update the params array */
-		event->params = talloc_realloc(event, event->params,
-					struct param, ++event->n_params);
-		param = &event->params[event->n_params - 1];
-
-		param->name = talloc_strndup(event, buf, name_len);
-		param->value = talloc_strndup(event, sep + 1, value_len);
-	}
-}
-
-const char *udev_event_param(struct udev_event *event, const char *name)
-{
-	int i;
-
-	for (i = 0; i < event->n_params; i++)
-		if (!strcasecmp(event->params[i].name, name))
-			return event->params[i].value;
-
-	return NULL;
-}
-
-static void print_event(struct udev_event *event)
+static void udev_print_event(struct event *event)
 {
 	const char *action, *params[] = {
 		"DEVNAME", "ID_TYPE", "ID_BUS", "ID_FS_UUID", "ID_FS_LABEL",
@@ -79,63 +35,32 @@ static void print_event(struct udev_event *event)
 	};
 	int i;
 
-	action = event->action == UDEV_ACTION_ADD ? "add" : "remove";
+	action = event->action == EVENT_ACTION_ADD ? "add" : "remove";
 
 	pb_log("udev %s event:\n", action);
 	pb_log("\tdevice: %s\n", event->device);
 
 	for (i = 0; params[i]; i++)
 		pb_log("\t%-12s => %s\n",
-				params[i], udev_event_param(event, params[i]));
+				params[i], event_get_param(event, params[i]));
 
 }
 
-static void handle_udev_message(struct udev *udev, char *buf, int len)
+static void udev_handle_message(struct udev *udev, char *buf, int len)
 {
-	char *sep, *device;
-	enum udev_action action;
-	struct udev_event *event;
-	int device_len;
+	int result;
+	struct event *event;
 
-	/* we should see an <action>@<device>\0 at the head of the buffer */
-	sep = strchr(buf, '@');
-	if (!sep)
+	event = talloc(udev, struct event);
+	event->type = EVENT_TYPE_UDEV;
+
+	result = event_parse_ad_message(event, buf, len);
+
+	if (result)
 		return;
 
-	/* terminate the action string */
-	*sep = '\0';
-	len -= sep - buf + 1;
-
-	if (!strcmp(buf, "add")) {
-		action = UDEV_ACTION_ADD;
-
-	} else if (!strcmp(buf, "remove")) {
-		action = UDEV_ACTION_REMOVE;
-
-	} else {
-		return;
-	}
-
-	/* initialise the device string */
-	device = sep + 1;
-	device_len = strnlen(device, len);
-	if (!device_len)
-		return;
-
-	/* now we have an action and a device, we can construct an event */
-	event = talloc(udev, struct udev_event);
-	event->action = action;
-	event->device = talloc_strndup(event, device, device_len);
-	event->n_params = 0;
-	event->params = NULL;
-
-	len -= device_len + 1;
-	parse_event_params(event, device + device_len + 1, len);
-
-	print_event(event);
-
+	udev_print_event(event);
 	device_handler_event(udev->handler, event);
-
 	talloc_free(event);
 
 	return;
@@ -157,7 +82,7 @@ static int udev_process(void *arg)
 	if (len == 0)
 		return 0;
 
-	handle_udev_message(udev, buf, len);
+	udev_handle_message(udev, buf, len);
 
 	return 0;
 }

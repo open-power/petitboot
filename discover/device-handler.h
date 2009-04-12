@@ -5,14 +5,14 @@
 
 struct device_handler;
 struct discover_server;
-struct udev_event;
+struct event;
 struct device;
 
 struct discover_context {
 	char *id;
 	char *device_path;
 	char *mount_path;
-	struct udev_event *event;
+	struct event *event;
 	struct device *device;
 	char **links;
 	int n_links;
@@ -28,7 +28,6 @@ int device_handler_get_device_count(const struct device_handler *handler);
 const struct device *device_handler_get_device(
 	const struct device_handler *handler, unsigned int index);
 
-int device_handler_event(struct device_handler *handler,
-		struct udev_event *event);
+int device_handler_event(struct device_handler *handler, struct event *event);
 
 #endif /* _DEVICE_HANDLER_H */
