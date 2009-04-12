@@ -28,7 +28,7 @@
 #include <ps3-av.h>
 
 #include "log/log.h"
-#include "pb-system.h"
+#include "ui-system.h"
 #include "ps3.h"
 
 static const char flash_dev[] = "/dev/ps3flash";
