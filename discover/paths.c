@@ -116,8 +116,16 @@ const char *mountpoint_for_device(const char *dev)
 
 char *resolve_path(void *alloc_ctx, const char *path, const char *current_dev)
 {
+	static const char s_file[] = "file://";
 	char *ret;
 	const char *devpath, *sep;
+
+	/* test for urls */
+
+	if (!strncasecmp(path, s_file, sizeof(s_file) - 1))
+		path += sizeof(s_file) - 1;
+	else if (strstr(path, "://"))
+		return talloc_strdup(alloc_ctx, path);
 
 	sep = strchr(path, ':');
 	if (!sep) {
