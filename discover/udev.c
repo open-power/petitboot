@@ -201,6 +201,8 @@ struct udev *udev_init(struct device_handler *handler)
 
 	waiter_register(udev->socket, WAIT_IN, udev_process, udev);
 
+	pb_log("%s: waiting on %s\n", __func__, PBOOT_DEVICE_SOCKET);
+
 	return udev;
 
 out_err:
