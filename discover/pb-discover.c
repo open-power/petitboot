@@ -52,6 +52,8 @@ int main(void)
 	if (!udev)
 		return EXIT_FAILURE;
 
+	udev_trigger(udev);
+
 	for (running = 1; running;) {
 		if (waiter_poll())
 			break;

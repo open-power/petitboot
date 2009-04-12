@@ -208,6 +208,16 @@ out_err:
 	return NULL;
 }
 
+int udev_trigger(struct udev __attribute__((unused)) *udev)
+{
+	int rc = system("/sbin/udevadm trigger --subsystem-match=block");
+
+	if (rc)
+		pb_log("udev trigger failed: %d (%d)\n", rc, WEXITSTATUS(rc));
+
+	return WEXITSTATUS(rc);
+}
+
 void udev_destroy(struct udev *udev)
 {
 	talloc_free(udev);
