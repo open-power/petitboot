@@ -50,7 +50,7 @@ discover_objs = discover/event.o discover/user-event.o discover/udev.o \
 # client objs
 ui_common_objs = ui/common/discover-client.o ui/common/loader.o \
 	ui/common/ui-system.o ui/common/url.o
-ncurses_objs =
+ncurses_objs = ui/ncurses/nc-scr.o ui/ncurses/nc-menu.o
 twin_objs = ui/twin/pb-twin.o
 
 # Makefiles
