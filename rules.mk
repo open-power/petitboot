@@ -33,6 +33,7 @@ rules = utils/99-petitboot.rules
 list_objs = lib/list/list.o
 log_objs = lib/log/log.o
 protocol_objs = lib/pb-protocol/pb-protocol.o
+system_objs = lib/system/system.o
 talloc_objs = lib/talloc/talloc.o
 waiter_objs = lib/waiter/waiter.o
 
@@ -51,8 +52,8 @@ twin_objs = ui/twin/pb-twin.o
 makefiles = Makefile $(top_srcdir)/rules.mk
 
 # object collections
-lib_objs = $(list_objs) $(log_objs) $(protocol_objs) $(talloc_objs) \
-	$(waiter_objs)
+lib_objs = $(list_objs) $(log_objs) $(protocol_objs) $(system_objs) \
+	$(talloc_objs) $(waiter_objs)
 
 daemon_objs = $(lib_objs) $(parser_objs) $(discover_objs)
 
