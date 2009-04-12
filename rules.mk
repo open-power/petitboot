@@ -19,7 +19,7 @@ parser_test = test/parser-test
 # install targets and components
 daemons = $(pb_discover)
 parsers = event kboot yaboot
-uis = $(pb_test)
+uis = $(pb_cui) $(pb_test)
 tests = $(parser_test)
 utils = $(pb_event)
 
@@ -68,11 +68,12 @@ client_objs = $(lib_objs) $(ui_common_objs)
 all: $(uis) $(daemons) $(utils)
 
 # ncurses cui
-pb_cui_objs = $(client_objs) $(ncurses_objs) ui/ncurses/ps3-cui.o \
-	ui/common/ps3.o
-$(pb_cui_objs): $(makefiles)
+pb_cui_objs-$(ENABLE_PS3) += ui/ncurses/ps3-cui.o ui/common/ps3.o
+pb_cui_ldflags-$(ENABLE_PS3) += -lps3-utils
 
-$(pb_cui): LDFLAGS += -lps3-utils -lmenu -lform -lncurses
+pb_cui_objs = $(client_objs) $(ncurses_objs) $(pb_cui_objs-y)
+$(pb_cui_objs): $(makefiles)
+$(pb_cui): LDFLAGS += $(pb_cui_ldflags-y) -lmenu -lform -lncurses
 
 $(pb_cui): $(pb_cui_objs)
 	$(LINK.o) -o $@ $^

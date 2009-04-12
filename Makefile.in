@@ -16,6 +16,9 @@ LIBTWIN = @LIBTWIN@
 twin_CFLAGS = @twin_CFLAGS@
 twin_LDFLAGS = @twin_LIBS@
 
+# build target
+ENABLE_PS3 = @ENABLE_PS3@
+
 # other programs
 INSTALL = @INSTALL@
 SHELL = @SHELL@

@@ -29,6 +29,16 @@ fi
 AC_PROG_CC
 AC_PROG_INSTALL
 
+AC_ARG_ENABLE([ps3],
+	[AS_HELP_STRING([--enable-ps3],
+		[build support for the PS3 game console])],
+	[],
+	[enable_ps3=check])
+
+AS_IF([test "x$enable_ps3" != xno],
+	[AC_SUBST([ENABLE_PS3], ["y"])],
+	[AC_SUBST([ENABLE_PS3], ["n"])])
+
 AC_ARG_WITH([twin],
 	[AS_HELP_STRING([--with-twin],
 		[build GUI versions using the twin window system])],
