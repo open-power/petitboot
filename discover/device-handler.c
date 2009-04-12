@@ -11,6 +11,7 @@
 #include <list/list.h>
 #include <log/log.h>
 #include <pb-protocol/pb-protocol.h>
+#include <system/system.h>
 
 #include "device-handler.h"
 #include "discover-server.h"
@@ -118,78 +119,6 @@ const struct device *device_handler_get_device(
 	return handler->devices[index];
 }
 
-static int mkdir_recursive(const char *dir)
-{
-	struct stat statbuf;
-	char *str, *sep;
-	int mode = 0755;
-
-	if (!*dir)
-		return 0;
-
-	if (!stat(dir, &statbuf)) {
-		if (!S_ISDIR(statbuf.st_mode)) {
-			pb_log("%s: %s exists, but isn't a directory\n",
-					__func__, dir);
-			return -1;
-		}
-		return 0;
-	}
-
-	str = talloc_strdup(NULL, dir);
-	sep = strchr(*str == '/' ? str + 1 : str, '/');
-
-	while (1) {
-
-		/* terminate the path at sep */
-		if (sep)
-			*sep = '\0';
-
-		if (mkdir(str, mode) && errno != EEXIST) {
-			pb_log("mkdir(%s): %s\n", str, strerror(errno));
-			return -1;
-		}
-
-		if (!sep)
-			break;
-
-		/* reset dir to the full path */
-		strcpy(str, dir);
-		sep = strchr(sep + 1, '/');
-	}
-
-	talloc_free(str);
-
-	return 0;
-}
-
-static int rmdir_recursive(const char *base, const char *dir)
-{
-	char *cur, *pos;
-
-	/* sanity check: make sure that dir is within base */
-	if (strncmp(base, dir, strlen(base)))
-		return -1;
-
-	cur = talloc_strdup(NULL, dir);
-
-	while (strcmp(base, dir)) {
-
-		rmdir(dir);
-
-		/* null-terminate at the last slash */
-		pos = strrchr(dir, '/');
-		if (!pos)
-			break;
-
-		*pos = '\0';
-	}
-
-	talloc_free(cur);
-
-	return 0;
-}
-
 static void setup_device_links(struct discover_context *ctx)
 {
 	struct link {
@@ -220,7 +149,7 @@ static void setup_device_links(struct discover_context *ctx)
 		dir = join_paths(ctx, mount_base(), link->dir);
 		path = join_paths(ctx, dir, value);
 
-		if (!mkdir_recursive(dir)) {
+		if (!pb_mkdir_recursive(dir)) {
 			unlink(path);
 			if (symlink(ctx->mount_path, path)) {
 				pb_log("symlink(%s,%s): %s\n",
@@ -253,47 +182,32 @@ static void remove_device_links(struct discover_context *ctx)
 static int mount_device(struct discover_context *ctx)
 {
 	const char *mountpoint;
-	int status;
-	pid_t pid;
+	const char *argv[6];
 
 	if (!ctx->mount_path) {
 		mountpoint = mountpoint_for_device(ctx->device_path);
 		ctx->mount_path = talloc_strdup(ctx, mountpoint);
 	}
 
-	if (mkdir_recursive(ctx->mount_path))
+	if (pb_mkdir_recursive(ctx->mount_path))
 		pb_log("couldn't create mount directory %s: %s\n",
 				ctx->mount_path, strerror(errno));
 
-	pid = fork();
-	if (pid == -1) {
-		pb_log("%s: fork failed: %s\n", __func__, strerror(errno));
-		goto out_rmdir;
-	}
+	argv[0] = MOUNT_BIN;
+	argv[1] = ctx->device_path;
+	argv[2] = ctx->mount_path;
+	argv[3] = "-o";
+	argv[4] = "ro";
+	argv[5] = NULL;
 
-	if (pid == 0) {
-		execl(MOUNT_BIN, MOUNT_BIN, ctx->device_path, ctx->mount_path,
-				"-o", "ro", NULL);
-		exit(EXIT_FAILURE);
-	}
-
-	if (waitpid(pid, &status, 0) == -1) {
-		pb_log("%s: waitpid failed: %s\n", __func__,
-				strerror(errno));
+	if (pb_run_cmd(argv))
 		goto out_rmdir;
-	}
-
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-		pb_log("%s: mount failed (%d): %s\n", __func__,
-			WEXITSTATUS(status), ctx->event->device);
-		goto out_rmdir;
-	}
 
 	setup_device_links(ctx);
 	return 0;
 
 out_rmdir:
-	rmdir_recursive(mount_base(), ctx->mount_path);
+	pb_rmdir_recursive(mount_base(), ctx->mount_path);
 	return -1;
 }
 
@@ -324,7 +238,7 @@ static int umount_device(struct discover_context *ctx)
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
 		return -1;
 
-	rmdir_recursive(mount_base(), ctx->mount_path);
+	pb_rmdir_recursive(mount_base(), ctx->mount_path);
 
 	return 0;
 }
@@ -450,7 +364,7 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	list_init(&handler->contexts);
 
 	/* set up our mount point base */
-	mkdir_recursive(mount_base());
+	pb_mkdir_recursive(mount_base());
 
 	parser_init();
 
