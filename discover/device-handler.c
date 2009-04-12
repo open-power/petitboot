@@ -35,31 +35,11 @@ struct mount_map {
 	char *mount_point;
 };
 
-
-static struct boot_option options[] = {
-	{
-		.id = "1.1",
-		.name = "meep one",
-		.description = "meep description one",
-		.icon_file = "meep.one.png",
-		.boot_args = "root=/dev/sda1",
-	},
-};
-
-static struct device device = {
-	.id = "1",
-	.name = "meep",
-	.description = "meep description",
-	.icon_file = "meep.png",
-};
-
-int device_handler_get_current_devices(
-		struct device_handler *handler __attribute__((unused)),
-		const struct device **devices)
-
+int device_handler_get_current_devices(struct device_handler *handler,
+	const struct device **devices)
 {
-	*devices = &device;
-	return 1;
+	*devices = handler->devices;
+	return handler->n_devices;
 }
 
 static int mkdir_recursive(const char *dir)
@@ -286,7 +266,6 @@ static struct discover_context *find_context(struct device_handler *handler,
 	return NULL;
 }
 
-
 static int destroy_context(void *arg)
 {
 	struct discover_context *ctx = arg;
@@ -380,7 +359,6 @@ int device_handler_event(struct device_handler *handler,
 struct device_handler *device_handler_init(struct discover_server *server)
 {
 	struct device_handler *handler;
-	unsigned int i;
 
 	handler = talloc(NULL, struct device_handler);
 	handler->devices = NULL;
@@ -392,12 +370,6 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	/* set up our mount point base */
 	mkdir_recursive(mount_base());
 
-	/* setup out test objects */
-	list_init(&device.boot_options);
-
-	for (i = 0; i < sizeof(options) / sizeof(options[0]); i++)
-		list_add(&device.boot_options, &options[i].list);
-
 	parser_init();
 
 	return handler;
@@ -407,4 +379,3 @@ void device_handler_destroy(struct device_handler *handler)
 {
 	talloc_free(handler);
 }
-
