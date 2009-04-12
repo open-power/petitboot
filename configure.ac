@@ -51,6 +51,6 @@ AS_IF([test "x$with_twin" != xno],
 		[${twin_LIBS}])])
 
 mkdir -p discover lib/list lib/log lib/pb-protocol lib/system lib/talloc \
-	lib/waiter test ui/common ui/ncurses ui/test ui/twin
+	lib/waiter test ui/common ui/ncurses ui/test ui/twin utils
 
 AC_OUTPUT

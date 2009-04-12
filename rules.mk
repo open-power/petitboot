@@ -13,6 +13,7 @@ pb_discover = discover/pb-discover
 pb_cui = ui/ncurses/pb-cui
 pb_test = ui/test/pb-test
 pb_twin = ui/twin/pb-twin
+pb_event = utils/pb-event
 parser_test = test/parser-test
 
 # install targets and components
@@ -20,6 +21,7 @@ daemons = $(pb_discover)
 parsers = event kboot yaboot
 uis = $(pb_test)
 tests = $(parser_test)
+utils = $(pb_event)
 
 ifeq ($(PBTWIN),y)
 	uis += $(pb_twin)
@@ -61,7 +63,7 @@ daemon_objs = $(lib_objs) $(parser_objs) $(discover_objs)
 
 client_objs = $(lib_objs) $(ui_common_objs)
 
-all: $(uis) $(daemons)
+all: $(uis) $(daemons) $(utils)
 
 # ncurses cui
 pb_cui_objs = $(client_objs) $(ncurses_objs) ui/ncurses/ps3-cui.o \
@@ -97,6 +99,13 @@ $(pb_discover_objs): $(makefiles)
 $(pb_discover): $(pb_discover_objs)
 	$(LINK.o) -o $@ $^
 
+# utils
+pb_event_objs = utils/pb-event.o
+$(pb_event_objs): $(makefiles)
+
+$(pb_event): $(pb_event_objs)
+	$(LINK.o) -o $@ $^
+
 # parser-test
 parser_test_objs = $(lib_objs) $(parser_objs) test/parser-test.o
 $(parser_test_objs): $(makefiles)
@@ -108,7 +117,7 @@ parser-test: $(parser_test)
 
 install: all $(rules)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)/
-	$(INSTALL) $(daemons) $(uis) $(DESTDIR)$(sbindir)/
+	$(INSTALL) $(daemons) $(uis) $(utils) $(DESTDIR)$(sbindir)/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
 		$(DESTDIR)$(pkgdatadir)/artwork/
@@ -142,6 +151,8 @@ clean:
 	rm -f $(pb_twin_objs)
 	rm -f $(daemons)
 	rm -f $(pb_discover_objs)
+	rm -f $(utils)
+	rm -f $(pb_event_objs)
 	rm -f $(tests)
 	rm -f $(parser_test_objs)
 
