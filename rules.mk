@@ -44,7 +44,7 @@ discover_objs =  discover/udev.o discover/discover-server.o \
 	discover/device-handler.o discover/paths.o discover/parser-utils.o
 
 # client objs
-ui_common_objs = ui/common/discover-client.o ui/common/url.o
+ui_common_objs = ui/common/discover-client.o ui/common/loader.o ui/common/url.o
 ncurses_objs =
 twin_objs = ui/twin/pb-twin.o
 
