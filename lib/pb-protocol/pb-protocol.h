@@ -7,7 +7,7 @@
 
 #define PB_SOCKET_PATH "/tmp/petitboot.ui"
 
-#define PB_PROTOCOL_MAX_PAYLOAD_SIZE (8 * 1024)
+#define PB_PROTOCOL_MAX_PAYLOAD_SIZE (64 * 1024)
 
 enum pb_protocol_action {
 	PB_PROTOCOL_ACTION_ADD		= 0x1,
