@@ -30,6 +30,7 @@ endif
 # other to install
 artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
 rules = utils/99-petitboot.rules
+udhcpc = utils/udhcpc
 
 # client/daemon lib objs
 list_objs = lib/list/list.o
@@ -115,7 +116,7 @@ $(parser_test): $(parser_test_objs)
 
 parser-test: $(parser_test)
 
-install: all $(rules)
+install: all $(rules) $(udhcpc)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)/
 	$(INSTALL) $(daemons) $(uis) $(utils) $(DESTDIR)$(sbindir)/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/artwork/
@@ -123,6 +124,7 @@ install: all $(rules)
 		$(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/utils
 	$(INSTALL) -m 644 $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
+	$(INSTALL) -m 644 $(top_srcdir)/$(udhcpc) $(DESTDIR)$(pkgdatadir)/utils
 
 dist: $(PACKAGE)-$(VERSION).tar.gz
 

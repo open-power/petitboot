@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Petitboot udhcpc user script.  Should be run by udhcpc when
+# there is a change in the dhcp configuration.  For more info
+# see the udhcpc man page and the Linux kernel source file
+# Documentation/filesystems/nfsroot.txt.
+#
+
+PBOOT_USER_EVENT_SOCKET="/tmp/petitboot.ev"
+log="pb-udhcpc.log"
+
+pb_add () {
+	k_server_ip=${rootpath%%:*}
+	k_root_dir=${rootpath#*:}
+
+	[ ${k_server_ip} != ${rootpath} ] || k_server_ip=${serverid}
+
+	echo -ne "add@/net/${interface}\0name=netboot\0image=tftp://${siaddr}${boot_file}\0args=root=/dev/nfs ip=any nfsroot=${k_server_ip}:${k_root_dir}\0" | pb-event
+}
+
+pb_remove () {
+	echo -ne "remove@/net/${interface}\0name=netboot\0" | pb-event
+}
+
+case "$1" in
+bound | renew)
+	pb_add
+	;;
+deconfig)
+	pb_remove
+	;;
+*)
+	;;
+esac
+
+echo "--- $1 ---" >> ${log}
+set >> ${log}
+echo "---------------" >> ${log}
