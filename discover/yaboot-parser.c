@@ -24,7 +24,12 @@ static void yaboot_finish(struct conf_context *conf)
 {
 	struct yaboot_state *state = conf->parser_info;
 
-	assert(state->desc_image);
+	if (!state->desc_image) {
+		pb_log("%s: %s: no image found\n", __func__,
+			conf->dc->device->id);
+		return;
+	}
+
 	assert(state->opt);
 	assert(state->opt->name);
 	assert(state->opt->boot_args);
