@@ -7,6 +7,7 @@
 #include <log/log.h>
 
 #include "udev.h"
+#include "user-event.h"
 #include "discover-server.h"
 #include "device-handler.h"
 
@@ -22,6 +23,7 @@ int main(void)
 	struct device_handler *handler;
 	struct discover_server *server;
 	struct udev *udev;
+	struct user_event *uev;
 	FILE *log;
 
 	log = fopen("pb-discover.log", "a");
@@ -52,7 +54,12 @@ int main(void)
 	if (!udev)
 		return EXIT_FAILURE;
 
+	uev = user_event_init(handler);
+	if (!uev)
+		return EXIT_FAILURE;
+
 	udev_trigger(udev);
+	user_event_trigger(uev);
 
 	for (running = 1; running;) {
 		if (waiter_poll())

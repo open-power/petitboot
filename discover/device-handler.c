@@ -335,6 +335,52 @@ static int handle_remove_udev_event(struct device_handler *handler,
 	return 0;
 }
 
+static int handle_add_user_event(struct device_handler *handler,
+		struct event *event)
+{
+	struct device *device;
+
+	assert(event->device);
+
+	device = talloc_zero(handler, struct device);
+
+	if (!device)
+		goto fail;
+
+	device->id = talloc_strdup(device, event->device);
+	list_init(&device->boot_options);
+
+	parse_user_event(device, event);
+
+	discover_server_notify_add(handler->server, device);
+
+	/* add device to handler device array */
+	device_handler_add(handler, device);
+
+	return 0;
+
+fail:
+	talloc_free(device);
+	return 0;
+}
+
+static int handle_remove_user_event(struct device_handler *handler,
+		struct event *event)
+{
+	struct device *device = device_handler_find(handler, event->device);
+
+	if (!device)
+		return 0;
+
+	discover_server_notify_remove(handler->server, device);
+
+	/* remove device from handler device array */
+	device_handler_remove(handler, device);
+
+	talloc_free(device);
+	return 0;
+}
+
 int device_handler_event(struct device_handler *handler,
 		struct event *event)
 {
@@ -356,6 +402,18 @@ int device_handler_event(struct device_handler *handler,
 		}
 		break;
 	case EVENT_TYPE_USER:
+		switch (event->action) {
+		case EVENT_ACTION_ADD:
+			rc = handle_add_user_event(handler, event);
+			break;
+		case EVENT_ACTION_REMOVE:
+			rc = handle_remove_user_event(handler, event);
+			break;
+		default:
+			pb_log("%s unknown action: %d\n", __func__,
+				event->action);
+			break;
+		}
 		break;
 	default:
 		pb_log("%s unknown type: %d\n", __func__, event->type);

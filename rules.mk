@@ -17,7 +17,7 @@ parser_test = test/parser-test
 
 # install targets and components
 daemons = $(pb_discover)
-parsers = kboot yaboot
+parsers = event kboot yaboot
 uis = $(pb_test)
 tests = $(parser_test)
 
@@ -40,8 +40,9 @@ waiter_objs = lib/waiter/waiter.o
 # daemon objs
 parser_objs = discover/parser.o discover/parser-conf.o discover/paths.o \
 	$(foreach p, $(parsers), discover/$(p)-parser.o)
-discover_objs = discover/event.o  discover/udev.o discover/discover-server.o \
-	discover/device-handler.o discover/paths.o discover/parser-utils.o
+discover_objs = discover/event.o discover/user-event.o discover/udev.o \
+	discover/discover-server.o discover/device-handler.o discover/paths.o \
+	discover/parser-utils.o
 
 # client objs
 ui_common_objs = ui/common/discover-client.o ui/common/loader.o \
