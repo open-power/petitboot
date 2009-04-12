@@ -187,11 +187,6 @@ static void conf_parse_buf(struct conf_context *conf)
 		if (*value == '#')
 			continue;
 
-		value = conf_strip_str(value);
-
-		if (!value)
-			continue;
-
 		conf->process_pair(conf, name, value);
 	}
 
