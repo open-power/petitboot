@@ -111,7 +111,7 @@ static void device_remove(struct discover_client *client, const char *id)
 	/* remove the device from the client's device array */
 	client->n_devices--;
 	memmove(&client->devices[i], &client->devices[i+1],
-			client->n_devices - i);
+			(client->n_devices - i) * sizeof(client->devices[0]));
 	client->devices = talloc_realloc(client, client->devices,
 			struct device *, client->n_devices);
 

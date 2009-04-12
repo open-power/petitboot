@@ -43,7 +43,8 @@ void waiter_remove(struct waiter *waiter)
 	assert(i >= 0 && i < n_waiters);
 
 	n_waiters--;
-	memmove(&waiters[i], &waiters[i+1], n_waiters - i);
+	memmove(&waiters[i], &waiters[i+1],
+		(n_waiters - i) * sizeof(waiters[0]));
 
 	waiters = talloc_realloc(NULL, waiters, struct waiter, n_waiters);
 }
