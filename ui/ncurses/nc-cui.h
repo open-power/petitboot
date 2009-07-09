@@ -21,9 +21,9 @@
 
 #include <signal.h>
 
+#include "ui/common/timer.h"
 #include "nc-menu.h"
 #include "nc-ked.h"
-
 
 struct cui_opt_data {
 	const struct device *dev;
@@ -49,6 +49,7 @@ struct cui {
 	sig_atomic_t resize;
 	struct nc_scr *current;
 	struct pmenu *main;
+	struct ui_timer timer;
 	void *platform_info;
 	unsigned int default_item;
 	int (*on_kexec)(struct cui *cui, struct cui_opt_data *cod);
@@ -83,6 +84,17 @@ static inline struct cui *cui_from_pmenu(struct pmenu *menu)
 static inline struct cui *cui_from_item(struct pmenu_item *item)
 {
 	return cui_from_pmenu(item->pmenu);
+}
+
+static inline struct cui *cui_from_timer(struct ui_timer *timer)
+{
+	struct cui *cui;
+
+	cui = (struct cui *)((char *)timer
+		- (size_t)&((struct cui *)0)->timer);
+	assert(cui->c_sig == pb_cui_sig);
+
+	return cui;
 }
 
 #endif

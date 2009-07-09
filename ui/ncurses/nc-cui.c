@@ -30,7 +30,6 @@
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
 
-
 static struct cui_opt_data *cod_from_item(struct pmenu_item *item)
 {
 	return item->data;
@@ -205,7 +204,10 @@ static int cui_process_key(void *arg)
 	struct cui *cui = cui_from_arg(arg);
 
 	assert(cui->current);
+
+	ui_timer_disable(&cui->timer);
 	cui->current->process_key(cui->current);
+
 	return 0;
 }
 
@@ -219,6 +221,24 @@ static int cui_client_process_socket(void *arg)
 
 	discover_client_process(client);
 	return 0;
+}
+
+/**
+ * cui_handle_timeout - Handle the timeout.
+ */
+
+static void cui_handle_timeout(struct ui_timer *timer)
+{
+	struct cui *cui = cui_from_timer(timer);
+	struct pmenu_item *i = pmenu_find_selected(cui->main);
+
+#if defined(DEBUG)
+	{
+		struct cui_opt_data *cod = cod_from_item(i);
+		assert(cod && (cod->opt_hash == cui->default_item));
+	}
+#endif
+	i->on_execute(i);
 }
 
 /**
@@ -320,15 +340,17 @@ static int cui_device_add(struct device *dev, void *arg)
 
 		insert_pt++;
 
-		/* If this is the default_item select it. */
-
-		if (cod->opt_hash == cui->default_item)
-			selected = i->nci;
-
 		pb_log("%s: adding opt '%s'\n", __func__, cod->opt->name);
 		pb_log("   image  '%s'\n", cod->kd->image);
 		pb_log("   initrd '%s'\n", cod->kd->initrd);
 		pb_log("   args   '%s'\n", cod->kd->args);
+
+		/* If this is the default_item select it and start timer. */
+
+		if (cod->opt_hash == cui->default_item) {
+			selected = i->nci;
+			ui_timer_kick(&cui->timer);
+		}
 	}
 
 	/* Re-attach the items array. */
@@ -379,9 +401,15 @@ static void cui_device_remove(struct device *dev, void *arg)
 
 	list_for_each_entry(&dev->boot_options, opt, list) {
 		struct pmenu_item *i = pmenu_item_from_arg(opt->ui_info);
+		struct cui_opt_data *cod = cod_from_item(i);
 
-		assert(pb_protocol_device_cmp(dev, cod_from_item(i)->dev));
+		assert(pb_protocol_device_cmp(dev, cod->dev));
 		pmenu_remove(cui->main, i);
+
+		/* If this is the default_item disable timer. */
+
+		if (cod->opt_hash == cui->default_item)
+			ui_timer_disable(&cui->timer);
 	}
 
 	/* Re-attach the items array. */
@@ -434,6 +462,7 @@ struct cui *cui_init(void* platform_info,
 	cui->c_sig = pb_cui_sig;
 	cui->platform_info = platform_info;
 	cui->on_kexec = on_kexec;
+	cui->timer.handle_timeout = cui_handle_timeout;
 
 	/* Loop here for scripts that just started the server. */
 
@@ -500,6 +529,8 @@ int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item)
 
 		if (cui->abort)
 			break;
+
+		ui_timer_process_sig(&cui->timer);
 
 		while (cui->resize) {
 			cui->resize = 0;
