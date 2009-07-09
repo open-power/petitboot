@@ -189,6 +189,7 @@ static struct pb_kexec_data *ked_prepare_data(struct ked *ked)
 static void ked_process_key(struct nc_scr *scr)
 {
 	struct ked *ked = ked_from_scr(scr);
+	struct pb_kexec_data *kd;
 
 	while (1) {
 		int c = getch();
@@ -204,29 +205,17 @@ static void ked_process_key(struct nc_scr *scr)
 			break;
 
 		/* hot keys */
-		case 2: { /* CTRL-B */
-			struct pb_kexec_data *kd;
-
-			form_driver(ked->ncf, REQ_VALIDATION);
-			kd = ked_prepare_data(ked);
-			ked->on_exit(ked, ked_boot, kd);
-			nc_flush_keys();
-			return;
-		}
 		case 27: /* ESC */
 			ked->on_exit(ked, ked_cancel, NULL);
 			nc_flush_keys();
 			return;
 		case '\n':
-		case '\r': {
-			struct pb_kexec_data *kd;
-
+		case '\r':
 			form_driver(ked->ncf, REQ_VALIDATION);
 			kd = ked_prepare_data(ked);
 			ked->on_exit(ked, ked_update, kd);
 			nc_flush_keys();
 			return;
-		}
 
 		/* insert mode */
 		case KEY_IC:
@@ -334,7 +323,7 @@ struct ked *ked_init(void *ui_ctx, const struct pb_kexec_data *kd,
 
 	ked->scr.frame.title = talloc_strdup(ked, "Petitboot Option Editor");
 	ked->scr.frame.help = talloc_strdup(ked,
-		"ESC=cancel, Enter=accept, Ctrl-b=boot");
+		"ESC=cancel, Enter=accept");
 
 	ked->on_exit = on_exit;
 
