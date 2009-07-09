@@ -94,6 +94,7 @@ struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
 	unsigned int index, const char *name)
 {
 	assert(i);
+	assert(name);
 
 	if (!i)
 		return NULL;
@@ -112,6 +113,67 @@ struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
 	menu->items[index] = i->nci;
 
 	return i;
+}
+
+static int pmenu_item_get_index(const struct pmenu_item *item)
+{
+	unsigned int i;
+
+	for (i = 0; i < item->pmenu->item_count; i++)
+		if (item->pmenu->items[i] == item->nci)
+			return i;
+
+	pb_log("%s: not found: %p %s\n", __func__, item,
+		(item ? item->nci->name.str : "(null)"));
+	return -1;
+}
+
+/**
+ * pmenu_item_replace - Replace the menu item with a new one.
+ *
+ * Use this routine to change a menu item's text.
+ */
+
+int pmenu_item_replace(struct pmenu_item *i, const char *name)
+{
+	struct pmenu *menu;
+	ITEM *nci;
+	int index;
+
+	assert(name);
+	assert(i->nci);
+
+	menu = i->pmenu;
+	index = pmenu_item_get_index(i);
+
+	if (index < 0) {
+		assert(0 && "get_index failed");
+		return -1;
+	}
+
+	nci = new_item(name, NULL);
+
+	if (!nci) {
+		assert(0 && "new_item failed");
+		return -1;
+	}
+
+	set_item_userptr(nci, i);
+
+	menu->scr.unpost(&menu->scr);
+	set_menu_items(menu->ncm, NULL);
+
+	// FIXME: need to assure item name is a talloc string.
+	/* talloc_free((char *)item_name(i->nci)); */
+
+	free_item(i->nci);
+	menu->items[index] = nci;
+	i->nci = nci;
+
+	set_menu_items(menu->ncm, menu->items);
+	menu->scr.post(&menu->scr);
+
+	return 0;
 }
 
 /**
@@ -230,19 +292,6 @@ unsigned int pmenu_grow(struct pmenu *menu, unsigned int count)
 	return tmp;
 }
 
-static int pmenu_item_get_index(const struct pmenu_item *item)
-{
-	unsigned int i;
-
-	for (i = 0; i < item->pmenu->item_count; i++)
-		if (item->pmenu->items[i] == item->nci)
-			return i;
-
-	pb_log("%s: not found: %p %s\n", __func__, item,
-		(item ? item->nci->name.str : "(null)"));
-	return -1;
-}
-
 /**
  * pmenu_remove - Remove an item from the item array.
  *
@@ -263,6 +312,9 @@ int pmenu_remove(struct pmenu *menu, struct pmenu_item *item)
 
 	if (index < 0)
 		return -1;
+
+	free_item(item->nci);
+	talloc_free(item);
 
 	/* Note that items array has a null terminator. */
 
@@ -351,7 +403,7 @@ void pmenu_delete(struct pmenu *menu)
 	menu->scr.sig = pb_removed_sig;
 
 	for (i = item_count(menu->ncm); i; i--)
-		free_item(menu->items[i]);
+		free_item(menu->items[i - 1]);
 
 	free_menu(menu->ncm);
 	delwin(menu->scr.sub_ncw);

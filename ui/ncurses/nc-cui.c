@@ -60,6 +60,35 @@ void cui_resize(struct cui *cui)
 }
 
 /**
+ * cui_make_item_name - Format the menu item name srting.
+ *
+ * Returns a talloc string.
+ */
+
+static char *cui_make_item_name(struct pmenu_item *i, struct cui_opt_data *cod)
+{
+	char *name;
+
+	assert(cod->name);
+	assert(cod->kd);
+
+	name = talloc_asprintf(i, "%s:", cod->name);
+
+	if (cod->kd->image)
+		name = talloc_asprintf_append(name, " %s", cod->kd->image);
+
+	if (cod->kd->initrd)
+		name = talloc_asprintf_append(name, " initrd=%s",
+			cod->kd->initrd);
+
+	if (cod->kd->args)
+		name = talloc_asprintf_append(name, " %s", cod->kd->args);
+
+	DBGS("@%s@\n", name);
+	return name;
+}
+
+/**
  * cui_on_exit - A generic main menu ESC callback.
  */
 
@@ -143,12 +172,19 @@ static void cui_ked_on_exit(struct ked *ked, enum ked_result ked_result,
 	if (ked_result == ked_update) {
 		struct pmenu_item *i = pmenu_find_selected(cui->main);
 		struct cui_opt_data *cod = cod_from_item(i);
+		char *name;
 
 		assert(kd);
 
 		talloc_steal(i, kd);
 		talloc_free(cod->kd);
 		cod->kd = kd;
+
+		name = cui_make_item_name(i, cod);
+		pmenu_item_replace(i, name);
+
+		/* FIXME: need to make item visible somehow */
+		set_current_item(cui->main->ncm, i->nci);
 
 		pb_log("%s: updating opt '%s'\n", __func__, cod->name);
 		pb_log(" image  '%s'\n", cod->kd->image);
@@ -164,10 +200,10 @@ static void cui_ked_on_exit(struct ked *ked, enum ked_result ked_result,
 int cui_ked_run(struct pmenu_item *item)
 {
 	struct cui *cui = cui_from_item(item);
+	struct cui_opt_data *cod = cod_from_item(item);
 	struct ked *ked;
 
-	ked = ked_init(cui, cod_from_item(item)->kd, cui_ked_on_exit);
-
+	ked = ked_init(cui, cod->kd, cui_ked_on_exit);
 	cui_set_current(cui, &ked->scr);
 
 	return 0;
@@ -270,7 +306,6 @@ void cui_on_open(struct pmenu *menu)
 	unsigned int insert_pt;
 	struct pmenu_item *i;
 	struct cui_opt_data *cod;
-	char *name;
 
 	menu->scr.unpost(&menu->scr);
 
@@ -283,23 +318,21 @@ void cui_on_open(struct pmenu *menu)
 	insert_pt = pmenu_grow(menu, 1);
 	i = pmenu_item_alloc(menu);
 
-	name = talloc_asprintf(i, "User item %u:", insert_pt);
-	pmenu_item_setup(menu, i, insert_pt, name);
-
 	i->on_edit = cui_ked_run;
 	i->on_execute = cui_run_kexec;
 	i->data = cod = talloc_zero(i, struct cui_opt_data);
 
+	cod->name = talloc_asprintf(i, "User item %u:", insert_pt);
 	cod->kd = talloc_zero(i, struct pb_kexec_data);
-	cod->name = name;
+
+	pmenu_item_setup(menu, i, insert_pt, talloc_strdup(i, cod->name));
 
 	/* Re-attach the items array. */
 
 	set_menu_items(menu->ncm, menu->items);
 
-	set_current_item(menu->ncm, i->nci);
 	menu->scr.post(&menu->scr);
-	pos_menu_cursor(menu->ncm);
+	set_current_item(menu->ncm, i->nci);
 
 	i->on_edit(i);
 }
@@ -351,11 +384,6 @@ static int cui_device_add(struct device *dev, void *arg)
 
 		opt->ui_info = i = pmenu_item_alloc(cui->main);
 
-		name = talloc_asprintf(i, "%s: %s", opt->name,
-			opt->description);
-
-		pmenu_item_setup(cui->main, i, insert_pt, name);
-
 		i->on_edit = cui_ked_run;
 		i->on_execute = cui_run_kexec;
 		i->data = cod = talloc(i, struct cui_opt_data);
@@ -369,6 +397,9 @@ static int cui_device_add(struct device *dev, void *arg)
 		cod->kd->image = talloc_strdup(cod->kd, opt->boot_image_file);
 		cod->kd->initrd = talloc_strdup(cod->kd, opt->initrd_file);
 		cod->kd->args = talloc_strdup(cod->kd, opt->boot_args);
+
+		name = cui_make_item_name(i, cod);
+		pmenu_item_setup(cui->main, i, insert_pt, name);
 
 		insert_pt++;
 
