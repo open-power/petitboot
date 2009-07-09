@@ -209,6 +209,10 @@ static int cui_process_key(void *arg)
 	return 0;
 }
 
+/**
+ * cui_client_process_socket - Process a socket event from the discover server.
+ */
+
 static int cui_client_process_socket(void *arg)
 {
 	struct discover_client *client = arg;
@@ -396,10 +400,6 @@ static void cui_device_remove(struct device *dev, void *arg)
 	if (cui->current == &cui->main->scr)
 		cui->current->post(cui->current);
 }
-
-/**
- * cui_client_process_socket - Process a socket event from the discover server.
- */
 
 static struct discover_client_ops cui_client_ops = {
 	.device_add = cui_device_add,
