@@ -1,5 +1,10 @@
 
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
 #include <assert.h>
+#include <getopt.h>
 #include <stdlib.h>
 #include <signal.h>
 
@@ -11,6 +16,79 @@
 #include "discover-server.h"
 #include "device-handler.h"
 
+static void print_version(void)
+{
+	printf("pb-discover (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
+}
+
+static void print_usage(void)
+{
+	print_version();
+	printf(
+"Usage: pb-discover [-h, --help] [-l, --log log-file] [-V, --version]\n");
+}
+
+/**
+ * enum opt_value - Tri-state options variables.
+ */
+
+enum opt_value {opt_undef = 0, opt_yes, opt_no};
+
+/**
+ * struct opts - Values from command line options.
+ */
+
+struct opts {
+	enum opt_value show_help;
+	const char *log_file;
+	enum opt_value show_version;
+};
+
+/**
+ * opts_parse - Parse the command line options.
+ */
+
+static int opts_parse(struct opts *opts, int argc, char *argv[])
+{
+	static const struct option long_options[] = {
+		{"help",           no_argument,       NULL, 'h'},
+		{"log",            required_argument, NULL, 'l'},
+		{"version",        no_argument,       NULL, 'V'},
+		{ NULL, 0, NULL, 0},
+	};
+	static const char short_options[] = "hl:V";
+	static const struct opts default_values = {
+		.log_file = "pb-discover.log",
+	};
+
+	*opts = default_values;
+
+	while (1) {
+		int c = getopt_long(argc, argv, short_options, long_options,
+			NULL);
+
+		if (c == EOF)
+			break;
+
+		switch (c) {
+		case 'h':
+			opts->show_help = opt_yes;
+			break;
+		case 'l':
+			opts->log_file = optarg;
+			break;
+		case 'V':
+			opts->show_version = opt_yes;
+			break;
+		default:
+			opts->show_help = opt_yes;
+			return -1;
+		}
+	}
+
+	return optind != argc;
+}
+
 static int running;
 
 static void sigint_handler(int __attribute__((unused)) signum)
@@ -18,15 +96,31 @@ static void sigint_handler(int __attribute__((unused)) signum)
 	running = 0;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	struct device_handler *handler;
 	struct discover_server *server;
+	struct opts opts;
 	struct udev *udev;
 	struct user_event *uev;
 	FILE *log;
 
-	log = fopen("pb-discover.log", "a");
+	if (opts_parse(&opts, argc, argv)) {
+		print_usage();
+		return EXIT_FAILURE;
+	}
+
+	if (opts.show_help == opt_yes) {
+		print_usage();
+		return EXIT_SUCCESS;
+	}
+
+	if (opts.show_version == opt_yes) {
+		print_version();
+		return EXIT_SUCCESS;
+	}
+
+	log = fopen(opts.log_file, "a");
 	assert(log);
 	pb_log_set_stream(log);
 
