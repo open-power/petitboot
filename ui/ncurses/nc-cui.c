@@ -140,7 +140,7 @@ static void cui_ked_on_exit(struct ked *ked, enum ked_result ked_result,
 {
 	struct cui *cui = cui_from_arg(ked->scr.ui_ctx);
 
-	if (ked_result == ked_update || ked_result == ked_boot) {
+	if (ked_result == ked_update) {
 		struct pmenu_item *i = pmenu_find_selected(cui->main);
 		struct cui_opt_data *cod = cod_from_item(i);
 
@@ -159,11 +159,6 @@ static void cui_ked_on_exit(struct ked *ked, enum ked_result ked_result,
 	cui_set_current(cui, &cui->main->scr);
 
 	talloc_free(ked);
-
-	if (ked_result == ked_boot) {
-		struct pmenu_item *i = pmenu_find_selected(cui->main);
-		i->on_execute(i);
-	}
 }
 
 int cui_ked_run(struct pmenu_item *item)

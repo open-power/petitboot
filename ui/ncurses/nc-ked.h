@@ -40,13 +40,11 @@ enum ked_attr_cursor {
  * enum ked_result - Result code for ked:on_exit().
  * @ked_cancel: The user canceled the operation.
  * @ked_update: The args were updated.
- * @ked_boot: The user requested a boot of this item.
  */
 
 enum ked_result {
 	ked_cancel,
 	ked_update,
-	ked_boot,
 };
 
 /**
