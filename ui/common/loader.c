@@ -227,7 +227,7 @@ enum wget_flags {
 static char *pb_load_wget(void *ctx, struct pb_url *url, enum wget_flags flags)
 {
 	int result;
-	const char *argv[6];
+	const char *argv[7];
 	const char **p;
 	char *local;
 
@@ -238,12 +238,15 @@ static char *pb_load_wget(void *ctx, struct pb_url *url, enum wget_flags flags)
 
 	p = argv;
 	*p++ = pb_system_apps.wget;			/* 1 */
-	*p++ = "-O";					/* 2 */
-	*p++ = local;					/* 3 */
-	*p++ = url->full;				/* 4 */
+#if !defined(DEBUG)
+	*p++ = "--quiet";				/* 2 */
+#endif
+	*p++ = "-O";					/* 3 */
+	*p++ = local;					/* 4 */
+	*p++ = url->full;				/* 5 */
 	if (flags & wget_no_check_certificate)
-		*p++ = "--no-check-certificate";	/* 5 */
-	*p++ = NULL;					/* 6 */
+		*p++ = "--no-check-certificate";	/* 6 */
+	*p++ = NULL;					/* 7 */
 
 	result = pb_run_cmd(argv);
 
