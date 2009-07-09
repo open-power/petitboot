@@ -120,13 +120,13 @@ parser-test: $(parser_test)
 
 install: all $(rules) $(udhcpc)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)/
-	$(INSTALL) $(daemons) $(uis) $(utils) $(DESTDIR)$(sbindir)/
+	$(INSTALL_PROGRAM) $(daemons) $(uis) $(utils) $(DESTDIR)$(sbindir)/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/artwork/
-	$(INSTALL) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
+	$(INSTALL_DATA) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
 		$(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/utils
-	$(INSTALL) -m 644 $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
-	$(INSTALL) -m 644 $(top_srcdir)/$(udhcpc) $(DESTDIR)$(pkgdatadir)/utils
+	$(INSTALL_DATA) $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
+	$(INSTALL_DATA) $(top_srcdir)/$(udhcpc) $(DESTDIR)$(pkgdatadir)/utils
 
 dist: $(PACKAGE)-$(VERSION).tar.gz
 
