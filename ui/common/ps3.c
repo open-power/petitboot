@@ -49,6 +49,11 @@ static const struct os_area_db_id id_flags =
 	.owner = OS_AREA_DB_OWNER_PETITBOOT, /* 3 */
 	.key = 3,
 };
+static const struct os_area_db_id id_timeout =
+{
+	.owner = OS_AREA_DB_OWNER_PETITBOOT, /* 3 */
+	.key = 4,
+};
 
 struct ps3_flash_ctx {
 	FILE *dev;
@@ -59,6 +64,8 @@ struct ps3_flash_ctx {
 
 static void ps3_flash_close(struct ps3_flash_ctx *fc)
 {
+	assert(fc->dev);
+
 	fclose(fc->dev);
 	fc->dev = NULL;
 }
@@ -104,19 +111,25 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	struct ps3_flash_ctx fc;
 	uint64_t tmp;
 
-	memset(values, 0, sizeof(*values));
+	/* Set default values. */
+
+	values->default_item = 0;
+	values->timeout = ps3_timeout_forever;
+	values->video_mode = 1;
 
 	result = ps3_flash_open(&fc, "r");
 
 	if (result)
-		return -1;
+		goto done;
 
 	result = os_area_db_read(&fc.db, &fc.header, fc.dev);
+
+	ps3_flash_close(&fc);
 
 	if (result) {
 		pb_log("%s: os_area_db_read failed: %s\n", __func__,
 			strerror(errno));
-		goto fail;
+		goto done;
 	}
 
 	sum = result = os_area_db_get(&fc.db, &id_default_item, &tmp);
@@ -124,21 +137,25 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	if (!result)
 		values->default_item = (uint32_t)tmp;
 
+	result = os_area_db_get(&fc.db, &id_timeout, &tmp);
+
+	if (!result)
+		values->timeout = (uint8_t)tmp;
+
 	sum += result = os_area_db_get(&fc.db, &id_video_mode, &tmp);
 
 	if (!result)
 		values->video_mode = (uint16_t)tmp;
 
+done:
+	pb_log("%s: default_item: %x\n", __func__,
+		(unsigned int)values->default_item);
+	pb_log("%s: timeout: %u\n", __func__,
+		(unsigned int)values->timeout);
+	pb_log("%s: video_mode:   %u\n", __func__,
+		(unsigned int)values->video_mode);
 
-	pb_log("%s: default_item: %u\n", __func__, values->default_item);
-	pb_log("%s: video_mode:   %u\n", __func__, values->video_mode);
-
-	ps3_flash_close(&fc);
-	return !!sum;
-
-fail:
-	ps3_flash_close(&fc);
-	return -1;
+	return (result || sum) ? -1 : 0;
 }
 
 /**
@@ -176,6 +193,8 @@ int ps3_flash_set_values(const struct ps3_flash_values *values)
 			goto fail;
 		}
 	}
+
+	/* timeout is currently read-only, set with ps3-bl-option */
 
 	result = os_area_db_set_32(&fc.db, &id_default_item,
 		values->default_item);

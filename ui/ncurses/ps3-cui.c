@@ -21,9 +21,7 @@
 /*
  * TODO
  * removable media event
- * resize after video mode change
  * ncurses mouse support
- * timeout
  */
 
 #if defined(HAVE_CONFIG_H)
@@ -36,6 +34,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -283,6 +282,21 @@ static int ps3_hot_key(struct pmenu __attribute__((unused)) *menu,
 }
 
 /**
+ * ps3_timer_update - Timer callback.
+ */
+
+static void ps3_timer_update(struct ui_timer *timer, unsigned int timeout)
+{
+	struct ps3_cui *ps3 = ps3_from_cui(cui_from_timer(timer));
+
+	//FIXME: make scr:timer.
+	// nc_scr_timer_update(&ps3.mm->scr, timeout);
+
+	nc_scr_status_printf(&ps3->mm->scr,
+		"Welcome to Petitboot (timeout %u sec)", timeout);
+}
+
+/**
  * ps3_mm_init - Setup the main menu instance.
  */
 
@@ -434,6 +448,10 @@ static void sig_handler(int signum)
 	DBGS("%d\n", signum);
 
 	switch (signum) {
+	case SIGALRM:
+		if (ps3.cui)
+			ui_timer_sigalrm(&ps3.cui->timer);
+		break;
 	case SIGWINCH:
 		if (ps3.cui)
 			cui_resize(ps3.cui);
@@ -491,8 +509,9 @@ int main(int argc, char *argv[])
 	pb_log("--- pb-cui ---\n");
 
 	sa.sa_handler = sig_handler;
-	result = sigaction(SIGINT, &sa, NULL);
+	result = sigaction(SIGALRM, &sa, NULL);
 	result += sigaction(SIGHUP, &sa, NULL);
+	result += sigaction(SIGINT, &sa, NULL);
 	result += sigaction(SIGTERM, &sa, NULL);
 	result += sigaction(SIGWINCH, &sa, NULL);
 
@@ -522,6 +541,13 @@ int main(int argc, char *argv[])
 
 	ps3.mm = ps3_mm_init(&ps3);
 	ps3.svm = ps3_svm_init(&ps3);
+
+	if (ps3.values.timeout == ps3_timeout_forever)
+		ui_timer_disable(&ps3.cui->timer);
+	else {
+		ps3.cui->timer.update_display = ps3_timer_update;
+		ui_timer_init(&ps3.cui->timer, ps3.values.timeout);
+	}
 
 	cui_result = cui_run(ps3.cui, ps3.mm, ps3.values.default_item);
 

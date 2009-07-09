@@ -33,9 +33,14 @@ enum ps3_flash_flags {
 	ps3_flag_telnet = 1,
 };
 
+enum ps3_timeouts {
+	ps3_timeout_forever = 255,
+};
+
 /**
  * struct ps3_flash_values - Values from PS3 flash memory.
  * @default_item: The default menu item.
+ * @timeout: The timeout in seconds.
  * @video_mode: The default video_mode.
  * @flags: Logical OR of enum ps3_flash_flags.
  */
@@ -44,6 +49,7 @@ struct ps3_flash_values {
 	uint32_t default_item;
 	uint16_t video_mode;
 	/* uint16_t flags; */
+	uint8_t timeout;
 };
 
 int ps3_flash_get_values(struct ps3_flash_values *values);
