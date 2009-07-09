@@ -137,6 +137,7 @@ static int kboot_parse(struct discover_context *dc)
 
 	conf->dc = dc;
 	conf->global_options = kboot_global_options,
+	conf_init_global_options(conf);
 	conf->conf_files = kboot_conf_files,
 	conf->process_pair = kboot_process_pair;
 	conf->parser_info = (void *)kboot_ignored_names,

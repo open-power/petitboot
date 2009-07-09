@@ -121,6 +121,18 @@ int conf_param_in_list(const char *const *list, const char *param)
 }
 
 /**
+ * conf_init_global_options - Zero the global option table.
+ */
+
+void conf_init_global_options(struct conf_context *conf)
+{
+	int i;
+
+	for (i = 0; conf->global_options[i].name; i++)
+		conf->global_options[i].value = NULL;
+}
+
+/**
  * conf_set_global_option - Set a value in the global option table.
  *
  * Check if an option (name=value) is a global option. If so, store it in
@@ -136,7 +148,7 @@ int conf_set_global_option(struct conf_context *conf, const char *name,
 		if (streq(name, conf->global_options[i].name)) {
 			conf->global_options[i].value
 				= talloc_strdup(conf, value);
-			pb_log("%s: %s:%s\n", __func__, name, value);
+			pb_log("%s: @%s@%s@\n", __func__, name, value);
 			return 1;
 		}
 	}
@@ -158,8 +170,11 @@ const char *conf_get_global_option(struct conf_context *conf,
 	int i;
 
 	for (i = 0; conf->global_options[i].name ;i++)
-		if (streq(name, conf->global_options[i].name))
+		if (streq(name, conf->global_options[i].name)) {
+			pb_log("%s: @%s@%s@\n", __func__, name,
+				conf->global_options[i].value);
 			return conf->global_options[i].value;
+		}
 
 	assert(0 && "unknown global name");
 	return NULL;

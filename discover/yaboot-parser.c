@@ -240,6 +240,7 @@ static int yaboot_parse(struct discover_context *dc)
 
 	conf->dc = dc;
 	conf->global_options = yaboot_global_options,
+	conf_init_global_options(conf);
 	conf->conf_files = yaboot_conf_files,
 	conf->process_pair = yaboot_process_pair;
 	conf->finish = yaboot_finish;
