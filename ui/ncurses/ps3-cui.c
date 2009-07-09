@@ -270,15 +270,21 @@ static int ps3_svm_cb(struct pmenu_item *item)
  * ps3_kexec_cb - The kexec callback.
  *
  * Writes config data to PS3 flash then calls pb_run_kexec().
+ * Adds a video mode arg to the kernel command line if needed.
  */
 
 static int ps3_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 {
 	struct ps3_cui *ps3 = ps3_from_cui(cui);
+	int result;
+	int altered_args;
+	char *orig_args;
 
 	pb_log("%s: %s\n", __func__, cod->name);
 
 	assert(ps3->cui->current == &ps3->cui->main->scr);
+
+	/* Save values to flash if needed */
 
 	if ((cod->opt_hash && cod->opt_hash != cui->default_item)
 		|| ps3->dirty_values) {
@@ -286,7 +292,29 @@ static int ps3_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 		ps3_flash_set_values(&ps3->values);
 	}
 
-	return pb_run_kexec(cod->kd);
+	/* Add a default kernel video mode. */
+
+	if (!cod->kd->args) {
+		altered_args = 1;
+		orig_args = NULL;
+		cod->kd->args = talloc_asprintf(NULL, "video=ps3fb:mode:%u",
+			(unsigned int)ps3->values.video_mode);
+	} else if (!strstr(cod->kd->args, "video=")) {
+		altered_args = 1;
+		orig_args = cod->kd->args;
+		cod->kd->args = talloc_asprintf(NULL, "%s video=ps3fb:mode:%u",
+			orig_args, (unsigned int)ps3->values.video_mode);
+	} else
+		altered_args = 0;
+
+	result = pb_run_kexec(cod->kd);
+
+	if (altered_args) {
+		talloc_free(cod->kd->args);
+		cod->kd->args = orig_args;
+	}
+
+	return result;
 }
 
 /**
@@ -408,7 +436,7 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 
 #if defined(DEBUG)
 	m->scr.frame.title = talloc_strdup(m,
-		"Petitboot PS3 (ver " PACKAGE_VERSION ")");
+		"Petitboot PS3 (" PACKAGE_VERSION ")");
 #else
 	m->scr.frame.title = talloc_strdup(m, "Petitboot PS3");
 #endif
