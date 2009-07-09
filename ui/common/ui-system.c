@@ -92,34 +92,34 @@ static int run_kexec_local(const char *l_image, const char *l_initrd,
 
 /**
  * pb_run_kexec - Run kexec with the supplied boot options.
- *
- * For the convenience of the user, tries to load both files before
- * returning error.
  */
 
 int pb_run_kexec(const struct pb_kexec_data *kd)
 {
 	int result;
-	char *l_image;
-	char *l_initrd;
+	char *l_image = NULL;
+	char *l_initrd = NULL;
 
 	pb_log("%s: image:  '%s'\n", __func__, kd->image);
 	pb_log("%s: initrd: '%s'\n", __func__, kd->initrd);
 	pb_log("%s: args:   '%s'\n", __func__, kd->args);
 
-	if (kd->image)
+	if (kd->image) {
 		l_image = pb_load_file(NULL, kd->image);
-	else {
-		l_image = NULL;
-		pb_log("%s: error null image\n", __func__);
+		if (!l_image)
+			return -1;
 	}
 
-	l_initrd = kd->initrd ? pb_load_file(NULL, kd->initrd) : NULL;
+	if (kd->initrd) {
+		l_initrd = pb_load_file(NULL, kd->initrd);
+		if (!l_initrd)
+			return -1;
+	}
 
-	if (!l_image || (kd->initrd && !l_initrd))
-		result = -1;
-	else
-		result = run_kexec_local(l_image, l_initrd, kd->args);
+	if (!l_image && !l_initrd)
+		return -1;
+
+	result = run_kexec_local(l_image, l_initrd, kd->args);
 
 	talloc_free(l_image);
 	talloc_free(l_initrd);
