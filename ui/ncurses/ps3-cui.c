@@ -52,7 +52,8 @@ static void print_usage(void)
 {
 	print_version();
 	printf(
-"Usage: pb-cui [-h, --help] [-l, --log log-file] [-V, --version]\n");
+"Usage: pb-cui [-h, --help] [-l, --log log-file] [-r, --reset-defaults]\n"
+"              [-V, --version]\n");
 }
 
 /**
@@ -68,6 +69,7 @@ enum opt_value {opt_undef = 0, opt_yes, opt_no};
 struct opts {
 	enum opt_value show_help;
 	const char *log_file;
+	enum opt_value reset_defaults;
 	enum opt_value show_version;
 };
 
@@ -78,12 +80,13 @@ struct opts {
 static int opts_parse(struct opts *opts, int argc, char *argv[])
 {
 	static const struct option long_options[] = {
-		{"help",    no_argument,       NULL, 'h'},
-		{"log",     required_argument, NULL, 'l'},
-		{"version", no_argument,       NULL, 'V'},
-		{ NULL,     0,                 NULL, 0},
+		{"help",           no_argument,       NULL, 'h'},
+		{"log",            required_argument, NULL, 'l'},
+		{"reset-defaults", no_argument,       NULL, 'r'},
+		{"version",        no_argument,       NULL, 'V'},
+		{ NULL, 0, NULL, 0},
 	};
-	static const char short_options[] = "hl:V";
+	static const char short_options[] = "hl:rV";
 	static const struct opts default_values = {
 		.log_file = "pb-cui.log",
 	};
@@ -103,6 +106,9 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 			break;
 		case 'l':
 			opts->log_file = optarg;
+			break;
+		case 'r':
+			opts->reset_defaults = opt_yes;
 			break;
 		case 'V':
 			opts->show_version = opt_yes;
@@ -520,7 +526,10 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	ps3.dirty_values = ps3_flash_get_values(&ps3.values);
+	ps3.values = ps3_flash_defaults;
+
+	if (opts.reset_defaults != opt_yes)
+		ps3.dirty_values = ps3_flash_get_values(&ps3.values);
 
 	result = ps3_get_video_mode(&mode);
 

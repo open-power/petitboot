@@ -111,12 +111,6 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	struct ps3_flash_ctx fc;
 	uint64_t tmp;
 
-	/* Set default values. */
-
-	values->default_item = 0;
-	values->timeout = ps3_timeout_forever;
-	values->video_mode = 1;
-
 	result = ps3_flash_open(&fc, "r");
 
 	if (result)

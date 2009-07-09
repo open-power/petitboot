@@ -52,6 +52,12 @@ struct ps3_flash_values {
 	uint8_t timeout;
 };
 
+static const struct ps3_flash_values ps3_flash_defaults = {
+	.default_item = 0,
+	.video_mode = 1,
+	.timeout = ps3_timeout_forever,
+};
+
 int ps3_flash_get_values(struct ps3_flash_values *values);
 int ps3_flash_set_values(const struct ps3_flash_values *values);
 
