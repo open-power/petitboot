@@ -45,7 +45,7 @@ struct pmenu_item {
 
 struct pmenu_item *pmenu_item_alloc(struct pmenu *menu);
 struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
-	unsigned int index, const char *name, const char *description);
+	unsigned int index, const char *name);
 void pmenu_item_delete(struct pmenu_item *item);
 
 static inline struct pmenu_item *pmenu_item_from_arg(void *arg)
@@ -57,10 +57,9 @@ static inline struct pmenu_item *pmenu_item_from_arg(void *arg)
 }
 
 static inline struct pmenu_item *pmenu_item_init(struct pmenu *menu,
-	unsigned int index, const char *name, const char *description)
+	unsigned int index, const char *name)
 {
-	return pmenu_item_setup(menu, pmenu_item_alloc(menu), index, name,
-		description);
+	return pmenu_item_setup(menu, pmenu_item_alloc(menu), index, name);
 }
 
 /**

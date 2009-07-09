@@ -169,8 +169,7 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		"ESC=exit, Enter=accept, e=edit, o=open");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
-	i = pmenu_item_init(m, 0, "Exit to Shell",
-		"Exit petitboot and return to a shell prompt");
+	i = pmenu_item_init(m, 0, "Exit to Shell");
 	i->on_execute = pmenu_exit_cb;
 
 	result = pmenu_setup(m);

@@ -339,17 +339,14 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 		"ESC=exit, Enter=accept, e=edit, o=open");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
-	i = pmenu_item_init(m, 0, "Boot GameOS",
-		"Reboot the PS3 into the GameOS");
+	i = pmenu_item_init(m, 0, "Boot GameOS");
 	i->on_execute = cui_run_cmd;
 	i->data = (void *)bgo;
 
-	i = pmenu_item_init(m, 1, "Set Video Mode",
-		"Display a video mode selection menu");
+	i = pmenu_item_init(m, 1, "Set Video Mode");
 	i->on_execute = ps3_mm_to_svm_cb;
 
-	i = pmenu_item_init(m, 2, "Exit to Shell",
-		"Exit petitboot and return to a shell prompt");
+	i = pmenu_item_init(m, 2, "Exit to Shell");
 	i->on_execute = pmenu_exit_cb;
 
 	result = pmenu_setup(m);
@@ -392,53 +389,51 @@ static struct pmenu *ps3_svm_init(struct ps3_cui *ps3_cui)
 	m->scr.frame.title = talloc_strdup(m, "Select PS3 Video Mode");
 	m->scr.frame.help = talloc_strdup(m, "ESC=exit, Enter=accept");
 
-	i = pmenu_item_init(m, 0, "auto detect",
-		"Auto detect the best HDMI video mode");
+	i = pmenu_item_init(m, 0, "auto detect");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)0;
 
-	i = pmenu_item_init(m, 1, "480i    (576 x 384)", NULL);
+	i = pmenu_item_init(m, 1, "480i    (576 x 384)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)1;
 
-	i = pmenu_item_init(m, 2, "480p    (576 x 384)", NULL);
+	i = pmenu_item_init(m, 2, "480p    (576 x 384)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)2;
 
-	i = pmenu_item_init(m, 3, "576i    (576 x 460)", NULL);
+	i = pmenu_item_init(m, 3, "576i    (576 x 460)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)6;
 
-	i = pmenu_item_init(m, 4, "576p    (576 x 460)", NULL);
+	i = pmenu_item_init(m, 4, "576p    (576 x 460)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)7;
 
-	i = pmenu_item_init(m, 5, "720p   (1124 x 644)", NULL);
+	i = pmenu_item_init(m, 5, "720p   (1124 x 644)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)3;
 
-	i = pmenu_item_init(m, 6, "1080i  (1688 x 964)", NULL);
+	i = pmenu_item_init(m, 6, "1080i  (1688 x 964)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)4;
 
-	i = pmenu_item_init(m, 7, "1080p  (1688 x 964)", NULL);
+	i = pmenu_item_init(m, 7, "1080p  (1688 x 964)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)5;
 
-	i = pmenu_item_init(m, 8, "wxga   (1280 x 768)", NULL);
+	i = pmenu_item_init(m, 8, "wxga   (1280 x 768)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)11;
 
-	i = pmenu_item_init(m, 9, "sxga   (1280 x 1024)", NULL);
+	i = pmenu_item_init(m, 9, "sxga   (1280 x 1024)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)12;
 
-	i = pmenu_item_init(m, 10, "wuxga  (1920 x 1200)", NULL);
+	i = pmenu_item_init(m, 10, "wuxga  (1920 x 1200)");
 	i->on_execute = ps3_svm_cb;
 	i->data = (void *)13;
 
-	i = pmenu_item_init(m, 11, "Return",
-		"Return to the main menu");
+	i = pmenu_item_init(m, 11, "Return");
 	i->on_execute = ps3_svm_to_mm_cb;
 
 	result = pmenu_setup(m);

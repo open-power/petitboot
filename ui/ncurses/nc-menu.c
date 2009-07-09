@@ -91,8 +91,7 @@ struct pmenu_item *pmenu_item_alloc(struct pmenu *menu)
 }
 
 struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
-	unsigned int index, const char *name,
-	const char *description)
+	unsigned int index, const char *name)
 {
 	assert(i);
 
@@ -101,7 +100,7 @@ struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
 
 	i->i_sig = pb_item_sig;
 	i->pmenu = menu;
-	i->nci = new_item(name, description);
+	i->nci = new_item(name, NULL);
 
 	if (!i->nci) {
 		talloc_free(i);

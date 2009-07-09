@@ -289,7 +289,7 @@ void cui_on_open(struct pmenu *menu)
 	i = pmenu_item_alloc(menu);
 
 	name = talloc_asprintf(i, "User item %u:", insert_pt);
-	pmenu_item_setup(menu, i, insert_pt, name, NULL);
+	pmenu_item_setup(menu, i, insert_pt, name);
 
 	i->on_edit = cui_ked_run;
 	i->on_execute = cui_run_kexec;
@@ -351,7 +351,6 @@ static int cui_device_add(struct device *dev, void *arg)
 		struct pmenu_item *i;
 		struct cui_opt_data *cod;
 		char *name;
-		char *description;
 
 		/* Save the item in opt->ui_info for cui_device_remove() */
 
@@ -360,13 +359,7 @@ static int cui_device_add(struct device *dev, void *arg)
 		name = talloc_asprintf(i, "%s: %s", opt->name,
 			opt->description);
 
-		description = talloc_asprintf(i,
-			" kexec: image='%s' initrd='%s' args='%s'",
-			opt->boot_image_file,
-			opt->initrd_file,
-			opt->boot_args);
-
-		pmenu_item_setup(cui->main, i, insert_pt, name, description);
+		pmenu_item_setup(cui->main, i, insert_pt, name);
 
 		i->on_edit = cui_ked_run;
 		i->on_execute = cui_run_kexec;
