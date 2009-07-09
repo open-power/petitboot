@@ -19,8 +19,8 @@ parser_test = test/parser-test
 # install targets and components
 daemons = $(pb_discover)
 parsers = event kboot yaboot
-uis = $(pb_cui) $(pb_test)
-tests = $(parser_test)
+uis = $(pb_cui)
+tests = $(parser_test) $(pb_test)
 utils = $(pb_event)
 
 ifeq ($(PBTWIN),y)
