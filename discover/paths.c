@@ -81,14 +81,6 @@ char *parse_device_path(void *alloc_ctx,
 	if (is_prefix(dev_str, "/dev/"))
 		dev_str += strlen("/dev/");
 
-	/* PS3 hack: if we're reading from a ps3dx device, and we refer to
-	 * a sdx device, remap to ps3dx */
-	if (cur_dev && is_prefix(cur_dev, "/dev/ps3d")
-			&& is_prefix(dev_str, "sd")) {
-		snprintf(tmp, 255, "ps3d%s", dev_str + 2);
-		dev_str = tmp;
-	}
-
 	return join_paths(alloc_ctx, "/dev", dev_str);
 }
 
