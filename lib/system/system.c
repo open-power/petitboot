@@ -3,6 +3,7 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -104,13 +105,13 @@ int pb_rmdir_recursive(const char *base, const char *dir)
 
 int pb_run_cmd(const char *const *cmd_argv)
 {
-	int status;
-	pid_t pid;
 #if defined(DEBUG)
 	enum {do_debug = 1};
 #else
 	enum {do_debug = 0};
 #endif
+	int status;
+	pid_t pid;
 
 	if (do_debug) {
 		const char *const *p = cmd_argv;
@@ -125,12 +126,23 @@ int pb_run_cmd(const char *const *cmd_argv)
 		pb_log("%s: %s\n", __func__, cmd_argv[0]);
 
 	pid = fork();
+
 	if (pid == -1) {
 		pb_log("%s: fork failed: %s\n", __func__, strerror(errno));
 		return -1;
 	}
 
 	if (pid == 0) {
+		int log = fileno(pb_log_get_stream());
+
+		/* Redirect child output to log. */
+
+		status = dup2(log, STDOUT_FILENO);
+		assert(status != -1);
+
+		status = dup2(log, STDERR_FILENO);
+		assert(status != -1);
+
 		execvp(cmd_argv[0], (char *const *)cmd_argv);
 		pb_log("%s: exec failed: %s\n", __func__, strerror(errno));
 		exit(EXIT_FAILURE);
