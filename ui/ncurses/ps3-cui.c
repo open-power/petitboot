@@ -53,7 +53,7 @@ static void print_usage(void)
 	print_version();
 	printf(
 "Usage: pb-cui [-h, --help] [-l, --log log-file] [-r, --reset-defaults]\n"
-"              [-V, --version]\n");
+"              [-t, --timeout] [-V, --version]\n");
 }
 
 /**
@@ -70,6 +70,7 @@ struct opts {
 	enum opt_value show_help;
 	const char *log_file;
 	enum opt_value reset_defaults;
+	enum opt_value use_timeout;
 	enum opt_value show_version;
 };
 
@@ -83,10 +84,11 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 		{"help",           no_argument,       NULL, 'h'},
 		{"log",            required_argument, NULL, 'l'},
 		{"reset-defaults", no_argument,       NULL, 'r'},
+		{"timeout",        no_argument,       NULL, 't'},
 		{"version",        no_argument,       NULL, 'V'},
 		{ NULL, 0, NULL, 0},
 	};
-	static const char short_options[] = "hl:rV";
+	static const char short_options[] = "hl:trV";
 	static const struct opts default_values = {
 		.log_file = "pb-cui.log",
 	};
@@ -107,6 +109,9 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 		case 'l':
 			opts->log_file = optarg;
 			break;
+		case 't':
+			opts->use_timeout = opt_yes;
+			break;
 		case 'r':
 			opts->reset_defaults = opt_yes;
 			break;
@@ -119,7 +124,7 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 		}
 	}
 
-	return 0;
+	return optind != argc;
 }
 
 /**
@@ -551,7 +556,8 @@ int main(int argc, char *argv[])
 	ps3.mm = ps3_mm_init(&ps3);
 	ps3.svm = ps3_svm_init(&ps3);
 
-	if (ps3.values.timeout == ps3_timeout_forever)
+	if (opts.use_timeout != opt_yes
+		|| ps3.values.timeout == ps3_timeout_forever)
 		ui_timer_disable(&ps3.cui->timer);
 	else {
 		ps3.cui->timer.update_display = ps3_timer_update;
