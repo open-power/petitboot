@@ -19,6 +19,6 @@
 #if !defined(_PB_FILE_LOADER_H)
 #define _PB_FILE_LOADER_H
 
-char *pb_load_file(void *ctx, const char *remote);
+char *pb_load_file(void *ctx, const char *remote, unsigned int *tempfile);
 
 #endif

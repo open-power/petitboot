@@ -33,13 +33,13 @@
 #include "ui-system.h"
 
 /**
- * run_kexec_local - Final kexec helper.
+ * kexec_load - kexec load helper.
  * @l_image: The local image file for kexec to execute.
  * @l_initrd: Optional local initrd file for kexec --initrd, can be NULL.
  * @args: Optional command line args for kexec --append, can be NULL.
  */
 
-static int run_kexec_local(const char *l_image, const char *l_initrd,
+static int kexec_load(const char *l_image, const char *l_initrd,
 	const char *args)
 {
 	int result;
@@ -49,43 +49,70 @@ static int run_kexec_local(const char *l_image, const char *l_initrd,
 	char *s_args = NULL;
 
 	p = argv;
-	*p++ = pb_system_apps.kexec;		/* 1 */
+	*p++ = pb_system_apps.kexec;	/* 1 */
+	*p++ = "-l";			/* 2 */
 
 	if (l_initrd) {
 		s_initrd = talloc_asprintf(NULL, "--initrd=%s", l_initrd);
 		assert(s_initrd);
-		*p++ = s_initrd;		 /* 2 */
+		*p++ = s_initrd;	 /* 3 */
 	}
 
 	if (args) {
 		s_args = talloc_asprintf(NULL, "--append=%s", args);
 		assert(s_args);
-		*p++ = s_args;			 /* 3 */
+		*p++ = s_args;		/* 4 */
 	}
 
-	/* First try by telling kexec to run shutdown */
-
-	*(p + 0) = l_image;
-	*(p + 1) = NULL;
+	*p++ = l_image;			/* 5 */
+	*p++ = NULL;			/* 6 */
 
 	result = pb_run_cmd(argv);
-
-	/* kexec will return zero on success */
-	/* On error, force a kexec with the -f option */
-
-	if (result) {
-		*(p + 0) = "-f";		/* 4 */
-		*(p + 1) = l_image;		/* 5 */
-		*(p + 2) = NULL;		/* 6 */
-
-		result = pb_run_cmd(argv);
-	}
 
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
 
 	talloc_free(s_initrd);
 	talloc_free(s_args);
+
+	return result;
+}
+
+/**
+ * kexec_reboot - Helper to boot the new kernel.
+ *
+ * Must only be called after a successful call to kexec_load().
+ */
+
+static int kexec_reboot(void)
+{
+	int result;
+	const char *argv[4];
+	const char **p;
+
+	/* First try running shutdown.  Init scripts should run 'exec -e' */
+
+	p = argv;
+	*p++ = pb_system_apps.shutdown;	/* 1 */
+	*p++ =  "-r";			/* 2 */
+	*p++ =  "now";			/* 3 */
+	*p++ =  NULL;			/* 4 */
+
+	result = pb_run_cmd(argv);
+
+	/* On error, force a kexec with the -e option */
+
+	if (result) {
+		p = argv;
+		*p++ = pb_system_apps.kexec;	/* 1 */
+		*p++ = "-e";			/* 2 */
+		*p++ = NULL;			/* 3 */
+
+		result = pb_run_cmd(argv);
+	}
+
+	if (result)
+		pb_log("%s: failed: (%d)\n", __func__, result);
 
 	return result;
 }
@@ -99,30 +126,43 @@ int pb_run_kexec(const struct pb_kexec_data *kd)
 	int result;
 	char *l_image = NULL;
 	char *l_initrd = NULL;
+	unsigned int clean_image = 0;
+	unsigned int clean_initrd = 0;
 
 	pb_log("%s: image:  '%s'\n", __func__, kd->image);
 	pb_log("%s: initrd: '%s'\n", __func__, kd->initrd);
 	pb_log("%s: args:   '%s'\n", __func__, kd->args);
 
+	result = -1;
+
 	if (kd->image) {
-		l_image = pb_load_file(NULL, kd->image);
+		l_image = pb_load_file(NULL, kd->image, &clean_image);
 		if (!l_image)
-			return -1;
+			goto no_load;
 	}
 
 	if (kd->initrd) {
-		l_initrd = pb_load_file(NULL, kd->initrd);
+		l_initrd = pb_load_file(NULL, kd->initrd, &clean_initrd);
 		if (!l_initrd)
-			return -1;
+			goto no_load;
 	}
 
 	if (!l_image && !l_initrd)
-		return -1;
+		goto no_load;
 
-	result = run_kexec_local(l_image, l_initrd, kd->args);
+	result = kexec_load(l_image, l_initrd, kd->args);
+
+no_load:
+	if (clean_image)
+		unlink(l_image);
+	if (clean_initrd)
+		unlink(l_initrd);
 
 	talloc_free(l_image);
 	talloc_free(l_initrd);
+
+	if (!result)
+		result = kexec_reboot();
 
 	return result;
 }

@@ -263,15 +263,21 @@ fail:
 /**
  * pb_load_file - Loads a remote file and returns the local file path.
  * @ctx: The talloc context to associate with the returned string.
+ * @remote: The remote file URL.
+ * @tempfile: An optional variable pointer to be set when a temporary local
+ *  file is created.
  *
  * Returns the local file path in a talloc'ed character string on success,
  * or NULL on error.
  */
 
-char *pb_load_file(void *ctx, const char *remote)
+char *pb_load_file(void *ctx, const char *remote, unsigned int *tempfile)
 {
 	char *local;
 	struct pb_url *url = pb_url_parse(NULL, remote);
+
+	if (tempfile)
+		*tempfile = 0;
 
 	if (!url)
 		return NULL;
@@ -280,19 +286,28 @@ char *pb_load_file(void *ctx, const char *remote)
 	case pb_url_ftp:
 	case pb_url_http:
 		local = pb_load_wget(ctx, url, 0);
+		if (tempfile && local)
+			*tempfile = 1;
 		break;
 	case pb_url_https:
-		local = pb_load_wget(ctx, url,
-			wget_no_check_certificate);
+		local = pb_load_wget(ctx, url, wget_no_check_certificate);
+		if (tempfile && local)
+			*tempfile = 1;
 		break;
 	case pb_url_nfs:
 		local = pb_load_nfs(ctx, url);
+		if (tempfile && local)
+			*tempfile = 1;
 		break;
 	case pb_url_sftp:
 		local = pb_load_sftp(ctx, url);
+		if (tempfile && local)
+			*tempfile = 1;
 		break;
 	case pb_url_tftp:
 		local = pb_load_tftp(ctx, url);
+		if (tempfile && local)
+			*tempfile = 1;
 		break;
 	default:
 		local = talloc_strdup(ctx, url->full);

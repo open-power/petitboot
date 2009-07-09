@@ -5,6 +5,7 @@ struct pb_system_apps {
 	const char *cp;
 	const char *kexec;
 	const char *mount;
+	const char *shutdown;
 	const char *sftp;
 	const char *tftp;
 	const char *umount;

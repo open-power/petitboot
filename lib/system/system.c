@@ -20,6 +20,7 @@ const struct pb_system_apps pb_system_apps = {
 	.cp = "/bin/cp",
 	.kexec = "/sbin/kexec",
 	.mount = "/bin/mount",
+	.shutdown = "/sbin/shutdown",
 	.sftp = "/usr/bin/sftp",
 	.tftp = "/usr/bin/tftp",
 	.umount = "/bin/umount",
