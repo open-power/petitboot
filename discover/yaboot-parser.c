@@ -85,6 +85,8 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* image */
 
 	if (streq(name, "image")) {
+		const char *g_boot = conf_get_global_option(conf, "boot");
+		const char *g_part = conf_get_global_option(conf, "partition");
 
 		/* First finish any previous image. */
 
@@ -93,9 +95,25 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 		/* Then start the new image. */
 
-		state->opt->boot_image_file = resolve_path(state->opt, value,
-			conf->dc->device_path);
-		state->desc_image = talloc_strdup(state->opt, value);
+		if (g_boot && g_part) {
+			char* dev = talloc_asprintf(NULL, "%s%s", g_boot,
+				g_part);
+
+			state->opt->boot_image_file = resolve_path(state->opt,
+				value, dev);
+			state->desc_image = talloc_asprintf(state->opt,
+				"%s%s", dev, value);
+			talloc_free(dev);
+		} else if (g_boot) {
+			state->opt->boot_image_file = resolve_path(state->opt,
+				value, g_boot);
+			state->desc_image = talloc_asprintf(state->opt,
+				"%s%s", g_boot, value);
+		} else {
+			state->opt->boot_image_file = resolve_path(state->opt,
+				value, conf->dc->device_path);
+			state->desc_image = talloc_strdup(state->opt, value);
+		}
 
 		return;
 	}
@@ -144,10 +162,29 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* initrd */
 
 	if (streq(name, "initrd")) {
-		state->opt->initrd_file = resolve_path(state->opt,
-			value, conf->dc->device_path);
-		state->desc_initrd = talloc_asprintf(state, "initrd=%s",
-			value);
+		const char *g_boot = conf_get_global_option(conf, "boot");
+		const char *g_part = conf_get_global_option(conf, "partition");
+
+		if (g_boot && g_part) {
+			char* dev = talloc_asprintf(NULL, "%s%s", g_boot,
+				g_part);
+
+			state->opt->initrd_file = resolve_path(state->opt,
+				value, dev);
+			state->desc_initrd = talloc_asprintf(state,
+				"initrd=%s%s", dev, value);
+			talloc_free(dev);
+		} else if (g_boot) {
+			state->opt->initrd_file = resolve_path(state->opt,
+				value, g_boot);
+			state->desc_initrd = talloc_asprintf(state,
+				"initrd=%s%s", g_boot, value);
+		} else {
+			state->opt->initrd_file = resolve_path(state->opt,
+				value, conf->dc->device_path);
+			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
+				value);
+		}
 		return;
 	}
 
