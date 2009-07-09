@@ -1,0 +1,47 @@
+.\" Copyright (C) 2009 Sony Computer Entertainment Inc.
+.\" Copyright 2009 Sony Corp.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; version 2 of the License.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+.\"
+.\" Maintainer's Notes:
+.\"  * For syntax help see the man pages for 'mdoc' and 'mdoc.samples'.
+.\"  * To check syntax use this:
+.\"    'groff -C -mtty-char -Tutf8 -man petitboot.8'.
+.\"  * To check format use this: 'less petitboot.8'.
+.\"
+.Dd ""
+.Dt petitboot 8
+.Os
+.\"
+.Sh NAME
+.\" ====
+.Nm petitboot
+.Nd The Petitboot bootloader
+.\"
+.Sh DESCRIPTION
+.\" ===========
+Petitboot is a platform independent bootloader based on Linux kexec.
+Petitboot can load Linux kernel and initrd images from any device that
+can be mounted by Linux, and can also load images from the network
+using the
+HTTP, HTTPS, NFS, SFTP, and TFTP
+protocols.
+.Pp
+Petitboot looks for bootloader configuration files on mountable devices
+in the system, and can also be configured to use boot information
+from a DHCP server.
+.\"
+.Sh SEE ALSO
+.\" ========
+.Xr pb-cui 8 , Xr pb-discover 8 , Xr pb-event 8

@@ -39,5 +39,6 @@ localstatedir = @localstatedir@
 builddir = @builddir@
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
+mandir = @mandir@
 
 include $(top_srcdir)/rules.mk

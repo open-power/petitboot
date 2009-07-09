@@ -29,6 +29,7 @@ endif
 
 # other to install
 artwork = background.jpg cdrom.png hdd.png usbpen.png tux.png cursor.gz
+man8 = pb-cui.8 pb-discover.8 pb-event.8 petitboot.8
 rules = utils/99-petitboot.rules
 udhcpc = utils/udhcpc
 
@@ -129,6 +130,9 @@ install: all $(rules) $(udhcpc)
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/utils
 	$(INSTALL_DATA) $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
 	$(INSTALL_DATA) $(top_srcdir)/$(udhcpc) $(DESTDIR)$(pkgdatadir)/utils
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man8/
+	$(INSTALL_DATA) $(addprefix $(top_srcdir)/man/, $(man8)) \
+		$(DESTDIR)$(mandir)/man8/
 
 dist: $(PACKAGE)-$(VERSION).tar.gz
 

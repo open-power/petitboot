@@ -1,0 +1,67 @@
+.\" Copyright (C) 2009 Sony Computer Entertainment Inc.
+.\" Copyright 2009 Sony Corp.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; version 2 of the License.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+.\"
+.\" Maintainer's Notes:
+.\"  * For syntax help see the man pages for 'mdoc' and 'mdoc.samples'.
+.\"  * To check syntax use this:
+.\"    'groff -C -mtty-char -Tutf8 -man pb-cui.8'.
+.\"  * To check format use this: 'less pb-cui.8'.
+.\"
+.Dd ""
+.Dt pb-cui 8
+.Os
+.\"
+.Sh NAME
+.\" ====
+.Nm pb-cui
+.Nd Petitboot ncurses bootloader UI
+.\"
+.Sh SYNOPSIS
+.\" ========
+.Nm
+.Op Fl h, -help
+.Op Fl l, -log Ar log-file
+.Op Fl V, -version
+.\"
+.Sh DESCRIPTION
+.\" ===========
+pb-cui is an ncurses based interface to the Petitboot bootloader.
+.Pp
+Petitboot is a Linux kexec based bootloader that supports loading Linux
+kernel and initrd images from any device that can be mounted by Linux.
+It can also load images from the network using the
+HTTP, HTTPS, NFS, SFTP, and TFTP
+protocols.
+.\"
+.Sh OPTIONS
+.\" =======
+.Bl -tag -width indent
+.\"
+.It Fl h, -help
+Print a help message.
+.\"
+.It Fl l, -log Ar log-file
+Log messages to the file
+.Ar log-file .
+The default log is a file pb-cui.log in the directory where pb-cui
+is started.  New messages are appended to an existing log file.
+.\"
+.It Fl V, -version
+Display the program version number.
+.El
+.Sh SEE ALSO
+.\" ========
+.Xr petitboot 8 , Xr pb-discover 8 , Xr pb-event 8
