@@ -295,7 +295,7 @@ static int yaboot_parse(struct discover_context *dc)
 	conf = talloc_zero(dc, struct conf_context);
 
 	if (!conf)
-		return -1;
+		return 0;
 
 	conf->dc = dc;
 	conf->global_options = yaboot_global_options,

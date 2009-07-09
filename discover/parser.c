@@ -13,16 +13,16 @@ extern struct parser __start_parsers[], __stop_parsers[];
 void iterate_parsers(struct discover_context *ctx)
 {
 	struct parser *parser;
+	unsigned int count = 0;
 
 	pb_log("trying parsers for %s\n", ctx->device_path);
 
 	for (parser = __start_parsers; parser < __stop_parsers; parser++) {
 		pb_log("\ttrying parser '%s'\n", parser->name);
-		/* just use a dummy device path for now */
-		if (parser->parse(ctx))
-			return;
+		count += parser->parse(ctx);
 	}
-	pb_log("\tno boot_options found\n");
+	if (!count)
+		pb_log("\tno boot_options found\n");
 }
 
 static int compare_parsers(const void *a, const void *b)
