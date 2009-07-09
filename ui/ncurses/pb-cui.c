@@ -138,7 +138,7 @@ static int pb_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 {
 	struct pb_cui *pb = pb_from_cui(cui);
 
-	pb_log("%s: %s:%s\n", __func__, cod->dev->name, cod->opt->name);
+	pb_log("%s: %s\n", __func__, cod->name);
 
 	assert(pb->cui->current == &pb->cui->main->scr);
 
@@ -162,9 +162,11 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		return NULL;
 	}
 
+	m->on_open = cui_on_open;
+
 	m->scr.frame.title = talloc_strdup(m, "Petitboot");
 	m->scr.frame.help = talloc_strdup(m,
-		"ESC=exit, Enter=accept, E,e=edit");
+		"ESC=exit, Enter=accept, e=edit, o=open");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
 	i = pmenu_item_init(m, 0, "Exit to Shell",

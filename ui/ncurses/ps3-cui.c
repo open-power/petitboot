@@ -199,11 +199,12 @@ static int ps3_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 {
 	struct ps3_cui *ps3 = ps3_from_cui(cui);
 
-	pb_log("%s: %s:%s\n", __func__, cod->dev->name, cod->opt->name);
+	pb_log("%s: %s\n", __func__, cod->name);
 
 	assert(ps3->cui->current == &ps3->cui->main->scr);
 
-	if (cui->default_item != cod->opt_hash || ps3->dirty_values) {
+	if ((cod->opt_hash && cod->opt_hash != cui->default_item)
+		|| ps3->dirty_values) {
 		ps3->values.default_item = cod->opt_hash;
 		ps3_flash_set_values(&ps3->values);
 	}
@@ -326,6 +327,8 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 	}
 
 	m->hot_key = ps3_hot_key;
+	m->on_open = cui_on_open;
+
 #if defined(DEBUG)
 	m->scr.frame.title = talloc_strdup(m,
 		"Petitboot PS3 (ver " PACKAGE_VERSION ")");
@@ -333,7 +336,7 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 	m->scr.frame.title = talloc_strdup(m, "Petitboot PS3");
 #endif
 	m->scr.frame.help = talloc_strdup(m,
-		"ESC=exit, Enter=accept, E,e=edit");
+		"ESC=exit, Enter=accept, e=edit, o=open");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
 	i = pmenu_item_init(m, 0, "Boot GameOS",

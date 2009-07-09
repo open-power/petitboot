@@ -77,6 +77,7 @@ struct pmenu {
 	unsigned int insert_pt;
 	int (*hot_key)(struct pmenu *menu, struct pmenu_item *item, int c);
 	void (*on_exit)(struct pmenu *menu);
+	void (*on_open)(struct pmenu *menu);
 };
 
 struct pmenu *pmenu_init(void *ui_ctx, unsigned int item_count,

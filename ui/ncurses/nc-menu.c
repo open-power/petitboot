@@ -174,12 +174,15 @@ static void pmenu_process_key(struct nc_scr *scr)
 		case '\t':
 			pmenu_move_cursor(menu, REQ_DOWN_ITEM);
 			break;
-
 		case KEY_LEFT:
-		case 'E':
 		case 'e':
 			if (item->on_edit)
 				item->on_edit(item);
+			break;
+		case 'o':
+			DBGS("on_open: %p\n", menu->on_open);
+			if (menu->on_open)
+				menu->on_open(menu);
 			break;
 		case '\n':
 		case '\r':

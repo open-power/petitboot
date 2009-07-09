@@ -26,10 +26,13 @@
 #include "nc-ked.h"
 
 struct cui_opt_data {
+	const char *name;
+	struct pb_kexec_data *kd;
+
+	/* optional data */
 	const struct device *dev;
 	const struct boot_option *opt;
 	uint32_t opt_hash;
-	struct pb_kexec_data *kd;
 };
 
 /**
@@ -66,6 +69,7 @@ int cui_ked_run(struct pmenu_item *item);
 void cui_abort(struct cui *cui);
 void cui_resize(struct cui *cui);
 void cui_on_exit(struct pmenu *menu);
+void cui_on_open(struct pmenu *menu);
 int cui_run_cmd(struct pmenu_item *item);
 
 static inline struct cui *cui_from_arg(void *arg)

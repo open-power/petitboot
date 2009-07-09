@@ -108,8 +108,8 @@ static int cui_run_kexec(struct pmenu_item *item)
 	assert(cui->current == &cui->main->scr);
 	assert(cui->on_kexec);
 
-	pb_log("%s: %s\n", __func__, cod->dev->name, cod->opt->name);
-	nc_scr_status_printf(cui->current, "Booting %s...", cod->opt->name);
+	pb_log("%s: %s\n", __func__, cod->name);
+	nc_scr_status_printf(cui->current, "Booting %s...", cod->name);
 
 	def_prog_mode();
 
@@ -150,7 +150,7 @@ static void cui_ked_on_exit(struct ked *ked, enum ked_result ked_result,
 		talloc_free(cod->kd);
 		cod->kd = kd;
 
-		pb_log("%s: updating opt '%s'\n", __func__, cod->opt->name);
+		pb_log("%s: updating opt '%s'\n", __func__, cod->name);
 		pb_log(" image  '%s'\n", cod->kd->image);
 		pb_log(" initrd '%s'\n", cod->kd->initrd);
 		pb_log(" args   '%s'\n", cod->kd->args);
@@ -267,6 +267,49 @@ static void cui_handle_resize(struct cui *cui)
 }
 
 /**
+ * cui_on_open - Open new item callback.
+ */
+
+void cui_on_open(struct pmenu *menu)
+{
+	unsigned int insert_pt;
+	struct pmenu_item *i;
+	struct cui_opt_data *cod;
+	char *name;
+
+	menu->scr.unpost(&menu->scr);
+
+	/* This disconnects items array from menu. */
+
+	set_menu_items(menu->ncm, NULL);
+
+	/* Insert new items at insert_pt. */
+
+	insert_pt = pmenu_grow(menu, 1);
+	i = pmenu_item_alloc(menu);
+
+	name = talloc_asprintf(i, "User item %u:", insert_pt);
+	pmenu_item_setup(menu, i, insert_pt, name, NULL);
+
+	i->on_edit = cui_ked_run;
+	i->on_execute = cui_run_kexec;
+	i->data = cod = talloc_zero(i, struct cui_opt_data);
+
+	cod->kd = talloc_zero(i, struct pb_kexec_data);
+	cod->name = name;
+
+	/* Re-attach the items array. */
+
+	set_menu_items(menu->ncm, menu->items);
+
+	set_current_item(menu->ncm, i->nci);
+	menu->scr.post(&menu->scr);
+	pos_menu_cursor(menu->ncm);
+
+	i->on_edit(i);
+}
+
+/**
  * cui_device_add - Client device_add callback.
  *
  * Creates menu_items for all the device boot_options and inserts those
@@ -332,6 +375,7 @@ static int cui_device_add(struct device *dev, void *arg)
 		cod->dev = dev;
 		cod->opt = opt;
 		cod->opt_hash = pb_opt_hash(dev, opt);
+		cod->name = opt->name;
 		cod->kd = talloc(i, struct pb_kexec_data);
 
 		cod->kd->image = talloc_strdup(cod->kd, opt->boot_image_file);
@@ -340,7 +384,7 @@ static int cui_device_add(struct device *dev, void *arg)
 
 		insert_pt++;
 
-		pb_log("%s: adding opt '%s'\n", __func__, cod->opt->name);
+		pb_log("%s: adding opt '%s'\n", __func__, cod->name);
 		pb_log("   image  '%s'\n", cod->kd->image);
 		pb_log("   initrd '%s'\n", cod->kd->initrd);
 		pb_log("   args   '%s'\n", cod->kd->args);

@@ -149,9 +149,10 @@ static char *ked_chomp(char *s)
 	for (; s < s_end; s++)
 		if (*s != ' ' && *s != '\t')
 			break;
-	start = s;
 
-	for (++s; s < s_end; s++)
+	start = end = s;
+
+	for (; s < s_end; s++)
 		if (*s != ' ' && *s != '\t')
 			end = s;
 	*(end + 1) = 0;
