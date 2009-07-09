@@ -15,7 +15,6 @@ struct yaboot_state {
 	struct boot_option *opt;
 	const char *desc_image;
 	char *desc_initrd;
-	int found_suse;
 	int globals_done;
 	const char *const *known_names;
 };
@@ -56,6 +55,19 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		char *value)
 {
 	struct yaboot_state *state = conf->parser_info;
+	struct fixed_pair {
+		const char *image;
+		const char *initrd;
+	};
+	static const struct fixed_pair suse_fp32 = {
+		.image = "/suseboot/vmlinux32",
+		.initrd = "/suseboot/initrd32",
+	};
+	static const struct fixed_pair suse_fp64 = {
+		.image = "/suseboot/vmlinux64",
+		.initrd = "/suseboot/initrd64",
+	};
+	const struct fixed_pair *suse_fp;
 
 	/* fixup for bare values */
 
@@ -73,32 +85,52 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* image */
 
 	if (streq(name, "image")) {
+
+		/* First finish any previous image. */
+
 		if (state->opt->boot_image_file)
 			yaboot_finish(conf);
+
+		/* Then start the new image. */
 
 		state->opt->boot_image_file = resolve_path(state->opt, value,
 			conf->dc->device_path);
 		state->desc_image = talloc_strdup(state->opt, value);
+
 		return;
 	}
 
-	if (streq(name, "image[32bit]") || streq(name, "image[64bit]")) {
-		state->found_suse = 1;
+	/* Special processing for SUSE install CD. */
+
+	if (streq(name, "image[32bit]"))
+		suse_fp = &suse_fp32;
+	else if (streq(name, "image[64bit]"))
+		suse_fp = &suse_fp64;
+	else
+		suse_fp = NULL;
+
+	if (suse_fp) {
+		/* First finish any previous image. */
 
 		if (state->opt->boot_image_file)
 			yaboot_finish(conf);
+
+		/* Then start the new image. */
 
 		if (*value == '/') {
 			state->opt->boot_image_file = resolve_path(state->opt,
 				value, conf->dc->device_path);
 			state->desc_image = talloc_strdup(state->opt, value);
 		} else {
-			char *s;
-			asprintf(&s, "/suseboot/%s", value);
 			state->opt->boot_image_file = resolve_path(state->opt,
-				s, conf->dc->device_path);
-			state->desc_image = talloc_strdup(state->opt, s);
-			free(s);
+				suse_fp->image, conf->dc->device_path);
+			state->desc_image = talloc_strdup(state->opt,
+				suse_fp->image);
+
+			state->opt->initrd_file = resolve_path(state->opt,
+				suse_fp->initrd, conf->dc->device_path);
+			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
+				suse_fp->initrd);
 		}
 
 		return;
@@ -112,20 +144,10 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* initrd */
 
 	if (streq(name, "initrd")) {
-		if (!state->found_suse || (*value == '/')) {
-			state->opt->initrd_file = resolve_path(state->opt,
-				value, conf->dc->device_path);
-			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
-				value);
-		} else {
-			char *s;
-			asprintf(&s, "/suseboot/%s", value);
-			state->opt->initrd_file = resolve_path(state->opt,
-				s, conf->dc->device_path);
-			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
-				s);
-			free(s);
-		}
+		state->opt->initrd_file = resolve_path(state->opt,
+			value, conf->dc->device_path);
+		state->desc_initrd = talloc_asprintf(state, "initrd=%s",
+			value);
 		return;
 	}
 
