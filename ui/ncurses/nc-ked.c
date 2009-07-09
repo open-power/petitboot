@@ -48,12 +48,15 @@ static struct ked *ked_from_arg(void *arg)
  * @req: An ncurses request or char to send to form_driver().
  */
 
-static void ked_move_cursor(struct ked *ked, int req)
+static int ked_move_cursor(struct ked *ked, int req)
 {
+	int result;
+
 	wchgat(ked->scr.sub_ncw, 1, ked_attr_field_selected, 0, 0);
-	form_driver(ked->ncf, req);
+	result = form_driver(ked->ncf, req);
 	wchgat(ked->scr.sub_ncw, 1, ked->attr_cursor, 0, 0);
 	wrefresh(ked->scr.main_ncw);
+	return result;
 }
 
 /**
@@ -93,12 +96,15 @@ static void ked_insert_mode_tog(struct ked *ked)
  * @req: An ncurses request to send to form_driver().
  */
 
-static void ked_move_field(struct ked *ked, int req)
+static int ked_move_field(struct ked *ked, int req)
 {
+	int result;
+
 	set_field_back(current_field(ked->ncf), ked_attr_field_normal);
-	form_driver(ked->ncf, req);
+	result = form_driver(ked->ncf, req);
 	set_field_back(current_field(ked->ncf), ked_attr_field_selected);
 	ked_move_cursor(ked, REQ_END_FIELD);
+	return result;
 }
 
 static int ked_post(struct nc_scr *scr)
@@ -187,12 +193,15 @@ static void ked_process_key(struct nc_scr *scr)
 	while (1) {
 		int c = getch();
 
+		if (c == ERR)
+			return;
+
+		/* DBGS("%d (%o)\n", c, c); */
+
 		switch (c) {
 		default:
 			ked_move_cursor(ked, c);
-		break;
-		case ERR:
-			return;
+			break;
 
 		/* hot keys */
 		case 2: { /* CTRL-B */
@@ -252,8 +261,8 @@ static void ked_process_key(struct nc_scr *scr)
 			ked_move_cursor(ked, REQ_RIGHT_CHAR);
 			break;
 		case KEY_BACKSPACE:
-			ked_move_cursor(ked, REQ_LEFT_CHAR);
-			ked_move_cursor(ked, REQ_DEL_CHAR);
+			if (ked_move_cursor(ked, REQ_LEFT_CHAR) == E_OK)
+				ked_move_cursor(ked, REQ_DEL_CHAR);
 			break;
 		case KEY_DC:
 			ked_move_cursor(ked, REQ_DEL_CHAR);
