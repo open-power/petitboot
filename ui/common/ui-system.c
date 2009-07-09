@@ -43,20 +43,24 @@ static int run_kexec_local(const char *l_image, const char *l_initrd,
 	const char *args)
 {
 	int result;
-	const char *argv[8];
+	const char *argv[6];
 	const char **p;
+	char *s_initrd = NULL;
+	char *s_args = NULL;
 
 	p = argv;
 	*p++ = pb_system_apps.kexec;		/* 1 */
 
 	if (l_initrd) {
-		*p++ = "--initrd";		/* 2 */
-		*p++ = l_initrd;		/* 3 */
+		s_initrd = talloc_asprintf(NULL, "--initrd=%s", l_initrd);
+		assert(s_initrd);
+		*p++ = s_initrd;		 /* 2 */
 	}
 
 	if (args) {
-		*p++ = "--append";		/* 4 */
-		*p++ = args;			/* 5 */
+		s_args = talloc_asprintf(NULL, "--append=%s", args);
+		assert(s_args);
+		*p++ = s_args;			 /* 3 */
 	}
 
 	/* First try by telling kexec to run shutdown */
@@ -70,15 +74,18 @@ static int run_kexec_local(const char *l_image, const char *l_initrd,
 	/* On error, force a kexec with the -f option */
 
 	if (result) {
-		*(p + 0) = "-f";		/* 6 */
-		*(p + 1) = l_image;		/* 7 */
-		*(p + 2) = NULL;		/* 8 */
+		*(p + 0) = "-f";		/* 4 */
+		*(p + 1) = l_image;		/* 5 */
+		*(p + 2) = NULL;		/* 6 */
 
 		result = pb_run_cmd(argv);
 	}
 
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
+
+	talloc_free(s_initrd);
+	talloc_free(s_args);
 
 	return result;
 }
