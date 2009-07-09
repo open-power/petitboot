@@ -20,6 +20,7 @@
 #define _PB_NC_KED_H
 
 #include <assert.h>
+#include <linux/input.h> /* This must be included before ncurses.h */
 #include <form.h>
 
 #include "pb-protocol/pb-protocol.h"

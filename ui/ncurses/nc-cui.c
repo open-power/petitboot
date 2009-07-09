@@ -230,6 +230,10 @@ struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr)
 	return old;
 }
 
+/**
+ * cui_process_key - Process input on stdin.
+ */
+
 static int cui_process_key(void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
@@ -242,6 +246,24 @@ static int cui_process_key(void *arg)
 	return 0;
 }
 
+/**
+ * cui_process_js - Process joystick events.
+ */
+
+static int cui_process_js(void *arg)
+{
+	struct cui *cui = cui_from_arg(arg);
+	int c;
+
+	c = pjs_process_event(cui->pjs);
+
+	if (c) {
+		ungetch(c);
+		cui_process_key(arg);
+	}
+
+	return 0;
+}
 /**
  * cui_client_process_socket - Process a socket event from the discover server.
  */
@@ -511,7 +533,8 @@ static struct discover_client_ops cui_client_ops = {
  */
 
 struct cui *cui_init(void* platform_info,
-	int (*on_kexec)(struct cui *, struct cui_opt_data *))
+	int (*on_kexec)(struct cui *, struct cui_opt_data *),
+	int (*js_map)(const struct js_event *e))
 {
 	struct cui *cui;
 	struct discover_client *client;
@@ -556,6 +579,15 @@ struct cui *cui_init(void* platform_info,
 		cui_client_process_socket, client);
 
 	waiter_register(STDIN_FILENO, WAIT_IN, cui_process_key, cui);
+
+	if (js_map) {
+
+		cui->pjs = pjs_init(cui, js_map);
+
+		if (cui->pjs)
+			waiter_register(pjs_get_fd(cui->pjs), WAIT_IN,
+				cui_process_js, cui);
+	}
 
 	return cui;
 

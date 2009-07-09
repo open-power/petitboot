@@ -204,7 +204,7 @@ static void pmenu_process_key(struct nc_scr *scr)
 		if (c == ERR)
 			return;
 
-		/* DBGS("%d (%o)\n", c, c); */
+		if (1) DBGS("%d (%o)\n", c, c);
 
 		if (menu->hot_key)
 			c = menu->hot_key(menu, item, c);

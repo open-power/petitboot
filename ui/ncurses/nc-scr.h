@@ -19,6 +19,7 @@
 #if !defined(_PB_NC_SCR_H)
 #define _PB_NC_SCR_H
 
+#include <linux/input.h> /* This must be included before ncurses.h */
 #include <ncurses.h>
 
 #define DBG(fmt, args...) pb_log("DBG: " fmt, ## args)

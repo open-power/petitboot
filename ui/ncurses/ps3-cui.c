@@ -157,6 +157,83 @@ static struct ps3_cui *ps3_from_item(struct pmenu_item *item)
 }
 
 /**
+ * ps3_sixaxis_map - Map a Linux joystick event to an ncurses key code.
+ *
+ */
+
+static int ps3_sixaxis_map(const struct js_event *e)
+{
+#if 0
+	static const int axis_map[] = {
+		0,		/*   0  Left thumb X	*/
+		0,		/*   1  Left thumb Y	*/
+		0,		/*   2  Right thumb X	*/
+		0,		/*   3  Right thumb Y	*/
+		0,		/*   4  nothing		*/
+		0,		/*   5  nothing		*/
+		0,		/*   6  nothing		*/
+		0,		/*   7  nothing		*/
+		0,		/*   8  Dpad Up		*/
+		0,		/*   9  Dpad Right	*/
+		0,		/*  10  Dpad Down	*/
+		0,		/*  11  Dpad Left	*/
+		0,		/*  12  L2		*/
+		0,		/*  13  R2		*/
+		0,		/*  14  L1		*/
+		0,		/*  15  R1		*/
+		0,		/*  16  Triangle	*/
+		0,		/*  17  Circle		*/
+		0,		/*  18  Cross		*/
+		0,		/*  19  Square		*/
+		0,		/*  20  nothing		*/
+		0,		/*  21  nothing		*/
+		0,		/*  22  nothing		*/
+		0,		/*  23  nothing		*/
+		0,		/*  24  nothing		*/
+		0,		/*  25  nothing		*/
+		0,		/*  26  nothing		*/
+		0,		/*  27  nothing		*/
+	};
+#endif
+	static const int button_map[] = {
+		0,		/*   0  Select		*/
+		0,		/*   1  L3		*/
+		0,		/*   2  R3		*/
+		0,		/*   3  Start		*/
+		KEY_UP,		/*   4  Dpad Up		*/
+		0,		/*   5  Dpad Right	*/
+		KEY_DOWN,	/*   6  Dpad Down	*/
+		0,		/*   7  Dpad Left	*/
+		KEY_UP,		/*   8  L2		*/
+		KEY_DOWN,	/*   9  R2		*/
+		KEY_HOME,	/*  10  L1		*/
+		KEY_END,	/*  11  R1		*/
+		0,		/*  12  Triangle	*/
+		0,		/*  13  Circle		*/
+		13,		/*  14  Cross		*/
+		0,		/*  15  Square		*/
+		0,		/*  16  PS Button	*/
+		0,		/*  17  nothing		*/
+		0,		/*  18  nothing		*/
+	};
+
+	if (!e->value)
+		return 0;
+
+	if (e->type == JS_EVENT_BUTTON
+		&& e->number < sizeof(button_map) / sizeof(button_map[0]))
+		return button_map[e->number];
+
+#if 0
+	if (e->type == JS_EVENT_AXIS
+		&& e->number < sizeof(axis_map) / sizeof(axis_map[0]))
+		return axis_map[e->number];
+#endif
+
+	return 0;
+}
+
+/**
  * ps3_set_mode - Set video mode helper.
  *
  * Runs ps3_set_video_mode().
@@ -550,7 +627,7 @@ int main(int argc, char *argv[])
 	if (!result && (ps3.values.video_mode != (uint16_t)mode))
 		ps3_set_video_mode(ps3.values.video_mode);
 
-	ps3.cui = cui_init(&ps3, ps3_kexec_cb);
+	ps3.cui = cui_init(&ps3, ps3_kexec_cb, ps3_sixaxis_map);
 
 	if (!ps3.cui)
 		return EXIT_FAILURE;

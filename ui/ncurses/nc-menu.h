@@ -20,6 +20,7 @@
 #define _PB_NC_MENU_H
 
 #include <assert.h>
+#include <linux/input.h> /* This must be included before ncurses.h */
 #include <menu.h>
 
 #include "log/log.h"

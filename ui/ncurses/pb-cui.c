@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	pb.cui = cui_init(&pb, pb_kexec_cb);
+	pb.cui = cui_init(&pb, pb_kexec_cb, NULL);
 
 	if (!pb.cui)
 		return EXIT_FAILURE;
