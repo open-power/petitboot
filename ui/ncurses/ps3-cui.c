@@ -316,8 +316,7 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 	int result;
 	struct pmenu *m;
 	struct pmenu_item *i;
-	static const char *const bgo[] =
-		{"/usr/sbin/ps3-boot-game-os-NOT", NULL};
+	static const char *const bgo[] = {"/usr/sbin/ps3-boot-game-os", NULL};
 
 	m = pmenu_init(ps3_cui->cui, 3, cui_on_exit);
 
