@@ -35,9 +35,7 @@ AC_ARG_ENABLE([ps3],
 	[],
 	[enable_ps3=check])
 
-AS_IF([test "x$enable_ps3" != xno],
-	[AC_SUBST([ENABLE_PS3], ["y"])],
-	[AC_SUBST([ENABLE_PS3], ["n"])])
+AS_IF([test "x$enable_ps3" != xno], [AC_SUBST([ENABLE_PS3], ["y"])], [])
 
 AC_ARG_WITH([twin],
 	[AS_HELP_STRING([--with-twin],

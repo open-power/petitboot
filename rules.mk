@@ -68,6 +68,7 @@ client_objs = $(lib_objs) $(ui_common_objs)
 all: $(uis) $(daemons) $(utils)
 
 # ncurses cui
+pb_cui_objs-y$(ENABLE_PS3) += ui/ncurses/pb-cui.o
 pb_cui_objs-$(ENABLE_PS3) += ui/ncurses/ps3-cui.o ui/common/ps3.o
 pb_cui_ldflags-$(ENABLE_PS3) += -lps3-utils
 
