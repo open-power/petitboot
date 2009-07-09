@@ -366,6 +366,9 @@ static int cui_device_add(struct device *dev, void *arg)
 			item_count(cui->main->ncm) + 1);
 	}
 
+	/* FIXME: need to make item visible somehow */
+	menu_driver(cui->main->ncm, REQ_SCR_UPAGE);
+	menu_driver(cui->main->ncm, REQ_SCR_DPAGE);
 	set_current_item(cui->main->ncm, selected);
 
 	if (cui->current == &cui->main->scr)
