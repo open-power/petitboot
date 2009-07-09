@@ -327,7 +327,12 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 	}
 
 	m->hot_key = ps3_hot_key;
+#if defined(DEBUG)
+	m->scr.frame.title = talloc_strdup(m,
+		"Petitboot PS3 (ver " PACKAGE_VERSION ")");
+#else
 	m->scr.frame.title = talloc_strdup(m, "Petitboot PS3");
+#endif
 	m->scr.frame.help = talloc_strdup(m,
 		"ESC=exit, Enter=accept, E,e=edit");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
