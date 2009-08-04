@@ -46,7 +46,7 @@ struct discover_client* discover_client_init(
 	client->ops.cb_arg = cb_arg;
 
 	client->fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (!client->fd < 0) {
+	if (client->fd < 0) {
 		pb_log("%s: socket: %s\n", __func__, strerror(errno));
 		goto out_err;
 	}
