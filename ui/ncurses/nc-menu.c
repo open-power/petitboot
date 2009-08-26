@@ -232,7 +232,6 @@ static void pmenu_process_key(struct nc_scr *scr)
 			pmenu_move_cursor(menu, REQ_UP_ITEM);
 			break;
 		case KEY_DOWN:
-		case '\t':
 			pmenu_move_cursor(menu, REQ_DOWN_ITEM);
 			break;
 		case KEY_LEFT:
