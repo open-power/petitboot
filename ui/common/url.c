@@ -140,7 +140,7 @@ struct pb_url *pb_url_parse(void *ctx, const char *url_str)
 		path = strchr(p, '/');
 
 		if (!path) {
-			pb_log("%s: parse path failed '%s'\n", p);
+			pb_log("%s: parse path failed '%s'\n", __func__ , p);
 			goto fail;
 		}
 

@@ -87,7 +87,7 @@ static int ps3_flash_open(struct ps3_flash_ctx *fc, const char *mode)
 	result = os_area_fixed_read(&fc->header, &fc->params, fc->dev);
 
 	if (result) {
-		pb_log("%s: os_area_fixed_read failed: %s\n", __func__);
+		pb_log("%s: os_area_fixed_read failed\n", __func__);
 		goto fail;
 	}
 
@@ -114,7 +114,7 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	result = ps3_flash_open(&fc, "r");
 
 	if (result)
-		goto done;
+		goto fail;
 
 	result = os_area_db_read(&fc.db, &fc.header, fc.dev);
 
@@ -123,7 +123,7 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	if (result) {
 		pb_log("%s: os_area_db_read failed: %s\n", __func__,
 			strerror(errno));
-		goto done;
+		goto fail;
 	}
 
 	sum = result = os_area_db_get(&fc.db, &id_default_item, &tmp);
@@ -141,14 +141,13 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	if (!result)
 		values->video_mode = (uint16_t)tmp;
 
-done:
 	pb_log("%s: default_item: %x\n", __func__,
 		(unsigned int)values->default_item);
 	pb_log("%s: timeout: %u\n", __func__,
 		(unsigned int)values->timeout);
 	pb_log("%s: video_mode:   %u\n", __func__,
 		(unsigned int)values->video_mode);
-
+fail:
 	return (result || sum) ? -1 : 0;
 }
 
