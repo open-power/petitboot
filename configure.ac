@@ -14,7 +14,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AC_INIT([petitboot], [0.2], [Jeremy Kerr <jk@ozlabs.org>])
+AC_INIT([petitboot], [0.3], [Geoff Levand <geoff@infradead.org>])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
