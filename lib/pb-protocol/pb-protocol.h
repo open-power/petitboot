@@ -28,6 +28,7 @@ struct device {
 
 	struct list boot_options;
 
+	int n_options;
 	void *ui_info;
 };
 

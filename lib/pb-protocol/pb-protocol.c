@@ -311,6 +311,8 @@ struct device *pb_protocol_deserialise_device(void *ctx,
 	n_options = __be32_to_cpu(*(uint32_t *)pos);
 	pos += sizeof(uint32_t);
 
+	dev->n_options = n_options;
+
 	list_init(&dev->boot_options);
 
 	for (i = 0; i < n_options; i++) {
