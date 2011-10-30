@@ -40,7 +40,31 @@ static inline int __attribute__ ((format (printf, 1, 2))) DBG(
 	__attribute__((unused)) const char *fmt, ...) {return 0; }
 #endif
 
-int main(void)
+static void print_version(void)
+{
+	printf("pb-event (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
+}
+
+static void print_usage(void)
+{
+	print_version();
+	printf(
+"Usage: pb-event [-h, --help] [-V, --version]\n"
+"\n"
+"       Reads a single petitboot user event on stdin and forwards it to the\n"
+"       petitboot discover server pb-discover.  User events must have the\n"
+"       following format:\n"
+"\n"
+"         (add|remove)@device-id\\0[name=value\\0][image=value\\0][args=value\\0]\n"
+"\n"
+"Examples:\n"
+"\n"
+"       echo -ne 'add@/net/eth0\\0name=netboot\\0image=tftp://192.168.1.10/vmlinux\\0args=root=/dev/nfs nfsroot=192.168.1.10:/target\\0' | pb-event\n"
+"       echo -ne 'remove@/net/eth0\\0' | pb-event\n"
+"\n");
+}
+
+int main(int argc, __attribute__((unused)) char *argv[])
 {
 	int result;
 	struct sockaddr_un addr;
@@ -48,7 +72,12 @@ int main(void)
 	ssize_t len;
 	int s;
 	int i;
-
+	
+	if (argc > 1) {
+		print_usage();
+		return EXIT_FAILURE;
+	}
+	
 	s = socket(PF_UNIX, SOCK_DGRAM, 0);
 
 	if (s < 0) {
@@ -62,7 +91,7 @@ int main(void)
 
 	if (!feof(stdin)) {
 		fprintf(stderr, "pb-event: msg too big (%u byte max)\n",
-			sizeof(buf));
+			(unsigned int)sizeof(buf));
 		result = EXIT_FAILURE;
 		/* continue on and try to write msg */
 	}
@@ -90,6 +119,6 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 
-	DBG("pb-event: wrote %u bytes\n", len);
+	DBG("pb-event: wrote %u bytes\n", (unsigned int)len);
 	return result;
 }
