@@ -21,6 +21,9 @@
 
 #include "pb-protocol/pb-protocol.h"
 #include "system/system.h"
+#include "ui/common/timer.h"
+
+#include <signal.h>
 
 struct pb_kexec_data {
 	char *image;
@@ -38,5 +41,23 @@ static inline uint32_t pb_opt_hash(const struct device *dev,
 {
 	return pb_cat_hash(dev->name, opt->name);
 }
+
+struct pb_opt_data {
+	const char *name;
+	struct pb_kexec_data *kd;
+
+	/* optional data */
+	union {
+		const struct device *dev;
+		const struct boot_option *opt;
+	};
+	uint32_t opt_hash;
+};
+
+struct pb_signal_data {
+	sig_atomic_t abort;
+	sig_atomic_t resize;
+	struct ui_timer timer;
+};
 
 #endif
