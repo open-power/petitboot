@@ -2,6 +2,7 @@
 #define _PB_PROTOCOL_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include <list/list.h>
 
@@ -46,6 +47,8 @@ struct boot_option {
 	void *ui_info;
 };
 
+void pb_protocol_dump_device(const struct device *dev, const char *text,
+	FILE *stream);
 int pb_protocol_device_len(const struct device *dev);
 int pb_protocol_device_cmp(const struct device *a, const struct device *b);
 

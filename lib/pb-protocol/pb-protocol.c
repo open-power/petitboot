@@ -40,6 +40,28 @@
  *   4-byte len, id
  */
 
+void pb_protocol_dump_device(const struct device *dev, const char *text,
+	FILE *stream)
+{
+	struct boot_option *opt;
+
+	fprintf(stream, "%snew dev:\n", text);
+	fprintf(stream, "%s\tid:   %s\n", text, dev->id);
+	fprintf(stream, "%s\tname: %s\n", text, dev->name);
+	fprintf(stream, "%s\tdesc: %s\n", text, dev->description);
+	fprintf(stream, "%s\ticon: %s\n", text, dev->icon_file);
+	fprintf(stream, "%s\tboot options:\n", text);
+	list_for_each_entry(&dev->boot_options, opt, list) {
+		fprintf(stream, "%s\t\tid:   %s\n", text, opt->id);
+		fprintf(stream, "%s\t\tname: %s\n", text, opt->name);
+		fprintf(stream, "%s\t\tdesc: %s\n", text, opt->description);
+		fprintf(stream, "%s\t\ticon: %s\n", text, opt->icon_file);
+		fprintf(stream, "%s\t\tboot: %s\n", text, opt->boot_image_file);
+		fprintf(stream, "%s\t\tinit: %s\n", text, opt->initrd_file);
+		fprintf(stream, "%s\t\targs: %s\n", text, opt->boot_args);
+	}
+}
+
 int pb_protocol_device_cmp(const struct device *a, const struct device *b)
 {
 	return !strcmp(a->id, b->id);
