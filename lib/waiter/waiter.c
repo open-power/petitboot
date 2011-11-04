@@ -25,6 +25,10 @@ struct waiter *waiter_register(int fd, int events,
 	n_waiters++;
 
 	waiters = talloc_realloc(NULL, waiters, struct waiter, n_waiters);
+	
+	if(!waiters)
+		return NULL;
+	
 	waiter = &waiters[n_waiters - 1];
 
 	waiter->fd = fd;
@@ -32,7 +36,7 @@ struct waiter *waiter_register(int fd, int events,
 	waiter->callback = callback;
 	waiter->arg = arg;
 
-	return 0;
+	return waiter;
 }
 
 void waiter_remove(struct waiter *waiter)
