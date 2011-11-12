@@ -59,13 +59,20 @@ twin_objs = ui/twin/pb-twin.o
 # Makefiles
 makefiles = Makefile $(top_srcdir)/rules.mk
 
+# headers
+discover_headers = $(wildcard $(top_srcdir)/discover/*.h)
+lib_headers = $(wildcard $(top_srcdir)/lib/*/*.h)
+ui_headers = $(wildcard $(top_srcdir)/ui/*/*.h)
+
 # object collections
 lib_objs = $(list_objs) $(log_objs) $(protocol_objs) $(system_objs) \
 	$(talloc_objs) $(waiter_objs)
 
 daemon_objs = $(lib_objs) $(parser_objs) $(discover_objs)
+daemon_headers = $(lib_headers) $(discover_headers)
 
 client_objs = $(lib_objs) $(ui_common_objs)
+client_headers = $(lib_headers) $(discover_headers) $(ui_headers)
 
 all: $(uis) $(daemons) $(utils)
 
@@ -75,7 +82,7 @@ pb_cui_objs-$(ENABLE_PS3) += ui/ncurses/ps3-cui.o ui/common/ps3.o
 pb_cui_ldflags-$(ENABLE_PS3) += -lps3-utils
 
 pb_cui_objs = $(client_objs) $(ncurses_objs) $(pb_cui_objs-y)
-$(pb_cui_objs): $(makefiles)
+$(pb_cui_objs): $(makefiles) $(client_headers)
 $(pb_cui): LDFLAGS += $(pb_cui_ldflags-y) -lmenu -lform -lncurses
 
 $(pb_cui): $(pb_cui_objs)
@@ -83,14 +90,14 @@ $(pb_cui): $(pb_cui_objs)
 
 # test ui
 pb_test_objs = $(client_objs) ui/test/pb-test.o
-$(pb_test_objs): $(makefiles)
+$(pb_test_objs): $(makefiles) $(client_headers)
 
 $(pb_test): $(pb_test_objs)
 	$(LINK.o) -o $@ $^
 
 # twin gui
 pb_twin_objs = $(client_objs) $(twin_objs) ui/twin/ps3-twin.o
-$(pb_twin_objs): $(makefiles)
+$(pb_twin_objs): $(makefiles) $(client_headers)
 
 $(pb_twin): LDFLAGS+=$(twin_LDFLAGS) $(LIBTWIN)
 $(pb_twin): CFLAGS+=$(twin_CFLAGS)
@@ -100,21 +107,21 @@ $(pb_twin): $(pb_twin_objs)
 
 # discovery daemon
 pb_discover_objs = $(daemon_objs) discover/pb-discover.o
-$(pb_discover_objs): $(makefiles)
+$(pb_discover_objs): $(makefiles) $(daemon_headers)
 
 $(pb_discover): $(pb_discover_objs)
 	$(LINK.o) -o $@ $^
 
 # utils
 pb_event_objs = utils/pb-event.o
-$(pb_event_objs): $(makefiles)
+$(pb_event_objs): $(makefiles) $(client_headers)
 
 $(pb_event): $(pb_event_objs)
 	$(LINK.o) -o $@ $^
 
 # parser-test
 parser_test_objs = $(lib_objs) $(parser_objs) test/parser-test.o
-$(parser_test_objs): $(makefiles)
+$(parser_test_objs): $(makefiles) $(client_headers)
 
 $(parser_test): $(parser_test_objs)
 	$(LINK.o) -o $@ $^
