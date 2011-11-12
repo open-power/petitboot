@@ -22,17 +22,19 @@ struct list {
 #define list_for_each(_list, _pos) \
 	for (_pos = (_list)->head.next; _pos != ((_list)->head); _pos = _pos->next)
 
-#define list_entry(_ptr, _type, _member) \
-	container_of(_ptr, _type, _member)
+#define list_entry(_ptr, _type, _member, _list) \
+	(&container_of(_ptr, _type, _member)->_member == &((_list)->head) \
+	? NULL \
+	: container_of(_ptr, _type, _member))
 
 #define list_for_each_entry(_list, _pos, _member) \
-	for (_pos = list_entry((_list)->head.next, typeof(*_pos), _member); \
-	     &_pos->_member != &(_list)->head; \
-	     _pos = list_entry(_pos->_member.next, typeof(*_pos), _member))
+	for (_pos = list_entry((_list)->head.next, typeof(*_pos), _member, _list); \
+		_pos; \
+		_pos = list_entry(_pos->_member.next, typeof(*_pos), _member, _list))
 
 #define list_for_each_entry_continue(_list, _pos, _member) \
-	for (; &_pos->_member != &(_list)->head; \
-		_pos = list_entry(_pos->_member.next, typeof(*_pos), _member))
+	for (; _pos; \
+		_pos = list_entry(_pos->_member.next, typeof(*_pos), _member, _list))
 
 #define STATIC_LIST(_list) static struct list _list = { \
 	.head = { \
