@@ -27,14 +27,19 @@ struct list {
 	? NULL \
 	: container_of(_ptr, _type, _member))
 
+#define list_prev_entry(_list, _pos, _member) \
+	list_entry(_pos->_member.prev, typeof(*_pos), _member, _list)
+
+#define list_next_entry(_list, _pos, _member) \
+	list_entry(_pos->_member.next, typeof(*_pos), _member, _list)
+
 #define list_for_each_entry(_list, _pos, _member) \
 	for (_pos = list_entry((_list)->head.next, typeof(*_pos), _member, _list); \
-		_pos; \
-		_pos = list_entry(_pos->_member.next, typeof(*_pos), _member, _list))
+		_pos; _pos = list_next_entry(_list, _pos, _member))
 
 #define list_for_each_entry_continue(_list, _pos, _member) \
-	for (; _pos; \
-		_pos = list_entry(_pos->_member.next, typeof(*_pos), _member, _list))
+	for (; _pos; _pos = list_next_entry(_list, _pos, _member))
+
 
 #define STATIC_LIST(_list) static struct list _list = { \
 	.head = { \
