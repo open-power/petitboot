@@ -10,25 +10,25 @@ struct list {
 };
 
 #ifndef container_of
-#define container_of(ptr, type, member) ({			\
-	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
-	(type *)( (char *)__mptr - offsetof(type,member) );})
+#define container_of(_ptr, _type, _member) ({ \
+	const typeof( ((_type *)0)->_member ) *__mptr = (_ptr); \
+	(_type *)( (char *)__mptr - offsetof(_type,_member) );})
 #endif
 
 #ifndef offsetof
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#define offsetof(_type, _member) ((size_t) &((_type *)0)->_member)
 #endif
 
-#define list_for_each(list, pos) \
-	for (pos = (list)->head.next; pos != ((list)->head); pos = pos->next)
+#define list_for_each(_list, _pos) \
+	for (_pos = (_list)->head.next; _pos != ((_list)->head); _pos = _pos->next)
 
-#define list_entry(ptr, type, member) \
-	container_of(ptr, type, member)
+#define list_entry(_ptr, _type, _member) \
+	container_of(_ptr, _type, _member)
 
-#define list_for_each_entry(list, pos, member)				\
-	for (pos = list_entry((list)->head.next, typeof(*pos), member);	\
-	     &pos->member != &(list)->head; 	\
-	     pos = list_entry(pos->member.next, typeof(*pos), member))
+#define list_for_each_entry(_list, _pos, _member) \
+	for (_pos = list_entry((_list)->head.next, typeof(*_pos), _member); \
+	     &_pos->_member != &(_list)->head; \
+	     _pos = list_entry(_pos->_member.next, typeof(*_pos), _member))
 
 #define list_for_each_entry_continue(_list, _pos, _member) \
 	for (; &_pos->_member != &(_list)->head; \
