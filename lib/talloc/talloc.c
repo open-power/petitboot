@@ -41,6 +41,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if !defined(NDEBUG)
+#include <assert.h>
+#define TALLOC_ABORT(reason) do{ \
+	fprintf(stderr, "%s: name: %s\n", __func__, tc->name); \
+	assert(0 && reason);} while (0)
+#endif
+
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
