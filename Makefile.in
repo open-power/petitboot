@@ -18,6 +18,7 @@ twin_LDFLAGS = @twin_LIBS@
 
 # build target
 ENABLE_PS3 = @ENABLE_PS3@
+ENABLE_X11 = @ENABLE_X11@
 
 # other programs
 INSTALL = @INSTALL@

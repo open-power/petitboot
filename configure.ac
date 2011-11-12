@@ -81,7 +81,18 @@ AS_IF([test "x$with_twin" != xno],
 		[if test "x$with_twin" != xcheck; then
 			AC_MSG_FAILURE([--with-twin was given, but test for twin failed])
 		fi],
-		[${twin_LIBS}])])
+		[${twin_LIBS}])
+	AC_CHECK_HEADERS([libtwin/twin_x11.h])
+	AC_CHECK_HEADERS([libtwin/twin_fbdev.h])])
+
+AC_ARG_ENABLE([x11],
+	[AS_HELP_STRING([--enable-x11],
+		[build for x11])],
+	[],
+	[enable_x11=check])
+
+AS_IF([test "x$enable_x11" != xno], [AC_SUBST([ENABLE_X11], ["y"])], [])
+
 
 mkdir -p discover lib/list lib/log lib/pb-protocol lib/system lib/talloc \
 	lib/waiter test ui/common ui/ncurses ui/test ui/twin utils
