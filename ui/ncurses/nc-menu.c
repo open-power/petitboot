@@ -234,7 +234,6 @@ static void pmenu_process_key(struct nc_scr *scr)
 		case KEY_DOWN:
 			pmenu_move_cursor(menu, REQ_DOWN_ITEM);
 			break;
-		case KEY_LEFT:
 		case 'e':
 			if (item->on_edit)
 				item->on_edit(item);
