@@ -132,7 +132,7 @@ install: all $(rules) $(udhcpc)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)/
 	$(INSTALL_PROGRAM) $(daemons) $(uis) $(utils) $(DESTDIR)$(sbindir)/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/artwork/
-	$(INSTALL_DATA) $(addprefix $(top_srcdir)/ui/twin/artwork/,$(artwork)) \
+	$(INSTALL_DATA) $(addprefix $(top_srcdir)/ui/common/artwork/,$(artwork)) \
 		$(DESTDIR)$(pkgdatadir)/artwork/
 	$(INSTALL) -d $(DESTDIR)$(pkgdatadir)/utils
 	$(INSTALL_DATA) $(top_srcdir)/$(rules) $(DESTDIR)$(pkgdatadir)/utils
