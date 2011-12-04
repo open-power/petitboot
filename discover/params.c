@@ -22,16 +22,16 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include <log/log.h>
+
 #include "params.h"
 
 #define new_array(type, num) ((type *)_new_array(sizeof(type), (num)))
 #define realloc_array(ptr, type, num) \
 	((type *)_realloc_array((ptr), sizeof(type), (num)))
 
-#define rprintf(x, ...) do { pb_log(stderr, ##__VA_ARGS__);	\
-				pb_log(stderr, "\n"); } while (0)
-#define rsyserr(x, y, ...) do { pb_log(stderr, ##__VA_ARGS__);	\
-				pb_log(stderr, "\n"); } while (0)
+#define rprintf(x, ...) do {pb_log(__VA_ARGS__); pb_log("\n");} while (0)
+#define rsyserr(x, y, ...) do {pb_log(__VA_ARGS__); pb_log("\n");} while (0)
 
 #define MALLOC_MAX 0x40000000
 #define False 0
