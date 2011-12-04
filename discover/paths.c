@@ -58,9 +58,9 @@ char *encode_label(void *alloc_ctx, const char *label)
 }
 
 char *parse_device_path(void *alloc_ctx,
-		const char *dev_str, const char *cur_dev)
+		const char *dev_str, const char __attribute__((unused)) *cur_dev)
 {
-	char *dev, tmp[256], *enc;
+	char *dev, *enc;
 
 	if (is_prefix_ignorecase(dev_str, "uuid=")) {
 		dev = talloc_asprintf(alloc_ctx, "/dev/disk/by-uuid/%s",
