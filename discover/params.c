@@ -37,14 +37,14 @@
 #define False 0
 #define True 1
 
-void *_new_array(unsigned int size, unsigned long num)
+static void *_new_array(unsigned int size, unsigned long num)
 {
 	if (num >= MALLOC_MAX/size)
 		return NULL;
 	return malloc(size * num);
 }
 
-void *_realloc_array(void *ptr, unsigned int size, unsigned long num)
+static void *_realloc_array(void *ptr, unsigned int size, unsigned long num)
 {
 	if (num >= MALLOC_MAX/size)
 		return NULL;
