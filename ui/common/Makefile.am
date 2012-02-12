@@ -47,14 +47,14 @@ artwork =
 
 if WITH_TWIN
 artwork += \
-	artwork/background.jpg \
-	artwork/cdrom.png \
-	artwork/cursor.gz \
-	artwork/hdd.png \
-	artwork/network.png \
-	artwork/system.png \
-	artwork/tux.png \
-	artwork/usbpen.png
+	$(srcdir)/artwork/background.jpg \
+	$(srcdir)/artwork/cdrom.png \
+	$(srcdir)/artwork/cursor.gz \
+	$(srcdir)/artwork/hdd.png \
+	$(srcdir)/artwork/network.png \
+	$(srcdir)/artwork/system.png \
+	$(srcdir)/artwork/tux.png \
+	$(srcdir)/artwork/usbpen.png
 endif
 
 artworkdir = $(pkgdatadir)/artwork/
