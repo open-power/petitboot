@@ -21,8 +21,14 @@ AM_CPPFLAGS = \
 AM_CFLAGS = \
 	$(DEFAULT_CFLAGS)
 
+bin_SCRIPTS = pb-udhcpc
+
 bin_PROGRAMS = pb-event
 
 pb_event_SOURCES = pb-event.c
+
+dist_pkgdata_DATA = \
+	99-petitboot.rules \
+	kboot.conf.sample
 
 MAINTAINERCLEANFILES = Makefile.in
