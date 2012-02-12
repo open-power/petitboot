@@ -1,0 +1,194 @@
+## configure.ac -- Process this file with autoconf to produce configure
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; version 2 of the License.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+AC_INIT([petitboot], [@version@], [Geoff Levand <geoff@infradead.org>])
+
+AC_CONFIG_MACRO_DIR([m4])
+
+AC_PREFIX_DEFAULT([/usr/local])
+
+AS_IF([test "x$CFLAGS" = "x"], [AC_SUBST([CFLAGS], [""])])
+
+AC_PROG_CC
+AC_PROG_INSTALL
+
+AM_INIT_AUTOMAKE
+LT_INIT
+
+AC_CHECK_HEADERS([stdarg.h])
+AC_CHECK_HEADERS([varargs.h])
+
+dnl Checking for va_copy availability
+AC_MSG_CHECKING([for va_copy])
+AC_TRY_LINK([#include <stdarg.h>
+va_list ap1,ap2;], [va_copy(ap1,ap2);],
+have_va_copy=yes,
+have_va_copy=no)
+AC_MSG_RESULT($have_va_copy)
+if test x"$have_va_copy" = x"yes"; then
+    AC_DEFINE(HAVE_VA_COPY,1,[Whether va_copy() is available])
+else
+    AC_MSG_CHECKING([for __va_copy])
+    AC_TRY_LINK([#include <stdarg.h>
+    va_list ap1,ap2;], [__va_copy(ap1,ap2);],
+    have___va_copy=yes,
+    have___va_copy=no)
+    AC_MSG_RESULT($have___va_copy)
+    if test x"$have___va_copy" = x"yes"; then
+        AC_DEFINE(HAVE___VA_COPY,1,[Whether __va_copy() is available])
+    fi
+fi
+
+AC_ARG_WITH(
+	[ncurses],
+	[AS_HELP_STRING([--with-ncurses],
+		[build text console UI programs using ncurses [default=yes]]
+	)],
+	[],
+	[with_ncurses=yes]
+)
+AM_CONDITIONAL([WITH_NCURSES], [test "x$with_ncurses" = "xyes"])
+
+AC_ARG_WITH(
+	[twin-x11],
+	[AS_HELP_STRING([--with-twin-x11],
+		[build x11 GUI programs using the twin window system [default=yes]]
+	)],
+	[],
+	[with_twin_x11=yes]
+)
+AM_CONDITIONAL([WITH_TWIN_X11], [test "x$with_twin_x11" = "xyes"])
+
+AC_ARG_WITH(
+	[twin-fbdev],
+	[AS_HELP_STRING(
+		[--with-twin-fbdev],
+		[build frame buffer GUI programs using the twin window system [default=no]]
+	)],
+	[],
+	[with_twin_fbdev=yes]
+)
+AM_CONDITIONAL([WITH_TWIN_FBDEV], [test "x$with_twin_fbdev" = "xyes"])
+
+AM_CONDITIONAL(
+	[WITH_TWIN],
+	[test "x$with_twin_x11" = "xyes" || test "x$with_twin_fbdev" = "xyes"])
+
+AS_IF(
+	[test "x$with_twin_x11" = "xyes" || test "x$with_twin_fbdev" = "xyes"],
+	[PKG_CHECK_MODULES(
+		[twin],
+		[libtwin],
+		[SAVE_LIBS="$LIBS" LIBS="$LIBS $twin_LIBS"
+			AC_CHECK_LIB(
+				[twin],
+				[twin_feature_init],
+				[],
+				[AC_MSG_FAILURE([--with-twin was given, but test for twin failed])]
+			)
+			LIBS="$SAVE_LIBS"
+		],
+		[AC_MSG_RESULT([$twin_PKG_ERRORS])
+			AC_MSG_FAILURE([ Consider adjusting PKG_CONFIG_PATH environment variable])
+		]
+	)]
+)
+
+AS_IF(
+	[test "x$with_twin_x11" = "xyes"],
+	[SAVE_CPPFLAGS="$CPPFLAGS" CPPFLAGS="$CPPFLAGS $twin_CFLAGS"
+		AC_CHECK_HEADERS(
+			[libtwin/twin_x11.h],
+			[],
+			[AC_MSG_FAILURE([ --with-twin-x11 given but libtwin/twin_x11.h not found])]
+		)
+		CPPFLAGS="$SAVE_CPPFLAGS"
+	]
+)
+
+AS_IF(
+	[test "x$with_twin_fbdev" = "xyes"],
+	[SAVE_CPPFLAGS="$CPPFLAGS" CPPFLAGS="$CPPFLAGS $twin_CFLAGS"
+		AC_CHECK_HEADERS(
+			[libtwin/twin_fbdev.h],
+			[],
+			[AC_MSG_FAILURE([ --with-twin-fbdev given but libtwin/twin_fbdev.h not found])]
+		)
+		CPPFLAGS="$SAVE_CPPFLAGS"
+	]
+)
+
+AC_ARG_ENABLE(
+	[busybox],
+	[AS_HELP_STRING(
+		[--enable-busybox],
+		[build programs with extra support for busybox [default=no]])
+	],
+	[],
+	[enable_busybox=no]
+)
+#AM_CONDITIONAL([ENABLE_BUSYBOX], [test "x$enable_busybox" = "xyes"])
+
+AC_ARG_ENABLE(
+	[ps3],
+	[AS_HELP_STRING(
+		[--enable-ps3],
+		[build additional programs for the PS3 game console [default=no]]
+	)],
+	[],
+	[enable_ps3=no]
+)
+AM_CONDITIONAL([ENABLE_PS3], [test "x$enable_ps3" = "xyes"])
+
+AC_ARG_ENABLE(
+	[debug],
+	[AS_HELP_STRING([--enable-debug],
+		[build programs with extra debug info [default=no]]
+	)],
+	[],
+	[enable_debug=check]
+)
+#AM_CONDITIONAL([ENABLE_DEBUG], [test "x$enable_debug" = "xyes"])
+
+default_cflags="--std=gnu99 -g \
+	-Wall -W -Wunused -Wstrict-prototypes -Wmissing-prototypes \
+	-Wmissing-declarations -Wredundant-decls -Winline"
+
+AS_IF(
+	[test "x$enable_debug" = "xyes"],
+	[AC_SUBST([DEFAULT_CFLAGS], ["$default_cflags -O0 -DDEBUG"])],
+	[AC_SUBST([DEFAULT_CFLAGS], ["$default_cflags -O2 -DNDEBUG"])]
+)
+ 
+
+AC_SUBST([LIBTOOL_DEPS])
+AC_SUBST([DESTDIR])
+
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([
+	Makefile
+	discover/Makefile
+	lib/Makefile
+	man/Makefile
+	ui/Makefile
+	ui/common/Makefile
+	ui/ncurses/Makefile
+	ui/test/Makefile
+	ui/twin/Makefile
+	utils/Makefile
+])
+
+AC_OUTPUT
