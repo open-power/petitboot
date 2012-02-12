@@ -21,7 +21,7 @@ AM_CPPFLAGS = \
 AM_CFLAGS = \
 	$(DEFAULT_CFLAGS)
 
-bin_SCRIPTS = pb-udhcpc
+dist_bin_SCRIPTS = pb-udhcpc
 
 bin_PROGRAMS = pb-event
 

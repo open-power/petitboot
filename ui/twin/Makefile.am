@@ -34,15 +34,7 @@ common_libs = \
 
 noinst_LTLIBRARIES = libpbt.la
 
-libpbt_la_SOURCES = \
-	pbt-client.c \
-	pbt-client.h \
-	pbt-main.c \
-	pbt-main.h \
-	pbt-menu.c \
-	pbt-menu.h \
-	pbt-scr.c \
-	pbt-scr.h
+libpbt_la_SOURCES =
 
 bin_PROGRAMS = pb-twin-generic
 
@@ -51,10 +43,10 @@ bin_PROGRAMS += pb-twin-ps3
 endif
 
 
-pb_twin_generic_SOURCES = main-generic.c
+pb_twin_generic_SOURCES =
 pb_twin_generic_LDADD = $(common_libs)
 
-pb_twin_ps3_SOURCES = main-ps3.c
+pb_twin_ps3_SOURCES = 
 pb_twin_ps3_LDADD = $(common_libs)
 pb_twin_ps3_LDFLAGS = -lps3-utils
 
