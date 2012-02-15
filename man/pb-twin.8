@@ -14,34 +14,54 @@
 .\" along with this program; if not, write to the Free Software
 .\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 .\"
-.\" Maintainer's Notes:
-.\"  * For syntax help see the man pages for 'mdoc' and 'mdoc.samples'.
-.\"  * To check syntax use this:
-.\"    'groff -C -mtty-char -Tutf8 -man pb-discover.8'.
-.\"  * To check format use this: 'less pb-discover.8'.
-.\"
 .Dd ""
-.Dt pb-discover 8
+.Dt pb-twin 8
 .Os
 .\"
 .Sh NAME
 .\" ====
-.Nm pb-discover
-.Nd The dynamic device discovery daemon of the Petitboot bootloader
+.Nm pb-twin
+.Nd Petitboot twin bootloader UI
 .\"
 .Sh SYNOPSIS
 .\" ========
 .Nm
+.Op Fl h, -help
+.Op Fl l, -log Ar log-file
+.Op Fl V, -version
+.Op Fl V, -version
+.Op Fl f, -fbdev
+.Op Fl x, -x11
 .\"
 .Sh DESCRIPTION
 .\" ===========
-pb-discover maintains a dynamic list of boot options available to
-the system.  On startup, the petitboot user interface clients connect to
-pb-discover daemon and receive boot option information.
+pb-twin is a twin based interface to the Petitboot bootloader.
+.Pp
+Petitboot is a Linux kexec based bootloader that supports loading Linux
+kernel and initrd images from any device that can be mounted by Linux.
+It can also load images from the network using the
+HTTP, HTTPS, NFS, SFTP, and TFTP
+protocols.
 .\"
+.Sh OPTIONS
+.\" =======
+.Bl -tag -width indent
+.\"
+.It Fl h, -help
+Print a help message.
+.\"
+.It Fl l, -log Ar log-file
+Log messages to the file
+.Ar log-file .
+The default log is a file pb-twin.log in the directory where pb-twin
+is started.  New messages are appended to an existing log file.
+.\"
+.It Fl V, -version
+Display the program version number.
+.El
 .Sh SEE ALSO
 .\" ========
-.Xr petitboot 8 , Xr pb-nc 8 , Xr pb-twin 8 , Xr pb-event 8
+.Xr petitboot 8 , Xr pb-twin 8 , Xr pb-discover 8 , Xr pb-event 8
 .\"
 .Sh REPORTING BUGS
 .\" ==============

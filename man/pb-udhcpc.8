@@ -1,5 +1,4 @@
-.\" Copyright (C) 2009 Sony Computer Entertainment Inc.
-.\" Copyright 2009 Sony Corp.
+.\" Copyright Geoff Levand <geoff@infradead.org>
 .\"
 .\" This program is free software; you can redistribute it and/or modify
 .\" it under the terms of the GNU General Public License as published by
@@ -14,34 +13,25 @@
 .\" along with this program; if not, write to the Free Software
 .\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 .\"
-.\" Maintainer's Notes:
-.\"  * For syntax help see the man pages for 'mdoc' and 'mdoc.samples'.
-.\"  * To check syntax use this:
-.\"    'groff -C -mtty-char -Tutf8 -man pb-discover.8'.
-.\"  * To check format use this: 'less pb-discover.8'.
-.\"
 .Dd ""
-.Dt pb-discover 8
+.Dt pb-udhcpc 8
 .Os
 .\"
 .Sh NAME
 .\" ====
-.Nm pb-discover
-.Nd The dynamic device discovery daemon of the Petitboot bootloader
-.\"
-.Sh SYNOPSIS
-.\" ========
-.Nm
+.Nm pb-udhcpc
+.Nd Petitboot udhcpc user script
 .\"
 .Sh DESCRIPTION
 .\" ===========
-pb-discover maintains a dynamic list of boot options available to
-the system.  On startup, the petitboot user interface clients connect to
-pb-discover daemon and receive boot option information.
+Petitboot udhcpc user script.  Should be run by udhcpc when
+there is a change in the dhcp configuration.  For more info
+see the udhcpc man page and the Linux kernel source file
+Documentation/filesystems/nfsroot.txt.
 .\"
 .Sh SEE ALSO
 .\" ========
-.Xr petitboot 8 , Xr pb-nc 8 , Xr pb-twin 8 , Xr pb-event 8
+.Xr petitboot 8 , Xr pb-nc 8 , Xr pb-twin 8 , Xr pb-discover 8 , Xr pb-event 8
 .\"
 .Sh REPORTING BUGS
 .\" ==============
