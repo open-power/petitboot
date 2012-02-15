@@ -7,6 +7,12 @@
 #include "event.h"
 #include "parser-utils.h"
 
+/**
+ * parse_user_event - Parse a user event.
+ *
+ * Understands params: name, image, args.
+ */
+
 int parse_user_event(struct device *device, struct event *event)
 {
 	struct boot_option *opt;
