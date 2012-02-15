@@ -12,7 +12,7 @@
 #include <talloc/talloc.h>
 #include <log/log.h>
 
-#include "ui/common/discover-client.h"
+#include "discover-client.h"
 #include "pb-protocol/pb-protocol.h"
 
 struct discover_client {
