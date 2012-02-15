@@ -47,10 +47,8 @@ struct pb_opt_data {
 	struct pb_kexec_data *kd;
 
 	/* optional data */
-	union {
-		const struct device *dev;
-		const struct boot_option *opt;
-	};
+	const struct device *dev;
+	const struct boot_option *opt;
 	uint32_t opt_hash;
 };
 
