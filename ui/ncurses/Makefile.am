@@ -40,15 +40,15 @@ libpbnc_la_SOURCES = \
 	nc-scr.c \
 	nc-scr.h
 
-bin_PROGRAMS = pb-nc-generic
+bin_PROGRAMS = pb-nc
 
 if ENABLE_PS3
 bin_PROGRAMS += pb-nc-ps3
 endif
 
 
-pb_nc_generic_SOURCES = generic-main.c
-pb_nc_generic_LDADD = $(common_libs)
+pb_nc_SOURCES = generic-main.c
+pb_nc_LDADD = $(common_libs)
 
 pb_nc_ps3_SOURCES = ps3-main.c
 pb_nc_ps3_LDADD = $(common_libs) $(libdir)/libps3-utils.so
