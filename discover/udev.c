@@ -54,6 +54,8 @@ static void udev_handle_message(struct udev *udev, char *buf, int len)
 	event = talloc(udev, struct event);
 	event->type = EVENT_TYPE_UDEV;
 
+	pb_log("%s\n", buf);
+
 	result = event_parse_ad_message(event, buf, len);
 
 	if (result)
@@ -137,7 +139,7 @@ out_err:
 
 int udev_trigger(struct udev __attribute__((unused)) *udev)
 {
-	int rc = system("/sbin/udevadm trigger --subsystem-match=block");
+	int rc = system("/sbin/udevadm trigger --subsystem-match=block --action=add");
 
 	if (rc)
 		pb_log("udev trigger failed: %d (%d)\n", rc, WEXITSTATUS(rc));
