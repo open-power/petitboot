@@ -31,7 +31,7 @@ libparser_la_SOURCES = \
 	paths.c \
 	paths.h
 
-bin_PROGRAMS = pb-discover
+sbin_PROGRAMS = pb-discover
 
 pb_discover_SOURCES = \
 	device-handler.c \

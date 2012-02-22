@@ -44,10 +44,10 @@ libpbt_la_SOURCES = \
 	pbt-scr.c \
 	pbt-scr.h
 
-bin_PROGRAMS = pb-twin
+sbin_PROGRAMS = pb-twin
 
 if ENABLE_PS3
-bin_PROGRAMS += pb-twin-ps3
+sbin_PROGRAMS += pb-twin-ps3
 endif
 
 

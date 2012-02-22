@@ -40,10 +40,10 @@ libpbnc_la_SOURCES = \
 	nc-scr.c \
 	nc-scr.h
 
-bin_PROGRAMS = pb-nc
+sbin_PROGRAMS = pb-nc
 
 if ENABLE_PS3
-bin_PROGRAMS += pb-nc-ps3
+sbin_PROGRAMS += pb-nc-ps3
 endif
 
 
