@@ -27,15 +27,16 @@
 
 void pbt_print_version(void)
 {
-	printf("pb-twin (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
+	printf("petitboot-twin (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
 }
 
 void pbt_print_usage(void)
 {
 	pbt_print_version();
 	printf(
-"Usage: pb-twin [-h, --help] [-l, --log log-file] [-r, --reset-defaults]\n"
-"               [-t, --timeout] [-V, --version] [[-f --fbdev] | [-x --x11]]\n");
+"Usage: petitboot-twin [-h, --help] [-l, --log log-file]\n"
+"                      [-r, --reset-defaults][-t, --timeout] [-V, --version]"
+"                      [[-f --fbdev] | [-x --x11]]\n");
 }
 
 /**
@@ -57,7 +58,7 @@ int pbt_opts_parse(struct pbt_opts *opts, int argc, char *argv[])
 	static const char short_options[] = "fhl:trVx";
 	static const struct pbt_opts default_values = {
 		.backend = pbt_twin_x11,
-		.log_file = "pb-twin.log",
+		.log_file = "/var/log/petitboot/petitboot-twin.log",
 	};
 
 	*opts = default_values;

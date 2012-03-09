@@ -38,14 +38,14 @@
 
 static void print_version(void)
 {
-	printf("pb-cui (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
+	printf("petitboot-nc (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
 }
 
 static void print_usage(void)
 {
 	print_version();
 	printf(
-"Usage: pb-cui [-h, --help] [-l, --log log-file] [-V, --version]\n");
+"Usage: petitboot-nc [-h, --help] [-l, --log log-file] [-V, --version]\n");
 }
 
 /**
@@ -78,7 +78,7 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 	};
 	static const char short_options[] = "hl:V";
 	static const struct opts default_values = {
-		.log_file = "pb-cui.log",
+		.log_file = "/var/log/petitboot/petitboot-nc.log",
 	};
 
 	*opts = default_values;
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 	pb_log_always_flush(1);
 #endif
 
-	pb_log("--- pb-cui ---\n");
+	pb_log("--- petitboot-nc ---\n");
 
 	sa.sa_handler = sig_handler;
 	result = sigaction(SIGALRM, &sa, NULL);

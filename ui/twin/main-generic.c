@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
 	pb_log_always_flush(1);
 #endif
 
-	pb_log("--- pb-twin ---\n");
+	pb_log("--- petitboot-twin ---\n");
 
 	sa.sa_handler = sig_handler;
 	result = sigaction(SIGALRM, &sa, NULL);

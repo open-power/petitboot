@@ -58,7 +58,7 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 	};
 	static const char short_options[] = "hl:V";
 	static const struct opts default_values = {
-		.log_file = "pb-discover.log",
+		.log_file = "/var/log/petitboot/pb-discover.log",
 	};
 
 	*opts = default_values;

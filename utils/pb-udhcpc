@@ -7,7 +7,7 @@
 #
 
 PBOOT_USER_EVENT_SOCKET="/tmp/petitboot.ev"
-log="pb-udhcpc.log"
+log="/var/log/petitboot/pb-udhcpc.log"
 
 pb_add () {
 	k_server_ip=${rootpath%%:*}
