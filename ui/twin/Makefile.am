@@ -44,19 +44,19 @@ libpbt_la_SOURCES = \
 	pbt-scr.c \
 	pbt-scr.h
 
-sbin_PROGRAMS = pb-twin
+sbin_PROGRAMS = petitboot-twin
 
 if ENABLE_PS3
-sbin_PROGRAMS += pb-twin-ps3
+sbin_PROGRAMS += petitboot-ps3-twin
 endif
 
 
-pb_twin_SOURCES = main-generic.c
-pb_twin_LDADD = $(common_libs)
+petitboot_twin_SOURCES = main-generic.c
+petitboot_twin_LDADD = $(common_libs)
 
-pb_twin_ps3_SOURCES = main-ps3.c
-pb_twin_ps3_LDADD = $(common_libs)
-pb_twin_ps3_LDFLAGS = -lps3-utils
+petitboot_ps3_twin_SOURCES = main-ps3.c
+petitboot_ps3_twin_LDADD = $(common_libs)
+petitboot_ps3_twin_LDFLAGS = -lps3-utils
 
 
 MAINTAINERCLEANFILES = Makefile.in

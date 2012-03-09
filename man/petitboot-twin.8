@@ -15,12 +15,12 @@
 .\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 .\"
 .Dd ""
-.Dt pb-twin 8
+.Dt petitboot-twin 8
 .Os
 .\"
 .Sh NAME
 .\" ====
-.Nm pb-twin
+.Nm petitboot-twin
 .Nd Petitboot twin bootloader UI
 .\"
 .Sh SYNOPSIS
@@ -35,7 +35,7 @@
 .\"
 .Sh DESCRIPTION
 .\" ===========
-pb-twin is a twin based interface to the Petitboot bootloader.
+petitboot-twin is a twin based interface to the Petitboot bootloader.
 .Pp
 Petitboot is a Linux kexec based bootloader that supports loading Linux
 kernel and initrd images from any device that can be mounted by Linux.
@@ -53,8 +53,8 @@ Print a help message.
 .It Fl l, -log Ar log-file
 Log messages to the file
 .Ar log-file .
-The default log is a file pb-twin.log in the directory where pb-twin
-is started.  New messages are appended to an existing log file.
+The default log is a file /var/log/petitboot-twin.log.  New messages are
+appended to an existing log file.
 .\"
 .It Fl V, -version
 Display the program version number.

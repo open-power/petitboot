@@ -40,19 +40,19 @@ libpbnc_la_SOURCES = \
 	nc-scr.c \
 	nc-scr.h
 
-sbin_PROGRAMS = pb-nc
+sbin_PROGRAMS = petitboot-nc
 
 if ENABLE_PS3
-sbin_PROGRAMS += pb-nc-ps3
+sbin_PROGRAMS += petitboot-ps3-nc
 endif
 
 
-pb_nc_SOURCES = generic-main.c
-pb_nc_LDADD = $(common_libs)
+petitboot_nc_SOURCES = generic-main.c
+petitboot_nc_LDADD = $(common_libs)
 
-pb_nc_ps3_SOURCES = ps3-main.c
-pb_nc_ps3_LDADD = $(common_libs) $(libdir)/libps3-utils.so
-#pb_nc_ps3_LDFLAGS = -L$(libdir) -lps3-utils
+petitboot_ps3_nc_SOURCES = ps3-main.c
+petitboot_ps3_nc_LDADD = $(common_libs) $(libdir)/libps3-utils.so
+#petitboot_ps3_nc_LDFLAGS = -L$(libdir) -lps3-utils
 
 
 MAINTAINERCLEANFILES = Makefile.in

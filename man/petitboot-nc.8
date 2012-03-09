@@ -14,19 +14,13 @@
 .\" along with this program; if not, write to the Free Software
 .\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 .\"
-.\" Maintainer's Notes:
-.\"  * For syntax help see the man pages for 'mdoc' and 'mdoc.samples'.
-.\"  * To check syntax use this:
-.\"    'groff -C -mtty-char -Tutf8 -man pb-nc.8'.
-.\"  * To check format use this: 'less pb-nc.8'.
-.\"
 .Dd ""
-.Dt pb-nc 8
+.Dt petitboot-nc 8
 .Os
 .\"
 .Sh NAME
 .\" ====
-.Nm pb-nc
+.Nm petitboot-nc
 .Nd Petitboot ncurses bootloader UI
 .\"
 .Sh SYNOPSIS
@@ -38,7 +32,7 @@
 .\"
 .Sh DESCRIPTION
 .\" ===========
-pb-nc is an ncurses based interface to the Petitboot bootloader.
+petitboot-nc is an ncurses based interface to the Petitboot bootloader.
 .Pp
 Petitboot is a Linux kexec based bootloader that supports loading Linux
 kernel and initrd images from any device that can be mounted by Linux.
@@ -56,15 +50,15 @@ Print a help message.
 .It Fl l, -log Ar log-file
 Log messages to the file
 .Ar log-file .
-The default log is a file pb-nc.log in the directory where pb-nc
-is started.  New messages are appended to an existing log file.
+The default log is a file /var/log/petitboot-nc.log.  New messages are
+appended to an existing log file.
 .\"
 .It Fl V, -version
 Display the program version number.
 .El
 .Sh SEE ALSO
 .\" ========
-.Xr petitboot 8 , Xr pb-twin 8 , Xr pb-discover 8 , Xr pb-event 8
+.Xr petitboot 8 , Xr petitboot-twin 8 , Xr pb-discover 8 , Xr pb-event 8
 .\"
 .Sh REPORTING BUGS
 .\" ==============
