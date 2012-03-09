@@ -180,7 +180,7 @@ twin_pixmap_t *pbt_background_load(twin_screen_t *tscreen,
 const char *pbt_icon_chooser(const char *hint)
 {
 	if (strstr(hint, "net"))
-		return PB_ARTWORK_PATH "/network.png";
+		return PB_ARTWORK_PATH "/network-wired.png";
 
 	return NULL;
 }

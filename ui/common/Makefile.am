@@ -48,13 +48,17 @@ artwork =
 if WITH_TWIN
 artwork += \
 	$(srcdir)/artwork/background.jpg \
-	$(srcdir)/artwork/cdrom.png \
-	$(srcdir)/artwork/cursor.gz \
-	$(srcdir)/artwork/hdd.png \
-	$(srcdir)/artwork/network.png \
-	$(srcdir)/artwork/system.png \
+	$(srcdir)/artwork/COPYING-tux \
 	$(srcdir)/artwork/tux.png \
-	$(srcdir)/artwork/usbpen.png
+	$(srcdir)/artwork/oxygen/applications-system.png \
+	$(srcdir)/artwork/oxygen/configure.png \
+	$(srcdir)/artwork/oxygen/COPYING-oxygen \
+	$(srcdir)/artwork/oxygen/drive-harddisk.png \
+	$(srcdir)/artwork/oxygen/drive-optical.png \
+	$(srcdir)/artwork/oxygen/drive-removable-media-usb-pendrive.png \
+	$(srcdir)/artwork/oxygen/media-optical.png \
+	$(srcdir)/artwork/oxygen/network-wired.png \
+	$(srcdir)/artwork/oxygen/utilities-terminal.png
 endif
 
 artworkdir = $(pkgdatadir)/artwork/

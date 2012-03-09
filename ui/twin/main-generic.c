@@ -71,7 +71,7 @@ static struct pbt_item *setup_system_item(struct pbt_menu *menu,
 	struct pbt_quad q;
 
 	top_item = pbt_item_create_reduced(menu, "system", 0,
-		PB_ARTWORK_PATH "/system.png");
+		PB_ARTWORK_PATH "/applications-system.png");
 
 	if (!top_item)
 		goto fail_top_item_create;
@@ -90,7 +90,7 @@ static struct pbt_item *setup_system_item(struct pbt_menu *menu,
 		goto fail_sub_menu_create;
 
 	sub_item = pbt_item_create(top_item->sub_menu, "Preferences", 0,
-		PB_ARTWORK_PATH "/system.png", "Preferences",
+		PB_ARTWORK_PATH "/configure.png", "Preferences",
 		"Edit petitboot preferences");
 
 	if (!sub_item)
@@ -101,7 +101,7 @@ static struct pbt_item *setup_system_item(struct pbt_menu *menu,
 	pbt_menu_set_selected(top_item->sub_menu, sub_item);
 
 	sub_item = pbt_item_create(top_item->sub_menu, "Exit to Shell", 1,
-		PB_ARTWORK_PATH "/system.png", "Exit to Shell",
+		PB_ARTWORK_PATH "/utilities-terminal.png", "Exit to Shell",
 		"Exit to a system shell prompt");
 
 	if (!sub_item)

@@ -148,7 +148,7 @@ static int ps3_setup_test_item(struct pbt_menu *menu,
 	struct pbt_item *sub_item;
 	twin_pixmap_t *icon;
 
-	icon = pbt_icon_load(PB_ARTWORK_PATH "/hdd.png");
+	icon = pbt_icon_load(PB_ARTWORK_PATH "/drive-harddisk.png");
 
 	/* Main item */
 
