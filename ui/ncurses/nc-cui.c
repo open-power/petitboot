@@ -111,7 +111,7 @@ int cui_run_cmd(struct pmenu_item *item)
 
 	def_prog_mode();
 
-	result = pb_run_cmd(cmd_argv);
+	result = pb_run_cmd(cmd_argv, 1);
 
 	reset_prog_mode();
 	redrawwin(cui->current->main_ncw);
@@ -534,7 +534,7 @@ static struct discover_client_ops cui_client_ops = {
 
 struct cui *cui_init(void* platform_info,
 	int (*on_kexec)(struct cui *, struct cui_opt_data *),
-	int (*js_map)(const struct js_event *e))
+	int (*js_map)(const struct js_event *e), int start_deamon)
 {
 	struct cui *cui;
 	struct discover_client *client;
@@ -555,12 +555,31 @@ struct cui *cui_init(void* platform_info,
 
 	/* Loop here for scripts that just started the server. */
 
+start_deamon:
 	for (i = 10; i; i--) {
 		client = discover_client_init(&cui_client_ops, cui);
 		if (client)
 			break;
 		pb_log("%s: waiting for server %d\n", __func__, i);
 		sleep(1);
+	}
+
+	if (!client && start_deamon) {
+		int result;
+
+		start_deamon = 0;
+
+		result = pb_start_daemon();
+
+		if (!result)
+			goto start_deamon;
+
+		pb_log("%s: discover_client_init failed.\n", __func__);
+		fprintf(stderr, "%s: error: discover_client_init failed.\n",
+			__func__);
+		fprintf(stderr, "could not start pb-discover, the petitboot "
+			"daemon.\n");
+		goto fail_client_init;
 	}
 
 	if (!client) {

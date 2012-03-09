@@ -33,6 +33,30 @@
 #include "ui-system.h"
 
 /**
+ * pb_start_daemon - start the pb-discover daemon.
+ */
+
+int pb_start_daemon(void)
+{
+	int result;
+	const char *argv[2];
+	char *name = talloc_asprintf(NULL, "%s/sbin/pb-discover",
+		pb_system_apps.prefix);
+
+	argv[0] = name;
+	argv[1] =  NULL;
+
+	result = pb_run_cmd(argv, 0);
+
+	talloc_free(name);
+
+	if (result)
+		pb_log("%s: failed: (%d)\n", __func__, result);
+
+	return result;
+}
+
+/**
  * kexec_load - kexec load helper.
  * @l_image: The local image file for kexec to execute.
  * @l_initrd: Optional local initrd file for kexec --initrd, can be NULL.
@@ -67,7 +91,7 @@ static int kexec_load(const char *l_image, const char *l_initrd,
 	*p++ = l_image;			/* 5 */
 	*p++ = NULL;			/* 6 */
 
-	result = pb_run_cmd(argv);
+	result = pb_run_cmd(argv, 1);
 
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
@@ -98,7 +122,7 @@ static int kexec_reboot(void)
 	*p++ =  "now";			/* 3 */
 	*p++ =  NULL;			/* 4 */
 
-	result = pb_run_cmd(argv);
+	result = pb_run_cmd(argv, 1);
 
 	/* On error, force a kexec with the -e option */
 
@@ -108,7 +132,7 @@ static int kexec_reboot(void)
 		*p++ = "-e";			/* 2 */
 		*p++ = NULL;			/* 3 */
 
-		result = pb_run_cmd(argv);
+		result = pb_run_cmd(argv, 1);
 	}
 
 	if (result)

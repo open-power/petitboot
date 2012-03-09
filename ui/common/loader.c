@@ -94,7 +94,7 @@ static char *pb_load_nfs(void *ctx, struct pb_url *url)
 	*p++ = local;			/* 7 */
 	*p++ = NULL;			/* 8 */
 
-	result = pb_run_cmd(argv);
+	result = pb_run_cmd(argv, 1);
 
 	talloc_free(opts);
 
@@ -138,7 +138,7 @@ static char *pb_load_sftp(void *ctx, struct pb_url __attribute__((unused)) *url)
 	*p++ = local;			/* 4 */
 	*p++ = NULL;			/* 5 */
 
-	result = pb_run_cmd(argv);
+	result = pb_run_cmd(argv, 1);
 
 	if (result)
 		goto fail;
@@ -183,7 +183,7 @@ static char *pb_load_tftp(void *ctx, struct pb_url *url)
 		*p++ = url->port;	/* 8 */
 	*p++ = NULL; 			/* 9 */
 
-	result = pb_run_cmd(argv);
+	result = pb_run_cmd(argv, 1);
 
 	if (!result)
 		return local;
@@ -203,7 +203,7 @@ static char *pb_load_tftp(void *ctx, struct pb_url *url)
 	*p++ = local;			/* 9 */
 	*p++ = NULL;			/* 10 */
 
-	result = pb_run_cmd(argv);
+	result = pb_run_cmd(argv, 1);
 
 	if (!result)
 		return local;
@@ -248,7 +248,7 @@ static char *pb_load_wget(void *ctx, struct pb_url *url, enum wget_flags flags)
 		*p++ = "--no-check-certificate";	/* 6 */
 	*p++ = NULL;					/* 7 */
 
-	result = pb_run_cmd(argv);
+	result = pb_run_cmd(argv, 1);
 
 	if (result)
 		goto fail;

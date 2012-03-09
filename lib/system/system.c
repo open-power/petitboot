@@ -17,6 +17,7 @@
 #include "system.h"
 
 const struct pb_system_apps pb_system_apps = {
+	.prefix = PREFIX,
 	.cp = "/bin/cp",
 	.kexec = "/sbin/kexec",
 	.mount = "/bin/mount",
@@ -104,7 +105,7 @@ int pb_rmdir_recursive(const char *base, const char *dir)
  * @cmd_argv: An argument list array for execv.
  */
 
-int pb_run_cmd(const char *const *cmd_argv)
+int pb_run_cmd(const char *const *cmd_argv, int wait)
 {
 #if defined(DEBUG)
 	enum {do_debug = 1};
@@ -148,6 +149,9 @@ int pb_run_cmd(const char *const *cmd_argv)
 		pb_log("%s: exec failed: %s\n", __func__, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
+
+	if (!wait && !waitpid(pid, &status, WNOHANG))
+		return 0;
 
 	if (waitpid(pid, &status, 0) == -1) {
 		pb_log("%s: waitpid failed: %s\n", __func__,

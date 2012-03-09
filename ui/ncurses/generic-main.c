@@ -45,7 +45,8 @@ static void print_usage(void)
 {
 	print_version();
 	printf(
-"Usage: petitboot-nc [-h, --help] [-l, --log log-file] [-V, --version]\n");
+"Usage: petitboot-nc [-d, --start-daemon] [-h, --help] [-l, --log log-file]\n"
+"                    [-V, --version]\n");
 }
 
 /**
@@ -59,6 +60,7 @@ enum opt_value {opt_undef = 0, opt_yes, opt_no};
  */
 
 struct opts {
+	enum opt_value start_daemon;
 	enum opt_value show_help;
 	const char *log_file;
 	enum opt_value show_version;
@@ -71,12 +73,13 @@ struct opts {
 static int opts_parse(struct opts *opts, int argc, char *argv[])
 {
 	static const struct option long_options[] = {
-		{"help",    no_argument,       NULL, 'h'},
-		{"log",     required_argument, NULL, 'l'},
-		{"version", no_argument,       NULL, 'V'},
-		{ NULL,     0,                 NULL, 0},
+		{"start-daemon", no_argument,       NULL, 'd'},
+		{"help",         no_argument,       NULL, 'h'},
+		{"log",          required_argument, NULL, 'l'},
+		{"version",      no_argument,       NULL, 'V'},
+		{ NULL,          0,                 NULL, 0},
 	};
-	static const char short_options[] = "hl:V";
+	static const char short_options[] = "dhl:V";
 	static const struct opts default_values = {
 		.log_file = "/var/log/petitboot/petitboot-nc.log",
 	};
@@ -91,6 +94,9 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 			break;
 
 		switch (c) {
+		case 'd':
+			opts->start_daemon = opt_yes;
+			break;
 		case 'h':
 			opts->show_help = opt_yes;
 			break;
@@ -269,7 +275,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	pb.cui = cui_init(&pb, pb_kexec_cb, NULL);
+	pb.cui = cui_init(&pb, pb_kexec_cb, NULL, opts.start_daemon);
 
 	if (!pb.cui)
 		return EXIT_FAILURE;

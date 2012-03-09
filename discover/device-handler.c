@@ -201,10 +201,10 @@ static int mount_device(struct discover_context *ctx)
 	argv[4] = "ro";
 	argv[5] = NULL;
 
-	if (pb_run_cmd(argv))
+	if (pb_run_cmd(argv, 1))
 		argv[3] = NULL; /* try without ro */
 
-	if (pb_run_cmd(argv))
+	if (pb_run_cmd(argv, 1))
 		goto out_rmdir;
 
 	setup_device_links(ctx);

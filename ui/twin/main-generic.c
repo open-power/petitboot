@@ -327,7 +327,8 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	client = pbt_client_init(opts.backend, 900, 300, kexec_cb);
+	client = pbt_client_init(opts.backend, 900, 300, kexec_cb,
+		opts.start_daemon);
 
 	if (!client) {
 		ui_result = EXIT_FAILURE;

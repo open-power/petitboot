@@ -26,6 +26,7 @@
 .Sh SYNOPSIS
 .\" ========
 .Nm
+.Op Fl d, -start-daemon
 .Op Fl h, -help
 .Op Fl l, -log Ar log-file
 .Op Fl V, -version
@@ -43,6 +44,11 @@ protocols.
 .Sh OPTIONS
 .\" =======
 .Bl -tag -width indent
+.\"
+.It Fl d, -start-daemon
+Start pb-discover, the petitboot dynamic device discovery daemon, if it has
+not been started.  This option is mainly useful when running petitboot as a
+stand-alone application.
 .\"
 .It Fl h, -help
 Print a help message.

@@ -32,6 +32,7 @@ struct pb_kexec_data {
 };
 
 int pb_run_kexec(const struct pb_kexec_data *kd);
+int pb_start_daemon(void);
 
 unsigned int pb_elf_hash(const char *str);
 unsigned int pb_cat_hash(const char *a, const char *b);

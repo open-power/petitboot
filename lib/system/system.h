@@ -2,6 +2,7 @@
 #define _PB_LIB_SYSTEM_H
 
 struct pb_system_apps {
+	const char *prefix;
 	const char *cp;
 	const char *kexec;
 	const char *mount;
@@ -14,7 +15,7 @@ struct pb_system_apps {
 
 extern const struct pb_system_apps pb_system_apps;
 
-int pb_run_cmd(const char *const *cmd_argv);
+int pb_run_cmd(const char *const *cmd_argv, int wait);
 int pb_mkdir_recursive(const char *dir);
 int pb_rmdir_recursive(const char *base, const char *dir);
 

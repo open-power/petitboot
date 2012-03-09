@@ -264,7 +264,8 @@ static void pbt_client_destructor(struct pbt_client *client)
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend, unsigned int width,
 	unsigned int height,
-	int (*kexec_cb)(struct pbt_client *, struct pb_opt_data *))
+	int (*kexec_cb)(struct pbt_client *, struct pb_opt_data *),
+	int start_deamon)
 {
 	struct pbt_client *pbt_client;
 	unsigned int i;
@@ -289,15 +290,32 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend, unsigned int w
 
 	/* Loop here for scripts that just started the server. */
 if (1) {
+start_deamon:
 	for (i = 10; i; i--) {
 		pbt_client->discover_client
 			= discover_client_init(&pbt_client_ops, pbt_client);
-
 		if (pbt_client->discover_client)
 			break;
-
 		pb_log("%s: waiting for server %d\n", __func__, i);
 		sleep(1);
+	}
+
+	if (!pbt_client->discover_client && start_deamon) {
+		int result;
+
+		start_deamon = 0;
+
+		result = pb_start_daemon();
+
+		if (!result)
+			goto start_deamon;
+
+		pb_log("%s: discover_client_init failed.\n", __func__);
+		fprintf(stderr, "%s: error: discover_client_init failed.\n",
+			__func__);
+		fprintf(stderr, "could not start pb-discover, the petitboot "
+			"daemon.\n");
+		goto fail_client_init;
 	}
 
 	if (!pbt_client->discover_client) {

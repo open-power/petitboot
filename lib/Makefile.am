@@ -12,7 +12,8 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib $(DEFAULT_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/lib $(DEFAULT_CPPFLAGS) \
+	-DPREFIX='"$(prefix)"'
 
 AM_CFLAGS = $(DEFAULT_CFLAGS)
 
