@@ -15,8 +15,10 @@ elif head=$(git rev-parse --short --verify HEAD 2>/dev/null); then
 
 	date=$(git log --pretty=format:"%ci" -1 HEAD)
 	date=${date##20}
-	date=${date%% [0-9][0-9]:*}
+	date=${date%%:[0-9][0-9] *}
 	date=${date//-/.}
+	date=${date// /.}
+	date=${date//:/.}
 
 	version=$(printf '%s-%s%s' ${date} g ${head})
 
