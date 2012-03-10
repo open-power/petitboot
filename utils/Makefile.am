@@ -29,6 +29,7 @@ pb_event_SOURCES = pb-event.c
 
 dist_pkgdata_DATA = \
 	99-petitboot.rules \
-	kboot.conf.sample
+	kboot.conf.sample \
+	logrotate.conf
 
 MAINTAINERCLEANFILES = Makefile.in
