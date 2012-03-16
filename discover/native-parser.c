@@ -1,3 +1,17 @@
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; version 2 of the License.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include "parser.h"
 #include "params.h"
@@ -7,14 +21,14 @@
 #include <stdio.h>
 #include <string.h>
 
-const char *conf_filename = "/boot/petitboot.conf";
+static const char *conf_filename = "/boot/petitboot.conf";
 
 static struct boot_option *cur_opt;
 static struct device *dev;
 static const char *devpath;
-int device_added;
+static int device_added;
 
-int check_and_add_device(struct device *dev)
+static int check_and_add_device(struct device *dev)
 {
 	if (!dev->icon_file)
 		dev->icon_file = strdup(generic_icon_file(guess_device_type()));
@@ -86,7 +100,7 @@ static int parameter(char *param_name, char *param_value)
 }
 
 
-int parse(const char *device)
+static int native_parse(const char *device)
 {
 	char *filepath;
 	int rc;
@@ -114,11 +128,4 @@ int parse(const char *device)
 	return 1;
 }
 
-struct parser native_parser = {
-	.name = "native petitboot parser",
-	.priority = 100,
-	.parse	  = parse
-};
-
-
-
+define_parser(native, 100, native_parse);
