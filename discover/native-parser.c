@@ -128,4 +128,4 @@ static int native_parse(const char *device)
 	return 1;
 }
 
-define_parser(native, 100, native_parse);
+define_parser(native, native_parse);

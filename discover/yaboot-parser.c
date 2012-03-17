@@ -318,4 +318,4 @@ static int yaboot_parse(struct discover_context *dc)
 	return rc;
 }
 
-define_parser(yaboot, 99, yaboot_parse);
+define_parser(yaboot, yaboot_parse);

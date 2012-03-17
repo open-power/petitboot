@@ -153,4 +153,4 @@ static int kboot_parse(struct discover_context *dc)
 	return rc;
 }
 
-define_parser(kboot, 98, kboot_parse);
+define_parser(kboot, kboot_parse);
