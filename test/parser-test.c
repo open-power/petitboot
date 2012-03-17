@@ -46,7 +46,6 @@ enum generic_icon_type guess_device_type(
 int main(int argc, char **argv)
 {
 	struct discover_context *ctx;
-	int rc;
 
 	if (argc != 3) {
 		fprintf(stderr, "usage: %s <basedir> <devname>\n", argv[0]);
@@ -67,7 +66,7 @@ int main(int argc, char **argv)
 	ctx->device = talloc_zero(ctx, struct device);
 	ctx->device->id = talloc_strdup(ctx->device, argv[2]);
 
-	rc = iterate_parsers(ctx);
+	iterate_parsers(ctx);
 
 	pb_log("--- end ---\n");
 
