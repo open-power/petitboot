@@ -183,6 +183,7 @@ AC_CONFIG_FILES([
 	discover/Makefile
 	lib/Makefile
 	man/Makefile
+	test/Makefile
 	ui/Makefile
 	ui/common/Makefile
 	ui/ncurses/Makefile

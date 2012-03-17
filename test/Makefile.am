@@ -12,22 +12,24 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-SUBDIRS = lib discover test ui utils man
+AM_CPPFLAGS = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/lib \
+	-I$(includedir) \
+	$(DEFAULT_CPPFLAGS)
 
-ACLOCAL_AMFLAGS = -I m4
+AM_CFLAGS = \
+	$(DEFAULT_CFLAGS)
 
-AM_CPPFLAGS = $(DEFAULT_CPPFLAGS)
-AM_CFLAGS = $(DEFAULT_CFLAGS)
+common_libs = \
+	$(top_builddir)/lib/libpbcore.la \
+	$(top_builddir)/discover/libparser.la
 
-LIBTOOL_DEPS = @LIBTOOL_DEPS@
+noinst_SCRIPTS = parser-test.sh hotplug-device.sh
 
-libtool: $(LIBTOOL_DEPS)
-	$(SHELL) ./config.status libtool
+noinst_PROGRAMS = parser-test
 
-EXTRA_DIST = bootstrap configure.ac.in
+parser_test_SOURCES = parser-test.c
+parser_test_LDADD = $(common_libs)
 
-MAINTAINERCLEANFILES = aclocal.m4 config.* configure configure.ac depcomp \
-	install-sh ltmain.sh Makefile.in missing $(PACKAGE)-*.gz
-
-maintainer-clean-local:
-	rm -rf m4
+MAINTAINERCLEANFILES = Makefile.in

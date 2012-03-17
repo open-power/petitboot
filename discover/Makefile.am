@@ -29,7 +29,13 @@ libparser_la_SOURCES = \
 	parser-utils.c \
 	parser-utils.h \
 	paths.c \
-	paths.h
+	paths.h \
+	kboot-parser.c \
+	yaboot-parser.c
+
+EXTRA_DIST = native-parser.c
+
+libparser_la_LIBADD = $(top_builddir)/lib/libpbcore.la
 
 sbin_PROGRAMS = pb-discover
 
@@ -41,7 +47,6 @@ pb_discover_SOURCES = \
 	event.c \
 	event.h \
 	event-parser.c \
-	kboot-parser.c \
 	message.h \
 	params.c \
 	params.h \
@@ -50,9 +55,8 @@ pb_discover_SOURCES = \
 	udev.c \
 	udev.h \
 	user-event.c \
-	user-event.h \
-	yaboot-parser.c
+	user-event.h
+
 pb_discover_LDADD = libparser.la $(top_builddir)/lib/libpbcore.la
 
-EXTRA_DIST = native-parser.c
 MAINTAINERCLEANFILES = Makefile.in
