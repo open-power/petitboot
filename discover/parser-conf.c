@@ -58,6 +58,22 @@ char *conf_strip_str(char *s)
 }
 
 /**
+ * conf_replace_char - replace one char with another.
+ */
+
+char *conf_replace_char(char *s, char from, char to)
+{
+	if (!s)
+		return NULL;
+
+	for ( ; *s; s++)
+		if (*s == from)
+			*s = to;
+
+	return s;
+}
+
+/**
  * conf_get_param_pair - Get the next 'name=value' parameter pair.
  * @str: The string to process.
  * @name_out: Returns a pointer to the name.

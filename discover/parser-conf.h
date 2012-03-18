@@ -51,5 +51,6 @@ int conf_set_global_option(struct conf_context *conf, const char *name,
 
 int conf_param_in_list(const char *const *list, const char *param);
 char *conf_strip_str(char *s);
+char *conf_replace_char(char *s, char from, char to);
 
 #endif
