@@ -301,6 +301,7 @@ static int yaboot_parse(struct discover_context *dc)
 	conf->global_options = yaboot_global_options,
 	conf_init_global_options(conf);
 	conf->conf_files = yaboot_conf_files,
+	conf->get_pair = conf_get_pair_equal;
 	conf->process_pair = yaboot_process_pair;
 	conf->finish = yaboot_finish;
 	conf->parser_info = state = talloc_zero(conf, struct yaboot_state);

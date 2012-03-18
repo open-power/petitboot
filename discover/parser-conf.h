@@ -33,6 +33,8 @@ struct conf_context {
 	struct conf_global_option *global_options;
 	const char *const *conf_files;
 
+	char *(*get_pair)(struct conf_context *conf, char *str, char **name_out,
+		char **value_out, char terminator);
 	void (*process_pair)(struct conf_context *conf, const char *name,
 		char *value);
 	void (*finish)(struct conf_context *conf);

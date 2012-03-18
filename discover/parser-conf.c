@@ -155,6 +155,9 @@ void conf_init_global_options(struct conf_context *conf)
 {
 	int i;
 
+	if (!conf->global_options)
+		return;
+
 	for (i = 0; conf->global_options[i].name; i++)
 		conf->global_options[i].value = NULL;
 }
@@ -170,6 +173,8 @@ int conf_set_global_option(struct conf_context *conf, const char *name,
 	const char *value)
 {
 	int i;
+
+	assert(conf->global_options);
 
 	for (i = 0; conf->global_options[i].name; i++) {
 		if (streq(name, conf->global_options[i].name)) {
@@ -196,6 +201,8 @@ const char *conf_get_global_option(struct conf_context *conf,
 {
 	int i;
 
+	assert(conf->global_options);
+
 	for (i = 0; conf->global_options[i].name ;i++)
 		if (streq(name, conf->global_options[i].name)) {
 			pb_log("%s: @%s@%s@\n", __func__, name,
@@ -217,8 +224,11 @@ static void conf_parse_buf(struct conf_context *conf)
 {
 	char *pos, *name, *value;
 
+	assert(conf->get_pair);
+	assert(conf->process_pair);
+
 	for (pos = conf->buf; pos;) {
-		pos = conf_get_pair_equal(conf, pos, &name, &value, '\n');
+		pos = conf->get_pair(conf, pos, &name, &value, '\n');
 
 		if (!value)
 			continue;
