@@ -39,13 +39,25 @@ struct conf_context {
 };
 
 int conf_parse(struct conf_context *conf);
-char *conf_get_param_pair(char *str, char **name_out, char **value_out,
-		char terminator);
+char *conf_get_pair(struct conf_context *conf, char *str, char **name_out,
+	char **value_out, char delimiter, char terminator);
 void conf_init_global_options(struct conf_context *conf);
 const char *conf_get_global_option(struct conf_context *conf,
 	const char *name);
 int conf_set_global_option(struct conf_context *conf, const char *name,
 	const char *value);
+
+static inline char *conf_get_pair_equal(struct conf_context *conf, char *str,
+	char **name_out, char **value_out, char terminator)
+{
+	return conf_get_pair(conf, str, name_out, value_out, '=', terminator);
+}
+
+static inline char *conf_get_pair_space(struct conf_context *conf, char *str,
+	char **name_out, char **value_out, char terminator)
+{
+	return conf_get_pair(conf, str, name_out, value_out, ' ', terminator);
+}
 
 /* utility routines */
 

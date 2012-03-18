@@ -57,7 +57,7 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	for (pos++; pos;) {
 		char *cl_name, *cl_value;
 
-		pos = conf_get_param_pair(pos, &cl_name, &cl_value, ' ');
+		pos = conf_get_pair_equal(conf, pos, &cl_name, &cl_value, ' ');
 
 		if (!cl_name) {
 			args = talloc_asprintf_append(args, "%s ", cl_value);

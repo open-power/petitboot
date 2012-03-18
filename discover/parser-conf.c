@@ -74,11 +74,12 @@ char *conf_replace_char(char *s, char from, char to)
 }
 
 /**
- * conf_get_param_pair - Get the next 'name=value' parameter pair.
+ * conf_get_pair - Get the next 'name/value' parameter pair.
  * @str: The string to process.
  * @name_out: Returns a pointer to the name.
  * @value_out: Returns a pointer to the value.
- * @terminator: The pair separator/terminator.
+ * @tdelimiter: The pair separator.
+ * @terminator: The pair terminator.
  *
  * Parses a name=value pair returning pointers in @name_out and @value_out.
  * The pair can be terminated by @terminator or a zero.
@@ -91,10 +92,12 @@ char *conf_replace_char(char *s, char from, char to)
  * string.
  */
 
-char *conf_get_param_pair(char *str, char **name_out, char **value_out,
-		char terminator)
+char *conf_get_pair(struct conf_context __attribute__((unused)) *conf, char *str,
+	char **name_out, char **value_out, char delimiter, char terminator)
 {
 	char *sep, *end;
+
+	*name_out = *value_out = NULL;
 
 	/* terminate the value */
 	end = strchr(str, terminator);
@@ -102,7 +105,14 @@ char *conf_get_param_pair(char *str, char **name_out, char **value_out,
 	if (end)
 		*end = 0;
 
-	sep = strchr(str, '=');
+	conf_replace_char(str, '\t', ' ');
+
+	str = conf_strip_str(str);
+
+	if (!str)
+		goto exit;
+
+	sep = strchr(str, delimiter);
 
 	if (!sep) {
 		*name_out = NULL;
@@ -113,6 +123,7 @@ char *conf_get_param_pair(char *str, char **name_out, char **value_out,
 		*value_out = conf_strip_str(sep + 1);
 	}
 
+exit:
 	pb_log("%s: @%s@%s@\n", __func__, *name_out, *value_out);
 
 	return end ? end + 1 : NULL;
@@ -207,7 +218,7 @@ static void conf_parse_buf(struct conf_context *conf)
 	char *pos, *name, *value;
 
 	for (pos = conf->buf; pos;) {
-		pos = conf_get_param_pair(pos, &name, &value, '\n');
+		pos = conf_get_pair_equal(conf, pos, &name, &value, '\n');
 
 		if (!value)
 			continue;
