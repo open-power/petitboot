@@ -8,15 +8,16 @@
 #include "parser.h"
 #include "parser-utils.h"
 
+struct parser __grub2_parser;
+struct parser __kboot_parser;
 struct parser __native_parser;
 struct parser __yaboot_parser;
-struct parser __kboot_parser;
-struct parser __grub2_parser;
 
 static const struct parser *const parsers[] = {
 //	&__native_parser,
-	&__yaboot_parser,
 	&__kboot_parser,
+	&__grub2_parser,
+	&__yaboot_parser,
 	NULL
 };
 

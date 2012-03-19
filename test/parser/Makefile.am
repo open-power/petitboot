@@ -31,6 +31,7 @@ parser_test_SOURCES = parser-test.c
 parser_test_LDADD = $(common_libs)
 
 noinst_DATA = \
+	data/grub-01/grub.cfg \
 	data/kboot-01/expected-output \
 	data/kboot-01/etc/kboot.conf \
 	data/kboot-02/expected-output \

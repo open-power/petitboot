@@ -31,6 +31,7 @@ libparser_la_SOURCES = \
 	paths.c \
 	paths.h \
 	kboot-parser.c \
+	grub2-parser.c \
 	yaboot-parser.c
 
 EXTRA_DIST = native-parser.c
