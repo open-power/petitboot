@@ -21,7 +21,7 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	const char *root;
 	struct boot_option *opt;
 
-	/* fixup for bare values */
+	/* ignore bare values */
 
 	if (!name)
 		return;
