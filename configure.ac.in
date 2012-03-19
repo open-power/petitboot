@@ -184,6 +184,7 @@ AC_CONFIG_FILES([
 	lib/Makefile
 	man/Makefile
 	test/Makefile
+	test/parser/Makefile
 	ui/Makefile
 	ui/common/Makefile
 	ui/ncurses/Makefile

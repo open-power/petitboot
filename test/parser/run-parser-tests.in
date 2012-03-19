@@ -1,0 +1,15 @@
+#!/bin/bash
+
+test="@abs_builddir@/parser-test"
+data_dir="@abs_srcdir@/data"
+mnt_dir="@prefix@/var/petitboot/mnt"
+
+dirs=$(ls ${data_dir})
+
+mkdir -p ${mnt_dir}
+ln -s ${data_dir} ${mnt_dir}/
+
+for d in ${dirs}; do
+	echo "##### running parser test in ${d} #####"
+	${test} data ${d}
+done

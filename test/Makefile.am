@@ -10,26 +10,10 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	-I$(includedir) \
-	$(DEFAULT_CPPFLAGS)
 
-AM_CFLAGS = \
-	$(DEFAULT_CFLAGS)
+SUBDIRS = parser
 
-common_libs = \
-	$(top_builddir)/lib/libpbcore.la \
-	$(top_builddir)/discover/libparser.la
-
-noinst_SCRIPTS = parser-test.sh hotplug-device.sh
-
-noinst_PROGRAMS = parser-test
-
-parser_test_SOURCES = parser-test.c
-parser_test_LDADD = $(common_libs)
+noinst_SCRIPTS = hotplug-device.sh
 
 MAINTAINERCLEANFILES = Makefile.in
