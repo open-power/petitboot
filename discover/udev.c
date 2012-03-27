@@ -30,7 +30,12 @@ struct udev {
 static void udev_print_event(struct event *event)
 {
 	const char *action, *params[] = {
-		"DEVNAME", "ID_TYPE", "ID_BUS", "ID_FS_UUID", "ID_FS_LABEL",
+		"DEVNAME",
+		"DEVPATH",
+		"ID_TYPE",
+		"ID_BUS",
+		"ID_FS_UUID",
+		"ID_FS_LABEL",
 		NULL,
 	};
 	int i;
@@ -43,7 +48,6 @@ static void udev_print_event(struct event *event)
 	for (i = 0; params[i]; i++)
 		pb_log("\t%-12s => %s\n",
 				params[i], event_get_param(event, params[i]));
-
 }
 
 static void udev_handle_message(struct udev *udev, char *buf, int len)
