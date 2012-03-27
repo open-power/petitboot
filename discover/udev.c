@@ -122,6 +122,7 @@ struct udev *udev_init(struct device_handler *handler)
 
 	talloc_set_destructor(udev, udev_destructor);
 
+	memset(&addr, 0, sizeof addr);
 	addr.sun_family = AF_UNIX;
 	strcpy(addr.sun_path, PBOOT_DEVICE_SOCKET);
 
