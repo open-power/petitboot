@@ -372,7 +372,6 @@ int main(int argc, char *argv[])
 	int result;
 	int ui_result = -1;
 	unsigned int mode;
-	FILE *log;
 
 	result = pbt_opts_parse(&opts, argc, argv);
 
@@ -391,9 +390,13 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	log = fopen(opts.log_file, "a");
-	assert(log);
-	pb_log_set_stream(log);
+	if (strcmp(opts.log_file, "-")) {
+		FILE *log = fopen(opts.log_file, "a");
+
+		assert(log);
+		pb_log_set_stream(log);
+	} else
+		pb_log_set_stream(stderr);
 
 #if defined(DEBUG)
 	pb_log_always_flush(1);

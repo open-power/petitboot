@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 
 #include <waiter/waiter.h>
 #include <log/log.h>
@@ -103,7 +104,6 @@ int main(int argc, char *argv[])
 	struct opts opts;
 	struct udev *udev;
 	struct user_event *uev;
-	FILE *log;
 
 	if (opts_parse(&opts, argc, argv)) {
 		print_usage();
@@ -120,9 +120,13 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	log = fopen(opts.log_file, "a");
-	assert(log);
-	pb_log_set_stream(log);
+	if (strcmp(opts.log_file, "-")) {
+		FILE *log = fopen(opts.log_file, "a");
+
+		assert(log);
+		pb_log_set_stream(log);
+	} else
+		pb_log_set_stream(stderr);
 
 #if defined(DEBUG)
 	pb_log_always_flush(1);

@@ -285,7 +285,6 @@ int main(int argc, char *argv[])
 	static struct pbt_opts opts;
 	int result;
 	int ui_result;
-	FILE *log;
 	struct pbt_client *client;
 
 	result = pbt_opts_parse(&opts, argc, argv);
@@ -305,9 +304,13 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	log = fopen(opts.log_file, "a");
-	assert(log);
-	pb_log_set_stream(log);
+	if (strcmp(opts.log_file, "-")) {
+		FILE *log = fopen(opts.log_file, "a");
+
+		assert(log);
+		pb_log_set_stream(log);
+	} else
+		pb_log_set_stream(stderr);
 
 #if defined(DEBUG)
 	pb_log_always_flush(1);

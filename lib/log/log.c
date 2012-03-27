@@ -11,7 +11,7 @@ void pb_log(const char *fmt, ...)
 	va_list ap;
 	FILE *stream;
 
-	stream = logf ? logf : stdout;
+	stream = logf ? logf : stderr;
 
 	va_start(ap, fmt);
 	vfprintf(stream, fmt, ap);
@@ -23,13 +23,13 @@ void pb_log(const char *fmt, ...)
 
 void pb_log_set_stream(FILE *stream)
 {
-	fflush(logf ? logf : stdout);
+	fflush(logf ? logf : stderr);
 	logf = stream;
 }
 
 FILE * pb_log_get_stream(void)
 {
-	return logf;
+	return logf ? logf : stderr;
 }
 
 void pb_log_always_flush(int state)
