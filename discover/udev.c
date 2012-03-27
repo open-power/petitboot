@@ -1,17 +1,18 @@
 
 #define _GNU_SOURCE
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/un.h>
 
+#include <log/log.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
-#include <log/log.h>
 
 #include "event.h"
 #include "udev.h"
@@ -54,6 +55,7 @@ static void udev_handle_message(struct udev *udev, char *buf, int len)
 {
 	int result;
 	struct event *event;
+	const char *devpath;
 
 	event = talloc(udev, struct event);
 	event->type = EVENT_TYPE_UDEV;
@@ -66,7 +68,17 @@ static void udev_handle_message(struct udev *udev, char *buf, int len)
 		return;
 
 	udev_print_event(event);
-	device_handler_event(udev->handler, event);
+
+	/* Ignore ram, loop, and devices with no DEVNAME. */
+
+	devpath = event_get_param(event, "DEVPATH");
+
+	if (event_get_param(event, "DEVNAME")
+		&& !strstr(devpath, "virtual/block/loop")
+		&& !strstr(devpath, "virtual/block/ram")) {
+		device_handler_event(udev->handler, event);
+	}
+
 	talloc_free(event);
 
 	return;

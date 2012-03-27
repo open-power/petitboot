@@ -294,11 +294,7 @@ static int handle_add_udev_event(struct device_handler *handler,
 	ctx->id = talloc_strdup(ctx, event->device);
 
 	devname = event_get_param(ctx->event, "DEVNAME");
-	if (!devname) {
-		pb_log("no devname for %s?\n", event->device);
-		return 0;
-	}
-
+	assert(devname);
 	ctx->device_path = talloc_strdup(ctx, devname);
 
 	rc = mount_device(ctx);
