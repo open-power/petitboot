@@ -31,11 +31,12 @@ enum pbt_opt_value {pbt_opt_undef = 0, pbt_opt_yes, pbt_opt_no};
  */
 
 struct pbt_opts {
-	enum pbt_opt_value start_daemon;
 	enum pbt_twin_backend backend;
+	enum pbt_opt_value dry_run;
 	enum pbt_opt_value show_help;
 	const char *log_file;
 	enum pbt_opt_value reset_defaults;
+	enum pbt_opt_value start_daemon;
 	enum pbt_opt_value use_timeout;
 	enum pbt_opt_value show_version;
 };

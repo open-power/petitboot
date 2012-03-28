@@ -199,7 +199,7 @@ fail_menu:
 	return NULL;
 }
 
-static int kexec_cb(__attribute__((unused)) struct pbt_client *client, struct pb_opt_data *opt_data)
+static int kexec_cb(struct pbt_client *client, struct pb_opt_data *opt_data)
 {
 	int result;
 
@@ -207,7 +207,7 @@ static int kexec_cb(__attribute__((unused)) struct pbt_client *client, struct pb
 
 	pb_log("%s: %s\n", __func__, opt_data->name);
 
-	result = pb_run_kexec(opt_data->kd);
+	result = pb_run_kexec(opt_data->kd, client->dry_run);
 
 	return result;
 }
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
 	}
 
 	client = pbt_client_init(opts.backend, 900, 300, kexec_cb,
-		opts.start_daemon);
+		opts.start_daemon, opts.dry_run);
 
 	if (!client) {
 		ui_result = EXIT_FAILURE;

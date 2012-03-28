@@ -64,7 +64,7 @@ int pb_start_daemon(void)
  */
 
 static int kexec_load(const char *l_image, const char *l_initrd,
-	const char *args)
+	const char *args, int dry_run)
 {
 	int result;
 	const char *argv[6];
@@ -91,7 +91,7 @@ static int kexec_load(const char *l_image, const char *l_initrd,
 	*p++ = l_image;			/* 5 */
 	*p++ = NULL;			/* 6 */
 
-	result = pb_run_cmd(argv, 1);
+	result = dry_run ? 0 : pb_run_cmd(argv, 1);
 
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
@@ -108,9 +108,9 @@ static int kexec_load(const char *l_image, const char *l_initrd,
  * Must only be called after a successful call to kexec_load().
  */
 
-static int kexec_reboot(void)
+static int kexec_reboot(int dry_run)
 {
-	int result;
+	int result = 0;
 	const char *argv[4];
 	const char **p;
 
@@ -122,7 +122,7 @@ static int kexec_reboot(void)
 	*p++ =  "now";			/* 3 */
 	*p++ =  NULL;			/* 4 */
 
-	result = pb_run_cmd(argv, 1);
+	result = dry_run ? 0 : pb_run_cmd(argv, 1);
 
 	/* On error, force a kexec with the -e option */
 
@@ -145,7 +145,7 @@ static int kexec_reboot(void)
  * pb_run_kexec - Run kexec with the supplied boot options.
  */
 
-int pb_run_kexec(const struct pb_kexec_data *kd)
+int pb_run_kexec(const struct pb_kexec_data *kd, int dry_run)
 {
 	int result;
 	char *l_image = NULL;
@@ -153,9 +153,10 @@ int pb_run_kexec(const struct pb_kexec_data *kd)
 	unsigned int clean_image = 0;
 	unsigned int clean_initrd = 0;
 
-	pb_log("%s: image:  '%s'\n", __func__, kd->image);
-	pb_log("%s: initrd: '%s'\n", __func__, kd->initrd);
-	pb_log("%s: args:   '%s'\n", __func__, kd->args);
+	pb_log("%s: image:   '%s'\n", __func__, kd->image);
+	pb_log("%s: initrd:  '%s'\n", __func__, kd->initrd);
+	pb_log("%s: args:    '%s'\n", __func__, kd->args);
+	pb_log("%s: dry_run: '%d'\n", __func__, dry_run);
 
 	result = -1;
 
@@ -174,7 +175,7 @@ int pb_run_kexec(const struct pb_kexec_data *kd)
 	if (!l_image && !l_initrd)
 		goto no_load;
 
-	result = kexec_load(l_image, l_initrd, kd->args);
+	result = kexec_load(l_image, l_initrd, kd->args, dry_run);
 
 no_load:
 	if (clean_image)
@@ -186,7 +187,7 @@ no_load:
 	talloc_free(l_initrd);
 
 	if (!result)
-		result = kexec_reboot();
+		result = kexec_reboot(dry_run);
 
 	return result;
 }

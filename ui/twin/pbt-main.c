@@ -34,8 +34,9 @@ void pbt_print_usage(void)
 {
 	pbt_print_version();
 	printf(
-"Usage: petitboot-twin [-d, --start-daemon] [-h, --help] [-l, --log log-file]\n"
-"                      [-r, --reset-defaults][-t, --timeout] [-V, --version]\n"
+"Usage: petitboot-twin [-d, --dry-run] [-h, --help] [-l, --log log-file]\n"
+"                      [-r, --reset-defaults] [-s, --start-daemon]\n"
+"                      [-t, --timeout] [-V, --version]\n"
 "                      [[-f --fbdev] | [-x --x11]]\n");
 }
 
@@ -46,17 +47,18 @@ void pbt_print_usage(void)
 int pbt_opts_parse(struct pbt_opts *opts, int argc, char *argv[])
 {
 	static const struct option long_options[] = {
-		{"start-daemon",   no_argument,       NULL, 'd'},
+		{"dry-run",        no_argument,       NULL, 'd'},
 		{"fbdev",          no_argument,       NULL, 'f'},
 		{"help",           no_argument,       NULL, 'h'},
 		{"log",            required_argument, NULL, 'l'},
 		{"reset-defaults", no_argument,       NULL, 'r'},
+		{"start-daemon",   no_argument,       NULL, 's'},
 		{"timeout",        no_argument,       NULL, 't'},
 		{"version",        no_argument,       NULL, 'V'},
 		{"x11",            no_argument,       NULL, 'x'},
 		{ NULL, 0, NULL, 0},
 	};
-	static const char short_options[] = "dfhl:trVx";
+	static const char short_options[] = "dfhl:strVx";
 	static const struct pbt_opts default_values = {
 		.backend = pbt_twin_x11,
 		.log_file = "/var/log/petitboot/petitboot-twin.log",
@@ -73,7 +75,7 @@ int pbt_opts_parse(struct pbt_opts *opts, int argc, char *argv[])
 
 		switch (c) {
 		case 'd':
-			opts->start_daemon = pbt_opt_yes;
+			opts->dry_run = pbt_opt_yes;
 			break;
 		case 'f':
 			opts->backend = pbt_twin_fbdev;
@@ -83,6 +85,9 @@ int pbt_opts_parse(struct pbt_opts *opts, int argc, char *argv[])
 			break;
 		case 'l':
 			opts->log_file = optarg;
+			break;
+		case 's':
+			opts->start_daemon = pbt_opt_yes;
 			break;
 		case 't':
 			opts->use_timeout = pbt_opt_yes;

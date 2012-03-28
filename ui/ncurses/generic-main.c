@@ -45,8 +45,8 @@ static void print_usage(void)
 {
 	print_version();
 	printf(
-"Usage: petitboot-nc [-d, --start-daemon] [-h, --help] [-l, --log log-file]\n"
-"                    [-V, --version]\n");
+"Usage: petitboot-nc [-d, --dry-run] [-h, --help] [-l, --log log-file]\n"
+"                    [-s, --start-daemon] [-V, --version]\n");
 }
 
 /**
@@ -60,9 +60,10 @@ enum opt_value {opt_undef = 0, opt_yes, opt_no};
  */
 
 struct opts {
-	enum opt_value start_daemon;
+	enum opt_value dry_run;
 	enum opt_value show_help;
 	const char *log_file;
+	enum opt_value start_daemon;
 	enum opt_value show_version;
 };
 
@@ -73,13 +74,14 @@ struct opts {
 static int opts_parse(struct opts *opts, int argc, char *argv[])
 {
 	static const struct option long_options[] = {
-		{"start-daemon", no_argument,       NULL, 'd'},
+		{"dry-run",      no_argument,       NULL, 'd'},
 		{"help",         no_argument,       NULL, 'h'},
 		{"log",          required_argument, NULL, 'l'},
+		{"start-daemon", no_argument,       NULL, 's'},
 		{"version",      no_argument,       NULL, 'V'},
 		{ NULL,          0,                 NULL, 0},
 	};
-	static const char short_options[] = "dhl:V";
+	static const char short_options[] = "dhl:sV";
 	static const struct opts default_values = {
 		.log_file = "/var/log/petitboot/petitboot-nc.log",
 	};
@@ -95,13 +97,16 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 
 		switch (c) {
 		case 'd':
-			opts->start_daemon = opt_yes;
+			opts->dry_run = opt_yes;
 			break;
 		case 'h':
 			opts->show_help = opt_yes;
 			break;
 		case 'l':
 			opts->log_file = optarg;
+			break;
+		case 's':
+			opts->start_daemon = opt_yes;
 			break;
 		case 'V':
 			opts->show_version = opt_yes;
@@ -124,6 +129,7 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 struct pb_cui {
 	struct pmenu *mm;
 	struct cui *cui;
+	struct opts opts;
 };
 
 static struct pb_cui *pb_from_cui(struct cui *cui)
@@ -148,7 +154,7 @@ static int pb_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 
 	assert(pb->cui->current == &pb->cui->main->scr);
 
-	return pb_run_kexec(cod->kd);
+	return pb_run_kexec(cod->kd, pb->opts.dry_run);
 }
 
 /**
@@ -231,29 +237,28 @@ static void sig_handler(int signum)
 int main(int argc, char *argv[])
 {
 	static struct sigaction sa;
-	static struct opts opts;
 	int result;
 	int cui_result;
 
-	result = opts_parse(&opts, argc, argv);
+	result = opts_parse(&pb.opts, argc, argv);
 
 	if (result) {
 		print_usage();
 		return EXIT_FAILURE;
 	}
 
-	if (opts.show_help == opt_yes) {
+	if (pb.opts.show_help == opt_yes) {
 		print_usage();
 		return EXIT_SUCCESS;
 	}
 
-	if (opts.show_version == opt_yes) {
+	if (pb.opts.show_version == opt_yes) {
 		print_version();
 		return EXIT_SUCCESS;
 	}
 
-	if (strcmp(opts.log_file, "-")) {
-		FILE *log = fopen(opts.log_file, "a");
+	if (strcmp(pb.opts.log_file, "-")) {
+		FILE *log = fopen(pb.opts.log_file, "a");
 
 		assert(log);
 		pb_log_set_stream(log);
@@ -278,7 +283,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	pb.cui = cui_init(&pb, pb_kexec_cb, NULL, opts.start_daemon);
+	pb.cui = cui_init(&pb, pb_kexec_cb, NULL, pb.opts.start_daemon);
 
 	if (!pb.cui)
 		return EXIT_FAILURE;

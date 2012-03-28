@@ -262,10 +262,10 @@ static void pbt_client_destructor(struct pbt_client *client)
 	memset(client, 0, sizeof(*client));
 }
 
-struct pbt_client *pbt_client_init(enum pbt_twin_backend backend, unsigned int width,
-	unsigned int height,
+struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
+	unsigned int width, unsigned int height,
 	int (*kexec_cb)(struct pbt_client *, struct pb_opt_data *),
-	int start_deamon)
+	int start_deamon, int dry_run)
 {
 	struct pbt_client *pbt_client;
 	unsigned int i;
@@ -282,6 +282,7 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend, unsigned int w
 
 	pbt_client->sig = "pbt_client";
 	pbt_client->kexec_cb = kexec_cb;
+	pbt_client->dry_run = dry_run;
 	pbt_client->frame.scr = pbt_scr_init(pbt_client, backend, width, height,
 		NULL, NULL);
 
