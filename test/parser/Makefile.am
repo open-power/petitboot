@@ -75,7 +75,7 @@ run-parser-tests: Makefile $(srcdir)/run-parser-tests.in
 
 composed_files = $(composed_noinst_scripts)
 
-EXTRA_DIST = $(addsuffix .in, $(composed_files))
+EXTRA_DIST = $(addsuffix .in, $(composed_files)) $(noinst_DATA)
 
 MAINTAINERCLEANFILES = Makefile.in
 

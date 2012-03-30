@@ -16,4 +16,6 @@ SUBDIRS = parser
 
 noinst_SCRIPTS = hotplug-device.sh
 
+EXTRA_DIST = $(noinst_SCRIPTS)
+
 MAINTAINERCLEANFILES = Makefile.in
