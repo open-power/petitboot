@@ -63,8 +63,7 @@ static int pbt_client_run_kexec(struct pbt_item *item)
 	result = item->pbt_client->kexec_cb(item->pbt_client, opt_data);
 
 	if (!result) {
-		//mvaddstr(1, 0, "system is going down now...");
-		sleep(60);
+		sleep(item->pbt_client->dry_run ? 1 : 60);
 	}
 
 	pb_log("%s: failed: %s\n", __func__, opt_data->kd->image);

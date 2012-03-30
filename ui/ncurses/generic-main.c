@@ -129,7 +129,6 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 struct pb_cui {
 	struct pmenu *mm;
 	struct cui *cui;
-	struct opts opts;
 };
 
 static struct pb_cui *pb_from_cui(struct cui *cui)
@@ -154,7 +153,7 @@ static int pb_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 
 	assert(pb->cui->current == &pb->cui->main->scr);
 
-	return pb_run_kexec(cod->kd, pb->opts.dry_run);
+	return pb_run_kexec(cod->kd, pb->cui->dry_run);
 }
 
 /**
@@ -176,7 +175,9 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 
 	m->on_open = cui_on_open;
 
-	m->scr.frame.title = talloc_strdup(m, "Petitboot");
+	m->scr.frame.title = talloc_asprintf(m,
+		"Petitboot (" PACKAGE_VERSION ")%s",
+		(pb_cui->cui->dry_run ? " (dry-run)" : ""));
 	m->scr.frame.help = talloc_strdup(m,
 		"ESC=exit, Enter=accept, e=edit, o=open");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
@@ -239,26 +240,27 @@ int main(int argc, char *argv[])
 	static struct sigaction sa;
 	int result;
 	int cui_result;
+	struct opts opts;
 
-	result = opts_parse(&pb.opts, argc, argv);
+	result = opts_parse(&opts, argc, argv);
 
 	if (result) {
 		print_usage();
 		return EXIT_FAILURE;
 	}
 
-	if (pb.opts.show_help == opt_yes) {
+	if (opts.show_help == opt_yes) {
 		print_usage();
 		return EXIT_SUCCESS;
 	}
 
-	if (pb.opts.show_version == opt_yes) {
+	if (opts.show_version == opt_yes) {
 		print_version();
 		return EXIT_SUCCESS;
 	}
 
-	if (strcmp(pb.opts.log_file, "-")) {
-		FILE *log = fopen(pb.opts.log_file, "a");
+	if (strcmp(opts.log_file, "-")) {
+		FILE *log = fopen(opts.log_file, "a");
 
 		assert(log);
 		pb_log_set_stream(log);
@@ -283,7 +285,8 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	pb.cui = cui_init(&pb, pb_kexec_cb, NULL, pb.opts.start_daemon);
+	pb.cui = cui_init(&pb, pb_kexec_cb, NULL, opts.start_daemon,
+		opts.dry_run);
 
 	if (!pb.cui)
 		return EXIT_FAILURE;

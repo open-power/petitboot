@@ -307,7 +307,7 @@ static int ps3_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 	} else
 		altered_args = 0;
 
-	result = pb_run_kexec(cod->kd);
+	result = pb_run_kexec(cod->kd, ps3->cui->dry_run);
 
 	if (altered_args) {
 		talloc_free(cod->kd->args);

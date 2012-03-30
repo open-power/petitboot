@@ -201,7 +201,7 @@ static int mount_device(struct discover_context *ctx)
 	argv[4] = "ro";
 	argv[5] = NULL;
 
-	if (pb_run_cmd(argv, 1)) {
+	if (pb_run_cmd(argv, 1, 0)) {
 
 		/* Retry mount without ro option. */
 
@@ -210,7 +210,7 @@ static int mount_device(struct discover_context *ctx)
 		argv[2] = ctx->mount_path;
 		argv[3] = NULL;
 
-		if (pb_run_cmd(argv, 1))
+		if (pb_run_cmd(argv, 1, 0))
 			goto out_rmdir;
 	}
 

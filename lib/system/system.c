@@ -103,9 +103,11 @@ int pb_rmdir_recursive(const char *base, const char *dir)
 /**
  * pb_run_cmd - Run the supplied command.
  * @cmd_argv: An argument list array for execv.
+ * @wait: Wait for the child process to complete before returning.
+ * @dry_run: Don't actually fork and exec.
  */
 
-int pb_run_cmd(const char *const *cmd_argv, int wait)
+int pb_run_cmd(const char *const *cmd_argv, int wait, int dry_run)
 {
 #if defined(DEBUG)
 	enum {do_debug = 1};
@@ -118,14 +120,19 @@ int pb_run_cmd(const char *const *cmd_argv, int wait)
 	if (do_debug) {
 		const char *const *p = cmd_argv;
 
-		pb_log("%s: ", __func__);
+		pb_log("%s: %s", __func__, (dry_run ? "(dry-run) " : ""));
+
 		while (*p) {
 			pb_log("%s ", *p);
 			p++;
 		}
 		pb_log("\n");
 	} else
-		pb_log("%s: %s\n", __func__, cmd_argv[0]);
+		pb_log("%s: %s%s\n", __func__, (dry_run ? "(dry-run) " : ""),
+			cmd_argv[0]);
+
+	if (dry_run)
+		return 0;
 
 	pid = fork();
 

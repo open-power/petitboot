@@ -111,7 +111,7 @@ int cui_run_cmd(struct pmenu_item *item)
 
 	def_prog_mode();
 
-	result = pb_run_cmd(cmd_argv, 1);
+	result = pb_run_cmd(cmd_argv, 1, 0);
 
 	reset_prog_mode();
 	redrawwin(cui->current->main_ncw);
@@ -151,7 +151,7 @@ static int cui_run_kexec(struct pmenu_item *item)
 		clear();
 		mvaddstr(1, 0, "system is going down now...");
 		refresh();
-		sleep(60);
+		sleep(cui->dry_run ? 1 : 60);
 	}
 
 	pb_log("%s: failed: %s\n", __func__, cod->kd->image);
@@ -534,7 +534,7 @@ static struct discover_client_ops cui_client_ops = {
 
 struct cui *cui_init(void* platform_info,
 	int (*on_kexec)(struct cui *, struct cui_opt_data *),
-	int (*js_map)(const struct js_event *e), int start_deamon)
+	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run)
 {
 	struct cui *cui;
 	struct discover_client *client;
@@ -552,6 +552,7 @@ struct cui *cui_init(void* platform_info,
 	cui->platform_info = platform_info;
 	cui->on_kexec = on_kexec;
 	cui->timer.handle_timeout = cui_handle_timeout;
+	cui->dry_run = dry_run;
 
 	/* Loop here for scripts that just started the server. */
 
