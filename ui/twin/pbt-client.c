@@ -289,12 +289,12 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 		goto fail_scr_init;
 
 	/* Loop here for scripts that just started the server. */
-if (1) {
-start_deamon:
-	for (i = 10; i; i--) {
+
+retry_start:
+	for (i = start_deamon ? 2 : 10; i; i--) {
 		pbt_client->discover_client
 			= discover_client_init(&pbt_client_ops, pbt_client);
-		if (pbt_client->discover_client)
+		if (pbt_client->discover_client || !i)
 			break;
 		pb_log("%s: waiting for server %d\n", __func__, i);
 		sleep(1);
@@ -308,7 +308,7 @@ start_deamon:
 		result = pb_start_daemon();
 
 		if (!result)
-			goto start_deamon;
+			goto retry_start;
 
 		pb_log("%s: discover_client_init failed.\n", __func__);
 		fprintf(stderr, "%s: error: discover_client_init failed.\n",
@@ -330,7 +330,7 @@ start_deamon:
 	waiter_register(discover_client_get_fd(pbt_client->discover_client),
 		WAIT_IN, (waiter_cb)discover_client_process,
 		pbt_client->discover_client);
-}
+
 	return pbt_client;
 
 fail_client_init:

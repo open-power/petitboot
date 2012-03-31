@@ -556,10 +556,10 @@ struct cui *cui_init(void* platform_info,
 
 	/* Loop here for scripts that just started the server. */
 
-start_deamon:
-	for (i = 10; i; i--) {
+retry_start:
+	for (i = start_deamon ? 2 : 10; i; i--) {
 		client = discover_client_init(&cui_client_ops, cui);
-		if (client)
+		if (client || !i)
 			break;
 		pb_log("%s: waiting for server %d\n", __func__, i);
 		sleep(1);
@@ -573,7 +573,7 @@ start_deamon:
 		result = pb_start_daemon();
 
 		if (!result)
-			goto start_deamon;
+			goto retry_start;
 
 		pb_log("%s: discover_client_init failed.\n", __func__);
 		fprintf(stderr, "%s: error: discover_client_init failed.\n",
