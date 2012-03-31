@@ -378,8 +378,6 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx, enum pbt_twin_backend backend,
 	int waiter_fd = -1;
 
 	assert(backend && backend < 3);
-	assert(width > 100);
-	assert(height > 100);
 
 	if (!scr) {
 		pb_log("%s: alloc pbt_scr failed.\n", __func__);
@@ -394,6 +392,9 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx, enum pbt_twin_backend backend,
 
 	if (backend == pbt_twin_x11) {
 		pb_log("%s: using twin x11 backend.\n", __func__);
+		assert(width > 100);
+		assert(height > 100);
+
 #if !defined(HAVE_LIBTWIN_TWIN_X11_H)
 		assert(0);
 #else
