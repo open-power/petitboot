@@ -122,7 +122,7 @@ fail:
 static char *pb_load_sftp(void *ctx, struct pb_url __attribute__((unused)) *url)
 {
 	int result;
-	const char *argv[5];
+	const char *argv[4];
 	const char **p;
 	char *local;
 
@@ -132,11 +132,10 @@ static char *pb_load_sftp(void *ctx, struct pb_url __attribute__((unused)) *url)
 		return NULL;
 
 	p = argv;
-	*p++ = pb_system_apps.sftp;	/* 1 */
-	*p++ = url->host;		/* 2 */
-	*p++ = url->path;		/* 3 */
-	*p++ = local;			/* 4 */
-	*p++ = NULL;			/* 5 */
+	*p++ = pb_system_apps.sftp;					/* 1 */
+	*p++ = talloc_asprintf(local, "%s:%s", url->host, url->path);	/* 2 */
+	*p++ = local;							/* 3 */
+	*p++ = NULL;							/* 4 */
 
 	result = pb_run_cmd(argv, 1, 0);
 
