@@ -59,8 +59,8 @@ static void print_usage(void)
 "\n"
 "Examples:\n"
 "\n"
-"       echo -ne 'add@/net/eth0\\0name=netboot\\0image=tftp://192.168.1.10/vmlinux\\0args=root=/dev/nfs nfsroot=192.168.1.10:/target\\0' | pb-event\n"
-"       echo -ne 'remove@/net/eth0\\0' | pb-event\n"
+"       printf 'add@/net/eth0\\0name=netboot\\0image=tftp://192.168.1.10/vmlinux\\0args=root=/dev/nfs nfsroot=192.168.1.10:/target\\0' | pb-event\n"
+"       printf 'remove@/net/eth0\\0' | pb-event\n"
 "\n");
 }
 
