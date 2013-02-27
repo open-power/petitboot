@@ -51,4 +51,7 @@ char *encode_label(void *alloc_ctx, const char *label);
  */
 const char *mount_base(void);
 
+/* Load a (potentially remote) file, and return a guaranteed-local name */
+char *load_file(void *ctx, const char *remote, unsigned int *tempfile);
+
 #endif /* PATHS_H */

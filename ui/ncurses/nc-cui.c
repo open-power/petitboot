@@ -135,14 +135,13 @@ static int cui_boot(struct pmenu_item *item)
 	struct cui_opt_data *cod = cod_from_item(item);
 
 	assert(cui->current == &cui->main->scr);
-	assert(cui->on_boot);
 
 	pb_log("%s: %s\n", __func__, cod->name);
 	nc_scr_status_printf(cui->current, "Booting %s...", cod->name);
 
 	def_prog_mode();
 
-	result = cui->on_boot(cui, cod);
+	result = discover_client_boot(cui->client, cod->dev, cod->opt, cod->bd);
 
 	reset_prog_mode();
 	redrawwin(cui->current->main_ncw);
@@ -151,11 +150,10 @@ static int cui_boot(struct pmenu_item *item)
 		clear();
 		mvaddstr(1, 0, "system is going down now...");
 		refresh();
-		sleep(cui->dry_run ? 1 : 60);
+	} else {
+		nc_scr_status_printf(cui->current,
+				"Failed: boot %s", cod->bd->image);
 	}
-
-	pb_log("%s: failed: %s\n", __func__, cod->bd->image);
-	nc_scr_status_printf(cui->current, "Failed: kexec %s", cod->bd->image);
 
 	return 0;
 }
@@ -522,7 +520,6 @@ static struct discover_client_ops cui_client_ops = {
  */
 
 struct cui *cui_init(void* platform_info,
-	int (*on_boot)(struct cui *, struct cui_opt_data *),
 	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run)
 {
 	struct cui *cui;
@@ -538,7 +535,6 @@ struct cui *cui_init(void* platform_info,
 
 	cui->c_sig = pb_cui_sig;
 	cui->platform_info = platform_info;
-	cui->on_boot = on_boot;
 	cui->timer.handle_timeout = cui_handle_timeout;
 	cui->dry_run = dry_run;
 	cui->waitset = waitset_create(cui);

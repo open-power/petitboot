@@ -28,7 +28,6 @@
 
 #include <signal.h>
 
-int pb_boot(const struct pb_boot_data *bd, int dry_run);
 int pb_start_daemon(void);
 
 unsigned int pb_elf_hash(const char *str);

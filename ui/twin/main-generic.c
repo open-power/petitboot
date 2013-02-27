@@ -199,19 +199,6 @@ fail_menu:
 	return NULL;
 }
 
-static int boot_cb(struct pbt_client *client, struct pb_opt_data *opt_data)
-{
-	int result;
-
-	assert(opt_data);
-
-	pb_log("%s: %s\n", __func__, opt_data->name);
-
-	result = pb_boot(opt_data->bd, client->dry_run);
-
-	return result;
-}
-
 static int run(struct pbt_client *client)
 {
 	while (1) {
@@ -330,7 +317,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	client = pbt_client_init(opts.backend, 1024, 640, boot_cb,
+	client = pbt_client_init(opts.backend, 1024, 640,
 		opts.start_daemon, opts.dry_run);
 
 	if (!client) {

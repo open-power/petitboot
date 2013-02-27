@@ -28,8 +28,6 @@ libpbui_la_SOURCES = \
 	discover-client.h \
 	joystick.c \
 	joystick.h \
-	loader.c \
-	loader.h \
 	timer.c \
 	timer.h \
 	ui-system.c \

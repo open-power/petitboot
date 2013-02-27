@@ -131,31 +131,6 @@ struct pb_cui {
 	struct cui *cui;
 };
 
-static struct pb_cui *pb_from_cui(struct cui *cui)
-{
-	struct pb_cui *pb;
-
-	assert(cui->c_sig == pb_cui_sig);
-	pb = cui->platform_info;
-	assert(pb->cui->c_sig == pb_cui_sig);
-	return pb;
-}
-
-/**
- * pb_boot_cb - The kexec callback.
- */
-
-static int pb_boot_cb(struct cui *cui, struct cui_opt_data *cod)
-{
-	struct pb_cui *pb = pb_from_cui(cui);
-
-	pb_log("%s: %s\n", __func__, cod->name);
-
-	assert(pb->cui->current == &pb->cui->main->scr);
-
-	return pb_boot(cod->bd, pb->cui->dry_run);
-}
-
 /**
  * pb_mm_init - Setup the main menu instance.
  */
@@ -285,8 +260,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	pb.cui = cui_init(&pb, pb_boot_cb, NULL, opts.start_daemon,
-		opts.dry_run);
+	pb.cui = cui_init(&pb, NULL, opts.start_daemon, opts.dry_run);
 
 	if (!pb.cui)
 		return EXIT_FAILURE;
