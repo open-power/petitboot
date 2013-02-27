@@ -153,7 +153,7 @@ static int pb_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 
 	assert(pb->cui->current == &pb->cui->main->scr);
 
-	return pb_run_kexec(cod->kd, pb->cui->dry_run);
+	return pb_run_kexec(cod->bd, pb->cui->dry_run);
 }
 
 /**

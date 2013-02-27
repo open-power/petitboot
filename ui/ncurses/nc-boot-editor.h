@@ -59,13 +59,13 @@ struct boot_editor {
 	enum boot_editor_attr_cursor attr_cursor;
 	void (*on_exit)(struct boot_editor *boot_editor,
 			enum boot_editor_result result,
-			struct pb_kexec_data *kd);
+			struct pb_boot_data *bd);
 };
 
 struct boot_editor *boot_editor_init(void *ui_ctx,
-		const struct pb_kexec_data *kd,
+		const struct pb_boot_data *bd,
 		void (*on_exit)(struct boot_editor *,
 				enum boot_editor_result,
-				struct pb_kexec_data *));
+				struct pb_boot_data *));
 
 #endif

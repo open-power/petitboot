@@ -145,7 +145,7 @@ static int kexec_reboot(int dry_run)
  * pb_run_kexec - Run kexec with the supplied boot options.
  */
 
-int pb_run_kexec(const struct pb_kexec_data *kd, int dry_run)
+int pb_run_kexec(const struct pb_boot_data *bd, int dry_run)
 {
 	int result;
 	char *l_image = NULL;
@@ -153,20 +153,20 @@ int pb_run_kexec(const struct pb_kexec_data *kd, int dry_run)
 	unsigned int clean_image = 0;
 	unsigned int clean_initrd = 0;
 
-	pb_log("%s: image:   '%s'\n", __func__, kd->image);
-	pb_log("%s: initrd:  '%s'\n", __func__, kd->initrd);
-	pb_log("%s: args:    '%s'\n", __func__, kd->args);
+	pb_log("%s: image:   '%s'\n", __func__, bd->image);
+	pb_log("%s: initrd:  '%s'\n", __func__, bd->initrd);
+	pb_log("%s: args:    '%s'\n", __func__, bd->args);
 
 	result = -1;
 
-	if (kd->image) {
-		l_image = pb_load_file(NULL, kd->image, &clean_image);
+	if (bd->image) {
+		l_image = pb_load_file(NULL, bd->image, &clean_image);
 		if (!l_image)
 			goto no_load;
 	}
 
-	if (kd->initrd) {
-		l_initrd = pb_load_file(NULL, kd->initrd, &clean_initrd);
+	if (bd->initrd) {
+		l_initrd = pb_load_file(NULL, bd->initrd, &clean_initrd);
 		if (!l_initrd)
 			goto no_load;
 	}
@@ -174,7 +174,7 @@ int pb_run_kexec(const struct pb_kexec_data *kd, int dry_run)
 	if (!l_image && !l_initrd)
 		goto no_load;
 
-	result = kexec_load(l_image, l_initrd, kd->args, dry_run);
+	result = kexec_load(l_image, l_initrd, bd->args, dry_run);
 
 no_load:
 	if (clean_image)

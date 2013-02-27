@@ -167,27 +167,27 @@ static char *boot_editor_chomp(char *s)
 	return start;
 }
 
-static struct pb_kexec_data *boot_editor_prepare_data(
+static struct pb_boot_data *boot_editor_prepare_data(
 		struct boot_editor *boot_editor)
 {
-	struct pb_kexec_data *kd;
+	struct pb_boot_data *bd;
 	char *s;
 
-	kd = talloc(boot_editor, struct pb_kexec_data);
+	bd = talloc(boot_editor, struct pb_boot_data);
 
-	if (!kd)
+	if (!bd)
 		return NULL;
 
 	s = boot_editor_chomp(field_buffer(boot_editor->fields[0], 0));
-	kd->image = *s ? talloc_strdup(kd, s) : NULL;
+	bd->image = *s ? talloc_strdup(bd, s) : NULL;
 
 	s = boot_editor_chomp(field_buffer(boot_editor->fields[1], 0));
-	kd->initrd = *s ? talloc_strdup(kd, s) : NULL;
+	bd->initrd = *s ? talloc_strdup(bd, s) : NULL;
 
 	s = boot_editor_chomp(field_buffer(boot_editor->fields[2], 0));
-	kd->args = *s ? talloc_strdup(kd, s) : NULL;
+	bd->args = *s ? talloc_strdup(bd, s) : NULL;
 
-	return kd;
+	return bd;
 }
 
 /**
@@ -199,7 +199,7 @@ static struct pb_kexec_data *boot_editor_prepare_data(
 static void boot_editor_process_key(struct nc_scr *scr)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
-	struct pb_kexec_data *kd;
+	struct pb_boot_data *bd;
 
 	while (1) {
 		int c = getch();
@@ -223,9 +223,9 @@ static void boot_editor_process_key(struct nc_scr *scr)
 		case '\n':
 		case '\r':
 			form_driver(boot_editor->ncf, REQ_VALIDATION);
-			kd = boot_editor_prepare_data(boot_editor);
+			bd = boot_editor_prepare_data(boot_editor);
 			boot_editor->on_exit(boot_editor,
-					boot_editor_update, kd);
+					boot_editor_update, bd);
 			nc_flush_keys();
 			return;
 
@@ -315,16 +315,16 @@ static FIELD *boot_editor_setup_label(unsigned int y, unsigned int x, char *str)
 }
 
 struct boot_editor *boot_editor_init(void *ui_ctx,
-		const struct pb_kexec_data *kd,
+		const struct pb_boot_data *bd,
 		void (*on_exit)(struct boot_editor *,
 				enum boot_editor_result,
-				struct pb_kexec_data *))
+				struct pb_boot_data *))
 {
 	struct boot_editor *boot_editor;
 
-	pb_log("%s: image:  '%s'\n", __func__, kd->image);
-	pb_log("%s: initrd: '%s'\n", __func__, kd->initrd);
-	pb_log("%s: args:   '%s'\n", __func__, kd->args);
+	pb_log("%s: image:  '%s'\n", __func__, bd->image);
+	pb_log("%s: initrd: '%s'\n", __func__, bd->initrd);
+	pb_log("%s: args:   '%s'\n", __func__, bd->args);
 
 	assert(on_exit);
 
@@ -348,9 +348,9 @@ struct boot_editor *boot_editor_init(void *ui_ctx,
 
 	boot_editor->fields = talloc_array(boot_editor, FIELD *, 7);
 
-	boot_editor->fields[0] = boot_editor_setup_field(0, 9, kd->image);
-	boot_editor->fields[1] = boot_editor_setup_field(1, 9, kd->initrd);
-	boot_editor->fields[2] = boot_editor_setup_field(2, 9, kd->args);
+	boot_editor->fields[0] = boot_editor_setup_field(0, 9, bd->image);
+	boot_editor->fields[1] = boot_editor_setup_field(1, 9, bd->initrd);
+	boot_editor->fields[2] = boot_editor_setup_field(2, 9, bd->args);
 	boot_editor->fields[3] = boot_editor_setup_label(0, 1, "image:");
 	boot_editor->fields[4] = boot_editor_setup_label(1, 1, "initrd:");
 	boot_editor->fields[5] = boot_editor_setup_label(2, 1, "args:");

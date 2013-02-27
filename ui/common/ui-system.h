@@ -27,13 +27,13 @@
 
 #include <signal.h>
 
-struct pb_kexec_data {
+struct pb_boot_data {
 	char *image;
 	char *initrd;
 	char *args;
 };
 
-int pb_run_kexec(const struct pb_kexec_data *kd, int dry_run);
+int pb_run_kexec(const struct pb_boot_data *bd, int dry_run);
 int pb_start_daemon(void);
 
 unsigned int pb_elf_hash(const char *str);
@@ -47,7 +47,7 @@ static inline uint32_t pb_opt_hash(const struct device *dev,
 
 struct pb_opt_data {
 	const char *name;
-	struct pb_kexec_data *kd;
+	struct pb_boot_data *bd;
 
 	/* optional data */
 	const struct device *dev;

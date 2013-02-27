@@ -294,24 +294,24 @@ static int ps3_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 
 	/* Add a default kernel video mode. */
 
-	if (!cod->kd->args) {
+	if (!cod->bd->args) {
 		altered_args = 1;
 		orig_args = NULL;
-		cod->kd->args = talloc_asprintf(NULL, "video=ps3fb:mode:%u",
+		cod->bd->args = talloc_asprintf(NULL, "video=ps3fb:mode:%u",
 			(unsigned int)ps3->values.video_mode);
-	} else if (!strstr(cod->kd->args, "video=")) {
+	} else if (!strstr(cod->bd->args, "video=")) {
 		altered_args = 1;
-		orig_args = cod->kd->args;
-		cod->kd->args = talloc_asprintf(NULL, "%s video=ps3fb:mode:%u",
+		orig_args = cod->bd->args;
+		cod->bd->args = talloc_asprintf(NULL, "%s video=ps3fb:mode:%u",
 			orig_args, (unsigned int)ps3->values.video_mode);
 	} else
 		altered_args = 0;
 
-	result = pb_run_kexec(cod->kd, ps3->cui->dry_run);
+	result = pb_run_kexec(cod->bd, ps3->cui->dry_run);
 
 	if (altered_args) {
-		talloc_free(cod->kd->args);
-		cod->kd->args = orig_args;
+		talloc_free(cod->bd->args);
+		cod->bd->args = orig_args;
 	}
 
 	return result;

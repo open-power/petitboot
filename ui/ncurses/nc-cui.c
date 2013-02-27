@@ -70,19 +70,19 @@ static char *cui_make_item_name(struct pmenu_item *i, struct cui_opt_data *cod)
 	char *name;
 
 	assert(cod->name);
-	assert(cod->kd);
+	assert(cod->bd);
 
 	name = talloc_asprintf(i, "%s:", cod->name);
 
-	if (cod->kd->image)
-		name = talloc_asprintf_append(name, " %s", cod->kd->image);
+	if (cod->bd->image)
+		name = talloc_asprintf_append(name, " %s", cod->bd->image);
 
-	if (cod->kd->initrd)
+	if (cod->bd->initrd)
 		name = talloc_asprintf_append(name, " initrd=%s",
-			cod->kd->initrd);
+			cod->bd->initrd);
 
-	if (cod->kd->args)
-		name = talloc_asprintf_append(name, " %s", cod->kd->args);
+	if (cod->bd->args)
+		name = talloc_asprintf_append(name, " %s", cod->bd->args);
 
 	DBGS("@%s@\n", name);
 	return name;
@@ -154,8 +154,8 @@ static int cui_run_kexec(struct pmenu_item *item)
 		sleep(cui->dry_run ? 1 : 60);
 	}
 
-	pb_log("%s: failed: %s\n", __func__, cod->kd->image);
-	nc_scr_status_printf(cui->current, "Failed: kexec %s", cod->kd->image);
+	pb_log("%s: failed: %s\n", __func__, cod->bd->image);
+	nc_scr_status_printf(cui->current, "Failed: kexec %s", cod->bd->image);
 
 	return 0;
 }
@@ -165,7 +165,7 @@ static int cui_run_kexec(struct pmenu_item *item)
  */
 
 static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_editor_result boot_editor_result,
-	struct pb_kexec_data *kd)
+	struct pb_boot_data *bd)
 {
 	struct cui *cui = cui_from_arg(boot_editor->scr.ui_ctx);
 
@@ -174,11 +174,11 @@ static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_e
 		struct cui_opt_data *cod = cod_from_item(i);
 		char *name;
 
-		assert(kd);
+		assert(bd);
 
-		talloc_steal(i, kd);
-		talloc_free(cod->kd);
-		cod->kd = kd;
+		talloc_steal(i, bd);
+		talloc_free(cod->bd);
+		cod->bd = bd;
 
 		name = cui_make_item_name(i, cod);
 		pmenu_item_replace(i, name);
@@ -187,9 +187,9 @@ static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_e
 		set_current_item(cui->main->ncm, i->nci);
 
 		pb_log("%s: updating opt '%s'\n", __func__, cod->name);
-		pb_log(" image  '%s'\n", cod->kd->image);
-		pb_log(" initrd '%s'\n", cod->kd->initrd);
-		pb_log(" args   '%s'\n", cod->kd->args);
+		pb_log(" image  '%s'\n", cod->bd->image);
+		pb_log(" initrd '%s'\n", cod->bd->initrd);
+		pb_log(" args   '%s'\n", cod->bd->args);
 	}
 
 	cui_set_current(cui, &cui->main->scr);
@@ -203,7 +203,7 @@ int cui_boot_editor_run(struct pmenu_item *item)
 	struct cui_opt_data *cod = cod_from_item(item);
 	struct boot_editor *boot_editor;
 
-	boot_editor = boot_editor_init(cui, cod->kd, cui_boot_editor_on_exit);
+	boot_editor = boot_editor_init(cui, cod->bd, cui_boot_editor_on_exit);
 	cui_set_current(cui, &boot_editor->scr);
 
 	return 0;
@@ -345,7 +345,7 @@ void cui_on_open(struct pmenu *menu)
 	i->data = cod = talloc_zero(i, struct cui_opt_data);
 
 	cod->name = talloc_asprintf(i, "User item %u:", insert_pt);
-	cod->kd = talloc_zero(i, struct pb_kexec_data);
+	cod->bd = talloc_zero(i, struct pb_boot_data);
 
 	pmenu_item_setup(menu, i, insert_pt, talloc_strdup(i, cod->name));
 
@@ -414,11 +414,11 @@ static int cui_device_add(struct device *dev, void *arg)
 		cod->opt = opt;
 		cod->opt_hash = pb_opt_hash(dev, opt);
 		cod->name = opt->name;
-		cod->kd = talloc(i, struct pb_kexec_data);
+		cod->bd = talloc(i, struct pb_boot_data);
 
-		cod->kd->image = talloc_strdup(cod->kd, opt->boot_image_file);
-		cod->kd->initrd = talloc_strdup(cod->kd, opt->initrd_file);
-		cod->kd->args = talloc_strdup(cod->kd, opt->boot_args);
+		cod->bd->image = talloc_strdup(cod->bd, opt->boot_image_file);
+		cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
+		cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
 
 		name = cui_make_item_name(i, cod);
 		pmenu_item_setup(cui->main, i, insert_pt, name);
@@ -426,9 +426,9 @@ static int cui_device_add(struct device *dev, void *arg)
 		insert_pt++;
 
 		pb_log("%s: adding opt '%s'\n", __func__, cod->name);
-		pb_log("   image  '%s'\n", cod->kd->image);
-		pb_log("   initrd '%s'\n", cod->kd->initrd);
-		pb_log("   args   '%s'\n", cod->kd->args);
+		pb_log("   image  '%s'\n", cod->bd->image);
+		pb_log("   initrd '%s'\n", cod->bd->initrd);
+		pb_log("   args   '%s'\n", cod->bd->args);
 
 		/* If this is the default_item select it and start timer. */
 

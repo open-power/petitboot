@@ -28,7 +28,7 @@
 
 struct cui_opt_data {
 	const char *name;
-	struct pb_kexec_data *kd;
+	struct pb_boot_data *bd;
 
 	/* optional data */
 	const struct device *dev;

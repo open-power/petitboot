@@ -69,10 +69,10 @@ static int pbt_client_run_kexec(struct pbt_item *item)
 		sleep(item->pbt_client->dry_run ? 1 : 60);
 	}
 
-	pb_log("%s: failed: %s\n", __func__, opt_data->kd->image);
+	pb_log("%s: failed: %s\n", __func__, opt_data->bd->image);
 
 	pbt_frame_status_printf(&item->pbt_client->frame, "Failed: kexec %s",
-		opt_data->kd->image);
+		opt_data->bd->image);
 
 	return 0;
 }
@@ -145,12 +145,12 @@ static int pbt_device_add(struct device *dev, struct pbt_client *client)
 
 		i->data = opt_data = talloc(i, struct pb_opt_data);
 		opt_data->name = opt->name;
-		opt_data->kd = talloc(i, struct pb_kexec_data);
-		opt_data->kd->image = talloc_strdup(opt_data->kd,
+		opt_data->bd = talloc(i, struct pb_boot_data);
+		opt_data->bd->image = talloc_strdup(opt_data->bd,
 			opt->boot_image_file);
-		opt_data->kd->initrd = talloc_strdup(opt_data->kd,
+		opt_data->bd->initrd = talloc_strdup(opt_data->bd,
 			opt->initrd_file);
-		opt_data->kd->args = talloc_strdup(opt_data->kd,
+		opt_data->bd->args = talloc_strdup(opt_data->bd,
 			opt->boot_args);
 		opt_data->dev = dev;
 		opt_data->opt = opt;

@@ -207,7 +207,7 @@ static int kexec_cb(struct pbt_client *client, struct pb_opt_data *opt_data)
 
 	pb_log("%s: %s\n", __func__, opt_data->name);
 
-	result = pb_run_kexec(opt_data->kd, client->dry_run);
+	result = pb_run_kexec(opt_data->bd, client->dry_run);
 
 	return result;
 }
