@@ -172,3 +172,42 @@ struct device *discover_client_get_device(struct discover_client *client,
 
 	return client->devices[index];
 }
+
+static void create_boot_command(struct boot_command *command,
+		const struct device *device __attribute__((unused)),
+		const struct boot_option *boot_option,
+		const struct pb_boot_data *data)
+{
+
+	command->option_id = boot_option->id;
+	command->boot_image_file = data->image;
+	command->initrd_file = data->initrd;
+	command->boot_args = data->args;
+}
+
+int discover_client_boot(struct discover_client *client,
+		const struct device *device,
+		const struct boot_option *boot_option,
+		const struct pb_boot_data *data)
+{
+	struct pb_protocol_message *message;
+	struct boot_command boot_command;
+	int len, rc;
+
+	create_boot_command(&boot_command, device, boot_option, data);
+
+	len = pb_protocol_boot_len(&boot_command);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_BOOT, len);
+
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_boot_command(&boot_command,
+			message->payload, len);
+
+	rc = pb_protocol_write_message(client->fd, message);
+
+	return rc;
+}

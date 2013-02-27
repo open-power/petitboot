@@ -5,6 +5,12 @@
 
 struct discover_client;
 
+struct pb_boot_data {
+	char *image;
+	char *initrd;
+	char *args;
+};
+
 /**
  * struct discover_client_ops - Application supplied client info.
  * @device_add: PB_PROTOCOL_ACTION_ADD event callback.
@@ -51,4 +57,13 @@ int discover_client_device_count(struct discover_client *client);
  */
 struct device *discover_client_get_device(struct discover_client *client,
 		int index);
+
+/* Tell the discover server to boot an image
+ * @param client A pointer to the discover client
+ * @param boot_command The command to boot
+ */
+int discover_client_boot(struct discover_client *client,
+		const struct device *device,
+		const struct boot_option *boot_option,
+		const struct pb_boot_data *data);
 #endif

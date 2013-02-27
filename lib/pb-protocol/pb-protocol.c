@@ -183,6 +183,14 @@ int pb_protocol_device_len(const struct device *dev)
 	return len;
 }
 
+int pb_protocol_boot_len(const struct boot_command *boot)
+{
+	return  4 + optional_strlen(boot->option_id) +
+		4 + optional_strlen(boot->boot_image_file) +
+		4 + optional_strlen(boot->initrd_file) +
+		4 + optional_strlen(boot->boot_args);
+}
+
 int pb_protocol_serialise_device(const struct device *dev, char *buf, int buf_len)
 {
 	struct boot_option *opt;
@@ -216,6 +224,22 @@ int pb_protocol_serialise_device(const struct device *dev, char *buf, int buf_le
 		pos += pb_protocol_serialise_string(pos, opt->initrd_file);
 		pos += pb_protocol_serialise_string(pos, opt->boot_args);
 	}
+
+	assert(pos <= buf + buf_len);
+	(void)buf_len;
+
+	return 0;
+}
+
+int pb_protocol_serialise_boot_command(const struct boot_command *boot,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
+
+	pos += pb_protocol_serialise_string(pos, boot->option_id);
+	pos += pb_protocol_serialise_string(pos, boot->boot_image_file);
+	pos += pb_protocol_serialise_string(pos, boot->initrd_file);
+	pos += pb_protocol_serialise_string(pos, boot->boot_args);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;

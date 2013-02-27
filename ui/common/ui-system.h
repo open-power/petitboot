@@ -24,14 +24,9 @@
 #include "system/system.h"
 #include "types/types.h"
 #include "ui/common/timer.h"
+#include "ui/common/discover-client.h"
 
 #include <signal.h>
-
-struct pb_boot_data {
-	char *image;
-	char *initrd;
-	char *args;
-};
 
 int pb_boot(const struct pb_boot_data *bd, int dry_run);
 int pb_start_daemon(void);
