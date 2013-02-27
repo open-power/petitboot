@@ -526,7 +526,6 @@ struct cui *cui_init(void* platform_info,
 	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run)
 {
 	struct cui *cui;
-	struct discover_client *client;
 	unsigned int i;
 
 	cui = talloc_zero(NULL, struct cui);
@@ -548,15 +547,15 @@ struct cui *cui_init(void* platform_info,
 
 retry_start:
 	for (i = start_deamon ? 2 : 10; i; i--) {
-		client = discover_client_init(cui->waitset,
+		cui->client = discover_client_init(cui->waitset,
 				&cui_client_ops, cui);
-		if (client || !i)
+		if (cui->client || !i)
 			break;
 		pb_log("%s: waiting for server %d\n", __func__, i);
 		sleep(1);
 	}
 
-	if (!client && start_deamon) {
+	if (!cui->client && start_deamon) {
 		int result;
 
 		start_deamon = 0;
@@ -574,7 +573,7 @@ retry_start:
 		goto fail_client_init;
 	}
 
-	if (!client) {
+	if (!cui->client) {
 		pb_log("%s: discover_client_init failed.\n", __func__);
 		fprintf(stderr, "%s: error: discover_client_init failed.\n",
 			__func__);
