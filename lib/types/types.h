@@ -29,4 +29,11 @@ struct boot_option {
 	void		*ui_info;
 };
 
+struct boot_command {
+	char *option_id;
+	char *boot_image_file;
+	char *initrd_file;
+	char *boot_args;
+};
+
 #endif /* _TYPES_H */

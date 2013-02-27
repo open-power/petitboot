@@ -14,6 +14,7 @@
 enum pb_protocol_action {
 	PB_PROTOCOL_ACTION_ADD		= 0x1,
 	PB_PROTOCOL_ACTION_REMOVE	= 0x2,
+	PB_PROTOCOL_ACTION_BOOT		= 0x3,
 };
 
 struct pb_protocol_message {

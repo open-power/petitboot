@@ -38,6 +38,14 @@
  * action = 0x2: device remove message
  *  payload:
  *   4-byte len, id
+ *
+ * action = 0x3: boot
+ *  payload:
+ *   4-byte len, boot option id
+ *   4-byte len, boot_image_file
+ *   4-byte len, initrd_file
+ *   4-byte len, boot_args
+ *
  */
 
 void pb_protocol_dump_device(const struct device *dev, const char *text,
