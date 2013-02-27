@@ -45,7 +45,7 @@ struct pbt_client {
 	int dry_run;
 	struct pb_signal_data signal_data;
 	void *client_data;
-	int (*kexec_cb)(struct pbt_client *pbt_client, struct pb_opt_data *pod);
+	int (*boot_cb)(struct pbt_client *pbt_client, struct pb_opt_data *pod);
 
 	struct pbt_frame frame;
 	struct discover_client *discover_client;
@@ -54,7 +54,7 @@ struct pbt_client {
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 	unsigned int width, unsigned int height,
-	int (*kexec_cb)(struct pbt_client *, struct pb_opt_data *),
+	int (*boot_cb)(struct pbt_client *, struct pb_opt_data *),
 	int start_deamon, int dry_run);
 void pbt_client_destroy(struct pbt_client *client);
 void pbt_client_resize(struct pbt_client *client);

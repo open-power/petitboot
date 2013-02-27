@@ -59,11 +59,11 @@ struct cui {
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
-	int (*on_kexec)(struct cui *cui, struct cui_opt_data *cod);
+	int (*on_boot)(struct cui *cui, struct cui_opt_data *cod);
 };
 
 struct cui *cui_init(void* platform_info,
-	int (*on_kexec)(struct cui *, struct cui_opt_data *),
+	int (*on_boot)(struct cui *, struct cui_opt_data *),
 	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run);
 struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr);
 int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item);

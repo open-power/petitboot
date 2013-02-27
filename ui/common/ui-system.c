@@ -142,10 +142,10 @@ static int kexec_reboot(int dry_run)
 }
 
 /**
- * pb_run_kexec - Run kexec with the supplied boot options.
+ * pb_boot - Run kexec with the supplied boot options.
  */
 
-int pb_run_kexec(const struct pb_boot_data *bd, int dry_run)
+int pb_boot(const struct pb_boot_data *bd, int dry_run)
 {
 	int result;
 	char *l_image = NULL;

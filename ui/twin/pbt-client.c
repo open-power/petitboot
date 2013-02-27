@@ -52,7 +52,7 @@ void pbt_frame_status_printf(struct pbt_frame *frame, const char *format, ...)
 	va_end(ap);
 }
 
-static int pbt_client_run_kexec(struct pbt_item *item)
+static int pbt_client_boot(struct pbt_item *item)
 {
 	int result;
 	struct pb_opt_data *opt_data = pbt_opt_data_from_item(item);
@@ -62,8 +62,8 @@ static int pbt_client_run_kexec(struct pbt_item *item)
 	pbt_frame_status_printf(&item->pbt_client->frame, "Booting %s...",
 		pbt_item_name(item));
 
-	assert(item->pbt_client->kexec_cb);
-	result = item->pbt_client->kexec_cb(item->pbt_client, opt_data);
+	assert(item->pbt_client->boot_cb);
+	result = item->pbt_client->boot_cb(item->pbt_client, opt_data);
 
 	if (!result) {
 		sleep(item->pbt_client->dry_run ? 1 : 60);
@@ -140,7 +140,7 @@ static int pbt_device_add(struct device *dev, struct pbt_client *client)
 
 		i->pb_opt = opt;
 		i->pbt_client = client;
-		i->on_execute = pbt_client_run_kexec;
+		i->on_execute = pbt_client_boot;
 		i->on_edit = pbt_client_on_edit;
 
 		i->data = opt_data = talloc(i, struct pb_opt_data);
@@ -265,7 +265,7 @@ static void pbt_client_destructor(struct pbt_client *client)
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 	unsigned int width, unsigned int height,
-	int (*kexec_cb)(struct pbt_client *, struct pb_opt_data *),
+	int (*boot_cb)(struct pbt_client *, struct pb_opt_data *),
 	int start_deamon, int dry_run)
 {
 	struct pbt_client *pbt_client;
@@ -284,7 +284,7 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 	pbt_client->waitset = waitset_create(pbt_client);
 
 	pbt_client->sig = "pbt_client";
-	pbt_client->kexec_cb = kexec_cb;
+	pbt_client->boot_cb = boot_cb;
 	pbt_client->dry_run = dry_run;
 	pbt_client->frame.scr = pbt_scr_init(pbt_client, pbt_client->waitset,
 			backend, width, height, NULL, NULL);

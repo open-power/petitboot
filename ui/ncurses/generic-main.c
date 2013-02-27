@@ -142,10 +142,10 @@ static struct pb_cui *pb_from_cui(struct cui *cui)
 }
 
 /**
- * pb_kexec_cb - The kexec callback.
+ * pb_boot_cb - The kexec callback.
  */
 
-static int pb_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
+static int pb_boot_cb(struct cui *cui, struct cui_opt_data *cod)
 {
 	struct pb_cui *pb = pb_from_cui(cui);
 
@@ -153,7 +153,7 @@ static int pb_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 
 	assert(pb->cui->current == &pb->cui->main->scr);
 
-	return pb_run_kexec(cod->bd, pb->cui->dry_run);
+	return pb_boot(cod->bd, pb->cui->dry_run);
 }
 
 /**
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	pb.cui = cui_init(&pb, pb_kexec_cb, NULL, opts.start_daemon,
+	pb.cui = cui_init(&pb, pb_boot_cb, NULL, opts.start_daemon,
 		opts.dry_run);
 
 	if (!pb.cui)

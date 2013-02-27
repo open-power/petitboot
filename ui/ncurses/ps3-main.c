@@ -267,13 +267,13 @@ static int ps3_svm_cb(struct pmenu_item *item)
 }
 
 /**
- * ps3_kexec_cb - The kexec callback.
+ * ps3_boot_cb - The kexec callback.
  *
- * Writes config data to PS3 flash then calls pb_run_kexec().
+ * Writes config data to PS3 flash then calls pb_boot().
  * Adds a video mode arg to the kernel command line if needed.
  */
 
-static int ps3_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
+static int ps3_boot_cb(struct cui *cui, struct cui_opt_data *cod)
 {
 	struct ps3_cui *ps3 = ps3_from_cui(cui);
 	int result;
@@ -307,7 +307,7 @@ static int ps3_kexec_cb(struct cui *cui, struct cui_opt_data *cod)
 	} else
 		altered_args = 0;
 
-	result = pb_run_kexec(cod->bd, ps3->cui->dry_run);
+	result = pb_boot(cod->bd, ps3->cui->dry_run);
 
 	if (altered_args) {
 		talloc_free(cod->bd->args);
@@ -658,7 +658,7 @@ int main(int argc, char *argv[])
 	if (!result && (ps3.values.video_mode != (uint16_t)mode))
 		ps3_set_video_mode(ps3.values.video_mode);
 
-	ps3.cui = cui_init(&ps3, ps3_kexec_cb, ps3_sixaxis_map);
+	ps3.cui = cui_init(&ps3, ps3_boot_cb, ps3_sixaxis_map);
 
 	if (!ps3.cui)
 		return EXIT_FAILURE;

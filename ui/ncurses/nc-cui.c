@@ -125,24 +125,24 @@ int cui_run_cmd(struct pmenu_item *item)
 }
 
 /**
- * cui_run_kexec - A generic cb to run kexec.
+ * cui_boot - A generic cb to run kexec.
  */
 
-static int cui_run_kexec(struct pmenu_item *item)
+static int cui_boot(struct pmenu_item *item)
 {
 	int result;
 	struct cui *cui = cui_from_item(item);
 	struct cui_opt_data *cod = cod_from_item(item);
 
 	assert(cui->current == &cui->main->scr);
-	assert(cui->on_kexec);
+	assert(cui->on_boot);
 
 	pb_log("%s: %s\n", __func__, cod->name);
 	nc_scr_status_printf(cui->current, "Booting %s...", cod->name);
 
 	def_prog_mode();
 
-	result = cui->on_kexec(cui, cod);
+	result = cui->on_boot(cui, cod);
 
 	reset_prog_mode();
 	redrawwin(cui->current->main_ncw);
@@ -341,7 +341,7 @@ void cui_on_open(struct pmenu *menu)
 	i = pmenu_item_alloc(menu);
 
 	i->on_edit = cui_boot_editor_run;
-	i->on_execute = cui_run_kexec;
+	i->on_execute = cui_boot;
 	i->data = cod = talloc_zero(i, struct cui_opt_data);
 
 	cod->name = talloc_asprintf(i, "User item %u:", insert_pt);
@@ -407,7 +407,7 @@ static int cui_device_add(struct device *dev, void *arg)
 		opt->ui_info = i = pmenu_item_alloc(cui->main);
 
 		i->on_edit = cui_boot_editor_run;
-		i->on_execute = cui_run_kexec;
+		i->on_execute = cui_boot;
 		i->data = cod = talloc(i, struct cui_opt_data);
 
 		cod->dev = dev;
@@ -533,7 +533,7 @@ static struct discover_client_ops cui_client_ops = {
  */
 
 struct cui *cui_init(void* platform_info,
-	int (*on_kexec)(struct cui *, struct cui_opt_data *),
+	int (*on_boot)(struct cui *, struct cui_opt_data *),
 	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run)
 {
 	struct cui *cui;
@@ -550,7 +550,7 @@ struct cui *cui_init(void* platform_info,
 
 	cui->c_sig = pb_cui_sig;
 	cui->platform_info = platform_info;
-	cui->on_kexec = on_kexec;
+	cui->on_boot = on_boot;
 	cui->timer.handle_timeout = cui_handle_timeout;
 	cui->dry_run = dry_run;
 	cui->waitset = waitset_create(cui);
