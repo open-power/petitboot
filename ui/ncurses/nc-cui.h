@@ -24,7 +24,7 @@
 #include "ui/common/joystick.h"
 #include "ui/common/timer.h"
 #include "nc-menu.h"
-#include "nc-ked.h"
+#include "nc-boot-editor.h"
 
 struct cui_opt_data {
 	const char *name;
@@ -67,7 +67,7 @@ struct cui *cui_init(void* platform_info,
 	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run);
 struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr);
 int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item);
-int cui_ked_run(struct pmenu_item *item);
+int cui_boot_editor_run(struct pmenu_item *item);
 
 /* convenience routines */
 

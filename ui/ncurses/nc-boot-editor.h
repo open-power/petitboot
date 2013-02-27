@@ -27,41 +27,45 @@
 #include "ui/common/ui-system.h"
 #include "nc-scr.h"
 
-enum ked_attr_field {
-	ked_attr_field_normal = A_NORMAL,
-	ked_attr_field_selected = A_REVERSE,
+enum boot_editor_attr_field {
+	boot_editor_attr_field_normal = A_NORMAL,
+	boot_editor_attr_field_selected = A_REVERSE,
 };
 
-enum ked_attr_cursor {
-	ked_attr_cursor_ins = A_NORMAL,
-	ked_attr_cursor_ovl = A_NORMAL | A_UNDERLINE,
-};
-
-/**
- * enum ked_result - Result code for ked:on_exit().
- * @ked_cancel: The user canceled the operation.
- * @ked_update: The args were updated.
- */
-
-enum ked_result {
-	ked_cancel,
-	ked_update,
+enum boot_editor_attr_cursor {
+	boot_editor_attr_cursor_ins = A_NORMAL,
+	boot_editor_attr_cursor_ovl = A_NORMAL | A_UNDERLINE,
 };
 
 /**
- * struct ked - kexec args editor.
+ * enum boot_editor_result - Result code for boot_editor:on_exit().
+ * @boot_editor_cancel: The user canceled the operation.
+ * @boot_editor_update: The args were updated.
  */
 
-struct ked {
+enum boot_editor_result {
+	boot_editor_cancel,
+	boot_editor_update,
+};
+
+/**
+ * struct boot_editor - kexec args editor.
+ */
+
+struct boot_editor {
 	struct nc_scr scr;
 	FORM *ncf;
 	FIELD **fields;
-	enum ked_attr_cursor attr_cursor;
-	void (*on_exit)(struct ked *ked, enum ked_result result,
-		struct pb_kexec_data *kd);
+	enum boot_editor_attr_cursor attr_cursor;
+	void (*on_exit)(struct boot_editor *boot_editor,
+			enum boot_editor_result result,
+			struct pb_kexec_data *kd);
 };
 
-struct ked *ked_init(void *ui_ctx, const struct pb_kexec_data *kd,
-	void (*on_exit)(struct ked *, enum ked_result, struct pb_kexec_data *));
+struct boot_editor *boot_editor_init(void *ui_ctx,
+		const struct pb_kexec_data *kd,
+		void (*on_exit)(struct boot_editor *,
+				enum boot_editor_result,
+				struct pb_kexec_data *));
 
 #endif

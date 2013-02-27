@@ -33,8 +33,8 @@ noinst_LTLIBRARIES = libpbnc.la
 libpbnc_la_SOURCES = \
 	nc-cui.c \
 	nc-cui.h \
-	nc-ked.c \
-	nc-ked.h \
+	nc-boot-editor.c \
+	nc-boot-editor.h \
 	nc-menu.c \
 	nc-menu.h \
 	nc-scr.c \

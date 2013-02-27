@@ -161,15 +161,15 @@ static int cui_run_kexec(struct pmenu_item *item)
 }
 
 /**
- * cui_ked_on_exit - The ked on_exit callback.
+ * cui_boot_editor_on_exit - The boot_editor on_exit callback.
  */
 
-static void cui_ked_on_exit(struct ked *ked, enum ked_result ked_result,
+static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_editor_result boot_editor_result,
 	struct pb_kexec_data *kd)
 {
-	struct cui *cui = cui_from_arg(ked->scr.ui_ctx);
+	struct cui *cui = cui_from_arg(boot_editor->scr.ui_ctx);
 
-	if (ked_result == ked_update) {
+	if (boot_editor_result == boot_editor_update) {
 		struct pmenu_item *i = pmenu_find_selected(cui->main);
 		struct cui_opt_data *cod = cod_from_item(i);
 		char *name;
@@ -194,17 +194,17 @@ static void cui_ked_on_exit(struct ked *ked, enum ked_result ked_result,
 
 	cui_set_current(cui, &cui->main->scr);
 
-	talloc_free(ked);
+	talloc_free(boot_editor);
 }
 
-int cui_ked_run(struct pmenu_item *item)
+int cui_boot_editor_run(struct pmenu_item *item)
 {
 	struct cui *cui = cui_from_item(item);
 	struct cui_opt_data *cod = cod_from_item(item);
-	struct ked *ked;
+	struct boot_editor *boot_editor;
 
-	ked = ked_init(cui, cod->kd, cui_ked_on_exit);
-	cui_set_current(cui, &ked->scr);
+	boot_editor = boot_editor_init(cui, cod->kd, cui_boot_editor_on_exit);
+	cui_set_current(cui, &boot_editor->scr);
 
 	return 0;
 }
@@ -340,7 +340,7 @@ void cui_on_open(struct pmenu *menu)
 	insert_pt = pmenu_grow(menu, 1);
 	i = pmenu_item_alloc(menu);
 
-	i->on_edit = cui_ked_run;
+	i->on_edit = cui_boot_editor_run;
 	i->on_execute = cui_run_kexec;
 	i->data = cod = talloc_zero(i, struct cui_opt_data);
 
@@ -406,7 +406,7 @@ static int cui_device_add(struct device *dev, void *arg)
 
 		opt->ui_info = i = pmenu_item_alloc(cui->main);
 
-		i->on_edit = cui_ked_run;
+		i->on_edit = cui_boot_editor_run;
 		i->on_execute = cui_run_kexec;
 		i->data = cod = talloc(i, struct cui_opt_data);
 

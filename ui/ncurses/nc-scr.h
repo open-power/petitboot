@@ -33,11 +33,11 @@
 
 
 enum pb_nc_sig {
-	pb_cui_sig     = 111,
-	pb_pmenu_sig   = 222,
-	pb_item_sig    = 333,
-	pb_ked_sig     = 444,
-	pb_removed_sig = -555,
+	pb_cui_sig         = 111,
+	pb_pmenu_sig       = 222,
+	pb_item_sig        = 333,
+	pb_boot_editor_sig = 444,
+	pb_removed_sig     = -555,
 };
 
 void nc_start(void);
