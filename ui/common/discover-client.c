@@ -32,50 +32,6 @@ static int discover_client_destructor(void *arg)
 	return 0;
 }
 
-struct discover_client* discover_client_init(
-	const struct discover_client_ops *ops, void *cb_arg)
-{
-	struct discover_client *client;
-	struct sockaddr_un addr;
-
-	client = talloc(NULL, struct discover_client);
-	if (!client)
-		return NULL;
-
-	memcpy(&client->ops, ops, sizeof(client->ops));
-	client->ops.cb_arg = cb_arg;
-
-	client->fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (client->fd < 0) {
-		pb_log("%s: socket: %s\n", __func__, strerror(errno));
-		goto out_err;
-	}
-
-	talloc_set_destructor(client, discover_client_destructor);
-
-	client->n_devices = 0;
-	client->devices = NULL;
-
-	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, PB_SOCKET_PATH);
-
-	if (connect(client->fd, (struct sockaddr *)&addr, sizeof(addr))) {
-		pb_log("%s: connect: %s\n", __func__, strerror(errno));
-		goto out_err;
-	}
-
-	return client;
-
-out_err:
-	talloc_free(client);
-	return NULL;
-}
-
-int discover_client_get_fd(const struct discover_client *client)
-{
-	return client->fd;
-}
-
 void discover_client_destroy(struct discover_client *client)
 {
 	talloc_free(client);
@@ -121,8 +77,9 @@ static void device_remove(struct discover_client *client, const char *id)
 	talloc_free(device);
 }
 
-int discover_client_process(struct discover_client *client)
+static int discover_client_process(void *arg)
 {
+	struct discover_client *client = arg;
 	struct pb_protocol_message *message;
 	struct device *dev;
 	char *dev_id;
@@ -156,6 +113,48 @@ int discover_client_process(struct discover_client *client)
 
 
 	return 0;
+}
+
+struct discover_client* discover_client_init(struct waitset *waitset,
+	const struct discover_client_ops *ops, void *cb_arg)
+{
+	struct discover_client *client;
+	struct sockaddr_un addr;
+
+	client = talloc(NULL, struct discover_client);
+	if (!client)
+		return NULL;
+
+	memcpy(&client->ops, ops, sizeof(client->ops));
+	client->ops.cb_arg = cb_arg;
+
+	client->fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (client->fd < 0) {
+		pb_log("%s: socket: %s\n", __func__, strerror(errno));
+		goto out_err;
+	}
+
+	talloc_set_destructor(client, discover_client_destructor);
+
+	client->n_devices = 0;
+	client->devices = NULL;
+
+	addr.sun_family = AF_UNIX;
+	strcpy(addr.sun_path, PB_SOCKET_PATH);
+
+	if (connect(client->fd, (struct sockaddr *)&addr, sizeof(addr))) {
+		pb_log("%s: connect: %s\n", __func__, strerror(errno));
+		goto out_err;
+	}
+
+	waiter_register(waitset, client->fd, WAIT_IN, discover_client_process,
+			client);
+
+	return client;
+
+out_err:
+	talloc_free(client);
+	return NULL;
 }
 
 /* accessors for discovered devices */

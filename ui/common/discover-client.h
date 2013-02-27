@@ -2,6 +2,7 @@
 #define _DISCOVER_CLIENT_H
 
 #include <types/types.h>
+#include <waiter/waiter.h>
 
 struct discover_client;
 
@@ -24,21 +25,10 @@ struct discover_client_ops {
 	void *cb_arg;
 };
 
-struct discover_client *discover_client_init(
+struct discover_client *discover_client_init(struct waitset *waitset,
 	const struct discover_client_ops *ops, void *cb_arg);
 
-int discover_client_get_fd(const struct discover_client *client);
-
 void discover_client_destroy(struct discover_client *client);
-
-/**
- * Process data from the server.
- *
- * Will read from the client socket, and call device_add on any discovered
- * devices.
- * 
- */
-int discover_client_process(struct discover_client *client);
 
 /**
  * Get the number of devices that the discover client has stored. This

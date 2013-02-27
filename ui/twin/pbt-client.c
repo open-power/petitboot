@@ -298,7 +298,8 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 retry_start:
 	for (i = start_deamon ? 2 : 10; i; i--) {
 		pbt_client->discover_client
-			= discover_client_init(&pbt_client_ops, pbt_client);
+			= discover_client_init(pbt_client->waitset,
+					&pbt_client_ops, pbt_client);
 		if (pbt_client->discover_client || !i)
 			break;
 		pb_log("%s: waiting for server %d\n", __func__, i);
@@ -331,11 +332,6 @@ retry_start:
 			"the petitboot daemon is running.\n");
 		goto fail_client_init;
 	}
-
-	waiter_register(pbt_client->waitset,
-			discover_client_get_fd(pbt_client->discover_client),
-			WAIT_IN, (waiter_cb)discover_client_process,
-			pbt_client->discover_client);
 
 	return pbt_client;
 

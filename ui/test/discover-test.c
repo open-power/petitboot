@@ -44,15 +44,18 @@ static struct discover_client_ops client_ops = {
 int main(void)
 {
 	struct discover_client *client;
+	struct waitset *waitset;
 
-	client = discover_client_init(&client_ops, NULL);
+	waitset = waitset_create(NULL);
+
+	client = discover_client_init(waitset, &client_ops, NULL);
 	if (!client)
 		return -1;
 
 	for (;;) {
 		int rc;
 
-		rc = discover_client_process(client);
+		rc = waiter_poll(waitset);
 		if (rc)
 			break;
 	}

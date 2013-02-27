@@ -264,17 +264,6 @@ static int cui_process_js(void *arg)
 
 	return 0;
 }
-/**
- * cui_client_process_socket - Process a socket event from the discover server.
- */
-
-static int cui_client_process_socket(void *arg)
-{
-	struct discover_client *client = arg;
-
-	discover_client_process(client);
-	return 0;
-}
 
 /**
  * cui_handle_timeout - Handle the timeout.
@@ -559,7 +548,8 @@ struct cui *cui_init(void* platform_info,
 
 retry_start:
 	for (i = start_deamon ? 2 : 10; i; i--) {
-		client = discover_client_init(&cui_client_ops, cui);
+		client = discover_client_init(cui->waitset,
+				&cui_client_ops, cui);
 		if (client || !i)
 			break;
 		pb_log("%s: waiting for server %d\n", __func__, i);
@@ -595,9 +585,6 @@ retry_start:
 
 	atexit(nc_atexit);
 	nc_start();
-
-	waiter_register(cui->waitset, discover_client_get_fd(client), WAIT_IN,
-			cui_client_process_socket, client);
 
 	waiter_register(cui->waitset, STDIN_FILENO, WAIT_IN,
 			cui_process_key, cui);
