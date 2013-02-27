@@ -126,7 +126,26 @@ static int write_remove_message(struct discover_server *server,
 	return client_write_message(server, client, message);
 }
 
-static int discover_server_process(void *arg)
+static int discover_server_process_message(void *arg)
+{
+	struct pb_protocol_message *message;
+	struct client *client = arg;
+
+	message = pb_protocol_read_message(client, client->fd);
+
+	if (!message)
+		return 0;
+
+	if (message->action != PB_PROTOCOL_ACTION_BOOT) {
+		pb_log("%s: invalid action %d\n", __func__, message->action);
+		return 0;
+	}
+
+	/* todo: process boot message */
+	return 0;
+}
+
+static int discover_server_process_connection(void *arg)
 {
 	struct discover_server *server = arg;
 	struct client *client;
@@ -155,6 +174,9 @@ static int discover_server_process(void *arg)
 		device = device_handler_get_device(server->device_handler, i);
 		write_add_message(server, client, device);
 	}
+
+	waiter_register(server->waitset, client->fd, WAIT_IN,
+			discover_server_process_message, client);
 
 	return 0;
 }
@@ -222,7 +244,7 @@ struct discover_server *discover_server_init(struct waitset *waitset)
 	}
 
 	server->waiter = waiter_register(server->waitset, server->socket,
-			WAIT_IN, discover_server_process, server);
+			WAIT_IN, discover_server_process_connection, server);
 
 	return server;
 
