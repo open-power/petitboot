@@ -45,6 +45,17 @@ void discover_context_add_boot_option(struct discover_context *ctx,
 
 int device_handler_event(struct device_handler *handler, struct event *event);
 
+struct discover_device *device_lookup_by_name(struct device_handler *handler,
+		const char *name);
+struct discover_device *device_lookup_by_path(struct device_handler *handler,
+		const char *path);
+struct discover_device *device_lookup_by_uuid(struct device_handler *handler,
+		const char *uuid);
+struct discover_device *device_lookup_by_label(struct device_handler *handler,
+		const char *label);
+struct discover_device *device_lookup_by_id(struct device_handler *handler,
+		const char *id);
+
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd);
 

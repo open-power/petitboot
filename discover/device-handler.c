@@ -464,6 +464,93 @@ void device_handler_destroy(struct device_handler *handler)
 	talloc_free(handler);
 }
 
+static int device_match_path(struct discover_device *dev, const char *path)
+{
+	return !strcmp(dev->device_path, path);
+}
+
+static int device_match_uuid(struct discover_device *dev, const char *uuid)
+{
+	return dev->uuid && !strcmp(dev->uuid, uuid);
+}
+
+static int device_match_label(struct discover_device *dev, const char *label)
+{
+	return dev->label && !strcmp(dev->label, label);
+}
+
+static int device_match_id(struct discover_device *dev, const char *id)
+{
+	return !strcmp(dev->device->id, id);
+}
+
+static struct discover_device *device_lookup(
+		struct device_handler *device_handler,
+		int (match_fn)(struct discover_device *, const char *),
+		const char *str)
+{
+	struct discover_device *dev;
+	unsigned int i;
+
+	if (!str)
+		return NULL;
+
+	for (i = 0; i < device_handler->n_devices; i++) {
+		dev = device_handler->devices[i];
+
+		if (match_fn(dev, str))
+			return dev;
+	}
+
+	return NULL;
+}
+
+struct discover_device *device_lookup_by_name(struct device_handler *handler,
+		const char *name)
+{
+	struct discover_device *dev;
+	char *path;
+
+	if (strncmp(name, "/dev/", strlen("/dev/")))
+		path = talloc_asprintf(NULL, "/dev/%s", name);
+	else
+		path = talloc_strdup(NULL, name);
+
+	dev = device_lookup_by_path(handler, path);
+
+	talloc_free(path);
+
+	return dev;
+}
+
+struct discover_device *device_lookup_by_path(
+		struct device_handler *device_handler,
+		const char *path)
+{
+	return device_lookup(device_handler, device_match_path, path);
+}
+
+struct discover_device *device_lookup_by_uuid(
+		struct device_handler *device_handler,
+		const char *uuid)
+{
+	return device_lookup(device_handler, device_match_uuid, uuid);
+}
+
+struct discover_device *device_lookup_by_label(
+		struct device_handler *device_handler,
+		const char *label)
+{
+	return device_lookup(device_handler, device_match_label, label);
+}
+
+struct discover_device *device_lookup_by_id(
+		struct device_handler *device_handler,
+		const char *id)
+{
+	return device_lookup(device_handler, device_match_id, id);
+}
+
 static struct boot_option *find_boot_option_by_id(
 		struct device_handler *handler, const char *id)
 {
