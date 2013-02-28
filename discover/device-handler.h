@@ -17,6 +17,9 @@ struct discover_device {
 	char			**links;
 	int			n_links;
 
+	char			*uuid;
+	char			*label;
+
 	char			*mount_path;
 	char			*device_path;
 };

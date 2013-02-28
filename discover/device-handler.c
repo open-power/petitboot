@@ -129,36 +129,33 @@ const struct device *device_handler_get_device(
 	return handler->devices[index]->device;
 }
 
-static void setup_device_links(struct discover_context *ctx)
+static void setup_device_links(struct discover_device *dev)
 {
-	struct discover_device *dev = ctx->device;
 	struct link {
-		char *env, *dir;
+		const char *dir, *val;
 	} *link, links[] = {
 		{
-			.env = "ID_FS_UUID",
-			.dir = "disk/by-uuid"
+			.dir = "disk/by-uuid",
+			.val = dev->uuid,
 		},
 		{
-			.env = "ID_FS_LABEL",
-			.dir = "disk/by-label"
+			.dir = "disk/by-label",
+			.val = dev->label,
 		},
 		{
-			.env = NULL
+			.dir = NULL
 		}
 	};
 
-	for (link = links; link->env; link++) {
+	for (link = links; link->dir; link++) {
 		char *enc, *dir, *path;
-		const char *value;
 
-		value = event_get_param(ctx->event, link->env);
-		if (!value || !*value)
+		if (!link->val || !*link->val)
 			continue;
 
-		enc = encode_label(ctx, value);
-		dir = join_paths(ctx, mount_base(), link->dir);
-		path = join_paths(dev, dir, value);
+		enc = encode_label(dev, link->val);
+		dir = join_paths(dev, mount_base(), link->dir);
+		path = join_paths(dev, dir, enc);
 
 		if (!pb_mkdir_recursive(dir)) {
 			unlink(path);
@@ -190,9 +187,8 @@ static void remove_device_links(struct discover_device *dev)
 		unlink(dev->links[i]);
 }
 
-static int mount_device(struct discover_context *ctx)
+static int mount_device(struct discover_device *dev)
 {
-	struct discover_device *dev = ctx->device;
 	const char *mountpoint;
 	const char *argv[6];
 
@@ -225,7 +221,7 @@ static int mount_device(struct discover_context *ctx)
 			goto out_rmdir;
 	}
 
-	setup_device_links(ctx);
+	setup_device_links(dev);
 	return 0;
 
 out_rmdir:
@@ -325,6 +321,7 @@ static int handle_add_udev_event(struct device_handler *handler,
 {
 	struct discover_context *ctx;
 	struct discover_device *dev;
+	const char *param;
 	int rc;
 
 	/* create our context */
@@ -337,7 +334,16 @@ static int handle_add_udev_event(struct device_handler *handler,
 
 	ctx->device = dev;
 
-	rc = mount_device(ctx);
+	/* try to parse UUID and labels */
+	param = event_get_param(ctx->event, "ID_FS_UUID");
+	if (param)
+		dev->uuid = talloc_strdup(dev, param);
+
+	param = event_get_param(ctx->event, "ID_FS_LABEL");
+	if (param)
+		dev->label = talloc_strdup(dev, param);
+
+	rc = mount_device(dev);
 	if (rc) {
 		talloc_free(ctx);
 		return 0;
