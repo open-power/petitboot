@@ -5,9 +5,7 @@ struct discover_context;
 
 struct parser {
 	char *name;
-	int priority;
 	int (*parse)(struct discover_context *ctx);
-	struct parser *next;
 };
 
 enum generic_icon_type {
