@@ -20,10 +20,6 @@
 #include "udev.h"
 #include "paths.h"
 
-#define MOUNT_BIN "/bin/mount"
-
-#define UMOUNT_BIN "/bin/umount"
-
 struct device_handler {
 	struct discover_server *server;
 
@@ -189,7 +185,7 @@ static int mount_device(struct discover_context *ctx)
 		pb_log("couldn't create mount directory %s: %s\n",
 				ctx->mount_path, strerror(errno));
 
-	argv[0] = MOUNT_BIN;
+	argv[0] = pb_system_apps.mount;
 	argv[1] = ctx->device_path;
 	argv[2] = ctx->mount_path;
 	argv[3] = "-o";
@@ -200,7 +196,7 @@ static int mount_device(struct discover_context *ctx)
 
 		/* Retry mount without ro option. */
 
-		argv[0] = MOUNT_BIN;
+		argv[0] = pb_system_apps.mount;
 		argv[1] = ctx->device_path;
 		argv[2] = ctx->mount_path;
 		argv[3] = NULL;
@@ -231,7 +227,8 @@ static int umount_device(struct discover_context *ctx)
 	}
 
 	if (pid == 0) {
-		execl(UMOUNT_BIN, UMOUNT_BIN, ctx->mount_path, NULL);
+		execl(pb_system_apps.umount, pb_system_apps.umount,
+						ctx->mount_path, NULL);
 		exit(EXIT_FAILURE);
 	}
 
