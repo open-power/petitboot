@@ -48,7 +48,6 @@ pb_discover_SOURCES = \
 	event.c \
 	event.h \
 	event-parser.c \
-	message.h \
 	params.c \
 	params.h \
 	pb-discover.c \
