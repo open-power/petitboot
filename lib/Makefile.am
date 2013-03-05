@@ -32,6 +32,8 @@ libpbcore_la_SOURCES = \
 	talloc/talloc.c \
 	talloc/talloc.h \
 	system/system.c \
-	system/system.h
+	system/system.h \
+	url/url.c \
+	url/url.h
 
 MAINTAINERCLEANFILES = Makefile.in

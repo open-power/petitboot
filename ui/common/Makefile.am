@@ -33,9 +33,7 @@ libpbui_la_SOURCES = \
 	timer.c \
 	timer.h \
 	ui-system.c \
-	ui-system.h \
-	url.c \
-	url.h
+	ui-system.h
 
 if ENABLE_PS3
 libpbui_la_SOURCES += \

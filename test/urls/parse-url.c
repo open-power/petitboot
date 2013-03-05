@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ui/common/url.h>
+#include <url/url.h>
 #include <log/log.h>
 
 int main(int argc, char **argv)

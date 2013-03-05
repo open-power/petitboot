@@ -22,10 +22,7 @@ AM_CPPFLAGS = \
 AM_CFLAGS = \
 	$(DEFAULT_CFLAGS)
 
-parse_url_SOURCES = \
-	parse-url.c \
-	../../ui/common/url.c \
-	../../ui/common/url.h
+parse_url_SOURCES = parse-url.c
 
 parse_url_LDADD = ../../lib/libpbcore.la
 

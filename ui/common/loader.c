@@ -26,9 +26,9 @@
 
 #include "log/log.h"
 #include <system/system.h>
+#include <url/url.h>
 #include "talloc/talloc.h"
 #include "loader.h"
-#include "url.h"
 
 
 /**
