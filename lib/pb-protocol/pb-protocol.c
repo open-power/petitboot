@@ -210,6 +210,7 @@ int pb_protocol_serialise_device(const struct device *dev, char *buf, int buf_le
 	}
 
 	assert(pos <= buf + buf_len);
+	(void)buf_len;
 
 	return 0;
 }
