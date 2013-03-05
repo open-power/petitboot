@@ -22,9 +22,15 @@
 #include <linux/input.h> /* This must be included before ncurses.h */
 #include <ncurses.h>
 
+#ifdef DEBUG
 #define DBG(fmt, args...) pb_log("DBG: " fmt, ## args)
 #define DBGS(fmt, args...) \
 	pb_log("DBG:%s:%d: " fmt, __func__, __LINE__, ## args)
+#else
+#define DBG(fmt, args...)
+#define DBGS(fmt, args...)
+#endif
+
 
 enum pb_nc_sig {
 	pb_cui_sig     = 111,
