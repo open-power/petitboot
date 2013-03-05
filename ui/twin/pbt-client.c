@@ -46,6 +46,7 @@ void pbt_frame_status_printf(struct pbt_frame *frame, const char *format, ...)
 
 	va_start(ap, format);
 	// TODO
+	(void)frame;
 	va_end(ap);
 }
 
@@ -184,12 +185,11 @@ static void pbt_device_remove(struct device *dev, struct pbt_client *client)
 {
 	struct pbt_frame *const frame = &client->frame;
 	struct list *i_list = frame->top_menu->item_list;
+	twin_window_t *last_window = NULL;
 	struct pbt_item *removed_item;
 	struct pbt_item *prev_item;
 	struct pbt_item *next_item;
 	struct pbt_item *i;
-	twin_window_t *last_window;
-	struct boot_option *opt;
 
 	pb_log("%s: %p %s: n_options %d\n", __func__, dev, dev->id,
 		dev->n_options);
