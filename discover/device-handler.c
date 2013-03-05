@@ -33,11 +33,6 @@ struct device_handler {
 	struct list contexts;
 };
 
-struct mount_map {
-	char *device_path;
-	char *mount_point;
-};
-
 /**
  * device_handler_add - Add a device to the handler device array.
  */
