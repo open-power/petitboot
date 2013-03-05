@@ -387,46 +387,31 @@ static int handle_remove_user_event(struct device_handler *handler,
 	return 0;
 }
 
+typedef int (*event_handler)(struct device_handler *, struct event *);
+
+static event_handler handlers[EVENT_TYPE_MAX][EVENT_ACTION_MAX] = {
+	[EVENT_TYPE_UDEV] = {
+		[EVENT_ACTION_ADD]	= handle_add_udev_event,
+		[EVENT_ACTION_REMOVE]	= handle_remove_udev_event,
+	},
+	[EVENT_TYPE_USER] = {
+		[EVENT_ACTION_ADD]	= handle_add_user_event,
+		[EVENT_ACTION_REMOVE]	= handle_remove_user_event,
+	}
+};
+
 int device_handler_event(struct device_handler *handler,
 		struct event *event)
 {
-	int rc = 0;
-
-	switch (event->type) {
-	case EVENT_TYPE_UDEV:
-		switch (event->action) {
-		case EVENT_ACTION_ADD:
-			rc = handle_add_udev_event(handler, event);
-			break;
-		case EVENT_ACTION_REMOVE:
-			rc = handle_remove_udev_event(handler, event);
-			break;
-		default:
-			pb_log("%s unknown action: %d\n", __func__,
-				event->action);
-			break;
-		}
-		break;
-	case EVENT_TYPE_USER:
-		switch (event->action) {
-		case EVENT_ACTION_ADD:
-			rc = handle_add_user_event(handler, event);
-			break;
-		case EVENT_ACTION_REMOVE:
-			rc = handle_remove_user_event(handler, event);
-			break;
-		default:
-			pb_log("%s unknown action: %d\n", __func__,
-				event->action);
-			break;
-		}
-		break;
-	default:
-		pb_log("%s unknown type: %d\n", __func__, event->type);
-		break;
+	if (event->type >= EVENT_TYPE_MAX ||
+			event->action >= EVENT_ACTION_MAX ||
+			!handlers[event->type][event->action]) {
+		pb_log("%s unknown type/action: %d/%d\n", __func__,
+				event->type, event->action);
+		return 0;
 	}
 
-	return rc;
+	return handlers[event->type][event->action](handler, event);
 }
 
 struct device_handler *device_handler_init(struct discover_server *server)

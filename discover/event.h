@@ -4,11 +4,13 @@
 enum event_type {
 	EVENT_TYPE_UDEV = 10,
 	EVENT_TYPE_USER,
+	EVENT_TYPE_MAX,
 };
 
 enum event_action {
 	EVENT_ACTION_ADD = 20,
 	EVENT_ACTION_REMOVE,
+	EVENT_ACTION_MAX,
 };
 
 struct event {
