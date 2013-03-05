@@ -13,6 +13,7 @@
 #include <log/log.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
+#include <system/system.h>
 
 #include "event.h"
 #include "udev.h"
@@ -156,7 +157,16 @@ out_err:
 
 int udev_trigger(struct udev __attribute__((unused)) *udev)
 {
-	int rc = system("/sbin/udevadm trigger --subsystem-match=block --action=add");
+	const char *cmd[] = {
+		"/sbin/udevadm,
+		"trigger",
+		"--subsystem-match=block",
+		"--action=add",
+		NULL,
+	};
+	int rc;
+
+	rc = pb_run_cmd(cmd, 1, 0);
 
 	if (rc)
 		pb_log("udev trigger failed: %d (%d)\n", rc, WEXITSTATUS(rc));
