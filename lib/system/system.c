@@ -24,6 +24,7 @@ const struct pb_system_apps pb_system_apps = {
 	.shutdown = "/sbin/shutdown",
 	.sftp = "/usr/bin/sftp",
 	.tftp = "/usr/bin/tftp",
+	.udevadm = "/sbin/udevadm",
 	.umount = "/bin/umount",
 	.wget = "/usr/bin/wget",
 };

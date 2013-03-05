@@ -158,7 +158,7 @@ out_err:
 int udev_trigger(struct udev __attribute__((unused)) *udev)
 {
 	const char *cmd[] = {
-		"/sbin/udevadm,
+		pb_system_apps.udevadm,
 		"trigger",
 		"--subsystem-match=block",
 		"--action=add",

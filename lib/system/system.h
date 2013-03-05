@@ -9,6 +9,7 @@ struct pb_system_apps {
 	const char *shutdown;
 	const char *sftp;
 	const char *tftp;
+	const char *udevadm;
 	const char *umount;
 	const char *wget;
 };
