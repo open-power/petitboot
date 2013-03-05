@@ -17,16 +17,16 @@
 #include "system.h"
 
 const struct pb_system_apps pb_system_apps = {
-	.prefix = PREFIX,
-	.cp = "/bin/cp",
-	.kexec = "/sbin/kexec",
-	.mount = "/bin/mount",
-	.shutdown = "/sbin/shutdown",
-	.sftp = "/usr/bin/sftp",
-	.tftp = "/usr/bin/tftp",
-	.udevadm = "/sbin/udevadm",
-	.umount = "/bin/umount",
-	.wget = "/usr/bin/wget",
+	.prefix		= PREFIX,
+	.cp		= HOST_PROG_CP,
+	.kexec		= HOST_PROG_KEXEC,
+	.mount		= HOST_PROG_MOUNT,
+	.shutdown	= HOST_PROG_SHUTDOWN,
+	.sftp		= HOST_PROG_SFTP,
+	.tftp		= HOST_PROG_TFTP,
+	.udevadm	= HOST_PROG_UDEVADM,
+	.umount		= HOST_PROG_UMOUNT,
+	.wget		= HOST_PROG_WGET,
 };
 
 int pb_mkdir_recursive(const char *dir)
