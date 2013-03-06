@@ -29,6 +29,7 @@ struct discover_server {
 };
 
 struct client {
+	struct discover_server *server;
 	struct list_item list;
 	int fd;
 };
@@ -165,6 +166,7 @@ static int discover_server_process_connection(void *arg)
 	talloc_set_destructor(client, client_destructor);
 
 	client->fd = fd;
+	client->server = server;
 
 	/* send existing devices to client */
 	n_devices = device_handler_get_device_count(server->device_handler);
