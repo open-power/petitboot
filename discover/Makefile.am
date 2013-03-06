@@ -41,6 +41,8 @@ libparser_la_LIBADD = $(top_builddir)/lib/libpbcore.la
 sbin_PROGRAMS = pb-discover
 
 pb_discover_SOURCES = \
+	boot.c \
+	boot.h \
 	device-handler.c \
 	device-handler.h \
 	discover-server.c \

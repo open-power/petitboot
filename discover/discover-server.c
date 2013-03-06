@@ -149,7 +149,7 @@ static int discover_server_process_message(void *arg)
 		return 0;
 	}
 
-	/* todo: pass boot_command to client->server->device_handler */
+	device_handler_boot(client->server->device_handler, boot_command);
 
 	return 0;
 }

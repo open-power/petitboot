@@ -19,6 +19,7 @@
 #include "parser.h"
 #include "udev.h"
 #include "paths.h"
+#include "boot.h"
 
 struct device_handler {
 	struct discover_server *server;
@@ -428,4 +429,31 @@ struct device_handler *device_handler_init(struct discover_server *server)
 void device_handler_destroy(struct device_handler *handler)
 {
 	talloc_free(handler);
+}
+
+static struct boot_option *find_boot_option_by_id(
+		struct device_handler *handler, const char *id)
+{
+	unsigned int i;
+
+	for (i = 0; i < handler->n_devices; i++) {
+		struct device *dev = handler->devices[i];
+		struct boot_option *opt;
+
+		list_for_each_entry(&dev->boot_options, opt, list)
+			if (!strcmp(opt->id, id))
+				return opt;
+	}
+
+	return NULL;
+}
+
+void device_handler_boot(struct device_handler *handler,
+		struct boot_command *cmd)
+{
+	struct boot_option *opt;
+
+	opt = find_boot_option_by_id(handler, cmd->option_id);
+
+	boot(handler, opt, cmd, 0);
 }
