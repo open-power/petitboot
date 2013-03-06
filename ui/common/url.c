@@ -38,13 +38,7 @@ struct pb_scheme_info {
 	unsigned int str_len;
 };
 
-/**
- * pb_url_find_scheme - Find the pb_scheme_info for a URL string.
- */
-
-static const struct pb_scheme_info *pb_url_find_scheme(const char *url_str)
-{
-	static const struct pb_scheme_info a[] = {
+static const struct pb_scheme_info schemes[] = {
 	{
 		.scheme = pb_url_file,
 		.str = "file://",
@@ -80,20 +74,25 @@ static const struct pb_scheme_info *pb_url_find_scheme(const char *url_str)
 		.str = "tftp://",
 		.str_len = sizeof("tftp://") - 1,
 	},
-	};
-	static const struct pb_scheme_info file_scheme = {
-		.str = "",
-		.scheme = pb_url_file,
-	};
+};
+
+static const struct pb_scheme_info *file_scheme = &schemes[0];
+
+/**
+ * pb_url_find_scheme - Find the pb_scheme_info for a URL string.
+ */
+
+static const struct pb_scheme_info *pb_url_find_scheme(const char *url_str)
+{
 	unsigned int i;
 
-	for (i = 0; i < sizeof(a) / sizeof(a[0]); i++)
-		if (!strncasecmp(url_str, a[i].str, a[i].str_len))
-			return &a[i];
+	for (i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++)
+		if (!strncasecmp(url_str, schemes[i].str, schemes[i].str_len))
+			return &schemes[i];
 
 	/* Assume this is a non-url local file. */
 
-	return &file_scheme;
+	return file_scheme;
 }
 
 /**
