@@ -41,38 +41,38 @@ struct pb_scheme_info {
 static const struct pb_scheme_info schemes[] = {
 	{
 		.scheme = pb_url_file,
-		.str = "file://",
-		.str_len = sizeof("file://") - 1,
+		.str = "file",
+		.str_len = sizeof("file") - 1,
 	},
 	{
 		.scheme = pb_url_ftp,
-		.str = "ftp://",
-		.str_len = sizeof("ftp://") - 1,
+		.str = "ftp",
+		.str_len = sizeof("ftp") - 1,
 	},
 	{
 		.scheme = pb_url_http,
-		.str = "http://",
-		.str_len = sizeof("http://") - 1,
+		.str = "http",
+		.str_len = sizeof("http") - 1,
 	},
 	{
 		.scheme = pb_url_https,
-		.str = "https://",
-		.str_len = sizeof("https://") - 1,
+		.str = "https",
+		.str_len = sizeof("https") - 1,
 	},
 	{
 		.scheme = pb_url_nfs,
-		.str = "nfs://",
-		.str_len = sizeof("nfs://") - 1,
+		.str = "nfs",
+		.str_len = sizeof("nfs") - 1,
 	},
 	{
 		.scheme = pb_url_sftp,
-		.str = "sftp://",
-		.str_len = sizeof("sftp://") - 1,
+		.str = "sftp",
+		.str_len = sizeof("sftp") - 1,
 	},
 	{
 		.scheme = pb_url_tftp,
-		.str = "tftp://",
-		.str_len = sizeof("tftp://") - 1,
+		.str = "tftp",
+		.str_len = sizeof("tftp") - 1,
 	},
 };
 
@@ -82,13 +82,28 @@ static const struct pb_scheme_info *file_scheme = &schemes[0];
  * pb_url_find_scheme - Find the pb_scheme_info for a URL string.
  */
 
-static const struct pb_scheme_info *pb_url_find_scheme(const char *url_str)
+static const struct pb_scheme_info *pb_url_find_scheme(const char *url)
 {
-	unsigned int i;
+	static const int sep_len = sizeof("://") - 1;
+	static const char *sep = "://";
+	unsigned int i, url_len;
 
-	for (i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++)
-		if (!strncasecmp(url_str, schemes[i].str, schemes[i].str_len))
-			return &schemes[i];
+	url_len = strlen(url);
+
+	for (i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
+		const struct pb_scheme_info *scheme = &schemes[i];
+
+		if (url_len < scheme->str_len + sep_len)
+			continue;
+
+		if (strncmp(url + scheme->str_len, sep, sep_len))
+			continue;
+
+		if (strncasecmp(url, scheme->str, scheme->str_len))
+			continue;
+
+		return scheme;
+	}
 
 	/* Assume this is a non-url local file. */
 
@@ -123,7 +138,7 @@ struct pb_url *pb_url_parse(void *ctx, const char *url_str)
 	si = pb_url_find_scheme(url_str);
 
 	url->scheme = si->scheme;
-	p = url_str + si->str_len;
+	p = url_str + si->str_len + strlen("://");
 
 	url->full = talloc_strdup(url, url_str);
 
