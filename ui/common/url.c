@@ -170,6 +170,11 @@ struct pb_url *pb_url_parse(void *ctx, const char *url_str)
 			url->port = NULL;
 			url->host = talloc_strndup(url, p, path - p);
 		}
+
+		/* remove multiple leading slashes */
+		for (; *path && *(path+1) == '/'; path++)
+			;
+
 		url->path = talloc_strdup(url, path);
 	}
 
