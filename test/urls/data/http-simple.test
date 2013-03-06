@@ -1,0 +1,7 @@
+http://hostname.tld:80/path/file
+scheme	http
+host	hostname.tld
+port	80
+path	/path/file
+dir	/path/
+file	file
