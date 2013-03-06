@@ -214,6 +214,7 @@ AC_CONFIG_FILES([
 	man/Makefile
 	test/Makefile
 	test/parser/Makefile
+	test/urls/Makefile
 	ui/Makefile
 	ui/common/Makefile
 	ui/ncurses/Makefile

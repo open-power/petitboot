@@ -1,0 +1,7 @@
+tftp://127.0.0.1//file
+scheme	tftp
+host	127.0.0.1
+port	(null)
+path	/file
+dir	/
+file	file

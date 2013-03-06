@@ -1,0 +1,27 @@
+#!/bin/bash
+
+parser="@abs_builddir@/parse-url"
+testfile=$1
+
+url=$(head -n1 $testfile)
+
+tmp=$(mktemp)
+trap "rm $tmp" EXIT
+
+$parser $url > $tmp
+if test $? -ne 0
+then
+	echo "Error running $parser on $testfile"
+	exit 2
+fi
+
+cmp --silent $testfile $tmp
+result=$?
+
+if test $result -ne 0
+then
+	echo "FAIL: URL parse results differ:"
+	diff -u $testfile $tmp
+fi
+
+exit $result
