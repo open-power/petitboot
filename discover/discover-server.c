@@ -130,6 +130,7 @@ static int write_remove_message(struct discover_server *server,
 static int discover_server_process_message(void *arg)
 {
 	struct pb_protocol_message *message;
+	struct boot_command *boot_command;
 	struct client *client = arg;
 
 	message = pb_protocol_read_message(client, client->fd);
@@ -142,7 +143,14 @@ static int discover_server_process_message(void *arg)
 		return 0;
 	}
 
-	/* todo: process boot message */
+	boot_command = pb_protocol_deserialise_boot_command(client, message);
+	if (!boot_command) {
+		pb_log("%s: no boot command?", __func__);
+		return 0;
+	}
+
+	/* todo: pass boot_command to client->server->device_handler */
+
 	return 0;
 }
 

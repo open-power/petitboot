@@ -404,3 +404,34 @@ out_err:
 	talloc_free(dev);
 	return NULL;
 }
+
+struct boot_command *pb_protocol_deserialise_boot_command(void *ctx,
+		const struct pb_protocol_message *message)
+{
+	struct boot_command *cmd;
+	const char *pos;
+	unsigned int len;
+
+	len = message->payload_len;
+	pos = message->payload;
+
+	cmd = talloc(ctx, struct boot_command);
+
+	if (read_string(cmd, &pos, &len, &cmd->option_id))
+		goto out_err;
+
+	if (read_string(cmd, &pos, &len, &cmd->boot_image_file))
+		goto out_err;
+
+	if (read_string(cmd, &pos, &len, &cmd->initrd_file))
+		goto out_err;
+
+	if (read_string(cmd, &pos, &len, &cmd->boot_args))
+		goto out_err;
+
+	return cmd;
+
+out_err:
+	talloc_free(cmd);
+	return NULL;
+}

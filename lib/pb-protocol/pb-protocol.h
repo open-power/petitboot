@@ -50,4 +50,7 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd);
 struct device *pb_protocol_deserialise_device(void *ctx,
 		const struct pb_protocol_message *message);
 
+struct boot_command *pb_protocol_deserialise_boot_command(void *ctx,
+		const struct pb_protocol_message *message);
+
 #endif /* _PB_PROTOCOL_H */
