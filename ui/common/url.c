@@ -197,3 +197,14 @@ fail:
 	talloc_free(url);
 	return NULL;
 }
+
+const char *pb_url_scheme_name(enum pb_url_scheme scheme)
+{
+	unsigned int i;
+
+	for (i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++)
+		if (schemes[i].scheme == scheme)
+			return schemes[i].str;
+
+	return NULL;
+}
