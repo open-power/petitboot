@@ -21,7 +21,8 @@ struct discover_context {
 	struct list_item list;
 };
 
-struct device_handler *device_handler_init(struct discover_server *server);
+struct device_handler *device_handler_init(struct discover_server *server,
+		int dry_run);
 
 void device_handler_destroy(struct device_handler *devices);
 

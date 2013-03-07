@@ -261,8 +261,7 @@ static void pbt_client_destructor(struct pbt_client *client)
 }
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
-	unsigned int width, unsigned int height,
-	int start_deamon, int dry_run)
+	unsigned int width, unsigned int height, int start_deamon)
 {
 	struct pbt_client *pbt_client;
 	unsigned int i;
@@ -280,7 +279,6 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 	pbt_client->waitset = waitset_create(pbt_client);
 
 	pbt_client->sig = "pbt_client";
-	pbt_client->dry_run = dry_run;
 	pbt_client->frame.scr = pbt_scr_init(pbt_client, pbt_client->waitset,
 			backend, width, height, NULL, NULL);
 

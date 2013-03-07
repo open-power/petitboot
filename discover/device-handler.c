@@ -23,6 +23,7 @@
 
 struct device_handler {
 	struct discover_server *server;
+	int dry_run;
 
 	struct device **devices;
 	unsigned int n_devices;
@@ -407,7 +408,8 @@ int device_handler_event(struct device_handler *handler,
 	return handlers[event->type][event->action](handler, event);
 }
 
-struct device_handler *device_handler_init(struct discover_server *server)
+struct device_handler *device_handler_init(struct discover_server *server,
+		int dry_run)
 {
 	struct device_handler *handler;
 
@@ -415,6 +417,7 @@ struct device_handler *device_handler_init(struct discover_server *server)
 	handler->devices = NULL;
 	handler->n_devices = 0;
 	handler->server = server;
+	handler->dry_run = dry_run;
 
 	list_init(&handler->contexts);
 
@@ -455,5 +458,5 @@ void device_handler_boot(struct device_handler *handler,
 
 	opt = find_boot_option_by_id(handler, cmd->option_id);
 
-	boot(handler, opt, cmd, 0);
+	boot(handler, opt, cmd, handler->dry_run);
 }

@@ -51,7 +51,6 @@ struct cui {
 	enum pb_nc_sig c_sig;
 	sig_atomic_t abort;
 	sig_atomic_t resize;
-	int dry_run;
 	struct nc_scr *current;
 	struct pmenu *main;
 	struct ui_timer timer;
@@ -64,7 +63,7 @@ struct cui {
 };
 
 struct cui *cui_init(void* platform_info,
-	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run);
+	int (*js_map)(const struct js_event *e), int start_deamon);
 struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr);
 int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item);
 int cui_boot_editor_run(struct pmenu_item *item);

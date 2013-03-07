@@ -317,8 +317,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	client = pbt_client_init(opts.backend, 1024, 640,
-		opts.start_daemon, opts.dry_run);
+	client = pbt_client_init(opts.backend, 1024, 640, opts.start_daemon);
 
 	if (!client) {
 		ui_result = EXIT_FAILURE;

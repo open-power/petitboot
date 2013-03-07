@@ -43,6 +43,7 @@ struct opts {
 	enum opt_value show_help;
 	const char *log_file;
 	enum opt_value show_version;
+	enum opt_value dry_run;
 };
 
 /**
@@ -54,12 +55,14 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 	static const struct option long_options[] = {
 		{"help",           no_argument,       NULL, 'h'},
 		{"log",            required_argument, NULL, 'l'},
+		{"dry-run",        no_argument,       NULL, 'n'},
 		{"version",        no_argument,       NULL, 'V'},
 		{ NULL, 0, NULL, 0},
 	};
-	static const char short_options[] = "hl:V";
+	static const char short_options[] = "hl:nV";
 	static const struct opts default_values = {
 		.log_file = "/var/log/petitboot/pb-discover.log",
+		.dry_run = opt_no,
 	};
 
 	*opts = default_values;
@@ -77,6 +80,9 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 			break;
 		case 'l':
 			opts->log_file = optarg;
+			break;
+		case 'n':
+			opts->dry_run = opt_yes;
 			break;
 		case 'V':
 			opts->show_version = opt_yes;
@@ -145,7 +151,7 @@ int main(int argc, char *argv[])
 	if (!server)
 		return EXIT_FAILURE;
 
-	handler = device_handler_init(server);
+	handler = device_handler_init(server, opts.dry_run == opt_yes);
 	if (!handler)
 		return EXIT_FAILURE;
 

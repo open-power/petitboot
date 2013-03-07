@@ -42,7 +42,6 @@ void pbt_frame_status_printf(struct pbt_frame *frame, const char *format, ...);
 
 struct pbt_client {
 	const char *sig;
-	int dry_run;
 	struct pb_signal_data signal_data;
 	void *client_data;
 	struct pbt_frame frame;
@@ -51,8 +50,7 @@ struct pbt_client {
 };
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
-	unsigned int width, unsigned int height,
-	int start_deamon, int dry_run);
+	unsigned int width, unsigned int height, int start_deamon);
 void pbt_client_destroy(struct pbt_client *client);
 void pbt_client_resize(struct pbt_client *client);
 

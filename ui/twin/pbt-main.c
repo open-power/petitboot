@@ -34,7 +34,7 @@ void pbt_print_usage(void)
 {
 	pbt_print_version();
 	printf(
-"Usage: petitboot-twin [-d, --dry-run] [-h, --help] [-l, --log log-file]\n"
+"Usage: petitboot-twin [-h, --help] [-l, --log log-file]\n"
 "                      [-r, --reset-defaults] [-s, --start-daemon]\n"
 "                      [-t, --timeout] [-V, --version]\n"
 "                      [[-f --fbdev] | [-x --x11]]\n");
@@ -47,7 +47,6 @@ void pbt_print_usage(void)
 int pbt_opts_parse(struct pbt_opts *opts, int argc, char *argv[])
 {
 	static const struct option long_options[] = {
-		{"dry-run",        no_argument,       NULL, 'd'},
 		{"fbdev",          no_argument,       NULL, 'f'},
 		{"help",           no_argument,       NULL, 'h'},
 		{"log",            required_argument, NULL, 'l'},
@@ -74,9 +73,6 @@ int pbt_opts_parse(struct pbt_opts *opts, int argc, char *argv[])
 			break;
 
 		switch (c) {
-		case 'd':
-			opts->dry_run = pbt_opt_yes;
-			break;
 		case 'f':
 			opts->backend = pbt_twin_fbdev;
 			break;

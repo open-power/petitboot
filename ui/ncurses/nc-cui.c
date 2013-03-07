@@ -520,7 +520,7 @@ static struct discover_client_ops cui_client_ops = {
  */
 
 struct cui *cui_init(void* platform_info,
-	int (*js_map)(const struct js_event *e), int start_deamon, int dry_run)
+	int (*js_map)(const struct js_event *e), int start_deamon)
 {
 	struct cui *cui;
 	unsigned int i;
@@ -536,7 +536,6 @@ struct cui *cui_init(void* platform_info,
 	cui->c_sig = pb_cui_sig;
 	cui->platform_info = platform_info;
 	cui->timer.handle_timeout = cui_handle_timeout;
-	cui->dry_run = dry_run;
 	cui->waitset = waitset_create(cui);
 
 	/* Loop here for scripts that just started the server. */
