@@ -83,6 +83,7 @@ static int discover_client_process(void *arg)
 	struct pb_protocol_message *message;
 	struct device *dev;
 	char *dev_id;
+	int rc;
 
 	message = pb_protocol_read_message(client, client->fd);
 
@@ -91,8 +92,10 @@ static int discover_client_process(void *arg)
 
 	switch (message->action) {
 	case PB_PROTOCOL_ACTION_ADD:
-		dev = pb_protocol_deserialise_device(client, message);
-		if (!dev) {
+		dev = talloc(client, struct device);
+
+		rc = pb_protocol_deserialise_device(dev, message);
+		if (rc) {
 			pb_log("%s: no device?\n", __func__);
 			return 0;
 		}

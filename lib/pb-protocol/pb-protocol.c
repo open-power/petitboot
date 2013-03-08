@@ -338,18 +338,15 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 }
 
 
-struct device *pb_protocol_deserialise_device(void *ctx,
+int pb_protocol_deserialise_device(struct device *dev,
 		const struct pb_protocol_message *message)
 {
-	struct device *dev;
 	const char *pos;
 	int i, n_options;
 	unsigned int len;
 
 	len = message->payload_len;
 	pos = message->payload;
-
-	dev = talloc(ctx, struct device);
 
 	if (read_string(dev, &pos, &len, &dev->id))
 		goto out_err;
@@ -398,24 +395,20 @@ struct device *pb_protocol_deserialise_device(void *ctx,
 		list_add(&dev->boot_options, &opt->list);
 	}
 
-	return dev;
+	return 0;
 
 out_err:
-	talloc_free(dev);
-	return NULL;
+	return -1;
 }
 
-struct boot_command *pb_protocol_deserialise_boot_command(void *ctx,
+int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 		const struct pb_protocol_message *message)
 {
-	struct boot_command *cmd;
 	const char *pos;
 	unsigned int len;
 
 	len = message->payload_len;
 	pos = message->payload;
-
-	cmd = talloc(ctx, struct boot_command);
 
 	if (read_string(cmd, &pos, &len, &cmd->option_id))
 		goto out_err;
@@ -429,9 +422,8 @@ struct boot_command *pb_protocol_deserialise_boot_command(void *ctx,
 	if (read_string(cmd, &pos, &len, &cmd->boot_args))
 		goto out_err;
 
-	return cmd;
+	return 0;
 
 out_err:
-	talloc_free(cmd);
-	return NULL;
+	return -1;
 }

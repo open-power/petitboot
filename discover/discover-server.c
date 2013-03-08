@@ -132,6 +132,7 @@ static int discover_server_process_message(void *arg)
 	struct pb_protocol_message *message;
 	struct boot_command *boot_command;
 	struct client *client = arg;
+	int rc;
 
 	message = pb_protocol_read_message(client, client->fd);
 
@@ -143,8 +144,10 @@ static int discover_server_process_message(void *arg)
 		return 0;
 	}
 
-	boot_command = pb_protocol_deserialise_boot_command(client, message);
-	if (!boot_command) {
+	boot_command = talloc(client, struct boot_command);
+
+	rc = pb_protocol_deserialise_boot_command(boot_command, message);
+	if (rc) {
 		pb_log("%s: no boot command?", __func__);
 		return 0;
 	}

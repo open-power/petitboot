@@ -47,10 +47,10 @@ struct pb_protocol_message *pb_protocol_create_message(void *ctx,
 
 struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd);
 
-struct device *pb_protocol_deserialise_device(void *ctx,
+int pb_protocol_deserialise_device(struct device *dev,
 		const struct pb_protocol_message *message);
 
-struct boot_command *pb_protocol_deserialise_boot_command(void *ctx,
+int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 		const struct pb_protocol_message *message);
 
 #endif /* _PB_PROTOCOL_H */
