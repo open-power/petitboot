@@ -161,26 +161,23 @@ static int optional_strlen(const char *str)
 
 int pb_protocol_device_len(const struct device *dev)
 {
-	struct boot_option *opt;
-	int len;
-
-	len =	4 + optional_strlen(dev->id) +
+	return	4 + optional_strlen(dev->id) +
 		4 + optional_strlen(dev->name) +
 		4 + optional_strlen(dev->description) +
-		4 + optional_strlen(dev->icon_file) +
-		4;
+		4 + optional_strlen(dev->icon_file);
+}
 
-	list_for_each_entry(&dev->boot_options, opt, list) {
-		len +=	4 + optional_strlen(opt->id) +
-			4 + optional_strlen(opt->name) +
-			4 + optional_strlen(opt->description) +
-			4 + optional_strlen(opt->icon_file) +
-			4 + optional_strlen(opt->boot_image_file) +
-			4 + optional_strlen(opt->initrd_file) +
-			4 + optional_strlen(opt->boot_args);
-	}
+int pb_protocol_boot_option_len(const struct boot_option *opt)
+{
 
-	return len;
+	return	4 + optional_strlen(opt->device_id) +
+		4 + optional_strlen(opt->id) +
+		4 + optional_strlen(opt->name) +
+		4 + optional_strlen(opt->description) +
+		4 + optional_strlen(opt->icon_file) +
+		4 + optional_strlen(opt->boot_image_file) +
+		4 + optional_strlen(opt->initrd_file) +
+		4 + optional_strlen(opt->boot_args);
 }
 
 int pb_protocol_boot_len(const struct boot_command *boot)
@@ -191,39 +188,35 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 		4 + optional_strlen(boot->boot_args);
 }
 
-int pb_protocol_serialise_device(const struct device *dev, char *buf, int buf_len)
+int pb_protocol_serialise_device(const struct device *dev,
+		char *buf, int buf_len)
 {
-	struct boot_option *opt;
-	uint32_t n;
-	char *pos;
+	char *pos = buf;
 
-	pos = buf;
-
-	/* construct payload into buffer */
 	pos += pb_protocol_serialise_string(pos, dev->id);
 	pos += pb_protocol_serialise_string(pos, dev->name);
 	pos += pb_protocol_serialise_string(pos, dev->description);
 	pos += pb_protocol_serialise_string(pos, dev->icon_file);
 
-	/* write option count */
-	n = 0;
+	assert(pos <= buf + buf_len);
+	(void)buf_len;
 
-	list_for_each_entry(&dev->boot_options, opt, list)
-		n++;
+	return 0;
+}
 
-	*(uint32_t *)pos = __cpu_to_be32(n);
-	pos += sizeof(uint32_t);
+int pb_protocol_serialise_boot_option(const struct boot_option *opt,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
 
-	/* write each option */
-	list_for_each_entry(&dev->boot_options, opt, list) {
-		pos += pb_protocol_serialise_string(pos, opt->id);
-		pos += pb_protocol_serialise_string(pos, opt->name);
-		pos += pb_protocol_serialise_string(pos, opt->description);
-		pos += pb_protocol_serialise_string(pos, opt->icon_file);
-		pos += pb_protocol_serialise_string(pos, opt->boot_image_file);
-		pos += pb_protocol_serialise_string(pos, opt->initrd_file);
-		pos += pb_protocol_serialise_string(pos, opt->boot_args);
-	}
+	pos += pb_protocol_serialise_string(pos, opt->device_id);
+	pos += pb_protocol_serialise_string(pos, opt->id);
+	pos += pb_protocol_serialise_string(pos, opt->name);
+	pos += pb_protocol_serialise_string(pos, opt->description);
+	pos += pb_protocol_serialise_string(pos, opt->icon_file);
+	pos += pb_protocol_serialise_string(pos, opt->boot_image_file);
+	pos += pb_protocol_serialise_string(pos, opt->initrd_file);
+	pos += pb_protocol_serialise_string(pos, opt->boot_args);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -341,89 +334,95 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 int pb_protocol_deserialise_device(struct device *dev,
 		const struct pb_protocol_message *message)
 {
-	const char *pos;
-	int i, n_options;
 	unsigned int len;
+	const char *pos;
+	int rc = -1;
 
 	len = message->payload_len;
 	pos = message->payload;
 
 	if (read_string(dev, &pos, &len, &dev->id))
-		goto out_err;
+		goto out;
 
 	if (read_string(dev, &pos, &len, &dev->name))
-		goto out_err;
+		goto out;
 
 	if (read_string(dev, &pos, &len, &dev->description))
-		goto out_err;
+		goto out;
 
 	if (read_string(dev, &pos, &len, &dev->icon_file))
-		goto out_err;
+		goto out;
 
-	n_options = __be32_to_cpu(*(uint32_t *)pos);
-	pos += sizeof(uint32_t);
+	rc = 0;
 
-	dev->n_options = n_options;
+out:
+	return rc;
+}
 
-	list_init(&dev->boot_options);
+int pb_protocol_deserialise_boot_option(struct boot_option *opt,
+		const struct pb_protocol_message *message)
+{
+	unsigned int len;
+	const char *pos;
+	int rc = -1;
 
-	for (i = 0; i < n_options; i++) {
-		struct boot_option *opt;
+	len = message->payload_len;
+	pos = message->payload;
 
-		opt = talloc(dev, struct boot_option);
+	if (read_string(opt, &pos, &len, &opt->device_id))
+		goto out;
 
-		if (read_string(opt, &pos, &len, &opt->id))
-			goto out_err;
-		if (read_string(opt, &pos, &len, &opt->name))
-			goto out_err;
-		if (read_string(opt, &pos, &len,
-					&opt->description))
-			goto out_err;
-		if (read_string(opt, &pos, &len,
-					&opt->icon_file))
-			goto out_err;
-		if (read_string(opt, &pos, &len,
-					&opt->boot_image_file))
-			goto out_err;
-		if (read_string(opt, &pos, &len,
-					&opt->initrd_file))
-			goto out_err;
-		if (read_string(opt, &pos, &len,
-					&opt->boot_args))
-			goto out_err;
+	if (read_string(opt, &pos, &len, &opt->id))
+		goto out;
 
-		list_add(&dev->boot_options, &opt->list);
-	}
+	if (read_string(opt, &pos, &len, &opt->name))
+		goto out;
 
-	return 0;
+	if (read_string(opt, &pos, &len, &opt->description))
+		goto out;
 
-out_err:
-	return -1;
+	if (read_string(opt, &pos, &len, &opt->icon_file))
+		goto out;
+
+	if (read_string(opt, &pos, &len, &opt->boot_image_file))
+		goto out;
+
+	if (read_string(opt, &pos, &len, &opt->initrd_file))
+		goto out;
+
+	if (read_string(opt, &pos, &len, &opt->boot_args))
+		goto out;
+
+	rc = 0;
+
+out:
+	return rc;
 }
 
 int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 		const struct pb_protocol_message *message)
 {
-	const char *pos;
 	unsigned int len;
+	const char *pos;
+	int rc = -1;
 
 	len = message->payload_len;
 	pos = message->payload;
 
 	if (read_string(cmd, &pos, &len, &cmd->option_id))
-		goto out_err;
+		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->boot_image_file))
-		goto out_err;
+		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->initrd_file))
-		goto out_err;
+		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->boot_args))
-		goto out_err;
+		goto out;
 
-	return 0;
+	rc = 0;
 
-out_err:
-	return -1;
+out:
+	return rc;
 }

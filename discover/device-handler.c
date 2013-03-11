@@ -275,6 +275,7 @@ static int handle_add_udev_event(struct device_handler *handler,
 		struct event *event)
 {
 	struct discover_context *ctx;
+	struct boot_option *opt;
 	const char *devname;
 	int rc;
 
@@ -311,7 +312,10 @@ static int handle_add_udev_event(struct device_handler *handler,
 	/* add device to handler device array */
 	device_handler_add(handler, ctx->device);
 
-	discover_server_notify_add(handler->server, ctx->device);
+	discover_server_notify_device_add(handler->server, ctx->device);
+
+	list_for_each_entry(&ctx->device->boot_options, opt, list)
+		discover_server_notify_boot_option_add(handler->server, opt);
 
 	return 0;
 }
@@ -325,7 +329,7 @@ static int handle_remove_udev_event(struct device_handler *handler,
 	if (!ctx)
 		return 0;
 
-	discover_server_notify_remove(handler->server, ctx->device);
+	discover_server_notify_device_remove(handler->server, ctx->device);
 
 	/* remove device from handler device array */
 	device_handler_remove(handler, ctx->device);
@@ -338,6 +342,7 @@ static int handle_remove_udev_event(struct device_handler *handler,
 static int handle_add_user_event(struct device_handler *handler,
 		struct event *event)
 {
+	struct boot_option *opt;
 	struct device *device;
 
 	assert(event->device);
@@ -352,7 +357,10 @@ static int handle_add_user_event(struct device_handler *handler,
 
 	parse_user_event(device, event);
 
-	discover_server_notify_add(handler->server, device);
+	discover_server_notify_device_add(handler->server, device);
+
+	list_for_each_entry(&device->boot_options, opt, list)
+		discover_server_notify_boot_option_add(handler->server, opt);
 
 	/* add device to handler device array */
 	device_handler_add(handler, device);
@@ -372,7 +380,7 @@ static int handle_remove_user_event(struct device_handler *handler,
 	if (!device)
 		return 0;
 
-	discover_server_notify_remove(handler->server, device);
+	discover_server_notify_device_remove(handler->server, device);
 
 	/* remove device from handler device array */
 	device_handler_remove(handler, device);

@@ -91,7 +91,7 @@ static int client_write_message(
 	return rc;
 }
 
-static int write_add_message(struct discover_server *server,
+static int write_device_add_message(struct discover_server *server,
 		struct client *client, const struct device *dev)
 {
 	struct pb_protocol_message *message;
@@ -100,7 +100,7 @@ static int write_add_message(struct discover_server *server,
 	len = pb_protocol_device_len(dev);
 
 	message = pb_protocol_create_message(client,
-			PB_PROTOCOL_ACTION_ADD, len);
+			PB_PROTOCOL_ACTION_DEVICE_ADD, len);
 	if (!message)
 		return -1;
 
@@ -109,7 +109,25 @@ static int write_add_message(struct discover_server *server,
 	return client_write_message(server, client, message);
 }
 
-static int write_remove_message(struct discover_server *server,
+static int write_boot_option_add_message(struct discover_server *server,
+		struct client *client, const struct boot_option *opt)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_boot_option_len(opt);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_BOOT_OPTION_ADD, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_boot_option(opt, message->payload, len);
+
+	return client_write_message(server, client, message);
+}
+
+static int write_device_remove_message(struct discover_server *server,
 		struct client *client, char *dev_id)
 {
 	struct pb_protocol_message *message;
@@ -118,7 +136,7 @@ static int write_remove_message(struct discover_server *server,
 	len = strlen(dev_id) + sizeof(uint32_t);
 
 	message = pb_protocol_create_message(client,
-			PB_PROTOCOL_ACTION_REMOVE, len);
+			PB_PROTOCOL_ACTION_DEVICE_REMOVE, len);
 	if (!message)
 		return -1;
 
@@ -183,9 +201,14 @@ static int discover_server_process_connection(void *arg)
 	n_devices = device_handler_get_device_count(server->device_handler);
 	for (i = 0; i < n_devices; i++) {
 		const struct device *device;
+		struct boot_option *opt;
 
 		device = device_handler_get_device(server->device_handler, i);
-		write_add_message(server, client, device);
+		write_device_add_message(server, client, device);
+
+		list_for_each_entry(&device->boot_options, opt, list)
+			discover_server_notify_boot_option_add(server, opt);
+
 	}
 
 	waiter_register(server->waitset, client->fd, WAIT_IN,
@@ -194,23 +217,32 @@ static int discover_server_process_connection(void *arg)
 	return 0;
 }
 
-void discover_server_notify_add(struct discover_server *server,
+void discover_server_notify_device_add(struct discover_server *server,
 		struct device *device)
 {
 	struct client *client;
 
 	list_for_each_entry(&server->clients, client, list)
-		write_add_message(server, client, device);
+		write_device_add_message(server, client, device);
 
 }
 
-void discover_server_notify_remove(struct discover_server *server,
+void discover_server_notify_boot_option_add(struct discover_server *server,
+		struct boot_option *boot_option)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_boot_option_add_message(server, client, boot_option);
+}
+
+void discover_server_notify_device_remove(struct discover_server *server,
 		struct device *device)
 {
 	struct client *client;
 
 	list_for_each_entry(&server->clients, client, list)
-		write_remove_message(server, client, device->id);
+		write_device_remove_message(server, client, device->id);
 
 }
 

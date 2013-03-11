@@ -142,7 +142,7 @@ static int cui_boot(struct pmenu_item *item)
 
 	def_prog_mode();
 
-	result = discover_client_boot(cui->client, cod->dev, cod->opt, cod->bd);
+	result = discover_client_boot(cui->client, NULL, cod->opt, cod->bd);
 
 	reset_prog_mode();
 	redrawwin(cui->current->main_ncw);
@@ -354,16 +354,18 @@ void cui_on_open(struct pmenu *menu)
  * menu_items into the main menu.  Redraws the main menu if it is active.
  */
 
-static int cui_device_add(struct device *dev, void *arg)
+static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
+		void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
-	int result;
-	struct boot_option *opt;
-	unsigned int o_count; /* device opts */
+	struct cui_opt_data *cod;
 	unsigned int insert_pt;
+	struct pmenu_item *i;
 	ITEM *selected;
+	char *name;
+	int result;
 
-	pb_log("%s: %p %s\n", __func__, dev, dev->id);
+	pb_log("%s: %p %s\n", __func__, opt, opt->id);
 
 	selected = current_item(cui->main->ncm);
 
@@ -377,57 +379,42 @@ static int cui_device_add(struct device *dev, void *arg)
 	if (result)
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
 
-	o_count = 0;
-	list_for_each_entry(&dev->boot_options, opt, list)
-		o_count++;
-
 	/* Insert new items at insert_pt. */
+	insert_pt = pmenu_grow(cui->main, 1);
 
-	insert_pt = pmenu_grow(cui->main, o_count);
+	/* Save the item in opt->ui_info for cui_device_remove() */
 
-	list_for_each_entry(&dev->boot_options, opt, list) {
-		struct pmenu_item *i;
-		struct cui_opt_data *cod;
-		char *name;
+	opt->ui_info = i = pmenu_item_alloc(cui->main);
 
-		/* Save the item in opt->ui_info for cui_device_remove() */
+	i->on_edit = cui_boot_editor_run;
+	i->on_execute = cui_boot;
+	i->data = cod = talloc(i, struct cui_opt_data);
 
-		opt->ui_info = i = pmenu_item_alloc(cui->main);
+	cod->opt = opt;
+	cod->dev = dev;
+	cod->opt_hash = pb_opt_hash(dev, opt);
+	cod->name = opt->name;
+	cod->bd = talloc(i, struct pb_boot_data);
 
-		i->on_edit = cui_boot_editor_run;
-		i->on_execute = cui_boot;
-		i->data = cod = talloc(i, struct cui_opt_data);
+	cod->bd->image = talloc_strdup(cod->bd, opt->boot_image_file);
+	cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
+	cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
 
-		cod->dev = dev;
-		cod->opt = opt;
-		cod->opt_hash = pb_opt_hash(dev, opt);
-		cod->name = opt->name;
-		cod->bd = talloc(i, struct pb_boot_data);
+	name = cui_make_item_name(i, cod);
+	pmenu_item_setup(cui->main, i, insert_pt, name);
 
-		cod->bd->image = talloc_strdup(cod->bd, opt->boot_image_file);
-		cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
-		cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
+	pb_log("%s: adding opt '%s'\n", __func__, cod->name);
+	pb_log("   image  '%s'\n", cod->bd->image);
+	pb_log("   initrd '%s'\n", cod->bd->initrd);
+	pb_log("   args   '%s'\n", cod->bd->args);
 
-		name = cui_make_item_name(i, cod);
-		pmenu_item_setup(cui->main, i, insert_pt, name);
-
-		insert_pt++;
-
-		pb_log("%s: adding opt '%s'\n", __func__, cod->name);
-		pb_log("   image  '%s'\n", cod->bd->image);
-		pb_log("   initrd '%s'\n", cod->bd->initrd);
-		pb_log("   args   '%s'\n", cod->bd->args);
-
-		/* If this is the default_item select it and start timer. */
-
-		if (cod->opt_hash == cui->default_item) {
-			selected = i->nci;
-			ui_timer_kick(&cui->timer);
-		}
+	/* If this is the default_item select it and start timer. */
+	if (cod->opt_hash == cui->default_item) {
+		selected = i->nci;
+		ui_timer_kick(&cui->timer);
 	}
 
 	/* Re-attach the items array. */
-
 	result = set_menu_items(cui->main->ncm, cui->main->items);
 
 	if (result)
@@ -506,7 +493,8 @@ static void cui_device_remove(struct device *dev, void *arg)
 }
 
 static struct discover_client_ops cui_client_ops = {
-	.device_add = cui_device_add,
+	.device_add = NULL,
+	.boot_option_add = cui_boot_option_add,
 	.device_remove = cui_device_remove,
 };
 

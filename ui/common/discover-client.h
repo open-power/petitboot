@@ -21,6 +21,8 @@ struct pb_boot_data {
 
 struct discover_client_ops {
 	int (*device_add)(struct device *device, void *arg);
+	int (*boot_option_add)(struct device *dev, struct boot_option *option,
+			void *arg);
 	void (*device_remove)(struct device *device, void *arg);
 	void *cb_arg;
 };

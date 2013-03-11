@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -37,6 +38,20 @@ void discover_client_destroy(struct discover_client *client)
 	talloc_free(client);
 }
 
+static struct device *find_device(struct discover_client *client,
+		const char *id)
+{
+	int i;
+
+	for (i = 0; i < client->n_devices; i++) {
+		struct device *dev = client->devices[i];
+		if (!strcmp(dev->id, id))
+			return dev;
+	}
+
+	return NULL;
+}
+
 static void device_add(struct discover_client *client, struct device *device)
 {
 	client->n_devices++;
@@ -46,7 +61,25 @@ static void device_add(struct discover_client *client, struct device *device)
 	client->devices[client->n_devices - 1] = device;
 	talloc_steal(client, device);
 
-	client->ops.device_add(device, client->ops.cb_arg);
+	if (client->ops.device_add)
+		client->ops.device_add(device, client->ops.cb_arg);
+}
+
+static void boot_option_add(struct discover_client *client,
+		struct boot_option *opt)
+{
+	struct device *dev;
+
+	dev = find_device(client, opt->device_id);
+
+	/* we require that devices are already present before any boot options
+	 * are added */
+	assert(dev);
+
+	talloc_steal(dev, opt);
+
+	if (client->ops.boot_option_add)
+		client->ops.boot_option_add(dev, opt, client->ops.cb_arg);
 }
 
 static void device_remove(struct discover_client *client, const char *id)
@@ -81,6 +114,7 @@ static int discover_client_process(void *arg)
 {
 	struct discover_client *client = arg;
 	struct pb_protocol_message *message;
+	struct boot_option *opt;
 	struct device *dev;
 	char *dev_id;
 	int rc;
@@ -91,8 +125,9 @@ static int discover_client_process(void *arg)
 		return -1;
 
 	switch (message->action) {
-	case PB_PROTOCOL_ACTION_ADD:
-		dev = talloc(client, struct device);
+	case PB_PROTOCOL_ACTION_DEVICE_ADD:
+		dev = talloc_zero(client, struct device);
+		list_init(&dev->boot_options);
 
 		rc = pb_protocol_deserialise_device(dev, message);
 		if (rc) {
@@ -102,7 +137,18 @@ static int discover_client_process(void *arg)
 
 		device_add(client, dev);
 		break;
-	case PB_PROTOCOL_ACTION_REMOVE:
+	case PB_PROTOCOL_ACTION_BOOT_OPTION_ADD:
+		opt = talloc_zero(client, struct boot_option);
+
+		rc = pb_protocol_deserialise_boot_option(opt, message);
+		if (rc) {
+			pb_log("%s: no boot_option?\n", __func__);
+			return 0;
+		}
+
+		boot_option_add(client, opt);
+		break;
+	case PB_PROTOCOL_ACTION_DEVICE_REMOVE:
 		dev_id = pb_protocol_deserialise_string(client, message);
 		if (!dev_id) {
 			pb_log("%s: no device id?\n", __func__);

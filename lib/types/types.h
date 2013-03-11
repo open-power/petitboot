@@ -16,6 +16,7 @@ struct device {
 };
 
 struct boot_option {
+	char		*device_id;
 	char		*id;
 	char		*name;
 	char		*description;

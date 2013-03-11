@@ -31,6 +31,7 @@ int parse_user_event(struct device *device, struct event *event)
 	}
 
 	opt->id = talloc_asprintf(opt, "%s#%s", device->id, p);
+	opt->device_id = talloc_strdup(opt, device->id);
 	opt->name = talloc_strdup(opt, p);
 
 	p = event_get_param(event, "image");

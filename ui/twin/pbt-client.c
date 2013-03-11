@@ -63,7 +63,7 @@ static int pbt_client_boot(struct pbt_item *item)
 		pbt_item_name(item));
 
 	result = discover_client_boot(item->pbt_client->discover_client,
-			opt_data->dev, opt_data->opt, opt_data->bd);
+			NULL, opt_data->opt, opt_data->bd);
 
 	if (result) {
 		pb_log("%s: failed: %s\n", __func__, opt_data->bd->image);
@@ -83,101 +83,89 @@ static int pbt_client_on_edit(struct pbt_item *item)
 static int pbt_device_add(struct device *dev, struct pbt_client *client)
 {
 	struct pbt_frame *const frame = &client->frame;
-	struct pbt_item *device_item;
-	struct boot_option *opt;
+	struct pbt_item *item;
 	struct pbt_quad q;
 	const char *icon_file;
-	struct pbt_item *selected_item = NULL;
 
 	pb_log("%s: %p %s: n_options %d\n", __func__, dev, dev->id,
 		dev->n_options);
 
 	pb_protocol_dump_device(dev, "", pb_log_get_stream());
 
-	/* device_item */
-
 	// FIXME: check for existing dev->id
 
 	icon_file = dev->icon_file ? dev->icon_file : pbt_icon_chooser(dev->id);
 
-	device_item = pbt_item_create_reduced(frame->top_menu, dev->id,
+	item = pbt_item_create_reduced(frame->top_menu, dev->id,
 		frame->top_menu->n_items, icon_file);
 
-	if (!device_item)
-		goto fail_device_item_create;
+	if (!item)
+		return -1;
 
-	device_item->pb_device = dev;
+	item->pb_device = dev;
+	dev->ui_info = item;
 	frame->top_menu->n_items++;
 
 	/* sub_menu */
-
 	q.x = frame->top_menu->window->pixmap->width;
 	q.y = 0;
 	q.width = frame->top_menu->scr->tscreen->width - q.x;
 	q.height = frame->top_menu->scr->tscreen->height;
 
-	device_item->sub_menu = pbt_menu_create(device_item, dev->id,
+	item->sub_menu = pbt_menu_create(item, dev->id,
 		frame->top_menu->scr, frame->top_menu, &q,
 		&frame->top_menu->layout);
-	if (!device_item->sub_menu)
-		goto fail_sub_menu_create;
+	if (!item->sub_menu)
+		return -1;
 
-	list_for_each_entry(&dev->boot_options, opt, list) {
-		struct pbt_item *i;
-		struct pb_opt_data *opt_data;
+	pbt_menu_show(frame->top_menu, 1);
 
-		i = pbt_item_create(device_item->sub_menu,
+	return 0;
+}
+
+static int pbt_boot_option_add(struct device *dev, struct boot_option *opt,
+		struct pbt_client *client)
+{
+	struct pbt_item *opt_item, *device_item;
+	struct pb_opt_data *opt_data;
+
+	device_item = dev->ui_info;
+
+	opt_item = pbt_item_create(device_item->sub_menu,
 			opt->id, device_item->sub_menu->n_items++,
 			opt->icon_file, opt->name, opt->description);
 
-		if (!i) {
-			assert(0);
-			break;
-		}
+	opt_item->pb_opt = opt;
+	opt_item->pbt_client = client;
+	opt_item->on_execute = pbt_client_boot;
+	opt_item->on_edit = pbt_client_on_edit;
 
-		i->pb_opt = opt;
-		i->pbt_client = client;
-		i->on_execute = pbt_client_boot;
-		i->on_edit = pbt_client_on_edit;
+	opt_item->data = opt_data = talloc(opt_item, struct pb_opt_data);
+	opt_data->name = opt->name;
+	opt_data->bd = talloc(opt_item, struct pb_boot_data);
+	opt_data->bd->image = talloc_strdup(opt_data->bd,
+		opt->boot_image_file);
+	opt_data->bd->initrd = talloc_strdup(opt_data->bd,
+		opt->initrd_file);
+	opt_data->bd->args = talloc_strdup(opt_data->bd,
+		opt->boot_args);
+	opt_data->opt = opt;
+	opt_data->opt_hash = pb_opt_hash(dev, opt);
 
-		i->data = opt_data = talloc(i, struct pb_opt_data);
-		opt_data->name = opt->name;
-		opt_data->bd = talloc(i, struct pb_boot_data);
-		opt_data->bd->image = talloc_strdup(opt_data->bd,
-			opt->boot_image_file);
-		opt_data->bd->initrd = talloc_strdup(opt_data->bd,
-			opt->initrd_file);
-		opt_data->bd->args = talloc_strdup(opt_data->bd,
-			opt->boot_args);
-		opt_data->dev = dev;
-		opt_data->opt = opt;
-		opt_data->opt_hash = pb_opt_hash(dev, opt);
-
-		/* Select the first item as default. */
-
-		if (!selected_item)
-			selected_item = i;
-
-		/* If this is the default_item select it and start timer. */
-
-		if (opt_data->opt_hash
-			== device_item->sub_menu->default_item_hash) {
-			selected_item = i;
-			ui_timer_kick(&client->signal_data.timer);
-		}
+	/* If this is the default_item select it and start timer. */
+	if (opt_data->opt_hash == device_item->sub_menu->default_item_hash) {
+		device_item->selected_item = opt_item;
+		pbt_menu_set_selected(device_item->sub_menu, opt_item);
+		ui_timer_kick(&client->signal_data.timer);
 	}
 
-	pbt_menu_set_selected(device_item->sub_menu, selected_item);
+	/* Select the first item as default. */
+	if (!device_item->selected_item)
+		pbt_menu_set_selected(device_item->sub_menu, opt_item);
 
-	pbt_menu_show(frame->top_menu, 1);
 	twin_screen_update(client->frame.scr->tscreen);
 
 	return 0;
-
-fail_sub_menu_create:
-fail_device_item_create:
-	assert(0);
-	return -1;
 }
 
 static void pbt_device_remove(struct device *dev, struct pbt_client *client)
@@ -248,6 +236,7 @@ static void pbt_device_remove(struct device *dev, struct pbt_client *client)
 
 static struct discover_client_ops pbt_client_ops = {
 	.device_add = (void *)pbt_device_add,
+	.boot_option_add = (void *)pbt_boot_option_add,
 	.device_remove = (void *)pbt_device_remove,
 };
 

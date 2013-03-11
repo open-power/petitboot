@@ -41,6 +41,7 @@ struct pbt_item
 	twin_pixmap_t *pixmap_active;
 
 	struct pbt_menu *sub_menu;
+	struct pbt_item *selected_item;
 
 	int (*on_execute)(struct pbt_item *item);
 	int (*on_edit)(struct pbt_item *item);
