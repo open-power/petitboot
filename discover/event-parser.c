@@ -13,7 +13,7 @@
  * Understands params: name, image, args.
  */
 
-int parse_user_event(struct device *device, struct event *event)
+struct boot_option *parse_user_event(struct device *device, struct event *event)
 {
 	struct boot_option *opt;
 	const char *p;
@@ -54,9 +54,9 @@ int parse_user_event(struct device *device, struct event *event)
 
 	device_add_boot_option(device, opt);
 
-	return 0;
+	return opt;
 
 fail:
 	talloc_free(opt);
-	return -1;
+	return NULL;
 }

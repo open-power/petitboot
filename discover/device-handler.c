@@ -347,23 +347,25 @@ static int handle_add_user_event(struct device_handler *handler,
 
 	assert(event->device);
 
-	device = talloc_zero(handler, struct device);
+	device = device_handler_find(handler, event->device);
 
-	if (!device)
-		goto fail;
+	if (!device) {
+		device = talloc_zero(handler, struct device);
 
-	device->id = talloc_strdup(device, event->device);
-	list_init(&device->boot_options);
+		if (!device)
+			goto fail;
 
-	parse_user_event(device, event);
+		device->id = talloc_strdup(device, event->device);
+		list_init(&device->boot_options);
 
-	discover_server_notify_device_add(handler->server, device);
+		/* add device to handler device array */
+		device_handler_add(handler, device);
 
-	list_for_each_entry(&device->boot_options, opt, list)
-		discover_server_notify_boot_option_add(handler->server, opt);
+		discover_server_notify_device_add(handler->server, device);
+	}
 
-	/* add device to handler device array */
-	device_handler_add(handler, device);
+	opt = parse_user_event(device, event);
+	discover_server_notify_boot_option_add(handler->server, opt);
 
 	return 0;
 

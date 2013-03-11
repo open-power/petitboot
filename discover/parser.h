@@ -21,6 +21,7 @@ enum generic_icon_type {
 void parser_init(void);
 
 void iterate_parsers(struct discover_context *ctx);
-int parse_user_event(struct device *device, struct event *event);
+struct boot_option *parse_user_event(struct device *device,
+		struct event *event);
 
 #endif /* _PARSER_H */

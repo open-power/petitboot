@@ -28,6 +28,23 @@ static int print_device_add(struct device *device,
 	return 0;
 }
 
+static int print_boot_option_add(struct device *dev,
+		struct boot_option *opt,
+		void __attribute__((unused)) *arg)
+{
+	printf("new boot option (dev: %s):\n", dev->id);
+	printf("\tdev id: %s\n", opt->device_id);
+	printf("\tid:     %s\n", opt->id);
+	printf("\tname:   %s\n", opt->name);
+	printf("\tdesc:   %s\n", opt->description);
+	printf("\ticon:   %s\n", opt->icon_file);
+	printf("\tboot:   %s\n", opt->boot_image_file);
+	printf("\tinit:   %s\n", opt->initrd_file);
+	printf("\targs:   %s\n", opt->boot_args);
+
+	return 0;
+}
+
 static void print_device_remove(struct device *device,
 	void __attribute__((unused)) *arg)
 {
@@ -38,6 +55,7 @@ static void print_device_remove(struct device *device,
 
 static struct discover_client_ops client_ops = {
 	.device_add = print_device_add,
+	.boot_option_add = print_boot_option_add,
 	.device_remove = print_device_remove,
 };
 
