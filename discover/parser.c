@@ -26,7 +26,7 @@ void iterate_parsers(struct discover_context *ctx)
 	int i;
 	unsigned int count = 0;
 
-	pb_log("trying parsers for %s\n", ctx->device_path);
+	pb_log("trying parsers for %s\n", ctx->device->device->id);
 
 	for (i = 0; parsers[i]; i++) {
 		pb_log("\ttrying parser '%s'\n", parsers[i]->name);

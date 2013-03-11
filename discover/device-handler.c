@@ -22,26 +22,58 @@
 #include "boot.h"
 
 struct device_handler {
-	struct discover_server *server;
-	int dry_run;
+	struct discover_server	*server;
+	int			dry_run;
 
-	struct device **devices;
-	unsigned int n_devices;
-
-	struct list contexts;
+	struct discover_device	**devices;
+	unsigned int		n_devices;
 };
 
 /**
- * device_handler_add - Add a device to the handler device array.
+ * context_commit - Commit a temporary discovery context to the handler,
+ * and notify the clients about any new options / devices
  */
-
-static void device_handler_add(struct device_handler *handler,
-	struct device *device)
+static void context_commit(struct device_handler *handler,
+		struct discover_context *ctx)
 {
-	handler->n_devices++;
-	handler->devices = talloc_realloc(handler, handler->devices,
-		struct device *, handler->n_devices);
-	handler->devices[handler->n_devices - 1] = device;
+	struct discover_device *dev = ctx->device;
+	unsigned int i, existing_device;
+	struct boot_option *opt, *tmp;
+
+	/* do we already have this device? */
+	for (i = 0; i < handler->n_devices; i++) {
+		if (ctx->device == handler->devices[i]) {
+			existing_device = 1;
+			break;
+		}
+	}
+
+	/* if not already present, add the device to the handler's array */
+	if (!existing_device) {
+		handler->n_devices++;
+		handler->devices = talloc_realloc(handler, handler->devices,
+			struct discover_device *, handler->n_devices);
+		handler->devices[handler->n_devices - 1] = dev;
+		talloc_steal(handler, dev);
+
+		discover_server_notify_device_add(handler->server, dev->device);
+	}
+
+
+	/* move boot options from the context to the device */
+	list_for_each_entry_safe(&ctx->boot_options, opt, tmp, list) {
+		list_remove(&opt->list);
+		list_add(&dev->device->boot_options, &opt->list);
+		dev->device->n_options++;
+		discover_server_notify_boot_option_add(handler->server, opt);
+	}
+}
+
+void discover_context_add_boot_option(struct discover_context *ctx,
+		struct boot_option *boot_option)
+{
+	list_add(&ctx->boot_options, &boot_option->list);
+	talloc_steal(ctx, boot_option);
 }
 
 /**
@@ -49,7 +81,7 @@ static void device_handler_add(struct device_handler *handler,
  */
 
 static void device_handler_remove(struct device_handler *handler,
-	struct device *device)
+	struct discover_device *device)
 {
 	unsigned int i;
 
@@ -66,27 +98,11 @@ static void device_handler_remove(struct device_handler *handler,
 	memmove(&handler->devices[i], &handler->devices[i + 1],
 		(handler->n_devices - i) * sizeof(handler->devices[0]));
 	handler->devices = talloc_realloc(handler, handler->devices,
-		struct device *, handler->n_devices);
-}
+		struct discover_device *, handler->n_devices);
 
-/**
- * device_handler_find - Find a handler device by id.
- */
+	discover_server_notify_device_remove(handler->server, device->device);
 
-static struct device *device_handler_find(struct device_handler *handler,
-	const char *id)
-{
-	unsigned int i;
-
-	assert(id);
-
-	for (i = 0; i < handler->n_devices; i++)
-		if (handler->devices[i]->id
-			&& streq(handler->devices[i]->id, id))
-			return handler->devices[i];
-
-	pb_log("%s: unknown device: %s\n", __func__, id);
-	return NULL;
+	talloc_free(device);
 }
 
 /**
@@ -110,11 +126,12 @@ const struct device *device_handler_get_device(
 		return NULL;
 	}
 
-	return handler->devices[index];
+	return handler->devices[index]->device;
 }
 
 static void setup_device_links(struct discover_context *ctx)
 {
+	struct discover_device *dev = ctx->device;
 	struct link {
 		char *env, *dir;
 	} *link, links[] = {
@@ -141,21 +158,21 @@ static void setup_device_links(struct discover_context *ctx)
 
 		enc = encode_label(ctx, value);
 		dir = join_paths(ctx, mount_base(), link->dir);
-		path = join_paths(ctx, dir, value);
+		path = join_paths(dev, dir, value);
 
 		if (!pb_mkdir_recursive(dir)) {
 			unlink(path);
-			if (symlink(ctx->mount_path, path)) {
+			if (symlink(dev->mount_path, path)) {
 				pb_log("symlink(%s,%s): %s\n",
-						ctx->mount_path, path,
+						dev->mount_path, path,
 						strerror(errno));
 				talloc_free(path);
 			} else {
-				int i = ctx->n_links++;
-				ctx->links = talloc_realloc(ctx,
-						ctx->links, char *,
-						ctx->n_links);
-				ctx->links[i] = path;
+				int i = dev->n_links++;
+				dev->links = talloc_realloc(dev,
+						dev->links, char *,
+						dev->n_links);
+				dev->links[i] = path;
 			}
 
 		}
@@ -165,31 +182,32 @@ static void setup_device_links(struct discover_context *ctx)
 	}
 }
 
-static void remove_device_links(struct discover_context *ctx)
+static void remove_device_links(struct discover_device *dev)
 {
 	int i;
 
-	for (i = 0; i < ctx->n_links; i++)
-		unlink(ctx->links[i]);
+	for (i = 0; i < dev->n_links; i++)
+		unlink(dev->links[i]);
 }
 
 static int mount_device(struct discover_context *ctx)
 {
+	struct discover_device *dev = ctx->device;
 	const char *mountpoint;
 	const char *argv[6];
 
-	if (!ctx->mount_path) {
-		mountpoint = mountpoint_for_device(ctx->device_path);
-		ctx->mount_path = talloc_strdup(ctx, mountpoint);
+	if (!dev->mount_path) {
+		mountpoint = mountpoint_for_device(dev->device_path);
+		dev->mount_path = talloc_strdup(dev, mountpoint);
 	}
 
-	if (pb_mkdir_recursive(ctx->mount_path))
+	if (pb_mkdir_recursive(dev->mount_path))
 		pb_log("couldn't create mount directory %s: %s\n",
-				ctx->mount_path, strerror(errno));
+				dev->mount_path, strerror(errno));
 
 	argv[0] = pb_system_apps.mount;
-	argv[1] = ctx->device_path;
-	argv[2] = ctx->mount_path;
+	argv[1] = dev->device_path;
+	argv[2] = dev->mount_path;
 	argv[3] = "-o";
 	argv[4] = "ro";
 	argv[5] = NULL;
@@ -199,8 +217,8 @@ static int mount_device(struct discover_context *ctx)
 		/* Retry mount without ro option. */
 
 		argv[0] = pb_system_apps.mount;
-		argv[1] = ctx->device_path;
-		argv[2] = ctx->mount_path;
+		argv[1] = dev->device_path;
+		argv[2] = dev->mount_path;
 		argv[3] = NULL;
 
 		if (pb_run_cmd(argv, 1, 0))
@@ -211,16 +229,16 @@ static int mount_device(struct discover_context *ctx)
 	return 0;
 
 out_rmdir:
-	pb_rmdir_recursive(mount_base(), ctx->mount_path);
+	pb_rmdir_recursive(mount_base(), dev->mount_path);
 	return -1;
 }
 
-static int umount_device(struct discover_context *ctx)
+static int umount_device(struct discover_device *dev)
 {
 	int status;
 	pid_t pid;
 
-	remove_device_links(ctx);
+	remove_device_links(dev);
 
 	pid = fork();
 	if (pid == -1) {
@@ -230,7 +248,7 @@ static int umount_device(struct discover_context *ctx)
 
 	if (pid == 0) {
 		execl(pb_system_apps.umount, pb_system_apps.umount,
-						ctx->mount_path, NULL);
+						dev->mount_path, NULL);
 		exit(EXIT_FAILURE);
 	}
 
@@ -243,54 +261,78 @@ static int umount_device(struct discover_context *ctx)
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
 		return -1;
 
-	pb_rmdir_recursive(mount_base(), ctx->mount_path);
+	pb_rmdir_recursive(mount_base(), dev->mount_path);
 
 	return 0;
 }
 
-static struct discover_context *find_context(struct device_handler *handler,
+static struct discover_device *find_device(struct device_handler *handler,
 		const char *id)
 {
-	struct discover_context *ctx;
+	struct discover_device *dev;
+	unsigned int i;
 
-	list_for_each_entry(&handler->contexts, ctx, list) {
-		if (!strcmp(ctx->id, id))
-			return ctx;
+	for (i = 0; i < handler->n_devices; i++) {
+		dev = handler->devices[i];
+		if (!strcmp(dev->device->id, id))
+			return dev;
 	}
 
 	return NULL;
 }
 
-static int destroy_context(void *arg)
+static int destroy_device(void *arg)
 {
-	struct discover_context *ctx = arg;
+	struct discover_device *dev = arg;
 
-	list_remove(&ctx->list);
-	umount_device(ctx);
+	umount_device(dev);
 
 	return 0;
+}
+
+static struct discover_device *discover_device_create(
+		struct device_handler *handler,
+		struct discover_context *ctx,
+		struct event *event)
+{
+	struct discover_device *dev;
+	const char *devname;
+
+	dev = find_device(handler, event->device);
+	if (dev)
+		return dev;
+
+	dev = talloc_zero(ctx, struct discover_device);
+	dev->device = talloc_zero(dev, struct device);
+	list_init(&dev->device->boot_options);
+
+	devname = event_get_param(ctx->event, "DEVNAME");
+	if (devname)
+		dev->device_path = talloc_strdup(dev, devname);
+
+	dev->device->id = talloc_strdup(dev, event->device);
+
+	talloc_set_destructor(dev, destroy_device);
+
+	return dev;
 }
 
 static int handle_add_udev_event(struct device_handler *handler,
 		struct event *event)
 {
 	struct discover_context *ctx;
-	struct boot_option *opt;
-	const char *devname;
+	struct discover_device *dev;
 	int rc;
 
 	/* create our context */
 	ctx = talloc(handler, struct discover_context);
 	ctx->event = event;
-	ctx->mount_path = NULL;
-	ctx->links = NULL;
-	ctx->n_links = 0;
+	list_init(&ctx->boot_options);
 
-	ctx->id = talloc_strdup(ctx, event->device);
+	/* create our top-level device */
+	dev = discover_device_create(handler, ctx, event);
 
-	devname = event_get_param(ctx->event, "DEVNAME");
-	assert(devname);
-	ctx->device_path = talloc_strdup(ctx, devname);
+	ctx->device = dev;
 
 	rc = mount_device(ctx);
 	if (rc) {
@@ -298,24 +340,13 @@ static int handle_add_udev_event(struct device_handler *handler,
 		return 0;
 	}
 
-	list_add(&handler->contexts, &ctx->list);
-	talloc_set_destructor(ctx, destroy_context);
-
-	/* set up the top-level device */
-	ctx->device = talloc_zero(ctx, struct device);
-	ctx->device->id = talloc_strdup(ctx->device, ctx->id);
-	list_init(&ctx->device->boot_options);
-
-	/* run the parsers */
+	/* run the parsers. This will populate the ctx's boot_option list. */
 	iterate_parsers(ctx);
 
-	/* add device to handler device array */
-	device_handler_add(handler, ctx->device);
+	/* add discovered stuff to the handler */
+	context_commit(handler, ctx);
 
-	discover_server_notify_device_add(handler->server, ctx->device);
-
-	list_for_each_entry(&ctx->device->boot_options, opt, list)
-		discover_server_notify_boot_option_add(handler->server, opt);
+	talloc_free(ctx);
 
 	return 0;
 }
@@ -323,18 +354,14 @@ static int handle_add_udev_event(struct device_handler *handler,
 static int handle_remove_udev_event(struct device_handler *handler,
 		struct event *event)
 {
-	struct discover_context *ctx;
+	struct discover_device *dev;
 
-	ctx = find_context(handler, event->device);
-	if (!ctx)
+	dev = find_device(handler, event->device);
+	if (!dev)
 		return 0;
 
-	discover_server_notify_device_remove(handler->server, ctx->device);
-
 	/* remove device from handler device array */
-	device_handler_remove(handler, ctx->device);
-
-	talloc_free(ctx);
+	device_handler_remove(handler, dev);
 
 	return 0;
 }
@@ -342,52 +369,38 @@ static int handle_remove_udev_event(struct device_handler *handler,
 static int handle_add_user_event(struct device_handler *handler,
 		struct event *event)
 {
-	struct boot_option *opt;
-	struct device *device;
+	struct discover_context *ctx;
+	struct discover_device *dev;
+	int rc;
 
 	assert(event->device);
 
-	device = device_handler_find(handler, event->device);
+	ctx = talloc(handler, struct discover_context);
+	ctx->event = event;
+	list_init(&ctx->boot_options);
 
-	if (!device) {
-		device = talloc_zero(handler, struct device);
+	dev = discover_device_create(handler, ctx, event);
+	ctx->device = dev;
 
-		if (!device)
-			goto fail;
+	rc = parse_user_event(ctx, event);
 
-		device->id = talloc_strdup(device, event->device);
-		list_init(&device->boot_options);
+	if (!rc)
+		context_commit(handler, ctx);
 
-		/* add device to handler device array */
-		device_handler_add(handler, device);
-
-		discover_server_notify_device_add(handler->server, device);
-	}
-
-	opt = parse_user_event(device, event);
-	discover_server_notify_boot_option_add(handler->server, opt);
-
-	return 0;
-
-fail:
-	talloc_free(device);
-	return 0;
+	return rc;
 }
 
 static int handle_remove_user_event(struct device_handler *handler,
 		struct event *event)
 {
-	struct device *device = device_handler_find(handler, event->device);
+	struct discover_device *dev = find_device(handler, event->device);
 
-	if (!device)
+	if (!dev)
 		return 0;
 
-	discover_server_notify_device_remove(handler->server, device);
-
 	/* remove device from handler device array */
-	device_handler_remove(handler, device);
+	device_handler_remove(handler, dev);
 
-	talloc_free(device);
 	return 0;
 }
 
@@ -429,8 +442,6 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	handler->server = server;
 	handler->dry_run = dry_run;
 
-	list_init(&handler->contexts);
-
 	/* set up our mount point base */
 	pb_mkdir_recursive(mount_base());
 
@@ -450,10 +461,10 @@ static struct boot_option *find_boot_option_by_id(
 	unsigned int i;
 
 	for (i = 0; i < handler->n_devices; i++) {
-		struct device *dev = handler->devices[i];
+		struct discover_device *dev = handler->devices[i];
 		struct boot_option *opt;
 
-		list_for_each_entry(&dev->boot_options, opt, list)
+		list_for_each_entry(&dev->device->boot_options, opt, list)
 			if (!strcmp(opt->id, id))
 				return opt;
 	}

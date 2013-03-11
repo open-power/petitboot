@@ -17,10 +17,15 @@
 
 static FILE *testf;
 
-void device_add_boot_option(struct device *device,
+struct device *discover_context_device(struct discover_context *ctx)
+{
+	return ctx->device->device;
+}
+
+void discover_context_add_boot_option(struct discover_context *ctx,
 		struct boot_option *boot_option)
 {
-	fprintf(testf, "%s: %s\n", __func__, device->id);
+	fprintf(testf, "%s: %s\n", __func__, ctx->device->device->id);
 	fprintf(testf, " id     '%s'\n", boot_option->id);
 	fprintf(testf, " name   '%s'\n", boot_option->name);
 	fprintf(testf, " descr  '%s'\n", boot_option->description);
@@ -62,9 +67,11 @@ int main(int argc, char **argv)
 
 	ctx = talloc_zero(NULL, struct discover_context);
 
-	ctx->device_path = talloc_asprintf(ctx, "%s/%s", argv[1], argv[2]);
-	ctx->device = talloc_zero(ctx, struct device);
-	ctx->device->id = talloc_strdup(ctx->device, argv[2]);
+	ctx->device = talloc_zero(ctx, struct discover_device);
+	ctx->device->device = talloc_zero(ctx->device, struct device);
+	ctx->device->device_path = talloc_asprintf(ctx, "%s/%s",
+							argv[1], argv[2]);
+	ctx->device->device->id = talloc_strdup(ctx->device->device, argv[2]);
 
 	iterate_parsers(ctx);
 

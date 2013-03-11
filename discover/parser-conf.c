@@ -255,6 +255,7 @@ static void conf_parse_buf(struct conf_context *conf)
 
 int conf_parse(struct conf_context *conf)
 {
+	struct device *dev;
 	int fd, rc;
 	unsigned int i;
 	struct stat stat;
@@ -269,7 +270,7 @@ int conf_parse(struct conf_context *conf)
 
 	for (i = 0; conf->conf_files[i]; i++) {
 		char *filepath = resolve_path(conf->dc,
-			conf->conf_files[i], conf->dc->device_path);
+			conf->conf_files[i], conf->dc->device->device_path);
 
 		pb_log("%s: try: %s\n", __func__, filepath);
 
@@ -309,8 +310,9 @@ int conf_parse(struct conf_context *conf)
 	if (len <= 0)
 		goto out;
 
-	if (!conf->dc->device->icon_file)
-		conf->dc->device->icon_file = talloc_strdup(conf->dc,
+	dev = conf->dc->device->device;
+	if (!dev->icon_file)
+		dev->icon_file = talloc_strdup(dev,
 			generic_icon_file(guess_device_type(conf->dc)));
 
 	conf_parse_buf(conf);

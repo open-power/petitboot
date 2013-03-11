@@ -22,10 +22,10 @@ struct yaboot_state {
 static void yaboot_finish(struct conf_context *conf)
 {
 	struct yaboot_state *state = conf->parser_info;
+	struct device *dev = conf->dc->device->device;
 
 	if (!state->desc_image) {
-		pb_log("%s: %s: no image found\n", __func__,
-			conf->dc->device->id);
+		pb_log("%s: %s: no image found\n", __func__, dev->id);
 		return;
 	}
 
@@ -46,8 +46,9 @@ static void yaboot_finish(struct conf_context *conf)
 
 	/* opt is persistent, so must be associated with device */
 
-	device_add_boot_option(conf->dc->device, state->opt);
-	state->opt = talloc_zero(conf->dc->device, struct boot_option);
+	discover_context_add_boot_option(conf->dc, state->opt);
+
+	state->opt = talloc_zero(conf->dc, struct boot_option);
 	state->opt->boot_args = talloc_strdup(state->opt, "");
 }
 
@@ -111,7 +112,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 				"%s%s", g_boot, value);
 		} else {
 			state->opt->boot_image_file = resolve_path(state->opt,
-				value, conf->dc->device_path);
+				value, conf->dc->device->device_path);
 			state->desc_image = talloc_strdup(state->opt, value);
 		}
 
@@ -137,16 +138,16 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 		if (*value == '/') {
 			state->opt->boot_image_file = resolve_path(state->opt,
-				value, conf->dc->device_path);
+				value, conf->dc->device->device_path);
 			state->desc_image = talloc_strdup(state->opt, value);
 		} else {
 			state->opt->boot_image_file = resolve_path(state->opt,
-				suse_fp->image, conf->dc->device_path);
+				suse_fp->image, conf->dc->device->device_path);
 			state->desc_image = talloc_strdup(state->opt,
 				suse_fp->image);
 
 			state->opt->initrd_file = resolve_path(state->opt,
-				suse_fp->initrd, conf->dc->device_path);
+				suse_fp->initrd, conf->dc->device->device_path);
 			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 				suse_fp->initrd);
 		}
@@ -181,7 +182,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 				"initrd=%s%s", g_boot, value);
 		} else {
 			state->opt->initrd_file = resolve_path(state->opt,
-				value, conf->dc->device_path);
+				value, conf->dc->device->device_path);
 			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 				value);
 		}
@@ -192,7 +193,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 	if (streq(name, "label")) {
 		state->opt->id = talloc_asprintf(state->opt, "%s#%s",
-			conf->dc->device->id, value);
+			conf->dc->device->device->id, value);
 		state->opt->name = talloc_strdup(state->opt, value);
 		return;
 	}

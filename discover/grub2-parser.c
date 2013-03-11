@@ -41,11 +41,11 @@ struct grub2_state {
 
 static void grub2_finish(struct conf_context *conf)
 {
+	struct device *dev = conf->dc->device->device;
 	struct grub2_state *state = conf->parser_info;
 
 	if (!state->desc_image) {
-		pb_log("%s: %s: no image found\n", __func__,
-			conf->dc->device->id);
+		pb_log("%s: %s: no image found\n", __func__, dev->id);
 		return;
 	}
 
@@ -66,8 +66,9 @@ static void grub2_finish(struct conf_context *conf)
 
 	/* opt is persistent, so must be associated with device */
 
-	device_add_boot_option(conf->dc->device, state->opt);
-	state->opt = talloc_zero(conf->dc->device, struct boot_option);
+	discover_context_add_boot_option(conf->dc, state->opt);
+
+	state->opt = talloc_zero(conf->dc, struct boot_option);
 	state->opt->boot_args = talloc_strdup(state->opt, "");
 
 	talloc_free(state->desc_image);
@@ -77,6 +78,7 @@ static void grub2_finish(struct conf_context *conf)
 static void grub2_process_pair(struct conf_context *conf, const char *name,
 		char *value)
 {
+	struct device *dev = conf->dc->device->device;
 	struct grub2_state *state = conf->parser_info;
 
 	if (!name || !conf_param_in_list(state->known_names, name))
@@ -95,7 +97,7 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 			*sep = 0;
 
 		state->opt->id = talloc_asprintf(state->opt, "%s#%s",
-			conf->dc->device->id, value);
+			dev->id, value);
 		state->opt->name = talloc_strdup(state->opt, value);
 
 		return;
@@ -110,7 +112,7 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 			*sep = 0;
 
 		state->opt->boot_image_file = resolve_path(state->opt,
-			value, conf->dc->device_path);
+			value, conf->dc->device->device_path);
 		state->desc_image = talloc_strdup(state->opt, value);
 
 		if (sep)
@@ -122,7 +124,7 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 
 	if (streq(name, "initrd")) {
 		state->opt->initrd_file = resolve_path(state->opt,
-			value, conf->dc->device_path);
+			value, conf->dc->device->device_path);
 		state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 			value);
 		return;

@@ -6,6 +6,7 @@
 #include "talloc/talloc.h"
 #include "event.h"
 #include "parser-utils.h"
+#include "device-handler.h"
 
 /**
  * parse_user_event - Parse a user event.
@@ -13,12 +14,15 @@
  * Understands params: name, image, args.
  */
 
-struct boot_option *parse_user_event(struct device *device, struct event *event)
+int parse_user_event(struct discover_context *ctx, struct event *event)
 {
 	struct boot_option *opt;
+	struct device *dev;
 	const char *p;
 
-	opt = talloc_zero(device, struct boot_option);
+	dev = ctx->device->device;
+
+	opt = talloc_zero(dev, struct boot_option);
 
 	if (!opt)
 		goto fail;
@@ -30,8 +34,8 @@ struct boot_option *parse_user_event(struct device *device, struct event *event)
 		goto fail;
 	}
 
-	opt->id = talloc_asprintf(opt, "%s#%s", device->id, p);
-	opt->device_id = talloc_strdup(opt, device->id);
+	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, p);
+	opt->device_id = talloc_strdup(opt, dev->id);
 	opt->name = talloc_strdup(opt, p);
 
 	p = event_get_param(event, "image");
@@ -52,11 +56,11 @@ struct boot_option *parse_user_event(struct device *device, struct event *event)
 	opt->description = talloc_asprintf(opt, "%s %s", opt->boot_image_file,
 		opt->boot_args);
 
-	device_add_boot_option(device, opt);
+	discover_context_add_boot_option(ctx, opt);
 
-	return opt;
+	return 0;
 
 fail:
 	talloc_free(opt);
-	return NULL;
+	return -1;
 }

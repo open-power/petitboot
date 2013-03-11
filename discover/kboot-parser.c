@@ -15,6 +15,7 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 		char *value)
 {
 	const char *const *ignored_names = conf->parser_info;
+	struct device *dev;
 	char *pos;
 	char *args;
 	const char *initrd;
@@ -34,12 +35,13 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 
 	/* opt must be associated with dc */
 
-	opt = talloc_zero(conf->dc->device, struct boot_option);
+	dev = conf->dc->device->device;
+	opt = talloc_zero(dev, struct boot_option);
 
 	if (!opt)
 		return;
 
-	opt->id = talloc_asprintf(opt, "%s#%s", conf->dc->device->id, name);
+	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, name);
 	opt->name = talloc_strdup(opt, name);
 
 	args = talloc_strdup(opt, "");
@@ -79,7 +81,8 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	}
 
 out_add:
-	opt->boot_image_file = resolve_path(opt, value, conf->dc->device_path);
+	opt->boot_image_file = resolve_path(opt, value,
+			conf->dc->device->device_path);
 
 	if (root) {
 		opt->boot_args = talloc_asprintf(opt, "root=%s %s", root, args);
@@ -89,7 +92,7 @@ out_add:
 
 	if (initrd) {
 		opt->initrd_file = resolve_path(opt, initrd,
-				conf->dc->device_path);
+				conf->dc->device->device_path);
 
 		opt->description = talloc_asprintf(opt, "%s initrd=%s %s",
 			value, initrd, opt->boot_args);
@@ -100,7 +103,7 @@ out_add:
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
 
-	device_add_boot_option(conf->dc->device, opt);
+	discover_context_add_boot_option(conf->dc, opt);
 }
 
 static struct conf_global_option kboot_global_options[] = {
