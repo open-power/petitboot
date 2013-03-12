@@ -240,6 +240,9 @@ static int umount_device(struct discover_device *dev)
 
 	remove_device_links(dev);
 
+	if (!dev->mount_path)
+		return 0;
+
 	pid = fork();
 	if (pid == -1) {
 		pb_log("%s: fork failed: %s\n", __func__, strerror(errno));
