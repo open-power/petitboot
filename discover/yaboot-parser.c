@@ -320,4 +320,8 @@ static int yaboot_parse(struct discover_context *dc)
 	return rc;
 }
 
-define_parser(yaboot, yaboot_parse);
+struct parser __yaboot_parser = {
+	.name		= "yaboot",
+	.parse		= yaboot_parse,
+	.filenames	= yaboot_conf_files,
+};

@@ -188,4 +188,8 @@ static int grub2_parse(struct discover_context *dc)
 	return rc;
 }
 
-define_parser(grub2, grub2_parse);
+struct parser __grub2_parser = {
+	.name		= "grub2",
+	.parse		= grub2_parse,
+	.filenames	= grub2_conf_files,
+};
