@@ -220,14 +220,15 @@ const char *conf_get_global_option(struct conf_context *conf,
  * Called from conf_parse() with data read from a conf file.
  */
 
-static void conf_parse_buf(struct conf_context *conf)
+void conf_parse_buf(struct conf_context *conf, char *buf,
+		int len __attribute__((unused)))
 {
 	char *pos, *name, *value;
 
 	assert(conf->get_pair);
 	assert(conf->process_pair);
 
-	for (pos = conf->buf; pos;) {
+	for (pos = buf; pos;) {
 		pos = conf->get_pair(conf, pos, &name, &value, '\n');
 
 		if (!value)
@@ -245,82 +246,3 @@ static void conf_parse_buf(struct conf_context *conf)
 	if (conf->finish)
 		conf->finish(conf);
 }
-
-/**
- * conf_parse - The common parser entry.
- *
- * Called from the parser specific setup routines.  Searches for .conf
- * files, reads data into buffers, and calls conf_parse_buf().
- */
-
-int conf_parse(struct conf_context *conf)
-{
-	struct device *dev;
-	int fd, rc;
-	unsigned int i;
-	struct stat stat;
-	ssize_t len;
-
-	rc = 0;
-	fd = -1;
-	len = 0;
-
-	/* The parser is only run on the first file found. */
-	/* FIXME: Could try others on error, etc. */
-
-	for (i = 0; conf->conf_files[i]; i++) {
-		char *filepath = resolve_path(conf->dc,
-			conf->conf_files[i], conf->dc->device->device_path);
-
-		pb_log("%s: try: %s\n", __func__, filepath);
-
-		fd = open(filepath, O_RDONLY);
-
-		talloc_free(filepath);
-
-		if (fd < 0) {
-			pb_log("%s: open failed: %s\n", __func__,
-				strerror(errno));
-			continue;
-		}
-
-		if (fstat(fd, &stat)) {
-			pb_log("%s: fstat failed: %s\n", __func__,
-				strerror(errno));
-			continue;
-		}
-
-		conf->buf = talloc_array(conf, char, stat.st_size + 1);
-
-		len = read(fd, conf->buf, stat.st_size);
-
-		if (len < 0) {
-			pb_log("%s: read failed: %s\n", __func__,
-				strerror(errno));
-			continue;
-		}
-		conf->buf[len] = 0;
-
-		break;
-	}
-
-	if (fd >= 0)
-		close(fd);
-
-	if (len <= 0)
-		goto out;
-
-	dev = conf->dc->device->device;
-	if (!dev->icon_file)
-		dev->icon_file = talloc_strdup(dev,
-			generic_icon_file(guess_device_type(conf->dc)));
-
-	conf_parse_buf(conf);
-
-	rc = 1;
-
-out:
-	pb_log("%s: %s\n", __func__, (rc ? "ok" : "failed"));
-	return rc;
-}
-

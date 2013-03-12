@@ -287,11 +287,10 @@ static const char *yaboot_known_names[] = {
 	NULL
 };
 
-static int yaboot_parse(struct discover_context *dc)
+static int yaboot_parse(struct discover_context *dc, char *buf, int len)
 {
 	struct conf_context *conf;
 	struct yaboot_state *state;
-	int rc;
 
 	conf = talloc_zero(dc, struct conf_context);
 
@@ -301,7 +300,6 @@ static int yaboot_parse(struct discover_context *dc)
 	conf->dc = dc;
 	conf->global_options = yaboot_global_options,
 	conf_init_global_options(conf);
-	conf->conf_files = yaboot_conf_files,
 	conf->get_pair = conf_get_pair_equal;
 	conf->process_pair = yaboot_process_pair;
 	conf->finish = yaboot_finish;
@@ -314,10 +312,10 @@ static int yaboot_parse(struct discover_context *dc)
 	state->opt = talloc_zero(conf->dc->device, struct boot_option);
 	state->opt->boot_args = talloc_strdup(state->opt, "");
 
-	rc = conf_parse(conf);
+	conf_parse_buf(conf, buf, len);
 
 	talloc_free(conf);
-	return rc;
+	return 1;
 }
 
 struct parser __yaboot_parser = {

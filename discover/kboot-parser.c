@@ -133,10 +133,9 @@ static const char *const kboot_ignored_names[] = {
 	NULL
 };
 
-static int kboot_parse(struct discover_context *dc)
+static int kboot_parse(struct discover_context *dc, char *buf, int len)
 {
 	struct conf_context *conf;
-	int rc;
 
 	conf = talloc_zero(dc, struct conf_context);
 
@@ -146,15 +145,14 @@ static int kboot_parse(struct discover_context *dc)
 	conf->dc = dc;
 	conf->global_options = kboot_global_options,
 	conf_init_global_options(conf);
-	conf->conf_files = kboot_conf_files,
 	conf->get_pair = conf_get_pair_equal;
 	conf->process_pair = kboot_process_pair;
 	conf->parser_info = (void *)kboot_ignored_names,
 
-	rc = conf_parse(conf);
+	conf_parse_buf(conf, buf, len);
 
 	talloc_free(conf);
-	return rc;
+	return 1;
 }
 
 struct parser __kboot_parser = {

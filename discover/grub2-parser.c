@@ -156,11 +156,10 @@ static const char *grub2_known_names[] = {
 	NULL
 };
 
-static int grub2_parse(struct discover_context *dc)
+static int grub2_parse(struct discover_context *dc, char *buf, int len)
 {
 	struct conf_context *conf;
 	struct grub2_state *state;
-	int rc;
 
 	conf = talloc_zero(dc, struct conf_context);
 
@@ -169,7 +168,6 @@ static int grub2_parse(struct discover_context *dc)
 
 	conf->dc = dc;
 	conf_init_global_options(conf);
-	conf->conf_files = grub2_conf_files,
 	conf->get_pair = conf_get_pair_space;
 	conf->process_pair = grub2_process_pair;
 	conf->finish = grub2_finish;
@@ -182,10 +180,10 @@ static int grub2_parse(struct discover_context *dc)
 	state->opt = talloc_zero(conf->dc->device, struct boot_option);
 	state->opt->boot_args = talloc_strdup(state->opt, "");
 
-	rc = conf_parse(conf);
+	conf_parse_buf(conf, buf, len);
 
 	talloc_free(conf);
-	return rc;
+	return 1;
 }
 
 struct parser __grub2_parser = {

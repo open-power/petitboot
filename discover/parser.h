@@ -6,7 +6,8 @@ struct discover_context;
 struct parser {
 	char			*name;
 	const char * const	*filenames;
-	int			(*parse)(struct discover_context *ctx);
+	int			(*parse)(struct discover_context *ctx,
+						char *buf, int len);
 };
 
 enum generic_icon_type {

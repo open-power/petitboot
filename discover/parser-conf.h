@@ -29,9 +29,7 @@ struct conf_global_option {
 struct conf_context {
 	void *parser_info;
 	struct discover_context *dc;
-	char *buf;
 	struct conf_global_option *global_options;
-	const char *const *conf_files;
 
 	char *(*get_pair)(struct conf_context *conf, char *str, char **name_out,
 		char **value_out, char terminator);
@@ -40,7 +38,7 @@ struct conf_context {
 	void (*finish)(struct conf_context *conf);
 };
 
-int conf_parse(struct conf_context *conf);
+void conf_parse_buf(struct conf_context *conf, char *buf, int len);
 char *conf_get_pair(struct conf_context *conf, char *str, char **name_out,
 	char **value_out, char delimiter, char terminator);
 void conf_init_global_options(struct conf_context *conf);
