@@ -22,17 +22,32 @@ struct device *discover_context_device(struct discover_context *ctx)
 	return ctx->device->device;
 }
 
-void discover_context_add_boot_option(struct discover_context *ctx,
-		struct boot_option *boot_option)
+struct discover_boot_option *discover_boot_option_create(
+		struct discover_context *ctx,
+		struct discover_device *dev)
 {
+	struct discover_boot_option *opt;
+
+	opt = talloc_zero(ctx, struct discover_boot_option);
+	opt->option = talloc(opt, struct boot_option);
+	opt->device = dev;
+
+	return opt;
+}
+
+void discover_context_add_boot_option(struct discover_context *ctx,
+		struct discover_boot_option *boot_option)
+{
+	struct boot_option *opt = boot_option->option;
+
 	fprintf(testf, "%s: %s\n", __func__, ctx->device->device->id);
-	fprintf(testf, " id     '%s'\n", boot_option->id);
-	fprintf(testf, " name   '%s'\n", boot_option->name);
-	fprintf(testf, " descr  '%s'\n", boot_option->description);
-	fprintf(testf, " icon   '%s'\n", boot_option->icon_file);
-	fprintf(testf, " image  '%s'\n", boot_option->boot_image_file);
-	fprintf(testf, " initrd '%s'\n", boot_option->initrd_file);
-	fprintf(testf, " args   '%s'\n", boot_option->boot_args);
+	fprintf(testf, " id     '%s'\n", opt->id);
+	fprintf(testf, " name   '%s'\n", opt->name);
+	fprintf(testf, " descr  '%s'\n", opt->description);
+	fprintf(testf, " icon   '%s'\n", opt->icon_file);
+	fprintf(testf, " image  '%s'\n", opt->boot_image_file);
+	fprintf(testf, " initrd '%s'\n", opt->initrd_file);
+	fprintf(testf, " args   '%s'\n", opt->boot_args);
 	fflush(testf);
 }
 

@@ -33,7 +33,7 @@
 #include "paths.h"
 
 struct grub2_state {
-	struct boot_option *opt;
+	struct discover_boot_option *opt;
 	char *desc_image;
 	char *desc_initrd;
 	const char *const *known_names;
@@ -43,6 +43,7 @@ static void grub2_finish(struct conf_context *conf)
 {
 	struct device *dev = conf->dc->device->device;
 	struct grub2_state *state = conf->parser_info;
+	struct boot_option *opt;
 
 	if (!state->desc_image) {
 		pb_log("%s: %s: no image found\n", __func__, dev->id);
@@ -50,26 +51,30 @@ static void grub2_finish(struct conf_context *conf)
 	}
 
 	assert(state->opt);
-	assert(state->opt->name);
-	assert(state->opt->boot_args);
+	opt = state->opt->option;
 
-	state->opt->description = talloc_asprintf(state->opt, "%s %s %s",
+	assert(opt);
+	assert(opt->name);
+	assert(opt->boot_args);
+
+	opt->description = talloc_asprintf(opt, "%s %s %s",
 		state->desc_image,
 		(state->desc_initrd ? state->desc_initrd : ""),
-		state->opt->boot_args);
+		opt->boot_args);
 
 	talloc_free(state->desc_initrd);
 	state->desc_initrd = NULL;
 
-	conf_strip_str(state->opt->boot_args);
-	conf_strip_str(state->opt->description);
+	conf_strip_str(opt->boot_args);
+	conf_strip_str(opt->description);
 
 	/* opt is persistent, so must be associated with device */
 
 	discover_context_add_boot_option(conf->dc, state->opt);
 
-	state->opt = talloc_zero(conf->dc, struct boot_option);
-	state->opt->boot_args = talloc_strdup(state->opt, "");
+	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
+	opt = state->opt->option;
+	opt->boot_args = talloc_strdup(opt, "");
 
 	talloc_free(state->desc_image);
 	state->desc_image = NULL;
@@ -80,6 +85,7 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 {
 	struct device *dev = conf->dc->device->device;
 	struct grub2_state *state = conf->parser_info;
+	struct boot_option *opt = state->opt->option;
 
 	if (!name || !conf_param_in_list(state->known_names, name))
 		return;
@@ -96,9 +102,8 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		if (sep)
 			*sep = 0;
 
-		state->opt->id = talloc_asprintf(state->opt, "%s#%s",
-			dev->id, value);
-		state->opt->name = talloc_strdup(state->opt, value);
+		opt->id = talloc_asprintf(opt, "%s#%s", dev->id, value);
+		opt->name = talloc_strdup(opt, value);
 
 		return;
 	}
@@ -111,19 +116,19 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		if (sep)
 			*sep = 0;
 
-		state->opt->boot_image_file = resolve_path(state->opt,
-			value, conf->dc->device->device_path);
-		state->desc_image = talloc_strdup(state->opt, value);
+		opt->boot_image_file = resolve_path(opt, value,
+					conf->dc->device->device_path);
+		state->desc_image = talloc_strdup(opt, value);
 
 		if (sep)
-			state->opt->boot_args = talloc_strdup(state->opt,
+			opt->boot_args = talloc_strdup(opt,
 				sep + 1);
 
 		return;
 	}
 
 	if (streq(name, "initrd")) {
-		state->opt->initrd_file = resolve_path(state->opt,
+		opt->initrd_file = resolve_path(opt,
 			value, conf->dc->device->device_path);
 		state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 			value);
@@ -177,8 +182,8 @@ static int grub2_parse(struct discover_context *dc, char *buf, int len)
 
 	/* opt is persistent, so must be associated with device */
 
-	state->opt = talloc_zero(conf->dc->device, struct boot_option);
-	state->opt->boot_args = talloc_strdup(state->opt, "");
+	state->opt = discover_boot_option_create(dc, dc->device);
+	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
 
 	conf_parse_buf(conf, buf, len);
 

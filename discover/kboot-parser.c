@@ -15,12 +15,12 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 		char *value)
 {
 	const char *const *ignored_names = conf->parser_info;
-	struct device *dev;
+	struct discover_boot_option *d_opt;
+	struct boot_option *opt;
 	char *pos;
 	char *args;
 	const char *initrd;
 	const char *root;
-	struct boot_option *opt;
 
 	/* ignore bare values */
 
@@ -35,13 +35,15 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 
 	/* opt must be associated with dc */
 
-	dev = conf->dc->device->device;
-	opt = talloc_zero(dev, struct boot_option);
+	d_opt = talloc_zero(conf->dc, struct discover_boot_option);
+	d_opt->device = conf->dc->device;
+	opt = talloc_zero(d_opt, struct boot_option);
 
 	if (!opt)
 		return;
 
-	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, name);
+	opt->id = talloc_asprintf(opt, "%s#%s", conf->dc->device->device->id,
+			name);
 	opt->name = talloc_strdup(opt, name);
 
 	args = talloc_strdup(opt, "");
@@ -103,7 +105,7 @@ out_add:
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
 
-	discover_context_add_boot_option(conf->dc, opt);
+	discover_context_add_boot_option(conf->dc, d_opt);
 }
 
 static struct conf_global_option kboot_global_options[] = {

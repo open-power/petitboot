@@ -12,7 +12,7 @@
 #include "paths.h"
 
 struct yaboot_state {
-	struct boot_option *opt;
+	struct discover_boot_option *opt;
 	const char *desc_image;
 	char *desc_initrd;
 	int globals_done;
@@ -23,6 +23,7 @@ static void yaboot_finish(struct conf_context *conf)
 {
 	struct yaboot_state *state = conf->parser_info;
 	struct device *dev = conf->dc->device->device;
+	struct boot_option *opt;
 
 	if (!state->desc_image) {
 		pb_log("%s: %s: no image found\n", __func__, dev->id);
@@ -30,32 +31,36 @@ static void yaboot_finish(struct conf_context *conf)
 	}
 
 	assert(state->opt);
-	assert(state->opt->name);
-	assert(state->opt->boot_args);
 
-	state->opt->description = talloc_asprintf(state->opt, "%s %s %s",
+	opt = state->opt->option;
+	assert(opt);
+	assert(opt->name);
+	assert(opt->boot_args);
+
+	opt->description = talloc_asprintf(opt, "%s %s %s",
 		state->desc_image,
 		(state->desc_initrd ? state->desc_initrd : ""),
-		state->opt->boot_args);
+		opt->boot_args);
 
 	talloc_free(state->desc_initrd);
 	state->desc_initrd = NULL;
 
-	conf_strip_str(state->opt->boot_args);
-	conf_strip_str(state->opt->description);
+	conf_strip_str(opt->boot_args);
+	conf_strip_str(opt->description);
 
 	/* opt is persistent, so must be associated with device */
 
 	discover_context_add_boot_option(conf->dc, state->opt);
 
-	state->opt = talloc_zero(conf->dc, struct boot_option);
-	state->opt->boot_args = talloc_strdup(state->opt, "");
+	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
+	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
 }
 
 static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		char *value)
 {
 	struct yaboot_state *state = conf->parser_info;
+	struct boot_option *opt = state->opt->option;
 	struct fixed_pair {
 		const char *image;
 		const char *initrd;
@@ -91,7 +96,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 		/* First finish any previous image. */
 
-		if (state->opt->boot_image_file)
+		if (opt->boot_image_file)
 			yaboot_finish(conf);
 
 		/* Then start the new image. */
@@ -100,20 +105,20 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 			char* dev = talloc_asprintf(NULL, "%s%s", g_boot,
 				g_part);
 
-			state->opt->boot_image_file = resolve_path(state->opt,
+			opt->boot_image_file = resolve_path(opt,
 				value, dev);
-			state->desc_image = talloc_asprintf(state->opt,
+			state->desc_image = talloc_asprintf(opt,
 				"%s%s", dev, value);
 			talloc_free(dev);
 		} else if (g_boot) {
-			state->opt->boot_image_file = resolve_path(state->opt,
+			opt->boot_image_file = resolve_path(opt,
 				value, g_boot);
-			state->desc_image = talloc_asprintf(state->opt,
+			state->desc_image = talloc_asprintf(opt,
 				"%s%s", g_boot, value);
 		} else {
-			state->opt->boot_image_file = resolve_path(state->opt,
+			opt->boot_image_file = resolve_path(opt,
 				value, conf->dc->device->device_path);
-			state->desc_image = talloc_strdup(state->opt, value);
+			state->desc_image = talloc_strdup(opt, value);
 		}
 
 		return;
@@ -131,22 +136,22 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	if (suse_fp) {
 		/* First finish any previous image. */
 
-		if (state->opt->boot_image_file)
+		if (opt->boot_image_file)
 			yaboot_finish(conf);
 
 		/* Then start the new image. */
 
 		if (*value == '/') {
-			state->opt->boot_image_file = resolve_path(state->opt,
+			opt->boot_image_file = resolve_path(opt,
 				value, conf->dc->device->device_path);
-			state->desc_image = talloc_strdup(state->opt, value);
+			state->desc_image = talloc_strdup(opt, value);
 		} else {
-			state->opt->boot_image_file = resolve_path(state->opt,
+			opt->boot_image_file = resolve_path(opt,
 				suse_fp->image, conf->dc->device->device_path);
-			state->desc_image = talloc_strdup(state->opt,
+			state->desc_image = talloc_strdup(opt,
 				suse_fp->image);
 
-			state->opt->initrd_file = resolve_path(state->opt,
+			opt->initrd_file = resolve_path(opt,
 				suse_fp->initrd, conf->dc->device->device_path);
 			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 				suse_fp->initrd);
@@ -155,7 +160,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		return;
 	}
 
-	if (!state->opt->boot_image_file) {
+	if (!opt->boot_image_file) {
 		pb_log("%s: unknown name: %s\n", __func__, name);
 		return;
 	}
@@ -170,18 +175,18 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 			char* dev = talloc_asprintf(NULL, "%s%s", g_boot,
 				g_part);
 
-			state->opt->initrd_file = resolve_path(state->opt,
+			opt->initrd_file = resolve_path(opt,
 				value, dev);
 			state->desc_initrd = talloc_asprintf(state,
 				"initrd=%s%s", dev, value);
 			talloc_free(dev);
 		} else if (g_boot) {
-			state->opt->initrd_file = resolve_path(state->opt,
+			opt->initrd_file = resolve_path(opt,
 				value, g_boot);
 			state->desc_initrd = talloc_asprintf(state,
 				"initrd=%s%s", g_boot, value);
 		} else {
-			state->opt->initrd_file = resolve_path(state->opt,
+			opt->initrd_file = resolve_path(opt,
 				value, conf->dc->device->device_path);
 			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 				value);
@@ -192,57 +197,57 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* label */
 
 	if (streq(name, "label")) {
-		state->opt->id = talloc_asprintf(state->opt, "%s#%s",
+		opt->id = talloc_asprintf(opt, "%s#%s",
 			conf->dc->device->device->id, value);
-		state->opt->name = talloc_strdup(state->opt, value);
+		opt->name = talloc_strdup(opt, value);
 		return;
 	}
 
 	/* args */
 
 	if (streq(name, "append")) {
-		state->opt->boot_args = talloc_asprintf_append(
-			state->opt->boot_args, "%s ", value);
+		opt->boot_args = talloc_asprintf_append(
+			opt->boot_args, "%s ", value);
 		return;
 	}
 
 	if (streq(name, "initrd-size")) {
-		state->opt->boot_args = talloc_asprintf_append(
-			state->opt->boot_args, "ramdisk_size=%s ", value);
+		opt->boot_args = talloc_asprintf_append(
+			opt->boot_args, "ramdisk_size=%s ", value);
 		return;
 	}
 
 	if (streq(name, "literal")) {
-		if (*state->opt->boot_args) {
+		if (*opt->boot_args) {
 			pb_log("%s: literal over writes '%s'\n", __func__,
-				state->opt->boot_args);
-			talloc_free(state->opt->boot_args);
+				opt->boot_args);
+			talloc_free(opt->boot_args);
 		}
-		talloc_asprintf(state->opt, "%s ", value);
+		talloc_asprintf(opt, "%s ", value);
 		return;
 	}
 
 	if (streq(name, "ramdisk")) {
-		state->opt->boot_args = talloc_asprintf_append(
-			state->opt->boot_args, "ramdisk=%s ", value);
+		opt->boot_args = talloc_asprintf_append(
+			opt->boot_args, "ramdisk=%s ", value);
 		return;
 	}
 
 	if (streq(name, "read-only")) {
-		state->opt->boot_args = talloc_asprintf_append(
-			state->opt->boot_args, "ro ");
+		opt->boot_args = talloc_asprintf_append(
+			opt->boot_args, "ro ");
 		return;
 	}
 
 	if (streq(name, "read-write")) {
-		state->opt->boot_args = talloc_asprintf_append(
-			state->opt->boot_args, "rw ");
+		opt->boot_args = talloc_asprintf_append(
+			opt->boot_args, "rw ");
 		return;
 	}
 
 	if (streq(name, "root")) {
-		state->opt->boot_args = talloc_asprintf_append(
-			state->opt->boot_args, "root=%s ", value);
+		opt->boot_args = talloc_asprintf_append(
+			opt->boot_args, "root=%s ", value);
 		return;
 	}
 
@@ -309,8 +314,8 @@ static int yaboot_parse(struct discover_context *dc, char *buf, int len)
 
 	/* opt is persistent, so must be associated with device */
 
-	state->opt = talloc_zero(conf->dc->device, struct boot_option);
-	state->opt->boot_args = talloc_strdup(state->opt, "");
+	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
+	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
 
 	conf_parse_buf(conf, buf, len);
 

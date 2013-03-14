@@ -37,8 +37,8 @@ static void context_commit(struct device_handler *handler,
 		struct discover_context *ctx)
 {
 	struct discover_device *dev = ctx->device;
+	struct discover_boot_option *opt, *tmp;
 	unsigned int i, existing_device;
-	struct boot_option *opt, *tmp;
 
 	/* do we already have this device? */
 	for (i = 0; i < handler->n_devices; i++) {
@@ -63,14 +63,15 @@ static void context_commit(struct device_handler *handler,
 	/* move boot options from the context to the device */
 	list_for_each_entry_safe(&ctx->boot_options, opt, tmp, list) {
 		list_remove(&opt->list);
-		list_add(&dev->device->boot_options, &opt->list);
-		dev->device->n_options++;
-		discover_server_notify_boot_option_add(handler->server, opt);
+		list_add(&dev->boot_options, &opt->list);
+		talloc_steal(dev, opt);
+		discover_server_notify_boot_option_add(handler->server,
+							opt->option);
 	}
 }
 
 void discover_context_add_boot_option(struct discover_context *ctx,
-		struct boot_option *boot_option)
+		struct discover_boot_option *boot_option)
 {
 	list_add(&ctx->boot_options, &boot_option->list);
 	talloc_steal(ctx, boot_option);
@@ -118,7 +119,7 @@ int device_handler_get_device_count(const struct device_handler *handler)
  * device_handler_get_device - Get a handler device by index.
  */
 
-const struct device *device_handler_get_device(
+const struct discover_device *device_handler_get_device(
 	const struct device_handler *handler, unsigned int index)
 {
 	if (index >= handler->n_devices) {
@@ -126,7 +127,7 @@ const struct device *device_handler_get_device(
 		return NULL;
 	}
 
-	return handler->devices[index]->device;
+	return handler->devices[index];
 }
 
 static void setup_device_links(struct discover_device *dev)
@@ -303,7 +304,7 @@ static struct discover_device *discover_device_create(
 
 	dev = talloc_zero(ctx, struct discover_device);
 	dev->device = talloc_zero(dev, struct device);
-	list_init(&dev->device->boot_options);
+	list_init(&dev->boot_options);
 
 	devname = event_get_param(ctx->event, "DEVNAME");
 	if (devname)
@@ -315,6 +316,20 @@ static struct discover_device *discover_device_create(
 
 	return dev;
 }
+
+struct discover_boot_option *discover_boot_option_create(
+		struct discover_context *ctx,
+		struct discover_device *device)
+{
+	struct discover_boot_option *opt;
+
+	opt = talloc_zero(ctx, struct discover_boot_option);
+	opt->option = talloc_zero(opt, struct boot_option);
+	opt->device = device;
+
+	return opt;
+}
+
 
 static int handle_add_udev_event(struct device_handler *handler,
 		struct event *event)
@@ -551,17 +566,17 @@ struct discover_device *device_lookup_by_id(
 	return device_lookup(device_handler, device_match_id, id);
 }
 
-static struct boot_option *find_boot_option_by_id(
+static struct discover_boot_option *find_boot_option_by_id(
 		struct device_handler *handler, const char *id)
 {
 	unsigned int i;
 
 	for (i = 0; i < handler->n_devices; i++) {
 		struct discover_device *dev = handler->devices[i];
-		struct boot_option *opt;
+		struct discover_boot_option *opt;
 
-		list_for_each_entry(&dev->device->boot_options, opt, list)
-			if (!strcmp(opt->id, id))
+		list_for_each_entry(&dev->boot_options, opt, list)
+			if (!strcmp(opt->option->id, id))
 				return opt;
 	}
 
@@ -571,9 +586,9 @@ static struct boot_option *find_boot_option_by_id(
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd)
 {
-	struct boot_option *opt;
+	struct discover_boot_option *opt;
 
 	opt = find_boot_option_by_id(handler, cmd->option_id);
 
-	boot(handler, opt, cmd, handler->dry_run);
+	boot(handler, opt->option, cmd, handler->dry_run);
 }

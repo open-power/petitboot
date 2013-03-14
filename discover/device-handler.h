@@ -22,7 +22,16 @@ struct discover_device {
 
 	char			*mount_path;
 	char			*device_path;
+
+	struct list		boot_options;
 };
+
+struct discover_boot_option {
+	struct discover_device	*device;
+	struct boot_option	*option;
+	struct list_item	list;
+};
+
 
 struct discover_context {
 	struct event		*event;
@@ -36,12 +45,15 @@ struct device_handler *device_handler_init(struct discover_server *server,
 void device_handler_destroy(struct device_handler *devices);
 
 int device_handler_get_device_count(const struct device_handler *handler);
-const struct device *device_handler_get_device(
+const struct discover_device *device_handler_get_device(
 	const struct device_handler *handler, unsigned int index);
 
 struct device *discover_context_device(struct discover_context *ctx);
+struct discover_boot_option *discover_boot_option_create(
+		struct discover_context *ctx,
+		struct discover_device *dev);
 void discover_context_add_boot_option(struct discover_context *ctx,
-		struct boot_option *opt);
+		struct discover_boot_option *opt);
 
 int device_handler_event(struct device_handler *handler, struct event *event);
 

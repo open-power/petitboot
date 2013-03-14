@@ -200,14 +200,15 @@ static int discover_server_process_connection(void *arg)
 	/* send existing devices to client */
 	n_devices = device_handler_get_device_count(server->device_handler);
 	for (i = 0; i < n_devices; i++) {
-		const struct device *device;
-		struct boot_option *opt;
+		const struct discover_boot_option *opt;
+		const struct discover_device *device;
 
 		device = device_handler_get_device(server->device_handler, i);
-		write_device_add_message(server, client, device);
+		write_device_add_message(server, client, device->device);
 
 		list_for_each_entry(&device->boot_options, opt, list)
-			discover_server_notify_boot_option_add(server, opt);
+			discover_server_notify_boot_option_add(server,
+					opt->option);
 
 	}
 
