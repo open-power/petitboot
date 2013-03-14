@@ -54,6 +54,7 @@ pb_discover_SOURCES = \
 	params.h \
 	pb-discover.c \
 	pb-discover.h \
+	resource.h \
 	udev.c \
 	udev.h \
 	user-event.c \
