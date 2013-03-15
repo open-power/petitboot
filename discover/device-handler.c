@@ -12,11 +12,13 @@
 #include <log/log.h>
 #include <types/types.h>
 #include <system/system.h>
+#include <url/url.h>
 
 #include "device-handler.h"
 #include "discover-server.h"
 #include "event.h"
 #include "parser.h"
+#include "resource.h"
 #include "udev.h"
 #include "paths.h"
 #include "boot.h"
@@ -28,6 +30,38 @@ struct device_handler {
 	struct discover_device	**devices;
 	unsigned int		n_devices;
 };
+
+static bool resource_is_resolved(struct resource *res)
+{
+	return !res || res->resolved;
+}
+
+/* We only use this in an assert, which will disappear if we're compiling
+ * with NDEBUG, so we need the 'used' attribute for these builds */
+static bool __attribute__((used)) boot_option_is_resolved(
+		struct discover_boot_option *opt)
+{
+	return resource_is_resolved(opt->boot_image) &&
+		resource_is_resolved(opt->initrd) &&
+		resource_is_resolved(opt->icon);
+}
+
+static void boot_option_finalise(struct discover_boot_option *opt)
+{
+	assert(boot_option_is_resolved(opt));
+
+	/* check that the parsers haven't set any of the final data */
+	assert(!opt->option->boot_image_file);
+	assert(!opt->option->initrd_file);
+	assert(!opt->option->icon_file);
+
+	if (opt->boot_image)
+		opt->option->boot_image_file = opt->boot_image->url->full;
+	if (opt->initrd)
+		opt->option->initrd_file = opt->initrd->url->full;
+	if (opt->icon)
+		opt->option->icon_file = opt->icon->url->full;
+}
 
 /**
  * context_commit - Commit a temporary discovery context to the handler,
@@ -65,6 +99,7 @@ static void context_commit(struct device_handler *handler,
 		list_remove(&opt->list);
 		list_add(&dev->boot_options, &opt->list);
 		talloc_steal(dev, opt);
+		boot_option_finalise(opt);
 		discover_server_notify_boot_option_add(handler->server,
 							opt->option);
 	}
