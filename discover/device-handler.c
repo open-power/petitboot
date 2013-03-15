@@ -29,6 +29,8 @@ struct device_handler {
 
 	struct discover_device	**devices;
 	unsigned int		n_devices;
+
+	struct list		unresolved_boot_options;
 };
 
 static bool resource_is_resolved(struct resource *res)
@@ -46,6 +48,25 @@ static bool __attribute__((used)) boot_option_is_resolved(
 		resource_is_resolved(opt->icon);
 }
 
+static bool resource_resolve(struct resource *res, struct parser *parser,
+		struct device_handler *handler)
+{
+	if (resource_is_resolved(res))
+		return true;
+
+	parser->resolve_resource(handler, res);
+
+	return res->resolved;
+}
+
+static bool boot_option_resolve(struct discover_boot_option *opt,
+		struct device_handler *handler)
+{
+	return resource_resolve(opt->boot_image, opt->source, handler) &&
+		resource_resolve(opt->initrd, opt->source, handler) &&
+		resource_resolve(opt->icon, opt->source, handler);
+}
+
 static void boot_option_finalise(struct discover_boot_option *opt)
 {
 	assert(boot_option_is_resolved(opt));
@@ -61,6 +82,25 @@ static void boot_option_finalise(struct discover_boot_option *opt)
 		opt->option->initrd_file = opt->initrd->url->full;
 	if (opt->icon)
 		opt->option->icon_file = opt->icon->url->full;
+}
+
+static void process_boot_option_queue(struct device_handler *handler)
+{
+	struct discover_boot_option *opt, *tmp;
+
+	list_for_each_entry_safe(&handler->unresolved_boot_options,
+			opt, tmp, list) {
+
+		if (!boot_option_resolve(opt, handler))
+			continue;
+
+		list_remove(&opt->list);
+		list_add(&opt->device->boot_options, &opt->list);
+		talloc_steal(opt->device, opt);
+		boot_option_finalise(opt);
+		discover_server_notify_boot_option_add(handler->server,
+							opt->option);
+	}
 }
 
 /**
@@ -91,23 +131,34 @@ static void context_commit(struct device_handler *handler,
 		talloc_steal(handler, dev);
 
 		discover_server_notify_device_add(handler->server, dev->device);
+
+		/* this new device might be able to resolve existing boot
+		 * options */
+		process_boot_option_queue(handler);
 	}
 
 
 	/* move boot options from the context to the device */
 	list_for_each_entry_safe(&ctx->boot_options, opt, tmp, list) {
 		list_remove(&opt->list);
-		list_add(&dev->boot_options, &opt->list);
-		talloc_steal(dev, opt);
-		boot_option_finalise(opt);
-		discover_server_notify_boot_option_add(handler->server,
-							opt->option);
+
+		if (boot_option_resolve(opt, handler)) {
+			list_add(&dev->boot_options, &opt->list);
+			talloc_steal(dev, opt);
+			boot_option_finalise(opt);
+			discover_server_notify_boot_option_add(handler->server,
+								opt->option);
+		} else {
+			list_add(&handler->unresolved_boot_options, &opt->list);
+			talloc_steal(handler, opt);
+		}
 	}
 }
 
 void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *boot_option)
 {
+	boot_option->source = ctx->parser;
 	list_add(&ctx->boot_options, &boot_option->list);
 	talloc_steal(ctx, boot_option);
 }
@@ -437,6 +488,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	handler->n_devices = 0;
 	handler->server = server;
 	handler->dry_run = dry_run;
+	list_init(&handler->unresolved_boot_options);
 
 	/* set up our mount point base */
 	pb_mkdir_recursive(mount_base());

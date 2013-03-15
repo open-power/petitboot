@@ -27,6 +27,7 @@ struct discover_device {
 };
 
 struct discover_boot_option {
+	struct parser		*source;
 	struct discover_device	*device;
 	struct boot_option	*option;
 	struct list_item	list;
@@ -38,6 +39,7 @@ struct discover_boot_option {
 
 
 struct discover_context {
+	struct parser		*parser;
 	struct event		*event;
 	struct discover_device	*device;
 	struct list		boot_options;

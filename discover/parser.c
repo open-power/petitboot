@@ -18,7 +18,7 @@ struct parser __kboot_parser;
 struct parser __native_parser;
 struct parser __yaboot_parser;
 
-static const struct parser *const parsers[] = {
+static struct parser *const parsers[] = {
 //	&__native_parser,
 	&__kboot_parser,
 	&__grub2_parser,
@@ -116,8 +116,10 @@ void iterate_parsers(struct discover_context *ctx)
 
 	for (i = 0; parsers[i]; i++) {
 		pb_log("\ttrying parser '%s'\n", parsers[i]->name);
+		ctx->parser = parsers[i];
 		iterate_parser_files(ctx, parsers[i]);
 	}
+	ctx->parser = NULL;
 }
 
 void parser_init(void)
