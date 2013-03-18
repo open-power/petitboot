@@ -19,15 +19,13 @@ AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPKG_SHARE_DIR='"$(pkgdatadir)"' \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"'
 
-noinst_LTLIBRARIES = libparser.la
+noinst_LIBRARIES = libparser.o
 
-libparser_la_SOURCES = \
+libparser_o_SOURCES = \
 	parser.c \
 	parser.h \
 	parser-conf.c \
 	parser-conf.h \
-	parser-utils.c \
-	parser-utils.h \
 	paths.c \
 	paths.h \
 	resource.c \
@@ -36,9 +34,10 @@ libparser_la_SOURCES = \
 	grub2-parser.c \
 	yaboot-parser.c
 
-EXTRA_DIST = native-parser.c
+libparser.o: $(libparser_o_OBJECTS)
+	$(LD) -r -o $@ $^
 
-libparser_la_LIBADD = $(top_builddir)/lib/libpbcore.la
+EXTRA_DIST = native-parser.c
 
 sbin_PROGRAMS = pb-discover
 
@@ -54,6 +53,8 @@ pb_discover_SOURCES = \
 	event-parser.c \
 	params.c \
 	params.h \
+	parser-utils.c \
+	parser-utils.h \
 	pb-discover.c \
 	pb-discover.h \
 	udev.c \
@@ -61,6 +62,6 @@ pb_discover_SOURCES = \
 	user-event.c \
 	user-event.h
 
-pb_discover_LDADD = libparser.la $(top_builddir)/lib/libpbcore.la
+pb_discover_LDADD = libparser.o $(top_builddir)/lib/libpbcore.la
 
 MAINTAINERCLEANFILES = Makefile.in

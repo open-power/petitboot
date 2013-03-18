@@ -23,7 +23,7 @@ AM_CFLAGS = \
 
 common_libs = \
 	$(top_builddir)/lib/libpbcore.la \
-	$(top_builddir)/discover/libparser.la
+	$(top_builddir)/discover/libparser.o
 
 noinst_PROGRAMS = parser-test
 

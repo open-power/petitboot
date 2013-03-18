@@ -13,18 +13,8 @@
 #include "parser-utils.h"
 #include "paths.h"
 
-struct parser __grub2_parser;
-struct parser __kboot_parser;
-struct parser __native_parser;
-struct parser __yaboot_parser;
-
-static struct parser *const parsers[] = {
-//	&__native_parser,
-	&__kboot_parser,
-	&__grub2_parser,
-	&__yaboot_parser,
-	NULL
-};
+static int n_parsers;
+static struct parser **parsers;
 
 static const int max_file_size = 1024 * 1024;
 
@@ -114,12 +104,19 @@ void iterate_parsers(struct discover_context *ctx)
 
 	pb_log("trying parsers for %s\n", ctx->device->device->id);
 
-	for (i = 0; parsers[i]; i++) {
+	for (i = 0; i < n_parsers; i++) {
 		pb_log("\ttrying parser '%s'\n", parsers[i]->name);
 		ctx->parser = parsers[i];
 		iterate_parser_files(ctx, parsers[i]);
 	}
 	ctx->parser = NULL;
+}
+
+void __register_parser(struct parser *parser)
+{
+	parsers = talloc_realloc(NULL, parsers, struct parser *, n_parsers + 1);
+	parsers[n_parsers] = parser;
+	n_parsers++;
 }
 
 void parser_init(void)

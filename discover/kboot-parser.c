@@ -157,9 +157,11 @@ static int kboot_parse(struct discover_context *dc, char *buf, int len)
 	return 1;
 }
 
-struct parser __kboot_parser = {
+static struct parser kboot_parser = {
 	.name			= "kboot",
 	.parse			= kboot_parse,
 	.filenames		= kboot_conf_files,
 	.resolve_resource	= resolve_devpath_resource,
 };
+
+register_parser(kboot_parser);

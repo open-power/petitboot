@@ -8,12 +8,17 @@
 
 #define artwork_pathname(file) (PKG_SHARE_DIR "/artwork/" file)
 
-#define define_parser(__name, __parse_fn)			\
-	struct parser 							\
-	__ ## __name ## _parser = {					\
-		.name		= #__name,				\
-		.parse		= __parse_fn,				\
-	};
+#define __parser_funcname(_n) __register_parser ## _ ## _n
+#define  _parser_funcname(_n) __parser_funcname(_n)
+
+#define register_parser(_parser)					\
+	static	__attribute__((constructor))				\
+		void _parser_funcname(__COUNTER__)(void)		\
+	{								\
+		__register_parser(&_parser);				\
+	}
+
+void __register_parser(struct parser *parser);
 
 void device_add_boot_option(struct device *device,
 		struct boot_option *boot_option);
