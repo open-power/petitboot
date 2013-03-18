@@ -10,8 +10,8 @@ int main(int argc, char **argv)
 	struct pb_url *url;
 	FILE *null;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <URL>\n", argv[0]);
+	if (argc != 2 && argc != 3) {
+		fprintf(stderr, "Usage: %s <URL> [update]\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 
@@ -23,7 +23,14 @@ int main(int argc, char **argv)
 	if (!url)
 		return EXIT_FAILURE;
 
-	printf("%s\n", argv[1]);
+	if (argc == 2) {
+		printf("%s\n", argv[1]);
+
+	} else {
+		printf("%s %s\n", argv[1], argv[2]);
+		url = pb_url_join(NULL, url, argv[2]);
+	}
+
 	printf("scheme\t%s\n", pb_url_scheme_name(url->scheme));
 	printf("host\t%s\n", url->host);
 	printf("port\t%s\n", url->port);

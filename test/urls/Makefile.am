@@ -30,7 +30,11 @@ check_PROGRAMS = parse-url
 check_SCRIPTS = run-url-test
 
 TESTS = data/double-slash.test \
-	data/http-simple.test
+	data/http-simple.test \
+	data/join-full.test \
+	data/join-absolute.test \
+	data/join-relative.test
+
 TEST_EXTENSIONS = .test
 TEST_LOG_COMPILER = $(builddir)/run-url-test
 
