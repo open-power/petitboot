@@ -32,7 +32,8 @@ libparser_o_SOURCES = \
 	resource.h \
 	kboot-parser.c \
 	grub2-parser.c \
-	yaboot-parser.c
+	yaboot-parser.c \
+	pxe-parser.c
 
 libparser.o: $(libparser_o_OBJECTS)
 	$(LD) -r -o $@ $^
