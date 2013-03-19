@@ -38,7 +38,7 @@ static void context_commit(struct device_handler *handler,
 {
 	struct discover_device *dev = ctx->device;
 	struct discover_boot_option *opt, *tmp;
-	unsigned int i, existing_device;
+	unsigned int i, existing_device = 0;
 
 	/* do we already have this device? */
 	for (i = 0; i < handler->n_devices; i++) {
