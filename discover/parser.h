@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "device-handler.h"
+
 struct discover_context;
 struct device_handler;
 struct resource;
@@ -25,6 +27,7 @@ struct resource;
  */
 struct parser {
 	char			*name;
+	enum conf_method	method;
 	const char * const	*filenames;
 	int			(*parse)(struct discover_context *ctx,
 						char *buf, int len);
@@ -45,7 +48,7 @@ enum generic_icon_type {
 
 void parser_init(void);
 
-void iterate_parsers(struct discover_context *ctx);
+void iterate_parsers(struct discover_context *ctx, enum conf_method method);
 int parse_user_event(struct discover_context *ctx, struct event *event);
 
 #endif /* _PARSER_H */

@@ -388,7 +388,7 @@ static int handle_add_udev_event(struct device_handler *handler,
 	}
 
 	/* run the parsers. This will populate the ctx's boot_option list. */
-	iterate_parsers(ctx);
+	iterate_parsers(ctx, CONF_METHOD_LOCAL_FILE);
 
 	/* add discovered stuff to the handler */
 	context_commit(handler, ctx);

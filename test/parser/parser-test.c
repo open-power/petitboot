@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 							argv[1], argv[2]);
 	ctx->device->device->id = talloc_strdup(ctx->device->device, argv[2]);
 
-	iterate_parsers(ctx);
+	iterate_parsers(ctx, CONF_METHOD_LOCAL_FILE);
 
 	pb_log("--- end ---\n");
 

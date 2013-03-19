@@ -193,6 +193,7 @@ static int grub2_parse(struct discover_context *dc, char *buf, int len)
 
 static struct parser grub2_parser = {
 	.name		= "grub2",
+	.method		= CONF_METHOD_LOCAL_FILE,
 	.parse		= grub2_parse,
 	.filenames	= grub2_conf_files,
 };

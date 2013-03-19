@@ -11,6 +11,11 @@ struct boot_command;
 struct event;
 struct device;
 
+enum conf_method {
+	CONF_METHOD_LOCAL_FILE,	/* discover by looking at local files on this
+				   block device */
+};
+
 struct discover_device {
 	struct device		*device;
 
@@ -43,6 +48,7 @@ struct discover_context {
 	struct event		*event;
 	struct discover_device	*device;
 	struct list		boot_options;
+	enum conf_method	method;
 };
 
 struct device_handler *device_handler_init(struct discover_server *server,

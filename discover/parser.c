@@ -98,18 +98,23 @@ static void iterate_parser_files(struct discover_context *ctx,
 	}
 }
 
-void iterate_parsers(struct discover_context *ctx)
+void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 {
 	int i;
 
 	pb_log("trying parsers for %s\n", ctx->device->device->id);
 
-	for (i = 0; i < n_parsers; i++) {
-		pb_log("\ttrying parser '%s'\n", parsers[i]->name);
-		ctx->parser = parsers[i];
-		iterate_parser_files(ctx, parsers[i]);
+	if (method == CONF_METHOD_LOCAL_FILE) {
+		for (i = 0; i < n_parsers; i++) {
+			if (parsers[i]->method != CONF_METHOD_LOCAL_FILE)
+				continue;
+
+			pb_log("\ttrying parser '%s'\n", parsers[i]->name);
+			ctx->parser = parsers[i];
+			iterate_parser_files(ctx, ctx->parser);
+		}
+		ctx->parser = NULL;
 	}
-	ctx->parser = NULL;
 }
 
 void __register_parser(struct parser *parser)
