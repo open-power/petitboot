@@ -10,6 +10,7 @@ enum event_type {
 enum event_action {
 	EVENT_ACTION_ADD = 20,
 	EVENT_ACTION_REMOVE,
+	EVENT_ACTION_CONF,
 	EVENT_ACTION_MAX,
 };
 

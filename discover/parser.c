@@ -73,6 +73,28 @@ static char *local_path(struct discover_context *ctx,
 	return join_paths(ctx, ctx->device->mount_path, filename);
 }
 
+static int download_config(struct discover_context *ctx, char **buf, int *len)
+{
+	unsigned tempfile;
+	const char *file;
+	int rc;
+
+	file = load_url(ctx, ctx->conf_url, &tempfile);
+	if (!file)
+		return -1;
+
+	rc = read_file(ctx, file, buf, len);
+	if (rc)
+		goto out_clean;
+
+	return 0;
+
+out_clean:
+	if (tempfile)
+		unlink(file);
+	return -1;
+}
+
 static void iterate_parser_files(struct discover_context *ctx,
 		const struct parser *parser)
 {
@@ -100,11 +122,13 @@ static void iterate_parser_files(struct discover_context *ctx,
 
 void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 {
-	int i;
+	int rc, i, len;
+	char *buf;
 
 	pb_log("trying parsers for %s\n", ctx->device->device->id);
 
-	if (method == CONF_METHOD_LOCAL_FILE) {
+	switch (method) {
+	case CONF_METHOD_LOCAL_FILE:
 		for (i = 0; i < n_parsers; i++) {
 			if (parsers[i]->method != CONF_METHOD_LOCAL_FILE)
 				continue;
@@ -114,6 +138,27 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 			iterate_parser_files(ctx, ctx->parser);
 		}
 		ctx->parser = NULL;
+		break;
+
+	case CONF_METHOD_DHCP:
+		rc = download_config(ctx, &buf, &len);
+		if (rc)
+			return;
+
+		for (i = 0; i < n_parsers; i++) {
+			if (parsers[i]->method != method)
+				continue;
+
+			pb_log("\ttrying parser '%s'\n", parsers[i]->name);
+			ctx->parser = parsers[i];
+			parsers[i]->parse(ctx, buf, len);
+		}
+
+		break;
+
+	case CONF_METHOD_UNKNOWN:
+		break;
+
 	}
 }
 

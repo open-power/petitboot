@@ -451,6 +451,61 @@ static int handle_remove_user_event(struct device_handler *handler,
 	return 0;
 }
 
+static enum conf_method parse_conf_method(const char *str)
+{
+
+	if (!strcasecmp(str, "dhcp")) {
+		return CONF_METHOD_DHCP;
+	}
+	return CONF_METHOD_UNKNOWN;
+}
+
+static int handle_conf_user_event(struct device_handler *handler,
+		struct event *event)
+{
+	struct discover_context *ctx;
+	struct discover_device *dev;
+	enum conf_method method;
+	const char *val;
+
+	ctx = talloc(handler, struct discover_context);
+	ctx->event = event;
+	list_init(&ctx->boot_options);
+
+	val = event_get_param(event, "url");
+	if (!val) {
+		talloc_free(ctx);
+		return 0;
+	}
+
+	ctx->conf_url = pb_url_parse(ctx, val);
+	if (!ctx->conf_url) {
+		talloc_free(ctx);
+		return 0;
+	}
+
+	val = event_get_param(event, "method");
+	if (!val) {
+		talloc_free(ctx);
+		return 0;
+	}
+
+	method = parse_conf_method(val);
+	if (method == CONF_METHOD_UNKNOWN) {
+		talloc_free(ctx);
+		return 0;
+	}
+
+	dev = discover_device_create(handler, ctx, event);
+	ctx->device = dev;
+
+	iterate_parsers(ctx, method);
+
+	context_commit(handler, ctx);
+
+	return 0;
+}
+
 typedef int (*event_handler)(struct device_handler *, struct event *);
 
 static event_handler handlers[EVENT_TYPE_MAX][EVENT_ACTION_MAX] = {
@@ -461,6 +516,7 @@ static event_handler handlers[EVENT_TYPE_MAX][EVENT_ACTION_MAX] = {
 	[EVENT_TYPE_USER] = {
 		[EVENT_ACTION_ADD]	= handle_add_user_event,
 		[EVENT_ACTION_REMOVE]	= handle_remove_user_event,
+		[EVENT_ACTION_CONF]	= handle_conf_user_event,
 	}
 };
 

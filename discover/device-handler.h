@@ -14,6 +14,10 @@ struct device;
 enum conf_method {
 	CONF_METHOD_LOCAL_FILE,	/* discover by looking at local files on this
 				   block device */
+
+	CONF_METHOD_DHCP,	/* configuration from a DHCP response */
+
+	CONF_METHOD_UNKNOWN = -1,
 };
 
 struct discover_device {
@@ -48,6 +52,7 @@ struct discover_context {
 	struct event		*event;
 	struct discover_device	*device;
 	struct list		boot_options;
+	struct pb_url		*conf_url;
 	enum conf_method	method;
 };
 
