@@ -54,9 +54,6 @@ artwork += \
 	$(srcdir)/artwork/oxygen/configure.png \
 	$(srcdir)/artwork/oxygen/COPYING-oxygen \
 	$(srcdir)/artwork/oxygen/drive-harddisk.png \
-	$(srcdir)/artwork/oxygen/drive-optical.png \
-	$(srcdir)/artwork/oxygen/drive-removable-media-usb-pendrive.png \
-	$(srcdir)/artwork/oxygen/media-optical.png \
 	$(srcdir)/artwork/oxygen/network-wired.png \
 	$(srcdir)/artwork/oxygen/utilities-terminal.png
 endif
