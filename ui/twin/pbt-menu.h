@@ -19,7 +19,7 @@
 #define _PBT_MENU_H
 
 #include "list/list.h"
-#include "pb-protocol/pb-protocol.h"
+#include "types/types.h"
 
 #include "pbt-scr.h"
 

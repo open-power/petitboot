@@ -4,7 +4,7 @@
 #include <log/log.h>
 #include <talloc/talloc.h>
 
-#include "pb-protocol/pb-protocol.h"
+#include "types/types.h"
 #include "event.h"
 #include "udev.h"
 #include "device-handler.h"

@@ -23,6 +23,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include <pb-protocol/pb-protocol.h>
+
 #include "pbt-client.h"
 
 #include "log/log.h"

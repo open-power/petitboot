@@ -24,7 +24,7 @@
 #include <menu.h>
 
 #include "log/log.h"
-#include "pb-protocol/pb-protocol.h"
+#include "types/types.h"
 #include "nc-scr.h"
 
 struct pmenu;

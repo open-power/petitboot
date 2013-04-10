@@ -1,7 +1,7 @@
 #ifndef _DISCOVER_CLIENT_H
 #define _DISCOVER_CLIENT_H
 
-#include <pb-protocol/pb-protocol.h>
+#include <types/types.h>
 
 struct discover_client;
 

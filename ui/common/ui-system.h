@@ -19,8 +19,10 @@
 #if !defined(_PB_UI_SYSTEM_H)
 #define _PB_UI_SYSTEM_H
 
-#include "pb-protocol/pb-protocol.h"
+#include <stdint.h>
+
 #include "system/system.h"
+#include "types/types.h"
 #include "ui/common/timer.h"
 
 #include <signal.h>

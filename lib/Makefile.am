@@ -28,6 +28,7 @@ libpbcore_la_SOURCES = \
 	waiter/waiter.h \
 	pb-protocol/pb-protocol.c \
 	pb-protocol/pb-protocol.h \
+	types/types.h \
 	talloc/talloc.c \
 	talloc/talloc.h \
 	system/system.c \

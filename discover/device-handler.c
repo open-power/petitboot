@@ -10,7 +10,7 @@
 #include <talloc/talloc.h>
 #include <list/list.h>
 #include <log/log.h>
-#include <pb-protocol/pb-protocol.h>
+#include <types/types.h>
 #include <system/system.h>
 
 #include "device-handler.h"

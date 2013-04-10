@@ -23,7 +23,7 @@
 #include <linux/input.h> /* This must be included before ncurses.h */
 #include <form.h>
 
-#include "pb-protocol/pb-protocol.h"
+#include "types/types.h"
 #include "ui/common/ui-system.h"
 #include "nc-scr.h"
 

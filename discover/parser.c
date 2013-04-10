@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 
-#include "pb-protocol/pb-protocol.h"
+#include "types/types.h"
 #include <log/log.h>
 
 #include "device-handler.h"

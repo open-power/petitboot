@@ -27,7 +27,7 @@
 
 #include "log/log.h"
 #include "talloc/talloc.h"
-#include "pb-protocol/pb-protocol.h"
+#include "types/types.h"
 #include "parser-conf.h"
 #include "parser-utils.h"
 #include "paths.h"

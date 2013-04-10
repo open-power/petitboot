@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include <log/log.h>
-#include "pb-protocol/pb-protocol.h"
+#include <types/types.h>
 #include <talloc/talloc.h>
 
 #include "discover/device-handler.h"

@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <list/list.h>
+#include <types/types.h>
 
 #define PB_SOCKET_PATH "/tmp/petitboot.ui"
 
@@ -19,32 +20,6 @@ struct pb_protocol_message {
 	uint32_t action;
 	uint32_t payload_len;
 	char     payload[];
-};
-
-struct device {
-	char *id;
-	char *name;
-	char *description;
-	char *icon_file;
-
-	struct list boot_options;
-
-	int n_options;
-	void *ui_info;
-};
-
-struct boot_option {
-	char *id;
-	char *name;
-	char *description;
-	char *icon_file;
-	char *boot_image_file;
-	char *initrd_file;
-	char *boot_args;
-
-	struct list_item list;
-
-	void *ui_info;
 };
 
 void pb_protocol_dump_device(const struct device *dev, const char *text,
