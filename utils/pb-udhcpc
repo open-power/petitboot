@@ -15,7 +15,7 @@ pb_add () {
 
 	[ ${k_server_ip} != ${rootpath} ] || k_server_ip=${serverid}
 
-	printf "add@/net/${interface}\0name=netboot\0image=tftp://${siaddr}${boot_file}\0args=root=/dev/nfs ip=any nfsroot=${k_server_ip}:${k_root_dir}\0" | pb-event
+	printf "add@/net/${interface}\0name=netboot\0image=tftp://${siaddr}/${boot_file}\0args=root=/dev/nfs ip=any nfsroot=${k_server_ip}:${k_root_dir}\0" | pb-event
 }
 
 pb_remove () {
