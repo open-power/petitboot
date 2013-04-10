@@ -45,8 +45,12 @@ edit = sed \
 	-e 's|@abs_builddir\@|$(abs_builddir)|g' \
 	-e 's|@prefix\@|$(prefix)|g'
 
+EXTRA_DIST = $(TESTS) run-url-test.in
+
 run-url-test: Makefile $(srcdir)/run-url-test.in
 	rm -f $@ $@.tmp
 	$(edit) $(srcdir)/$@.in >$@.tmp
 	chmod +x $@.tmp
 	mv $@.tmp $@
+
+CLEANFILES = run-url-test
