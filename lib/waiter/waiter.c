@@ -8,29 +8,48 @@
 #include "waiter.h"
 
 struct waiter {
+	struct waitset	*set;
 	int		fd;
 	int		events;
 	waiter_cb	callback;
 	void		*arg;
 };
 
-static struct waiter *waiters;
-static int n_waiters;
+struct waitset {
+	struct waiter	*waiters;
+	int		n_waiters;
+	struct pollfd	*pollfds;
+	int		n_pollfds;
+};
 
-struct waiter *waiter_register(int fd, int events,
+struct waitset *waitset_create(void *ctx)
+{
+	struct waitset *set = talloc_zero(ctx, struct waitset);
+	return set;
+}
+
+void waitset_destroy(struct waitset *set)
+{
+	talloc_free(set);
+}
+
+struct waiter *waiter_register(struct waitset *set, int fd, int events,
 		waiter_cb callback, void *arg)
 {
-	struct waiter *waiter;
+	struct waiter *waiters, *waiter;
 
-	n_waiters++;
+	waiters = talloc_realloc(set, set->waiters,
+			struct waiter, set->n_waiters + 1);
 
-	waiters = talloc_realloc(NULL, waiters, struct waiter, n_waiters);
-	
-	if(!waiters)
+	if (!waiters)
 		return NULL;
-	
-	waiter = &waiters[n_waiters - 1];
 
+	set->n_waiters++;
+	set->waiters = waiters;
+
+	waiter = &set->waiters[set->n_waiters - 1];
+
+	waiter->set = set;
 	waiter->fd = fd;
 	waiter->events = events;
 	waiter->callback = callback;
@@ -41,47 +60,47 @@ struct waiter *waiter_register(int fd, int events,
 
 void waiter_remove(struct waiter *waiter)
 {
+	struct waitset *set = waiter->set;
 	int i;
 
-	i = waiter - waiters;
-	assert(i >= 0 && i < n_waiters);
+	i = waiter - set->waiters;
+	assert(i >= 0 && i < set->n_waiters);
 
-	n_waiters--;
-	memmove(&waiters[i], &waiters[i+1],
-		(n_waiters - i) * sizeof(waiters[0]));
+	set->n_waiters--;
+	memmove(&set->waiters[i], &set->waiters[i+1],
+		(set->n_waiters - i) * sizeof(set->waiters[0]));
 
-	waiters = talloc_realloc(NULL, waiters, struct waiter, n_waiters);
+	set->waiters = talloc_realloc(set->waiters, set->waiters, struct waiter,
+			set->n_waiters);
 }
 
-int waiter_poll(void)
+int waiter_poll(struct waitset *set)
 {
-	static struct pollfd *pollfds;
-	static int n_pollfds;
 	int i, rc;
 
-	if (n_waiters != n_pollfds) {
-		pollfds = talloc_realloc(NULL, pollfds,
-				struct pollfd, n_waiters);
-		n_pollfds = n_waiters;
+	if (set->n_waiters != set->n_pollfds) {
+		set->pollfds = talloc_realloc(set, set->pollfds,
+				struct pollfd, set->n_waiters);
+		set->n_pollfds = set->n_waiters;
 	}
 
-	for (i = 0; i < n_waiters; i++) {
-		pollfds[i].fd = waiters[i].fd;
-		pollfds[i].events = waiters[i].events;
-		pollfds[i].revents = 0;
+	for (i = 0; i < set->n_waiters; i++) {
+		set->pollfds[i].fd = set->waiters[i].fd;
+		set->pollfds[i].events = set->waiters[i].events;
+		set->pollfds[i].revents = 0;
 	}
 
-	rc = poll(pollfds, n_waiters, -1);
+	rc = poll(set->pollfds, set->n_waiters, -1);
 
 	if (rc <= 0)
 		return rc;
 
-	for (i = 0; i < n_waiters; i++) {
-		if (pollfds[i].revents) {
-			rc = waiters[i].callback(waiters[i].arg);
+	for (i = 0; i < set->n_waiters; i++) {
+		if (set->pollfds[i].revents) {
+			rc = set->waiters[i].callback(set->waiters[i].arg);
 
 			if (rc)
-				waiter_remove(&waiters[i]);
+				waiter_remove(&set->waiters[i]);
 		}
 	}
 

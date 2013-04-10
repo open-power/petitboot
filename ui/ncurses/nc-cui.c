@@ -553,6 +553,7 @@ struct cui *cui_init(void* platform_info,
 	cui->on_kexec = on_kexec;
 	cui->timer.handle_timeout = cui_handle_timeout;
 	cui->dry_run = dry_run;
+	cui->waitset = waitset_create(cui);
 
 	/* Loop here for scripts that just started the server. */
 
@@ -595,18 +596,19 @@ retry_start:
 	atexit(nc_atexit);
 	nc_start();
 
-	waiter_register(discover_client_get_fd(client), WAIT_IN,
-		cui_client_process_socket, client);
+	waiter_register(cui->waitset, discover_client_get_fd(client), WAIT_IN,
+			cui_client_process_socket, client);
 
-	waiter_register(STDIN_FILENO, WAIT_IN, cui_process_key, cui);
+	waiter_register(cui->waitset, STDIN_FILENO, WAIT_IN,
+			cui_process_key, cui);
 
 	if (js_map) {
 
 		cui->pjs = pjs_init(cui, js_map);
 
 		if (cui->pjs)
-			waiter_register(pjs_get_fd(cui->pjs), WAIT_IN,
-				cui_process_js, cui);
+			waiter_register(cui->waitset, pjs_get_fd(cui->pjs),
+					WAIT_IN, cui_process_js, cui);
 	}
 
 	return cui;
@@ -638,7 +640,7 @@ int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item)
 	cui->current->post(cui->current);
 
 	while (1) {
-		int result = waiter_poll();
+		int result = waiter_poll(cui->waitset);
 
 		if (result < 0 && errno != EINTR) {
 			pb_log("%s: poll: %s\n", __func__, strerror(errno));

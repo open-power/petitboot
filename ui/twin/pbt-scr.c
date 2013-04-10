@@ -368,7 +368,9 @@ static void pbt_scr_destructor(struct pbt_scr *scr)
 	memset(scr, 0, sizeof(*scr));
 }
 
-struct pbt_scr *pbt_scr_init(void *talloc_ctx, enum pbt_twin_backend backend,
+struct pbt_scr *pbt_scr_init(void *talloc_ctx,
+	struct waitset *waitset,
+	enum pbt_twin_backend backend,
 	unsigned int width, unsigned int height,
 	const char *filename_background,
 	twin_bool_t (*scr_event_cb)(twin_screen_t *tscreen,
@@ -441,7 +443,7 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx, enum pbt_twin_backend backend,
 
 	assert(waiter_fd != -1);
 
-	waiter_register(waiter_fd, WAIT_IN, (void *)pbt_twin_waiter_cb,
+	waiter_register(waitset, waiter_fd, WAIT_IN, (void *)pbt_twin_waiter_cb,
 		&scr->twin_ctx);
 
 	return scr;

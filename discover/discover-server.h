@@ -1,11 +1,13 @@
 #ifndef _DISCOVER_SERVER_H
 #define _DISCOVER_SERVER_H
 
+#include <waiter/waiter.h>
+
 struct discover_server;
 struct device_handler;
 struct device;
 
-struct discover_server *discover_server_init(void);
+struct discover_server *discover_server_init(struct waitset *waitset);
 
 void discover_server_destroy(struct discover_server *server);
 

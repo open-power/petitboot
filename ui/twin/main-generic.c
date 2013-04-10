@@ -215,7 +215,7 @@ static int kexec_cb(struct pbt_client *client, struct pb_opt_data *opt_data)
 static int run(struct pbt_client *client)
 {
 	while (1) {
-		int result = waiter_poll();
+		int result = waiter_poll(client->waitset);
 
 		if (result < 0 && errno != EINTR) {
 			pb_log("%s: poll: %s\n", __func__, strerror(errno));

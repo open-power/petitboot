@@ -49,6 +49,7 @@ struct pbt_client {
 
 	struct pbt_frame frame;
 	struct discover_client *discover_client;
+	struct waitset *waitset;
 };
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,

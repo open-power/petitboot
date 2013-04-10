@@ -4,6 +4,7 @@
 #include <poll.h>
 
 struct waiter;
+struct waitset;
 
 enum events {
 	WAIT_IN  = POLLIN,
@@ -12,12 +13,15 @@ enum events {
 
 typedef int (*waiter_cb)(void *);
 
-struct waiter *waiter_register(int fd, int events,
+struct waitset *waitset_create(void *ctx);
+void waitset_destroy(struct waitset *waitset);
+
+struct waiter *waiter_register(struct waitset *waitset, int fd, int events,
 		waiter_cb callback, void *arg);
 
 void waiter_remove(struct waiter *waiter);
 
-int waiter_poll(void);
+int waiter_poll(struct waitset *waitset);
 #endif /* _WAITER_H */
 
 

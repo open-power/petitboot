@@ -25,8 +25,10 @@
 #define PBOOT_USER_EVENT_SIZE (1 * 1024)
 
 struct user_event;
+struct waitset;
 
-struct user_event *user_event_init(struct device_handler *handler);
+struct user_event *user_event_init(struct waitset *waitset,
+		struct device_handler *handler);
 void user_event_trigger(struct user_event *uev);
 void user_event_destroy(struct user_event *uev);
 

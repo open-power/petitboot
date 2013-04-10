@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
 {
 	struct device_handler *handler;
 	struct discover_server *server;
+	struct waitset *waitset;
 	struct opts opts;
 	struct udev *udev;
 	struct user_event *uev;
@@ -138,7 +139,9 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, sigint_handler);
 
-	server = discover_server_init();
+	waitset = waitset_create(NULL);
+
+	server = discover_server_init(waitset);
 	if (!server)
 		return EXIT_FAILURE;
 
@@ -148,11 +151,11 @@ int main(int argc, char *argv[])
 
 	discover_server_set_device_source(server, handler);
 
-	udev = udev_init(handler);
+	udev = udev_init(waitset, handler);
 	if (!udev)
 		return EXIT_FAILURE;
 
-	uev = user_event_init(handler);
+	uev = user_event_init(waitset, handler);
 	if (!uev)
 		return EXIT_FAILURE;
 
@@ -160,11 +163,12 @@ int main(int argc, char *argv[])
 	user_event_trigger(uev);
 
 	for (running = 1; running;) {
-		if (waiter_poll())
+		if (waiter_poll(waitset))
 			break;
 	}
 
 	device_handler_destroy(handler);
+	waitset_destroy(waitset);
 
 	pb_log("--- end ---\n");
 

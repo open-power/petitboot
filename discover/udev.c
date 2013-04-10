@@ -116,7 +116,7 @@ static int udev_destructor(void *p)
 	return 0;
 }
 
-struct udev *udev_init(struct device_handler *handler)
+struct udev *udev_init(struct waitset *waitset, struct device_handler *handler)
 {
 	struct sockaddr_un addr;
 	struct udev *udev;
@@ -144,7 +144,7 @@ struct udev *udev_init(struct device_handler *handler)
 		goto out_err;
 	}
 
-	waiter_register(udev->socket, WAIT_IN, udev_process, udev);
+	waiter_register(waitset, udev->socket, WAIT_IN, udev_process, udev);
 
 	pb_log("%s: waiting on %s\n", __func__, PBOOT_DEVICE_SOCKET);
 

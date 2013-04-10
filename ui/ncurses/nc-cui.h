@@ -55,6 +55,7 @@ struct cui {
 	struct nc_scr *current;
 	struct pmenu *main;
 	struct ui_timer timer;
+	struct waitset *waitset;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;

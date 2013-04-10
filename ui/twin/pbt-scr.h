@@ -18,6 +18,8 @@
 #if !defined(_PBT_SCR_H)
 #define _PBT_SCR_H
 
+#include <waiter/waiter.h>
+
 #include <libtwin/twin.h>
 #include <libtwin/twin_jpeg.h>
 #include <libtwin/twin_linux_mouse.h>
@@ -137,7 +139,8 @@ struct pbt_scr {
 	twin_pixmap_t *cursor;
 };
 
-struct pbt_scr *pbt_scr_init(void *talloc_ctx, enum pbt_twin_backend backend,
+struct pbt_scr *pbt_scr_init(void *talloc_ctx, struct waitset *waitset,
+	enum pbt_twin_backend backend,
 	unsigned int width, unsigned int height,
 	const char *filename_background,
 	twin_bool_t (*scr_event_cb)(twin_screen_t *tscreen,

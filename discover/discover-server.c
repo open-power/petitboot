@@ -22,6 +22,7 @@
 
 struct discover_server {
 	int socket;
+	struct waitset *waitset;
 	struct waiter *waiter;
 	struct list clients;
 	struct device_handler *device_handler;
@@ -184,7 +185,7 @@ void discover_server_set_device_source(struct discover_server *server,
 	server->device_handler = handler;
 }
 
-struct discover_server *discover_server_init(void)
+struct discover_server *discover_server_init(struct waitset *waitset)
 {
 	struct discover_server *server;
 	struct sockaddr_un addr;
@@ -194,6 +195,7 @@ struct discover_server *discover_server_init(void)
 		return NULL;
 
 	server->waiter = NULL;
+	server->waitset = waitset;
 	list_init(&server->clients);
 
 	unlink(PB_SOCKET_PATH);
@@ -219,8 +221,8 @@ struct discover_server *discover_server_init(void)
 		goto out_err;
 	}
 
-	server->waiter = waiter_register(server->socket, WAIT_IN,
-			discover_server_process, server);
+	server->waiter = waiter_register(server->waitset, server->socket,
+			WAIT_IN, discover_server_process, server);
 
 	return server;
 

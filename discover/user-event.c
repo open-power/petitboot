@@ -118,7 +118,8 @@ static int user_event_destructor(void *arg)
 	return 0;
 }
 
-struct user_event *user_event_init(struct device_handler *handler)
+struct user_event *user_event_init(struct waitset *waitset,
+		struct device_handler *handler)
 {
 	struct sockaddr_un addr;
 	struct user_event *uev;
@@ -147,7 +148,7 @@ struct user_event *user_event_init(struct device_handler *handler)
 			strerror(errno));
 	}
 
-	waiter_register(uev->socket, WAIT_IN, user_event_process, uev);
+	waiter_register(waitset, uev->socket, WAIT_IN, user_event_process, uev);
 
 	pb_log("%s: waiting on %s\n", __func__, PBOOT_USER_EVENT_SOCKET);
 

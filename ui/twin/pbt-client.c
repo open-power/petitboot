@@ -281,11 +281,14 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 
 	talloc_set_destructor(pbt_client, (void *)pbt_client_destructor);
 
+	pbt_client->waitset = waitset_create(pbt_client);
+
 	pbt_client->sig = "pbt_client";
 	pbt_client->kexec_cb = kexec_cb;
 	pbt_client->dry_run = dry_run;
-	pbt_client->frame.scr = pbt_scr_init(pbt_client, backend, width, height,
-		NULL, NULL);
+	pbt_client->frame.scr = pbt_scr_init(pbt_client, pbt_client->waitset,
+			backend, width, height, NULL, NULL);
+
 
 	if (!pbt_client->frame.scr)
 		goto fail_scr_init;
@@ -329,9 +332,10 @@ retry_start:
 		goto fail_client_init;
 	}
 
-	waiter_register(discover_client_get_fd(pbt_client->discover_client),
-		WAIT_IN, (waiter_cb)discover_client_process,
-		pbt_client->discover_client);
+	waiter_register(pbt_client->waitset,
+			discover_client_get_fd(pbt_client->discover_client),
+			WAIT_IN, (waiter_cb)discover_client_process,
+			pbt_client->discover_client);
 
 	return pbt_client;
 
