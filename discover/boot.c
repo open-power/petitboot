@@ -117,9 +117,9 @@ int boot(void *ctx, struct boot_option *opt, struct boot_command *cmd,
 	}
 
 	if (cmd->initrd_file) {
-		image = talloc_strdup(ctx, cmd->initrd_file);
+		initrd = talloc_strdup(ctx, cmd->initrd_file);
 	} else if (opt && opt->initrd_file) {
-		image = talloc_strdup(ctx, opt->initrd_file);
+		initrd = talloc_strdup(ctx, opt->initrd_file);
 	}
 
 	if (cmd->boot_args) {
