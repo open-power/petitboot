@@ -25,6 +25,7 @@
 #include <sys/ioctl.h>
 
 #include "log/log.h"
+#include "pb-protocol/pb-protocol.h"
 #include "talloc/talloc.h"
 #include "waiter/waiter.h"
 #include "ui/common/discover-client.h"
