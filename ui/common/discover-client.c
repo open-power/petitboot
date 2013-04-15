@@ -249,6 +249,7 @@ static void create_boot_command(struct boot_command *command,
 	command->option_id = boot_option->id;
 	command->boot_image_file = data->image;
 	command->initrd_file = data->initrd;
+	command->dtb_file = data->dtb;
 	command->boot_args = data->args;
 }
 

@@ -9,6 +9,7 @@ struct discover_client;
 struct pb_boot_data {
 	char *image;
 	char *initrd;
+	char *dtb;
 	char *args;
 };
 

@@ -24,6 +24,7 @@ struct boot_option {
 	char		*icon_file;
 	char		*boot_image_file;
 	char		*initrd_file;
+	char		*dtb_file;
 	char		*boot_args;
 	bool		is_default;
 
@@ -36,6 +37,7 @@ struct boot_command {
 	char *option_id;
 	char *boot_image_file;
 	char *initrd_file;
+	char *dtb_file;
 	char *boot_args;
 };
 

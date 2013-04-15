@@ -158,6 +158,7 @@ static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_e
 		pb_log("%s: updating opt '%s'\n", __func__, cod->name);
 		pb_log(" image  '%s'\n", cod->bd->image);
 		pb_log(" initrd '%s'\n", cod->bd->initrd);
+		pb_log(" dtb    '%s'\n", cod->bd->dtb);
 		pb_log(" args   '%s'\n", cod->bd->args);
 	}
 
@@ -375,6 +376,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 
 	cod->bd->image = talloc_strdup(cod->bd, opt->boot_image_file);
 	cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
+	cod->bd->dtb = talloc_strdup(cod->bd, opt->dtb_file);
 	cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
 
 	pmenu_item_setup(cui->main, i, insert_pt, cod->name);

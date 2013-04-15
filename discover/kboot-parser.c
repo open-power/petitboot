@@ -21,6 +21,7 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	char *args;
 	const char *initrd;
 	const char *root;
+	const char *dtb;
 
 	/* ignore bare values */
 
@@ -50,6 +51,7 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	args = talloc_strdup(opt, "");
 	initrd = conf_get_global_option(conf, "initrd");
 	root = conf_get_global_option(conf, "root");
+	dtb = conf_get_global_option(conf, "dtb");
 
 	pos = strchr(value, ' ');
 
@@ -79,6 +81,11 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 			continue;
 		}
 
+		if (streq(cl_name, "dtb")) {
+			dtb = cl_value;
+			continue;
+		}
+
 		args = talloc_asprintf_append(args, "%s=%s ", cl_name,
 			cl_value);
 	}
@@ -93,15 +100,22 @@ out_add:
 	} else
 		opt->boot_args = args;
 
+	opt->description = talloc_asprintf(opt, "%s %s", value,
+			opt->boot_args);
+
 	if (initrd) {
 		d_opt->initrd = create_devpath_resource(d_opt,
 				conf->dc->device, initrd);
+		opt->description = talloc_asprintf_append(opt->description,
+				" initrd=%s", initrd);
+	}
 
-		opt->description = talloc_asprintf(opt, "%s initrd=%s %s",
-			value, initrd, opt->boot_args);
-	} else
-		opt->description = talloc_asprintf(opt, "%s %s", value,
-			opt->boot_args);
+	if (dtb) {
+		d_opt->dtb = create_devpath_resource(d_opt,
+				conf->dc->device, dtb);
+		opt->description = talloc_asprintf_append(opt->description,
+				" dtb=%s", dtb);
+	}
 
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
@@ -110,6 +124,7 @@ out_add:
 }
 
 static struct conf_global_option kboot_global_options[] = {
+	{ .name = "dtb" },
 	{ .name = "initrd" },
 	{ .name = "root" },
 	{ .name = "video" },

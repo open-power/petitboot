@@ -147,6 +147,8 @@ static int pbt_boot_option_add(struct device *dev, struct boot_option *opt,
 		opt->boot_image_file);
 	opt_data->bd->initrd = talloc_strdup(opt_data->bd,
 		opt->initrd_file);
+	opt_data->bd->dtb = talloc_strdup(opt_data->bd,
+		opt->dtb_file);
 	opt_data->bd->args = talloc_strdup(opt_data->bd,
 		opt->boot_args);
 	opt_data->opt = opt;

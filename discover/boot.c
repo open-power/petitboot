@@ -16,16 +16,18 @@
  * kexec_load - kexec load helper.
  * @l_image: The local image file for kexec to execute.
  * @l_initrd: Optional local initrd file for kexec --initrd, can be NULL.
+ * @l_dtb: Optional local dtb file for kexec --dtb, can be NULL.
  * @args: Optional command line args for kexec --append, can be NULL.
  */
 
 static int kexec_load(const char *l_image, const char *l_initrd,
-	const char *args, int dry_run)
+	const char *l_dtb, const char *args, int dry_run)
 {
 	int result;
-	const char *argv[6];
+	const char *argv[7];
 	const char **p;
 	char *s_initrd = NULL;
+	char *s_dtb = NULL;
 	char *s_args = NULL;
 
 	p = argv;
@@ -38,14 +40,20 @@ static int kexec_load(const char *l_image, const char *l_initrd,
 		*p++ = s_initrd;	 /* 3 */
 	}
 
+	if (l_dtb) {
+		s_dtb = talloc_asprintf(NULL, "--dtb=%s", l_dtb);
+		assert(s_dtb);
+		*p++ = s_dtb;		 /* 4 */
+	}
+
 	if (args) {
 		s_args = talloc_asprintf(NULL, "--append=%s", args);
 		assert(s_args);
-		*p++ = s_args;		/* 4 */
+		*p++ = s_args;		/* 5 */
 	}
 
-	*p++ = l_image;			/* 5 */
-	*p++ = NULL;			/* 6 */
+	*p++ = l_image;			/* 6*/
+	*p++ = NULL;			/* 7 */
 
 	result = pb_run_cmd(argv, 1, dry_run);
 
@@ -53,6 +61,7 @@ static int kexec_load(const char *l_image, const char *l_initrd,
 		pb_log("%s: failed: (%d)\n", __func__, result);
 
 	talloc_free(s_initrd);
+	talloc_free(s_dtb);
 	talloc_free(s_args);
 
 	return result;
@@ -128,16 +137,18 @@ static void update_status(boot_status_fn fn, void *arg, int type,
 int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		int dry_run, boot_status_fn status_fn, void *status_arg)
 {
-	char *local_image, *local_initrd;
+	char *local_image, *local_initrd, *local_dtb;
+	struct pb_url *image, *initrd, *dtb;
 	unsigned int clean_image = 0;
 	unsigned int clean_initrd = 0;
-	struct pb_url *image, *initrd;
+	unsigned int clean_dtb = 0;
 	char *args;
 	int result;
 
 	local_initrd = NULL;
 	image = NULL;
 	initrd = NULL;
+	dtb = NULL;
 	args = NULL;
 
 	if (cmd && cmd->boot_image_file) {
@@ -153,6 +164,12 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		initrd = pb_url_parse(opt, cmd->initrd_file);
 	} else if (opt && opt->initrd) {
 		initrd = opt->initrd->url;
+	}
+
+	if (cmd && cmd->dtb_file) {
+		dtb = pb_url_parse(opt, cmd->dtb_file);
+	} else if (opt && opt->dtb) {
+		dtb = opt->dtb->url;
 	}
 
 	if (cmd && cmd->boot_args) {
@@ -183,10 +200,23 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		}
 	}
 
+	local_dtb = NULL;
+	if (dtb) {
+		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+				"loading device tree");
+		local_dtb = load_url(NULL, dtb, &clean_dtb);
+		if (!local_dtb) {
+			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
+					"Couldn't load device tree");
+			goto no_load;
+		}
+	}
+
 	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 			"performing kexec_load");
 
-	result = kexec_load(local_image, local_initrd, args, dry_run);
+	result = kexec_load(local_image, local_initrd, local_dtb,
+				args, dry_run);
 
 	if (result) {
 		update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
@@ -198,9 +228,12 @@ no_load:
 		unlink(local_image);
 	if (clean_initrd)
 		unlink(local_initrd);
+	if (clean_dtb)
+		unlink(local_dtb);
 
 	talloc_free(local_image);
 	talloc_free(local_initrd);
+	talloc_free(local_dtb);
 
 	if (!result) {
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,

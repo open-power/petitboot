@@ -185,6 +185,9 @@ static struct pb_boot_data *boot_editor_prepare_data(
 	bd->initrd = *s ? talloc_strdup(bd, s) : NULL;
 
 	s = boot_editor_chomp(field_buffer(boot_editor->fields[2], 0));
+	bd->dtb = *s ? talloc_strdup(bd, s) : NULL;
+
+	s = boot_editor_chomp(field_buffer(boot_editor->fields[3], 0));
 	bd->args = *s ? talloc_strdup(bd, s) : NULL;
 
 	return bd;
@@ -315,6 +318,7 @@ struct boot_editor *boot_editor_init(void *ui_ctx,
 
 	pb_log("%s: image:  '%s'\n", __func__, bd->image);
 	pb_log("%s: initrd: '%s'\n", __func__, bd->initrd);
+	pb_log("%s: dtb:    '%s'\n", __func__, bd->dtb);
 	pb_log("%s: args:   '%s'\n", __func__, bd->args);
 
 	assert(on_exit);
@@ -337,15 +341,17 @@ struct boot_editor *boot_editor_init(void *ui_ctx,
 
 	boot_editor->on_exit = on_exit;
 
-	boot_editor->fields = talloc_array(boot_editor, FIELD *, 7);
+	boot_editor->fields = talloc_array(boot_editor, FIELD *, 9);
 
 	boot_editor->fields[0] = boot_editor_setup_field(0, 9, bd->image);
 	boot_editor->fields[1] = boot_editor_setup_field(1, 9, bd->initrd);
-	boot_editor->fields[2] = boot_editor_setup_field(2, 9, bd->args);
-	boot_editor->fields[3] = boot_editor_setup_label(0, 1, "image:");
-	boot_editor->fields[4] = boot_editor_setup_label(1, 1, "initrd:");
-	boot_editor->fields[5] = boot_editor_setup_label(2, 1, "args:");
-	boot_editor->fields[6] = NULL;
+	boot_editor->fields[2] = boot_editor_setup_field(2, 9, bd->dtb);
+	boot_editor->fields[3] = boot_editor_setup_field(3, 9, bd->args);
+	boot_editor->fields[4] = boot_editor_setup_label(0, 1, "image:");
+	boot_editor->fields[5] = boot_editor_setup_label(1, 1, "initrd:");
+	boot_editor->fields[6] = boot_editor_setup_label(2, 1, "dtb:");
+	boot_editor->fields[7] = boot_editor_setup_label(3, 1, "args:");
+	boot_editor->fields[8] = NULL;
 
 	boot_editor->ncf = new_form(boot_editor->fields);
 

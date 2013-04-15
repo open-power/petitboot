@@ -22,6 +22,7 @@ static int print_device_add(struct device *device,
 		printf("\t\ticon: %s\n", opt->icon_file);
 		printf("\t\tboot: %s\n", opt->boot_image_file);
 		printf("\t\tinit: %s\n", opt->initrd_file);
+		printf("\t\tdtb:  %s\n", opt->dtb_file);
 		printf("\t\targs: %s\n", opt->boot_args);
 	}
 

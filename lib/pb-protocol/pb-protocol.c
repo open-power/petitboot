@@ -34,6 +34,7 @@
  *    4-byte len, icon_file
  *    4-byte len, boot_image_file
  *    4-byte len, initrd_file
+ *    4-byte len, dtb_file
  *    4-byte len, boot_args
  *
  * action = 0x2: device remove message
@@ -45,6 +46,7 @@
  *   4-byte len, boot option id
  *   4-byte len, boot_image_file
  *   4-byte len, initrd_file
+ *   4-byte len, dtb_file
  *   4-byte len, boot_args
  *
  */
@@ -67,6 +69,7 @@ void pb_protocol_dump_device(const struct device *dev, const char *text,
 		fprintf(stream, "%s\t\ticon: %s\n", text, opt->icon_file);
 		fprintf(stream, "%s\t\tboot: %s\n", text, opt->boot_image_file);
 		fprintf(stream, "%s\t\tinit: %s\n", text, opt->initrd_file);
+		fprintf(stream, "%s\t\tdtb:  %s\n", text, opt->dtb_file);
 		fprintf(stream, "%s\t\targs: %s\n", text, opt->boot_args);
 	}
 }
@@ -178,6 +181,7 @@ int pb_protocol_boot_option_len(const struct boot_option *opt)
 		4 + optional_strlen(opt->icon_file) +
 		4 + optional_strlen(opt->boot_image_file) +
 		4 + optional_strlen(opt->initrd_file) +
+		4 + optional_strlen(opt->dtb_file) +
 		4 + optional_strlen(opt->boot_args) +
 		sizeof(opt->is_default);
 }
@@ -187,6 +191,7 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 	return  4 + optional_strlen(boot->option_id) +
 		4 + optional_strlen(boot->boot_image_file) +
 		4 + optional_strlen(boot->initrd_file) +
+		4 + optional_strlen(boot->dtb_file) +
 		4 + optional_strlen(boot->boot_args);
 }
 
@@ -226,6 +231,7 @@ int pb_protocol_serialise_boot_option(const struct boot_option *opt,
 	pos += pb_protocol_serialise_string(pos, opt->icon_file);
 	pos += pb_protocol_serialise_string(pos, opt->boot_image_file);
 	pos += pb_protocol_serialise_string(pos, opt->initrd_file);
+	pos += pb_protocol_serialise_string(pos, opt->dtb_file);
 	pos += pb_protocol_serialise_string(pos, opt->boot_args);
 
 	*(bool *)pos = opt->is_default;
@@ -245,6 +251,7 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 	pos += pb_protocol_serialise_string(pos, boot->option_id);
 	pos += pb_protocol_serialise_string(pos, boot->boot_image_file);
 	pos += pb_protocol_serialise_string(pos, boot->initrd_file);
+	pos += pb_protocol_serialise_string(pos, boot->dtb_file);
 	pos += pb_protocol_serialise_string(pos, boot->boot_args);
 
 	assert(pos <= buf + buf_len);
@@ -423,6 +430,9 @@ int pb_protocol_deserialise_boot_option(struct boot_option *opt,
 	if (read_string(opt, &pos, &len, &opt->initrd_file))
 		goto out;
 
+	if (read_string(opt, &pos, &len, &opt->dtb_file))
+		goto out;
+
 	if (read_string(opt, &pos, &len, &opt->boot_args))
 		goto out;
 
@@ -453,6 +463,9 @@ int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->initrd_file))
+		goto out;
+
+	if (read_string(cmd, &pos, &len, &cmd->dtb_file))
 		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->boot_args))
