@@ -19,5 +19,29 @@ struct resource {
 	};
 };
 
+/**
+ * devpath resources.
+ *
+ * Most resources in config files will be in one of the following formats:
+ *  - URLs
+ *  - device-local filenames (ie, filenames on the currently-discovered dev)
+ *  - other-device filenames (which speficy the device by a string format,
+ *     using a dev:path format).
+ *
+ * The following definitions are a generic resource handler for these types
+ * of resources. By creating resources with create_devpath_resource,
+ * parsers can use resolve_devpath_resource as their resolve_resouce
+ * callback.
+ */
+
+struct resource *create_devpath_resource(void *ctx,
+		struct discover_device *orig_device,
+		const char *devpath);
+
+bool resolve_devpath_resource(struct device_handler *dev,
+		struct resource *res);
+
+
+
 #endif /* RESOURCE_H */
 
