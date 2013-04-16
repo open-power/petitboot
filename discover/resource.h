@@ -38,6 +38,8 @@ struct resource *create_devpath_resource(void *ctx,
 		struct discover_device *orig_device,
 		const char *devpath);
 
+struct resource *create_url_resource(void *ctx, struct pb_url *url);
+
 bool resolve_devpath_resource(struct device_handler *dev,
 		struct resource *res);
 

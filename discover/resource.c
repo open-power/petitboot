@@ -111,3 +111,14 @@ bool resolve_devpath_resource(struct device_handler *handler,
 
 	return true;
 }
+
+struct resource *create_url_resource(void *ctx, struct pb_url *url)
+{
+	struct resource *res;
+
+	res = talloc(ctx, struct resource);
+	res->url = url;
+	res->resolved = true;
+
+	return res;
+}
