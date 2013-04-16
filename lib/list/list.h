@@ -40,6 +40,14 @@ struct list {
 #define list_for_each_entry_continue(_list, _pos, _member) \
 	for (; _pos; _pos = list_next_entry(_list, _pos, _member))
 
+#define list_for_each_entry_safe(_list, _pos, _tmp, _member) \
+	for (_pos = container_of((_list)->head.next, typeof(*_pos), _member), \
+		_tmp = container_of(_pos->_member.next, typeof(*_pos), \
+				_member); \
+	     &_pos->_member != &(_list)->head; \
+	     _pos = _tmp, \
+		_tmp = list_entry(_tmp->_member.next, typeof(*_pos), \
+				_member, _list))
 
 #define DEFINE_LIST(_list) struct list _list = { \
 	.head = { \
