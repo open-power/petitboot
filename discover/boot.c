@@ -103,6 +103,7 @@ int boot(void *ctx, struct boot_option *opt, struct boot_command *cmd,
 	char *image, *initrd, *args;
 	int result;
 
+	local_initrd = NULL;
 	image = NULL;
 	initrd = NULL;
 	args = NULL;
@@ -134,7 +135,6 @@ int boot(void *ctx, struct boot_option *opt, struct boot_command *cmd,
 	if (!local_image)
 		goto no_load;
 
-	local_initrd = NULL;
 	if (initrd) {
 		local_initrd = load_file(NULL, initrd, &clean_initrd);
 		if (!local_initrd)
