@@ -35,6 +35,28 @@ struct discover_boot_option *discover_boot_option_create(
 	return opt;
 }
 
+struct discover_device *device_lookup_by_name(
+		struct device_handler *handler __attribute__((unused)),
+		const char *name __attribute__((unused)))
+{
+	return NULL;
+}
+
+struct discover_device *device_lookup_by_label(
+		struct device_handler *handler __attribute__((unused)),
+		const char *label __attribute__((unused)))
+{
+	return NULL;
+}
+
+struct discover_device *device_lookup_by_uuid(
+		struct device_handler *handler __attribute__((unused)),
+		const char *uuid __attribute__((unused)))
+{
+	return NULL;
+}
+
+
 void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *boot_option)
 {
@@ -84,7 +106,7 @@ int main(int argc, char **argv)
 
 	ctx->device = talloc_zero(ctx, struct discover_device);
 	ctx->device->device = talloc_zero(ctx->device, struct device);
-	ctx->device->device_path = talloc_asprintf(ctx, "%s/%s",
+	ctx->device->mount_path = talloc_asprintf(ctx, "%s/%s",
 							argv[1], argv[2]);
 	ctx->device->device->id = talloc_strdup(ctx->device->device, argv[2]);
 

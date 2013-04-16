@@ -30,7 +30,7 @@
 #include "types/types.h"
 #include "parser-conf.h"
 #include "parser-utils.h"
-#include "paths.h"
+#include "resource.h"
 
 struct grub2_state {
 	struct discover_boot_option *opt;
@@ -85,7 +85,7 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 {
 	struct device *dev = conf->dc->device->device;
 	struct grub2_state *state = conf->parser_info;
-	struct boot_option *opt = state->opt->option;
+	struct discover_boot_option *opt = state->opt;
 
 	if (!name || !conf_param_in_list(state->known_names, name))
 		return;
@@ -102,8 +102,9 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		if (sep)
 			*sep = 0;
 
-		opt->id = talloc_asprintf(opt, "%s#%s", dev->id, value);
-		opt->name = talloc_strdup(opt, value);
+		opt->option->id = talloc_asprintf(opt->option,
+					"%s#%s", dev->id, value);
+		opt->option->name = talloc_strdup(opt->option, value);
 
 		return;
 	}
@@ -116,20 +117,19 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		if (sep)
 			*sep = 0;
 
-		opt->boot_image_file = resolve_path(opt, value,
-					conf->dc->device->device_path);
+		opt->boot_image = create_devpath_resource(opt,
+					conf->dc->device, value);
 		state->desc_image = talloc_strdup(opt, value);
 
 		if (sep)
-			opt->boot_args = talloc_strdup(opt,
-				sep + 1);
+			opt->option->boot_args = talloc_strdup(opt, sep + 1);
 
 		return;
 	}
 
 	if (streq(name, "initrd")) {
-		opt->initrd_file = resolve_path(opt,
-			value, conf->dc->device->device_path);
+		opt->initrd = create_devpath_resource(opt,
+					conf->dc->device, value);
 		state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 			value);
 		return;

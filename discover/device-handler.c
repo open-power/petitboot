@@ -130,73 +130,13 @@ const struct discover_device *device_handler_get_device(
 	return handler->devices[index];
 }
 
-static void setup_device_links(struct discover_device *dev)
-{
-	struct link {
-		const char *dir, *val;
-	} *link, links[] = {
-		{
-			.dir = "disk/by-uuid",
-			.val = dev->uuid,
-		},
-		{
-			.dir = "disk/by-label",
-			.val = dev->label,
-		},
-		{
-			.dir = NULL
-		}
-	};
-
-	for (link = links; link->dir; link++) {
-		char *enc, *dir, *path;
-
-		if (!link->val || !*link->val)
-			continue;
-
-		enc = encode_label(dev, link->val);
-		dir = join_paths(dev, mount_base(), link->dir);
-		path = join_paths(dev, dir, enc);
-
-		if (!pb_mkdir_recursive(dir)) {
-			unlink(path);
-			if (symlink(dev->mount_path, path)) {
-				pb_log("symlink(%s,%s): %s\n",
-						dev->mount_path, path,
-						strerror(errno));
-				talloc_free(path);
-			} else {
-				int i = dev->n_links++;
-				dev->links = talloc_realloc(dev,
-						dev->links, char *,
-						dev->n_links);
-				dev->links[i] = path;
-			}
-
-		}
-
-		talloc_free(dir);
-		talloc_free(enc);
-	}
-}
-
-static void remove_device_links(struct discover_device *dev)
-{
-	int i;
-
-	for (i = 0; i < dev->n_links; i++)
-		unlink(dev->links[i]);
-}
-
 static int mount_device(struct discover_device *dev)
 {
-	const char *mountpoint;
 	const char *argv[6];
 
-	if (!dev->mount_path) {
-		mountpoint = mountpoint_for_device(dev->device_path);
-		dev->mount_path = talloc_strdup(dev, mountpoint);
-	}
+	if (!dev->mount_path)
+		dev->mount_path = join_paths(dev, mount_base(),
+						dev->device_path);
 
 	if (pb_mkdir_recursive(dev->mount_path))
 		pb_log("couldn't create mount directory %s: %s\n",
@@ -222,7 +162,6 @@ static int mount_device(struct discover_device *dev)
 			goto out_rmdir;
 	}
 
-	setup_device_links(dev);
 	return 0;
 
 out_rmdir:
@@ -234,8 +173,6 @@ static int umount_device(struct discover_device *dev)
 {
 	int status;
 	pid_t pid;
-
-	remove_device_links(dev);
 
 	if (!dev->mount_path)
 		return 0;
@@ -590,5 +527,5 @@ void device_handler_boot(struct device_handler *handler,
 
 	opt = find_boot_option_by_id(handler, cmd->option_id);
 
-	boot(handler, opt->option, cmd, handler->dry_run);
+	boot(handler, opt, cmd, handler->dry_run);
 }

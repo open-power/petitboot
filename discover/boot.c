@@ -5,9 +5,12 @@
 #include <pb-protocol/pb-protocol.h>
 #include <system/system.h>
 #include <talloc/talloc.h>
+#include <url/url.h>
 
+#include "device-handler.h"
 #include "boot.h"
 #include "paths.h"
+#include "resource.h"
 
 /**
  * kexec_load - kexec load helper.
@@ -94,13 +97,14 @@ static int kexec_reboot(int dry_run)
 	return result;
 }
 
-int boot(void *ctx, struct boot_option *opt, struct boot_command *cmd,
+int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		int dry_run)
 {
 	char *local_image, *local_initrd;
 	unsigned int clean_image = 0;
 	unsigned int clean_initrd = 0;
-	char *image, *initrd, *args;
+	struct pb_url *image, *initrd;
+	char *args;
 	int result;
 
 	local_initrd = NULL;
@@ -109,34 +113,34 @@ int boot(void *ctx, struct boot_option *opt, struct boot_command *cmd,
 	args = NULL;
 
 	if (cmd->boot_image_file) {
-		image = talloc_strdup(ctx, cmd->boot_image_file);
-	} else if (opt && opt->boot_image_file) {
-		image = talloc_strdup(ctx, opt->boot_image_file);
+		image = pb_url_parse(opt, cmd->boot_image_file);
+	} else if (opt && opt->boot_image) {
+		image = opt->boot_image->url;
 	} else {
 		pb_log("%s: no image specified", __func__);
 		return -1;
 	}
 
 	if (cmd->initrd_file) {
-		initrd = talloc_strdup(ctx, cmd->initrd_file);
-	} else if (opt && opt->initrd_file) {
-		initrd = talloc_strdup(ctx, opt->initrd_file);
+		initrd = pb_url_parse(opt, cmd->initrd_file);
+	} else if (opt && opt->initrd) {
+		initrd = opt->initrd->url;
 	}
 
 	if (cmd->boot_args) {
 		args = talloc_strdup(ctx, cmd->boot_args);
-	} else if (opt && opt->boot_args) {
-		args = talloc_strdup(ctx, opt->boot_args);
+	} else if (opt && opt->option->boot_args) {
+		args = talloc_strdup(ctx, opt->option->boot_args);
 	}
 
 	result = -1;
 
-	local_image = load_file(NULL, image, &clean_image);
+	local_image = load_url(NULL, image, &clean_image);
 	if (!local_image)
 		goto no_load;
 
 	if (initrd) {
-		local_initrd = load_file(NULL, initrd, &clean_initrd);
+		local_initrd = load_url(NULL, initrd, &clean_initrd);
 		if (!local_initrd)
 			goto no_load;
 	}

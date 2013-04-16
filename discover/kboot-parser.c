@@ -9,7 +9,7 @@
 #include "types/types.h"
 #include "parser-conf.h"
 #include "parser-utils.h"
-#include "paths.h"
+#include "resource.h"
 
 static void kboot_process_pair(struct conf_context *conf, const char *name,
 		char *value)
@@ -83,8 +83,8 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	}
 
 out_add:
-	opt->boot_image_file = resolve_path(opt, value,
-			conf->dc->device->device_path);
+	d_opt->boot_image = create_devpath_resource(opt,
+				conf->dc->device, value);
 
 	if (root) {
 		opt->boot_args = talloc_asprintf(opt, "root=%s %s", root, args);
@@ -93,8 +93,8 @@ out_add:
 		opt->boot_args = args;
 
 	if (initrd) {
-		opt->initrd_file = resolve_path(opt, initrd,
-				conf->dc->device->device_path);
+		d_opt->initrd = create_devpath_resource(opt,
+				conf->dc->device, initrd);
 
 		opt->description = talloc_asprintf(opt, "%s initrd=%s %s",
 			value, initrd, opt->boot_args);
@@ -158,7 +158,8 @@ static int kboot_parse(struct discover_context *dc, char *buf, int len)
 }
 
 struct parser __kboot_parser = {
-	.name		= "kboot",
-	.parse		= kboot_parse,
-	.filenames	= kboot_conf_files,
+	.name			= "kboot",
+	.parse			= kboot_parse,
+	.filenames		= kboot_conf_files,
+	.resolve_resource	= resolve_devpath_resource,
 };

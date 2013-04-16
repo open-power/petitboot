@@ -30,6 +30,10 @@ struct discover_boot_option {
 	struct discover_device	*device;
 	struct boot_option	*option;
 	struct list_item	list;
+
+	struct resource		*boot_image;
+	struct resource		*initrd;
+	struct resource		*icon;
 };
 
 

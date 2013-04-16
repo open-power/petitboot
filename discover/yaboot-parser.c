@@ -9,11 +9,11 @@
 #include "types/types.h"
 #include "parser-conf.h"
 #include "parser-utils.h"
-#include "paths.h"
+#include "resource.h"
 
 struct yaboot_state {
 	struct discover_boot_option *opt;
-	const char *desc_image;
+	char *desc_image;
 	char *desc_initrd;
 	int globals_done;
 	const char *const *known_names;
@@ -56,11 +56,40 @@ static void yaboot_finish(struct conf_context *conf)
 	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
 }
 
+static struct resource *create_yaboot_devpath_resource(
+		struct conf_context *conf,
+		const char *path, char **desc_str)
+{
+	const char *g_boot = conf_get_global_option(conf, "boot");
+	const char *g_part = conf_get_global_option(conf, "partition");
+	struct resource *res;
+	char *devpath;
+
+	if (g_boot && g_part) {
+		devpath = talloc_asprintf(conf,
+				"%s%s:%s", g_boot, g_part, path);
+	} else if (g_boot) {
+		devpath = talloc_asprintf(conf, "%s:%s", g_boot, path);
+	} else {
+		devpath = talloc_strdup(conf, path);
+	}
+
+	res = create_devpath_resource(conf->dc, conf->dc->device, devpath);
+
+	if (desc_str)
+		*desc_str = devpath;
+	else
+		talloc_free(devpath);
+
+	return res;
+}
+
+
 static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		char *value)
 {
 	struct yaboot_state *state = conf->parser_info;
-	struct boot_option *opt = state->opt->option;
+	struct discover_boot_option *opt = state->opt;
 	struct fixed_pair {
 		const char *image;
 		const char *initrd;
@@ -91,35 +120,14 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* image */
 
 	if (streq(name, "image")) {
-		const char *g_boot = conf_get_global_option(conf, "boot");
-		const char *g_part = conf_get_global_option(conf, "partition");
 
 		/* First finish any previous image. */
-
-		if (opt->boot_image_file)
+		if (opt->boot_image)
 			yaboot_finish(conf);
 
 		/* Then start the new image. */
-
-		if (g_boot && g_part) {
-			char* dev = talloc_asprintf(NULL, "%s%s", g_boot,
-				g_part);
-
-			opt->boot_image_file = resolve_path(opt,
-				value, dev);
-			state->desc_image = talloc_asprintf(opt,
-				"%s%s", dev, value);
-			talloc_free(dev);
-		} else if (g_boot) {
-			opt->boot_image_file = resolve_path(opt,
-				value, g_boot);
-			state->desc_image = talloc_asprintf(opt,
-				"%s%s", g_boot, value);
-		} else {
-			opt->boot_image_file = resolve_path(opt,
-				value, conf->dc->device->device_path);
-			state->desc_image = talloc_strdup(opt, value);
-		}
+		opt->boot_image = create_yaboot_devpath_resource(conf,
+				value, &state->desc_image);
 
 		return;
 	}
@@ -136,31 +144,33 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	if (suse_fp) {
 		/* First finish any previous image. */
 
-		if (opt->boot_image_file)
+		if (opt->boot_image)
 			yaboot_finish(conf);
 
 		/* Then start the new image. */
 
 		if (*value == '/') {
-			opt->boot_image_file = resolve_path(opt,
-				value, conf->dc->device->device_path);
-			state->desc_image = talloc_strdup(opt, value);
+			opt->boot_image = create_yaboot_devpath_resource(
+					conf, value, &state->desc_image);
 		} else {
-			opt->boot_image_file = resolve_path(opt,
-				suse_fp->image, conf->dc->device->device_path);
-			state->desc_image = talloc_strdup(opt,
-				suse_fp->image);
+			char *tmp;
 
-			opt->initrd_file = resolve_path(opt,
-				suse_fp->initrd, conf->dc->device->device_path);
-			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
-				suse_fp->initrd);
+			opt->boot_image = create_yaboot_devpath_resource(
+					conf, suse_fp->image,
+					&state->desc_image);
+
+			opt->initrd = create_yaboot_devpath_resource(
+					conf, suse_fp->initrd, &tmp);
+
+			state->desc_initrd = talloc_asprintf(opt,
+				"initrd=%s", tmp);
+			talloc_free(tmp);
 		}
 
 		return;
 	}
 
-	if (!opt->boot_image_file) {
+	if (!opt->boot_image) {
 		pb_log("%s: unknown name: %s\n", __func__, name);
 		return;
 	}
@@ -168,86 +178,66 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* initrd */
 
 	if (streq(name, "initrd")) {
-		const char *g_boot = conf_get_global_option(conf, "boot");
-		const char *g_part = conf_get_global_option(conf, "partition");
+		opt->initrd = create_yaboot_devpath_resource(conf,
+				value, &state->desc_image);
 
-		if (g_boot && g_part) {
-			char* dev = talloc_asprintf(NULL, "%s%s", g_boot,
-				g_part);
-
-			opt->initrd_file = resolve_path(opt,
-				value, dev);
-			state->desc_initrd = talloc_asprintf(state,
-				"initrd=%s%s", dev, value);
-			talloc_free(dev);
-		} else if (g_boot) {
-			opt->initrd_file = resolve_path(opt,
-				value, g_boot);
-			state->desc_initrd = talloc_asprintf(state,
-				"initrd=%s%s", g_boot, value);
-		} else {
-			opt->initrd_file = resolve_path(opt,
-				value, conf->dc->device->device_path);
-			state->desc_initrd = talloc_asprintf(state, "initrd=%s",
-				value);
-		}
 		return;
 	}
 
 	/* label */
 
 	if (streq(name, "label")) {
-		opt->id = talloc_asprintf(opt, "%s#%s",
+		opt->option->id = talloc_asprintf(opt->option, "%s#%s",
 			conf->dc->device->device->id, value);
-		opt->name = talloc_strdup(opt, value);
+		opt->option->name = talloc_strdup(opt->option, value);
 		return;
 	}
 
 	/* args */
 
 	if (streq(name, "append")) {
-		opt->boot_args = talloc_asprintf_append(
-			opt->boot_args, "%s ", value);
+		opt->option->boot_args = talloc_asprintf_append(
+			opt->option->boot_args, "%s ", value);
 		return;
 	}
 
 	if (streq(name, "initrd-size")) {
-		opt->boot_args = talloc_asprintf_append(
-			opt->boot_args, "ramdisk_size=%s ", value);
+		opt->option->boot_args = talloc_asprintf_append(
+			opt->option->boot_args, "ramdisk_size=%s ", value);
 		return;
 	}
 
 	if (streq(name, "literal")) {
-		if (*opt->boot_args) {
+		if (*opt->option->boot_args) {
 			pb_log("%s: literal over writes '%s'\n", __func__,
-				opt->boot_args);
-			talloc_free(opt->boot_args);
+				opt->option->boot_args);
+			talloc_free(opt->option->boot_args);
 		}
-		talloc_asprintf(opt, "%s ", value);
+		talloc_asprintf(opt->option, "%s ", value);
 		return;
 	}
 
 	if (streq(name, "ramdisk")) {
-		opt->boot_args = talloc_asprintf_append(
-			opt->boot_args, "ramdisk=%s ", value);
+		opt->option->boot_args = talloc_asprintf_append(
+			opt->option->boot_args, "ramdisk=%s ", value);
 		return;
 	}
 
 	if (streq(name, "read-only")) {
-		opt->boot_args = talloc_asprintf_append(
-			opt->boot_args, "ro ");
+		opt->option->boot_args = talloc_asprintf_append(
+			opt->option->boot_args, "ro ");
 		return;
 	}
 
 	if (streq(name, "read-write")) {
-		opt->boot_args = talloc_asprintf_append(
-			opt->boot_args, "rw ");
+		opt->option->boot_args = talloc_asprintf_append(
+			opt->option->boot_args, "rw ");
 		return;
 	}
 
 	if (streq(name, "root")) {
-		opt->boot_args = talloc_asprintf_append(
-			opt->boot_args, "root=%s ", value);
+		opt->option->boot_args = talloc_asprintf_append(
+			opt->option->boot_args, "root=%s ", value);
 		return;
 	}
 

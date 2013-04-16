@@ -77,12 +77,17 @@ err_close:
 	return -1;
 }
 
+static char *local_path(struct discover_context *ctx,
+		const char *filename)
+{
+	return join_paths(ctx, ctx->device->mount_path, filename);
+}
+
 static void iterate_parser_files(struct discover_context *ctx,
 		const struct parser *parser)
 {
 	const char * const *filename;
-	const char *path, *url;
-	unsigned int tempfile;
+	const char *path;
 
 	if (!parser->filenames)
 		return;
@@ -91,12 +96,7 @@ static void iterate_parser_files(struct discover_context *ctx,
 		int rc, len;
 		char *buf;
 
-		url = resolve_path(ctx, *filename, ctx->device->device_path);
-		if (!url)
-			continue;
-
-		path = load_file(ctx, url, &tempfile);
-
+		path = local_path(ctx, *filename);
 		if (!path)
 			continue;
 
@@ -105,12 +105,7 @@ static void iterate_parser_files(struct discover_context *ctx,
 			parser->parse(ctx, buf, len);
 			talloc_free(buf);
 		}
-
-		if (tempfile)
-			unlink(path);
-
 	}
-
 }
 
 void iterate_parsers(struct discover_context *ctx)

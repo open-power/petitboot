@@ -30,6 +30,8 @@ libparser_la_SOURCES = \
 	parser-utils.h \
 	paths.c \
 	paths.h \
+	resource.c \
+	resource.h \
 	kboot-parser.c \
 	grub2-parser.c \
 	yaboot-parser.c
@@ -54,8 +56,6 @@ pb_discover_SOURCES = \
 	params.h \
 	pb-discover.c \
 	pb-discover.h \
-	resource.c \
-	resource.h \
 	udev.c \
 	udev.h \
 	user-event.c \
