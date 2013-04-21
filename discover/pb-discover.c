@@ -175,6 +175,7 @@ int main(int argc, char *argv[])
 
 	device_handler_destroy(handler);
 	waitset_destroy(waitset);
+	udev_destroy(udev);
 
 	pb_log("--- end ---\n");
 
