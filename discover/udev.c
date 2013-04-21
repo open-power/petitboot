@@ -24,7 +24,7 @@
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-struct udev {
+struct pb_udev {
 	struct device_handler *handler;
 	int socket;
 };
@@ -52,7 +52,7 @@ static void udev_print_event(struct event *event)
 				params[i], event_get_param(event, params[i]));
 }
 
-static void udev_handle_message(struct udev *udev, char *buf, int len)
+static void udev_handle_message(struct pb_udev *udev, char *buf, int len)
 {
 	int result;
 	struct event *event;
@@ -87,7 +87,7 @@ static void udev_handle_message(struct udev *udev, char *buf, int len)
 
 static int udev_process(void *arg)
 {
-	struct udev *udev = arg;
+	struct pb_udev *udev = arg;
 	char buf[4096];
 	int len;
 
@@ -108,7 +108,7 @@ static int udev_process(void *arg)
 
 static int udev_destructor(void *p)
 {
-	struct udev *udev = p;
+	struct pb_udev *udev = p;
 
 	if (udev->socket >= 0)
 		close(udev->socket);
@@ -116,14 +116,14 @@ static int udev_destructor(void *p)
 	return 0;
 }
 
-struct udev *udev_init(struct waitset *waitset, struct device_handler *handler)
+struct pb_udev *udev_init(struct waitset *waitset, struct device_handler *handler)
 {
 	struct sockaddr_un addr;
-	struct udev *udev;
+	struct pb_udev *udev;
 
 	unlink(PBOOT_DEVICE_SOCKET);
 
-	udev = talloc(NULL, struct udev);
+	udev = talloc(NULL, struct pb_udev);
 
 	udev->handler = handler;
 
@@ -155,7 +155,7 @@ out_err:
 	return NULL;
 }
 
-int udev_trigger(struct udev __attribute__((unused)) *udev)
+int udev_trigger(struct pb_udev __attribute__((unused)) *udev)
 {
 	const char *cmd[] = {
 		pb_system_apps.udevadm,
@@ -174,7 +174,7 @@ int udev_trigger(struct udev __attribute__((unused)) *udev)
 	return WEXITSTATUS(rc);
 }
 
-void udev_destroy(struct udev *udev)
+void udev_destroy(struct pb_udev *udev)
 {
 	talloc_free(udev);
 }

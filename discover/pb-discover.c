@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 	struct discover_server *server;
 	struct waitset *waitset;
 	struct opts opts;
-	struct udev *udev;
+	struct pb_udev *udev;
 	struct user_event *uev;
 
 	if (opts_parse(&opts, argc, argv)) {
