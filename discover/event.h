@@ -16,11 +16,11 @@ enum event_action {
 struct event {
 	enum event_type type;
 	enum event_action action;
-	char *device;
+	const char *device;
 
 	struct param {
-		char *name;
-		char *value;
+		const char *name;
+		const char *value;
 	} *params;
 	int n_params;
 };
