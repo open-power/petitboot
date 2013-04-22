@@ -65,4 +65,6 @@ pb_discover_SOURCES = \
 
 pb_discover_LDADD = libparser.o $(top_builddir)/lib/libpbcore.la
 
+pb_discover_LDFLAGS = -ludev
+
 MAINTAINERCLEANFILES = Makefile.in

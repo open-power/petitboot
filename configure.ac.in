@@ -31,6 +31,11 @@ LT_INIT
 AC_CHECK_HEADERS([stdarg.h])
 AC_CHECK_HEADERS([varargs.h])
 
+AC_CHECK_LIB([udev], [udev_new],
+	[],
+	[AC_MSG_FAILURE([The libudev development library is required by petitboot.  Try installing the libudev-dev package.])]
+)
+
 dnl Checking for va_copy availability
 AC_MSG_CHECKING([for va_copy])
 AC_TRY_LINK([#include <stdarg.h>

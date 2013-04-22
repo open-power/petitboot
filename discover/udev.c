@@ -1,7 +1,9 @@
 
 #define _GNU_SOURCE
 
+#include <assert.h>
 #include <errno.h>
+#include <libudev.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,158 +22,304 @@
 #include "pb-discover.h"
 #include "device-handler.h"
 
-#define PBOOT_DEVICE_SOCKET "/tmp/petitboot.udev"
-
-#define max(a, b) ((a) > (b) ? (a) : (b))
+#if defined(DEBUG)
+#define DBG(fmt, args...) pb_log("DBG: " fmt, ## args)
+#define DBGS(fmt, args...) \
+	pb_log("DBG:%s:%d: " fmt, __func__, __LINE__, ## args)
+#else
+#define DBG(fmt, args...)
+#define DBGS(fmt, args...)
+#endif
 
 struct pb_udev {
+	struct udev *udev;
+	struct udev_monitor *monitor;
 	struct device_handler *handler;
-	int socket;
 };
-
-static void udev_print_event(struct event *event)
-{
-	const char *action, *params[] = {
-		"DEVNAME",
-		"DEVPATH",
-		"ID_TYPE",
-		"ID_BUS",
-		"ID_FS_UUID",
-		"ID_FS_LABEL",
-		NULL,
-	};
-	int i;
-
-	action = event->action == EVENT_ACTION_ADD ? "add" : "remove";
-
-	pb_log("udev %s event:\n", action);
-	pb_log("\tdevice: %s\n", event->device);
-
-	for (i = 0; params[i]; i++)
-		pb_log("\t%-12s => %s\n",
-				params[i], event_get_param(event, params[i]));
-}
-
-static void udev_handle_message(struct pb_udev *udev, char *buf, int len)
-{
-	int result;
-	struct event *event;
-	const char *devpath;
-
-	event = talloc(udev, struct event);
-	event->type = EVENT_TYPE_UDEV;
-
-	pb_log("%s\n", buf);
-
-	result = event_parse_ad_message(event, buf, len);
-
-	if (result)
-		return;
-
-	udev_print_event(event);
-
-	/* Ignore ram, loop, and devices with no DEVNAME. */
-
-	devpath = event_get_param(event, "DEVPATH");
-
-	if (event_get_param(event, "DEVNAME")
-		&& !strstr(devpath, "virtual/block/loop")
-		&& !strstr(devpath, "virtual/block/ram")) {
-		device_handler_event(udev->handler, event);
-	}
-
-	talloc_free(event);
-
-	return;
-}
-
-static int udev_process(void *arg)
-{
-	struct pb_udev *udev = arg;
-	char buf[4096];
-	int len;
-
-	len = recvfrom(udev->socket, buf, sizeof(buf), 0, NULL, NULL);
-
-	if (len < 0) {
-		pb_log("udev socket read failed: %s", strerror(errno));
-		return -1;
-	}
-
-	if (len == 0)
-		return 0;
-
-	udev_handle_message(udev, buf, len);
-
-	return 0;
-}
 
 static int udev_destructor(void *p)
 {
 	struct pb_udev *udev = p;
 
-	if (udev->socket >= 0)
-		close(udev->socket);
+	udev_monitor_unref(udev->monitor);
+	udev->monitor = NULL;
+
+	udev_unref(udev->udev);
+	udev->udev = NULL;
 
 	return 0;
 }
 
-struct pb_udev *udev_init(struct waitset *waitset, struct device_handler *handler)
+static void print_device_properties(struct udev_device *dev)
 {
-	struct sockaddr_un addr;
+	struct udev_list_entry *list, *entry;
+
+	assert(dev);
+
+	if (1) {
+		list = udev_device_get_properties_list_entry(dev);
+
+		assert(list);
+
+		udev_list_entry_foreach(entry, list)
+			DBG("property: %s - %s\n",
+				udev_list_entry_get_name(entry),
+				udev_device_get_property_value(dev,
+					udev_list_entry_get_name(entry)));
+	}
+}
+
+static int udev_handle_dev_action(struct udev_device *dev, const char *action)
+{
+	const char *devtype;
+	const char *devpath;
+	const char *devnode;
 	struct pb_udev *udev;
+	struct event *event;
+	enum event_action eva = 0;
 
-	unlink(PBOOT_DEVICE_SOCKET);
+	assert(dev);
+	assert(action);
 
-	udev = talloc(NULL, struct pb_udev);
+	devtype = udev_device_get_devtype(dev); /* DEVTYPE */
 
-	udev->handler = handler;
+	if (!devtype) {
+		pb_log("udev_device_get_devtype failed\n");
+		return -1;
+	}
 
-	udev->socket = socket(PF_UNIX, SOCK_DGRAM, 0);
-	if (udev->socket < 0) {
-		pb_log("Error creating udev socket: %s\n", strerror(errno));
+	devpath = udev_device_get_devpath(dev); /* DEVPATH */
+
+	if (!devpath) {
+		pb_log("udev_device_get_devpath failed\n");
+		return -1;
+	}
+
+	devnode = udev_device_get_devnode(dev); /* DEVNAME */
+
+	if (!devnode) {
+		pb_log("udev_device_get_devnode failed\n");
+		return -1;
+	}
+
+	print_device_properties(dev);
+
+	/* Ignore non disk or partition, ram, loop. */
+
+	if (!(strstr(devtype, "disk") || strstr(devtype, "partition"))
+		|| strstr(devpath, "virtual/block/loop")
+		|| strstr(devpath, "virtual/block/ram")) {
+		pb_log("SKIP: %s - %s\n", devtype, devnode);
+		return 0;
+	}
+
+	if (!strcmp(action, "add")) {
+		pb_log("ADD: %s - %s\n", devtype, devnode);
+		eva = EVENT_ACTION_ADD;
+	} else if (!strcmp(action, "remove")) {
+		pb_log("REMOVE: %s - %s\n", devtype, devnode);
+		eva = EVENT_ACTION_REMOVE;
+	} else {
+		pb_log("SKIP: %s: %s - %s\n", action, devtype, devnode);
+		return 0;
+	}
+
+	event = talloc(NULL, struct event);
+
+	event->type = EVENT_TYPE_UDEV;
+	event->action = eva;
+	event->device = devpath;
+
+	event->n_params = 1;
+	event->params = talloc(event, struct param);
+	event->params->name = "DEVNAME";
+	event->params->value = devnode;
+
+	udev = udev_get_userdata(udev_device_get_udev(dev));
+	assert(udev);
+
+	device_handler_event(udev->handler, event);
+
+	talloc_free(event);
+	return 0;
+}
+
+static int udev_enumerate(struct udev *udev)
+{
+	int result;
+	struct udev_list_entry *list, *entry;
+	struct udev_enumerate *enumerate;
+
+	enumerate = udev_enumerate_new(udev);
+
+	if (!enumerate) {
+		pb_log("udev_enumerate_new failed\n");
+		return -1;
+	}
+
+	result = udev_enumerate_add_match_subsystem(enumerate, "block");
+
+	if (result) {
+		pb_log("udev_enumerate_add_match_subsystem failed\n");
+		goto fail;
+	}
+
+	udev_enumerate_scan_devices(enumerate);
+
+	list = udev_enumerate_get_list_entry(enumerate);
+
+	if (!list) {
+		pb_log("udev_enumerate_get_list_entry failed\n");
+		goto fail;
+	}
+
+	udev_list_entry_foreach(entry, list) {
+		const char *syspath;
+		struct udev_device *dev;
+
+		syspath = udev_list_entry_get_name(entry);
+		dev = udev_device_new_from_syspath(udev, syspath);
+
+		udev_handle_dev_action(dev, "add");
+
+		udev_device_unref(dev);
+	}
+
+	udev_enumerate_unref(enumerate);
+	return 0;
+
+fail:
+	udev_enumerate_unref(enumerate);
+	return -1;
+}
+
+static int udev_setup_monitor(struct udev *udev, struct udev_monitor **monitor)
+{
+	int result;
+	struct udev_monitor *m;
+
+	*monitor = NULL;
+	m = udev_monitor_new_from_netlink(udev, "udev");
+
+	if (!m) {
+		pb_log("udev_monitor_new_from_netlink failed\n");
 		goto out_err;
 	}
+
+	result = udev_monitor_filter_add_match_subsystem_devtype(m, "block",
+		NULL);
+
+	if (result) {
+		pb_log("udev_monitor_filter_add_match_subsystem_devtype failed\n");
+		goto out_err;
+	}
+
+	result = udev_monitor_enable_receiving(m);
+
+	if (result) {
+		pb_log("udev_monitor_enable_receiving failed\n");
+		goto out_err;
+	}
+
+	*monitor = m;
+	return 0;
+
+out_err:
+	udev_monitor_unref(m);
+	return -1;
+}
+
+/*
+ * udev_process - waiter callback for monitor netlink.
+ */
+
+static int udev_process(void *arg)
+{
+	struct udev_monitor *monitor = arg;
+	struct udev_device *dev;
+	const char *action;
+	int result;
+
+	dev = udev_monitor_receive_device(monitor);
+
+	if (!dev) {
+		pb_log("udev_monitor_receive_device failed\n");
+		return -1;
+	}
+
+	action = udev_device_get_action(dev);
+
+	if (!action) {
+		pb_log("udev_device_get_action failed\n");
+		goto fail;
+	}
+
+	result = udev_handle_dev_action(dev, action);
+
+	udev_device_unref(dev);
+	return result;
+
+fail:
+	udev_device_unref(dev);
+	return -1;
+}
+
+static void udev_log_fn(struct udev __attribute__((unused)) *udev,
+	int __attribute__((unused)) priority, const char *file, int line,
+	const char *fn, const char *format, va_list args)
+{
+      pb_log("libudev: %s %s:%d: ", fn, file, line);
+      vfprintf(pb_log_get_stream(), format, args);
+}
+
+struct pb_udev *udev_init(struct waitset *waitset,
+	struct device_handler *handler)
+{
+	int result;
+	struct pb_udev *udev = talloc(NULL, struct pb_udev);
 
 	talloc_set_destructor(udev, udev_destructor);
+	udev->handler = handler;
 
-	memset(&addr, 0, sizeof addr);
-	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, PBOOT_DEVICE_SOCKET);
+	udev->udev = udev_new();
 
-	if (bind(udev->socket, (struct sockaddr *)&addr, sizeof(addr))) {
-		pb_log("Error binding udev socket: %s\n", strerror(errno));
-		goto out_err;
+	if (!udev->udev) {
+		pb_log("udev_new failed\n");
+		goto fail_new;
 	}
 
-	waiter_register(waitset, udev->socket, WAIT_IN, udev_process, udev);
+	udev_set_userdata(udev->udev, udev);
 
-	pb_log("%s: waiting on %s\n", __func__, PBOOT_DEVICE_SOCKET);
+	udev_set_log_fn(udev->udev, udev_log_fn);
+
+	result = udev_enumerate(udev->udev);
+
+	if (result)
+		goto fail_enumerate;
+
+	result = udev_setup_monitor(udev->udev, &udev->monitor);
+
+	if (result)
+		goto fail_monitor;
+
+	waiter_register(waitset, udev_monitor_get_fd(udev->monitor), WAIT_IN,
+		udev_process, udev->monitor);
+
+	pb_log("%s: waiting on %s\n", __func__, udev_get_sys_path(udev->udev));
 
 	return udev;
 
-out_err:
+fail_monitor:
+fail_enumerate:
+	udev_unref(udev->udev);
+fail_new:
 	talloc_free(udev);
 	return NULL;
 }
 
 int udev_trigger(struct pb_udev __attribute__((unused)) *udev)
 {
-	const char *cmd[] = {
-		pb_system_apps.udevadm,
-		"trigger",
-		"--subsystem-match=block",
-		"--action=add",
-		NULL,
-	};
-	int rc;
-
-	rc = pb_run_cmd(cmd, 1, 0);
-
-	if (rc)
-		pb_log("udev trigger failed: %d (%d)\n", rc, WEXITSTATUS(rc));
-
-	return WEXITSTATUS(rc);
+	return 0;
 }
 
 void udev_destroy(struct pb_udev *udev)
