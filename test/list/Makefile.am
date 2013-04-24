@@ -11,11 +11,20 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+AUTOMAKE_OPTIONS = parallel-tests
 
-SUBDIRS = list parser urls
+AM_CPPFLAGS = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/lib \
+	-I$(includedir) \
+	$(DEFAULT_CPPFLAGS)
 
-noinst_SCRIPTS = hotplug-device.sh
+AM_CFLAGS = \
+	$(DEFAULT_CFLAGS)
 
-EXTRA_DIST = $(noinst_SCRIPTS)
+list_test_SOURCES = list-test.c
+list_test_LDADD = ../../lib/libpbcore.la
+
+noinst_PROGRAMS = list-test
 
 MAINTAINERCLEANFILES = Makefile.in

@@ -213,6 +213,7 @@ AC_CONFIG_FILES([
 	lib/Makefile
 	man/Makefile
 	test/Makefile
+	test/list/Makefile
 	test/parser/Makefile
 	test/urls/Makefile
 	ui/Makefile
