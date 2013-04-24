@@ -41,13 +41,11 @@ struct list {
 	for (; _pos; _pos = list_next_entry(_list, _pos, _member))
 
 #define list_for_each_entry_safe(_list, _pos, _tmp, _member) \
-	for (_pos = container_of((_list)->head.next, typeof(*_pos), _member), \
-		_tmp = container_of(_pos->_member.next, typeof(*_pos), \
-				_member); \
-	     &_pos->_member != &(_list)->head; \
-	     _pos = _tmp, \
-		_tmp = list_entry(_tmp->_member.next, typeof(*_pos), \
-				_member, _list))
+	for (_pos = list_entry((_list)->head.next, typeof(*_pos), _member, _list), \
+		_tmp = list_entry(_pos->_member.next, typeof(*_pos), _member, _list); \
+	_pos; \
+	_pos = _tmp, \
+	_tmp = _tmp ? list_entry(_tmp->_member.next, typeof(*_pos), _member, _list) : NULL)
 
 #define DEFINE_LIST(_list) struct list _list = { \
 	.head = { \
