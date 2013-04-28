@@ -165,7 +165,6 @@ int main(int argc, char *argv[])
 	if (!uev)
 		return EXIT_FAILURE;
 
-	udev_trigger(udev);
 	user_event_trigger(uev);
 
 	for (running = 1; running;) {

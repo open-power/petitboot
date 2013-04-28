@@ -317,11 +317,6 @@ fail_new:
 	return NULL;
 }
 
-int udev_trigger(struct pb_udev __attribute__((unused)) *udev)
-{
-	return 0;
-}
-
 void udev_destroy(struct pb_udev *udev)
 {
 	talloc_free(udev);
