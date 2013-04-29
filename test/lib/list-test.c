@@ -67,5 +67,5 @@ int main(void)
 	}
 
 	fprintf(stderr, "-- done --\n");
-	return -1;
+	return EXIT_SUCCESS;
 }

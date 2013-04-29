@@ -25,6 +25,7 @@ AM_CFLAGS = \
 list_test_SOURCES = list-test.c
 list_test_LDADD = ../../lib/libpbcore.la
 
-noinst_PROGRAMS = list-test
+check_PROGRAMS = list-test
+TESTS = list-test
 
 MAINTAINERCLEANFILES = Makefile.in
