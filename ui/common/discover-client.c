@@ -110,10 +110,19 @@ static void device_remove(struct discover_client *client, const char *id)
 	talloc_free(device);
 }
 
+static void update_status(struct discover_client *client,
+		struct boot_status *status)
+{
+	if (client->ops.update_status)
+		client->ops.update_status(status, client->ops.cb_arg);
+	talloc_free(status);
+}
+
 static int discover_client_process(void *arg)
 {
 	struct discover_client *client = arg;
 	struct pb_protocol_message *message;
+	struct boot_status *status;
 	struct boot_option *opt;
 	struct device *dev;
 	char *dev_id;
@@ -155,6 +164,16 @@ static int discover_client_process(void *arg)
 			return 0;
 		}
 		device_remove(client, dev_id);
+		break;
+	case PB_PROTOCOL_ACTION_STATUS:
+		status = talloc_zero(client, struct boot_status);
+
+		rc = pb_protocol_deserialise_boot_status(status, message);
+		if (rc) {
+			pb_log("%s: invalid status message?\n", __func__);
+			return 0;
+		}
+		update_status(client, status);
 		break;
 	default:
 		pb_log("%s: unknown action %d\n", __func__, message->action);

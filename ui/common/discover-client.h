@@ -24,6 +24,7 @@ struct discover_client_ops {
 	int (*boot_option_add)(struct device *dev, struct boot_option *option,
 			void *arg);
 	void (*device_remove)(struct device *device, void *arg);
+	void (*update_status)(struct boot_status *status, void *arg);
 	void *cb_arg;
 };
 
