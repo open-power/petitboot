@@ -663,6 +663,13 @@ static struct discover_boot_option *find_boot_option_by_id(
 	return NULL;
 }
 
+static void boot_status(void *arg, struct boot_status *status)
+{
+	struct device_handler *handler = arg;
+
+	discover_server_notify_boot_status(handler->server, status);
+}
+
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd)
 {
@@ -670,5 +677,5 @@ void device_handler_boot(struct device_handler *handler,
 
 	opt = find_boot_option_by_id(handler, cmd->option_id);
 
-	boot(handler, opt, cmd, handler->dry_run);
+	boot(handler, opt, cmd, handler->dry_run, boot_status, handler);
 }

@@ -97,8 +97,21 @@ static int kexec_reboot(int dry_run)
 	return result;
 }
 
+static void update_status(boot_status_fn fn, void *arg, int type,
+		char *message)
+{
+	struct boot_status status;
+
+	status.type = type;
+	status.message = message;
+	status.progress = -1;
+	status.detail = NULL;
+
+	fn(arg, &status);
+}
+
 int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
-		int dry_run)
+		int dry_run, boot_status_fn status_fn, void *status_arg)
 {
 	char *local_image, *local_initrd;
 	unsigned int clean_image = 0;
@@ -135,17 +148,35 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 
 	result = -1;
 
+	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+			"loading kernel");
 	local_image = load_url(NULL, image, &clean_image);
-	if (!local_image)
+	if (!local_image) {
+		update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
+				"Couldn't load kernel image");
 		goto no_load;
-
-	if (initrd) {
-		local_initrd = load_url(NULL, initrd, &clean_initrd);
-		if (!local_initrd)
-			goto no_load;
 	}
 
+	if (initrd) {
+		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+				"loading initrd");
+		local_initrd = load_url(NULL, initrd, &clean_initrd);
+		if (!local_initrd) {
+			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
+					"Couldn't load initrd image");
+			goto no_load;
+		}
+	}
+
+	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+			"performing kexec_load");
+
 	result = kexec_load(local_image, local_initrd, args, dry_run);
+
+	if (result) {
+		update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
+				"kexec load failed");
+	}
 
 no_load:
 	if (clean_image)
@@ -156,8 +187,17 @@ no_load:
 	talloc_free(local_image);
 	talloc_free(local_initrd);
 
-	if (!result)
+	if (!result) {
+		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+				"performing kexec reboot");
+
 		result = kexec_reboot(dry_run);
+
+		if (result) {
+			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
+					"kexec reboot failed");
+		}
+	}
 
 	return result;
 }
