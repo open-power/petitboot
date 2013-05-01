@@ -147,11 +147,7 @@ static int cui_boot(struct pmenu_item *item)
 	reset_prog_mode();
 	redrawwin(cui->current->main_ncw);
 
-	if (!result) {
-		clear();
-		mvaddstr(1, 0, "system is going down now...");
-		refresh();
-	} else {
+	if (result) {
 		nc_scr_status_printf(cui->current,
 				"Failed: boot %s", cod->bd->image);
 	}
@@ -492,10 +488,22 @@ static void cui_device_remove(struct device *dev, void *arg)
 		cui->current->post(cui->current);
 }
 
+static void cui_update_status(struct boot_status *status, void *arg)
+{
+	struct cui *cui = cui_from_arg(arg);
+
+	nc_scr_status_printf(cui->current,
+			"%s: %s",
+			status->type == BOOT_STATUS_ERROR ? "Error" : "Info",
+			status->message);
+
+}
+
 static struct discover_client_ops cui_client_ops = {
 	.device_add = NULL,
 	.boot_option_add = cui_boot_option_add,
 	.device_remove = cui_device_remove,
+	.update_status = cui_update_status,
 };
 
 /**
