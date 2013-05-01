@@ -37,4 +37,14 @@ struct boot_command {
 	char *boot_args;
 };
 
+struct boot_status {
+	enum {
+		BOOT_STATUS_INFO,
+		BOOT_STATUS_ERROR,
+	} type;
+	char	*message;
+	char	*detail;
+	int	progress;
+};
+
 #endif /* _TYPES_H */

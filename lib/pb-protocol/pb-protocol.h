@@ -17,6 +17,7 @@ enum pb_protocol_action {
 	PB_PROTOCOL_ACTION_DEVICE_REMOVE	= 0x3,
 /*	PB_PROTOCOL_ACTION_BOOT_OPTION_REMOVE	= 0x4, */
 	PB_PROTOCOL_ACTION_BOOT			= 0x5,
+	PB_PROTOCOL_ACTION_STATUS		= 0x6,
 };
 
 struct pb_protocol_message {
