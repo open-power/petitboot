@@ -50,6 +50,10 @@ int parse_user_event(struct discover_context *ctx, struct event *event)
 
 	opt->boot_image_file = talloc_strdup(opt, p);
 
+	p = event_get_param(event, "initrd");
+	if (p)
+		opt->initrd_file = talloc_strdup(opt, p);
+
 	p = event_get_param(event, "args");
 	assert(p);
 
