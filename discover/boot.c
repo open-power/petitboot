@@ -94,6 +94,21 @@ static int kexec_reboot(int dry_run)
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
 
+	/* okay, kexec -e -f */
+	if (result) {
+		p = argv;
+		*p++ = pb_system_apps.kexec;	/* 1 */
+		*p++ = "-e";			/* 2 */
+		*p++ = "-f";			/* 3 */
+		*p++ = NULL;			/* 4 */
+
+		result = pb_run_cmd(argv, 1, 0);
+	}
+
+	if (result)
+		pb_log("%s: failed: (%d)\n", __func__, result);
+
+
 	return result;
 }
 
