@@ -188,6 +188,14 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 		4 + optional_strlen(boot->boot_args);
 }
 
+int pb_protocol_boot_status_len(const struct boot_status *status)
+{
+	return  4 +
+		4 + optional_strlen(status->message) +
+		4 + optional_strlen(status->detail) +
+		4;
+}
+
 int pb_protocol_serialise_device(const struct device *dev,
 		char *buf, int buf_len)
 {
@@ -233,6 +241,26 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 	pos += pb_protocol_serialise_string(pos, boot->boot_image_file);
 	pos += pb_protocol_serialise_string(pos, boot->initrd_file);
 	pos += pb_protocol_serialise_string(pos, boot->boot_args);
+
+	assert(pos <= buf + buf_len);
+	(void)buf_len;
+
+	return 0;
+}
+
+int pb_protocol_serialise_boot_status(const struct boot_status *status,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
+
+	*(uint32_t *)pos = __cpu_to_be32(status->type);
+	pos += sizeof(uint32_t);
+
+	pos += pb_protocol_serialise_string(pos, status->message);
+	pos += pb_protocol_serialise_string(pos, status->detail);
+
+	*(uint32_t *)pos = __cpu_to_be32(status->type);
+	pos += sizeof(uint32_t);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -420,6 +448,56 @@ int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 
 	if (read_string(cmd, &pos, &len, &cmd->boot_args))
 		goto out;
+
+	rc = 0;
+
+out:
+	return rc;
+}
+
+int pb_protocol_deserialise_boot_status(struct boot_status *status,
+		const struct pb_protocol_message *message)
+{
+	unsigned int len;
+	const char *pos;
+	int rc = -1;
+
+	len = message->payload_len;
+	pos = message->payload;
+
+	/* first up, the type enum... */
+	if (len < sizeof(uint32_t))
+		goto out;
+
+	status->type = __be32_to_cpu(*(uint32_t *)(pos));
+
+	switch (status->type) {
+	case BOOT_STATUS_ERROR:
+	case BOOT_STATUS_INFO:
+		break;
+	default:
+		goto out;
+	}
+
+	pos += sizeof(uint32_t);
+	len -= sizeof(uint32_t);
+
+	/* message and detail strings */
+	if (read_string(status, &pos, &len, &status->message))
+		goto out;
+
+	if (read_string(status, &pos, &len, &status->detail))
+		goto out;
+
+	/* and finally, progress */
+	if (len < sizeof(uint32_t))
+		goto out;
+
+	status->progress = __be32_to_cpu(*(uint32_t *)(pos));
+
+	/* clamp to 100% */
+	if (status->progress > 100)
+		status->progress = 100;
 
 	rc = 0;
 

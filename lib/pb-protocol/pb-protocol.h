@@ -31,6 +31,7 @@ void pb_protocol_dump_device(const struct device *dev, const char *text,
 int pb_protocol_device_len(const struct device *dev);
 int pb_protocol_boot_option_len(const struct boot_option *opt);
 int pb_protocol_boot_len(const struct boot_command *boot);
+int pb_protocol_boot_status_len(const struct boot_status *status);
 int pb_protocol_device_cmp(const struct device *a, const struct device *b);
 
 int pb_protocol_boot_option_cmp(const struct boot_option *a,
@@ -45,6 +46,8 @@ int pb_protocol_serialise_device(const struct device *dev,
 int pb_protocol_serialise_boot_option(const struct boot_option *opt,
 		char *buf, int buf_len);
 int pb_protocol_serialise_boot_command(const struct boot_command *boot,
+		char *buf, int buf_len);
+int pb_protocol_serialise_boot_status(const struct boot_status *status,
 		char *buf, int buf_len);
 
 int pb_protocol_write_message(int fd, struct pb_protocol_message *message);
@@ -61,6 +64,9 @@ int pb_protocol_deserialise_boot_option(struct boot_option *opt,
 		const struct pb_protocol_message *message);
 
 int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
+		const struct pb_protocol_message *message);
+
+int pb_protocol_deserialise_boot_status(struct boot_status *status,
 		const struct pb_protocol_message *message);
 
 #endif /* _PB_PROTOCOL_H */
