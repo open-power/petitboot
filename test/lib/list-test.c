@@ -60,12 +60,28 @@ int main(void)
 		list_remove(&item->list);
 	}
 
+	/* we should see that the list is empty */
 	i = 0;
-	fprintf(stderr, "-- list_for_each_entry --\n");
+	fprintf(stderr, "-- list_for_each_entry(empty) --\n");
 	list_for_each_entry(&tester, item, list) {
 		fprintf(stderr, "%d: %d: %p -> %p\n", i++, item->value, item, item->list.next);
 	}
 
+	if (i) {
+		fprintf(stderr, "Error: list should be empty\n");
+		return EXIT_FAILURE;
+	}
+
+	i = 0;
+	fprintf(stderr, "-- list_for_each_entry_safe(empty) --\n");
+	list_for_each_entry_safe(&tester, item, tmp, list) {
+		fprintf(stderr, "%d: %d: %p -> %p\n", i++, item->value, item, item->list.next);
+	}
+
+	if (i) {
+		fprintf(stderr, "Error: list should be empty\n");
+		return EXIT_FAILURE;
+	}
 	fprintf(stderr, "-- done --\n");
 	return EXIT_SUCCESS;
 }
