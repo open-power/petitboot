@@ -6,6 +6,7 @@
 struct discover_server;
 struct device_handler;
 struct boot_option;
+struct boot_status;
 struct device;
 
 struct discover_server *discover_server_init(struct waitset *waitset);
@@ -21,4 +22,6 @@ void discover_server_notify_boot_option_add(struct discover_server *server,
 		struct boot_option *option);
 void discover_server_notify_device_remove(struct discover_server *server,
 		struct device *device);
+void discover_server_notify_boot_status(struct discover_server *server,
+		struct boot_status *status);
 #endif /* _DISCOVER_SERVER_H */

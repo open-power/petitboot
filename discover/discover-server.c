@@ -145,6 +145,24 @@ static int write_device_remove_message(struct discover_server *server,
 	return client_write_message(server, client, message);
 }
 
+static int write_boot_status_message(struct discover_server *server,
+		struct client *client, const struct boot_status *status)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_boot_status_len(status);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_STATUS, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_boot_status(status, message->payload, len);
+
+	return client_write_message(server, client, message);
+}
+
 static int discover_server_process_message(void *arg)
 {
 	struct pb_protocol_message *message;
@@ -245,6 +263,15 @@ void discover_server_notify_device_remove(struct discover_server *server,
 	list_for_each_entry(&server->clients, client, list)
 		write_device_remove_message(server, client, device->id);
 
+}
+
+void discover_server_notify_boot_status(struct discover_server *server,
+		struct boot_status *status)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_boot_status_message(server, client, status);
 }
 
 void discover_server_set_device_source(struct discover_server *server,
