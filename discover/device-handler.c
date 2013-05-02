@@ -149,8 +149,17 @@ static void context_commit(struct device_handler *handler,
 			discover_server_notify_boot_option_add(handler->server,
 								opt->option);
 		} else {
-			list_add(&handler->unresolved_boot_options, &opt->list);
-			talloc_steal(handler, opt);
+			if (!opt->source->resolve_resource) {
+				pb_log("parser %s gave us an unresolved "
+					"resource (%s), but no way to "
+					"resolve it\n",
+					opt->source->name, opt->option->id);
+				talloc_free(opt);
+			} else {
+				list_add(&handler->unresolved_boot_options,
+						&opt->list);
+				talloc_steal(handler, opt);
+			}
 		}
 	}
 }
