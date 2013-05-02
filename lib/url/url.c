@@ -129,9 +129,7 @@ static const struct pb_scheme_info *pb_url_find_scheme(const char *url)
 		return scheme;
 	}
 
-	/* Assume this is a non-url local file. */
-
-	return file_scheme;
+	return NULL;
 }
 
 static void pb_url_parse_path(struct pb_url *url)
@@ -177,9 +175,13 @@ struct pb_url *pb_url_parse(void *ctx, const char *url_str)
 		return NULL;
 
 	si = pb_url_find_scheme(url_str);
-
-	url->scheme = si->scheme;
-	p = url_str + si->str_len + strlen("://");
+	if (si) {
+		url->scheme = si->scheme;
+		p = url_str + si->str_len + strlen("://");
+	} else {
+		url->scheme = file_scheme->scheme;
+		p = url_str;
+	}
 
 	url->full = talloc_strdup(url, url_str);
 

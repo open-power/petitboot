@@ -1,0 +1,7 @@
+/test/path/to/local/file
+scheme	file
+host	(null)
+port	(null)
+path	/test/path/to/local/file
+dir	/test/path/to/local/
+file	file
