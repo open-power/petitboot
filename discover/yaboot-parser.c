@@ -314,10 +314,11 @@ static int yaboot_parse(struct discover_context *dc, char *buf, int len)
 }
 
 static struct parser yaboot_parser = {
-	.name		= "yaboot",
-	.method		= CONF_METHOD_LOCAL_FILE,
-	.parse		= yaboot_parse,
-	.filenames	= yaboot_conf_files,
+	.name			= "yaboot",
+	.method			= CONF_METHOD_LOCAL_FILE,
+	.parse			= yaboot_parse,
+	.filenames		= yaboot_conf_files,
+	.resolve_resource	= resolve_devpath_resource,
 };
 
 register_parser(yaboot_parser);
