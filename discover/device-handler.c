@@ -156,6 +156,9 @@ static void context_commit(struct device_handler *handler,
 					opt->source->name, opt->option->id);
 				talloc_free(opt);
 			} else {
+				pb_log("boot option %s is unresolved, "
+						"adding to queue\n",
+						opt->option->id);
 				list_add(&handler->unresolved_boot_options,
 						&opt->list);
 				talloc_steal(handler, opt);
