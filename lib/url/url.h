@@ -60,6 +60,7 @@ struct pb_url {
 
 struct pb_url *pb_url_parse(void *ctx, const char *url_str);
 struct pb_url *pb_url_join(void *ctx, const struct pb_url *url, const char *s);
+char *pb_url_to_string(struct pb_url *url);
 
 const char *pb_url_scheme_name(enum pb_url_scheme scheme);
 

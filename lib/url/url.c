@@ -242,16 +242,19 @@ static bool is_url(const char *str)
 	return strstr(str, "://") != NULL;
 }
 
-static void pb_url_update_full(struct pb_url *url)
+char *pb_url_to_string(struct pb_url *url)
 {
 	const struct pb_scheme_info *scheme = pb_url_scheme_info(url->scheme);
-
 	assert(scheme);
 
-	talloc_free(url->full);
-
-	url->full = talloc_asprintf(url, "%s://%s%s", scheme->str,
+	return talloc_asprintf(url, "%s://%s%s", scheme->str,
 			scheme->has_host ? url->host : "", url->path);
+}
+
+static void pb_url_update_full(struct pb_url *url)
+{
+	talloc_free(url->full);
+	url->full = pb_url_to_string(url);
 }
 
 static struct pb_url *pb_url_copy(void *ctx, const struct pb_url *url)
