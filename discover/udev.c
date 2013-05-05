@@ -305,7 +305,7 @@ struct pb_udev *udev_init(struct waitset *waitset,
 	waiter_register(waitset, udev_monitor_get_fd(udev->monitor), WAIT_IN,
 		udev_process, udev->monitor);
 
-	pb_log("%s: waiting on %s\n", __func__, udev_get_sys_path(udev->udev));
+	pb_log("%s: waiting on udev\n", __func__);
 
 	return udev;
 
