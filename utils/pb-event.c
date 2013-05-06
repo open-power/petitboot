@@ -22,6 +22,7 @@
 
 #define _GNU_SOURCE
 #include <assert.h>
+#include <err.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -121,24 +122,48 @@ static ssize_t parse_event_file(FILE *filp, char *buf, size_t max_len)
 	return len;
 }
 
-int main(int argc, char *argv[])
+static int send_event(char *buf, ssize_t len)
 {
 	struct sockaddr_un addr;
+	int sd, i;
+
+	sd = socket(PF_UNIX, SOCK_DGRAM, 0);
+	if (sd < 0)
+		err(EXIT_FAILURE, "socket");
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strcpy(addr.sun_path, PBOOT_USER_EVENT_SOCKET);
+
+	for (i = 10; i; i--) {
+		ssize_t sent = sendto(sd, buf, len, 0,
+				(struct sockaddr *)&addr, SUN_LEN(&addr));
+
+		if (sent == len)
+			break;
+
+		DBG("pb-event: waiting for server %d\n", i);
+		sleep(1);
+	}
+
+	close(sd);
+
+	if (!i)
+		err(EXIT_FAILURE, "send");
+
+	DBG("pb-event: wrote %zu bytes\n", len);
+
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
 	char buf[PBOOT_USER_EVENT_SIZE];
 	ssize_t len;
-	int s;
-	int i;
 
 	if (argc >= 2 && !strcmp(argv[1], "-h")) {
 		print_usage();
 		return EXIT_SUCCESS;
-	}
-
-	s = socket(PF_UNIX, SOCK_DGRAM, 0);
-
-	if (s < 0) {
-		fprintf(stderr, "pb-event: socket: %s\n", strerror(errno));
-		return EXIT_FAILURE;
 	}
 
 	if (argc > 1) {
@@ -151,26 +176,7 @@ int main(int argc, char *argv[])
 	if (len < 0)
 		return EXIT_FAILURE;
 
-	memset(&addr, 0, sizeof(addr));
-	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, PBOOT_USER_EVENT_SOCKET);
+	send_event(buf, len);
 
-	for (i = 10; i; i--) {
-		ssize_t sent = sendto(s, buf, len, 0, (struct sockaddr *)&addr,
-			SUN_LEN(&addr));
-
-		if (sent == len)
-			break;
-
-		DBG("pb-event: waiting for server %d\n", i);
-		sleep(1);
-	}
-
-	if (!i) {
-		fprintf(stderr, "pb-event: send: %s\n", strerror(errno));
-		return EXIT_FAILURE;
-	}
-
-	DBG("pb-event: wrote %u bytes\n", (unsigned int)len);
 	return EXIT_SUCCESS;
 }
