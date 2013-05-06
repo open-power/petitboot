@@ -49,35 +49,91 @@ static void print_usage(void)
 {
 	print_version();
 	printf(
-"Usage: pb-event [-h, --help] [-V, --version]\n"
+"Usage: pb-event [-h] [event...]\n"
 "\n"
-"       Reads a single petitboot user event on stdin and forwards it to the\n"
-"       petitboot discover server pb-discover.  User events must have the\n"
-"       following format:\n"
+"       Send a single petitboot user event to the petitboot discover server.\n"
+"       Events can be read from stdin, or provided on the command line.\n"
+"       User events must have the following format:\n"
 "\n"
-"         (add|remove)@device-id\\0[name=value\\0][image=value\\0][args=value\\0]\n"
+"         (add|remove)@device-id [name=value] [image=value] [args=value]\n"
+"\n"
+"       When read from stdin, components are separated by NUL chars\n"
 "\n"
 "Examples:\n"
 "\n"
-"       printf 'add@/net/eth0\\0name=netboot\\0image=tftp://192.168.1.10/vmlinux\\0args=root=/dev/nfs nfsroot=192.168.1.10:/target\\0' | pb-event\n"
+"    args:\n"
+"       pb-event add@/net/eth0 name=netboot image=tftp://192.168.1.10/vmlinux\n"
+"       pb-event remove@/net/eth0\n"
+"\n"
+"    stdin:\n"
+"       printf 'add@/net/eth0\\0name=netboot\\0image=tftp://10.0.0.2/vmlinux\\0' \\\n"
+"           | pb-event\n"
 "       printf 'remove@/net/eth0\\0' | pb-event\n"
 "\n");
 }
 
-int main(int argc, __attribute__((unused)) char *argv[])
+static const char *err_max_size = "pb-event: message too large "
+					"(%zu byte max)\n";
+
+static ssize_t parse_event_args(int n, char * const * args,
+		char *buf, size_t max_len)
 {
-	int result;
+	ssize_t arg_len, total_len;
+	const char *arg;
+	int i;
+
+	total_len = 0;
+
+	for (i = 0; i < n; i++) {
+		arg = args[i];
+		arg_len = strlen(arg);
+
+		if (total_len + (size_t)i + 1 > max_len) {
+			fprintf(stderr, err_max_size, max_len);
+			return -1;
+		}
+
+		memcpy(buf + total_len, arg, arg_len);
+		total_len += arg_len;
+
+		buf[total_len] = '\0';
+		total_len++;
+	}
+
+	return total_len;
+
+}
+
+static ssize_t parse_event_file(FILE *filp, char *buf, size_t max_len)
+{
+	int len;
+
+	len = fread(buf, 1, max_len, filp);
+
+	if (!feof(filp)) {
+		fprintf(stderr, err_max_size, max_len);
+		return -1;
+	}
+
+	if (!len)
+		return -1;
+
+	return len;
+}
+
+int main(int argc, char *argv[])
+{
 	struct sockaddr_un addr;
 	char buf[PBOOT_USER_EVENT_SIZE];
 	ssize_t len;
 	int s;
 	int i;
-	
-	if (argc > 1) {
+
+	if (argc >= 2 && !strcmp(argv[1], "-h")) {
 		print_usage();
-		return EXIT_FAILURE;
+		return EXIT_SUCCESS;
 	}
-	
+
 	s = socket(PF_UNIX, SOCK_DGRAM, 0);
 
 	if (s < 0) {
@@ -85,19 +141,15 @@ int main(int argc, __attribute__((unused)) char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	result = EXIT_SUCCESS;
-
-	len = fread(buf, 1, sizeof(buf), stdin);
-
-	if (!feof(stdin)) {
-		fprintf(stderr, "pb-event: msg too big (%u byte max)\n",
-			(unsigned int)sizeof(buf));
-		result = EXIT_FAILURE;
-		/* continue on and try to write msg */
+	if (argc > 1) {
+		len = parse_event_args(argc - 1, argv + 1,
+					buf, sizeof(buf));
+	} else {
+		len = parse_event_file(stdin, buf, sizeof(buf));
 	}
 
-	if (!len)
-		return result;
+	if (len < 0)
+		return EXIT_FAILURE;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
@@ -120,5 +172,5 @@ int main(int argc, __attribute__((unused)) char *argv[])
 	}
 
 	DBG("pb-event: wrote %u bytes\n", (unsigned int)len);
-	return result;
+	return EXIT_SUCCESS;
 }
