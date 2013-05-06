@@ -185,7 +185,6 @@ DEFINE_HOST_PROG(MOUNT, mount, [/bin/mount])
 DEFINE_HOST_PROG(SHUTDOWN, shutdown, [/sbin/shutdown])
 DEFINE_HOST_PROG(SFTP, sftp, [/usr/bin/sftp])
 DEFINE_HOST_PROG(TFTP, tftp, [/usr/bin/tftp])
-DEFINE_HOST_PROG(UDEVADM, udevadm, [/sbin/udevadm])
 DEFINE_HOST_PROG(UMOUNT, umount, [/bin/umount])
 DEFINE_HOST_PROG(WGET, wget, [/usr/bin/wget])
 
