@@ -179,3 +179,24 @@ void __check_boot_option_count(struct discover_context *ctx, int count,
 
 	exit(EXIT_FAILURE);
 }
+
+void __check_args(struct discover_boot_option *opt, const char *args,
+		const char *file, int line)
+{
+	int rc;
+
+	if (!opt->option->boot_args) {
+		fprintf(stderr, "%s%d: arg check failed\n", file, line);
+		fprintf(stderr, "  no arguments parsed\n");
+		fprintf(stderr, "  expected '%s'\n", args);
+		exit(EXIT_FAILURE);
+	}
+
+	rc = strcmp(opt->option->boot_args, args);
+	if (rc) {
+		fprintf(stderr, "%s%d: arg check failed\n", file, line);
+		fprintf(stderr, "  got      '%s'\n", opt->option->boot_args);
+		fprintf(stderr, "  expected '%s'\n", args);
+		exit(EXIT_FAILURE);
+	}
+}

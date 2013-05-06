@@ -55,5 +55,12 @@ extern const size_t __embedded_config_size;
 	__check_boot_option_count(ctx, count, __FILE__, __LINE__)
 void __check_boot_option_count(struct discover_context *ctx, int count,
 		const char *file, int line);
+/*
+ * Check that a boot option @opt has args @args
+ */
+void __check_args(struct discover_boot_option *opt, const char *args,
+		const char *file, int line);
+#define check_args(opt, args) \
+	__check_args(opt, args, __FILE__, __LINE__)
 
 #endif /* PARSER_TEST_H */
