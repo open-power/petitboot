@@ -131,7 +131,12 @@ int test_run_parser(struct parser_test *test, const char *parser_name)
 			continue;
 		test->ctx->parser = parser;
 		rc = parser->parse(test->ctx, test->conf.buf, test->conf.size);
+		break;
 	}
+
+	if (i == n_parsers)
+		errx(EXIT_FAILURE, "%s: parser '%s' not found",
+				__func__, parser_name);
 
 	return rc;
 }
