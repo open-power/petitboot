@@ -142,8 +142,10 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 
 	case CONF_METHOD_DHCP:
 		rc = download_config(ctx, &buf, &len);
-		if (rc)
+		if (rc) {
+			pb_log("\tdownload failed, aborting\n");
 			return;
+		}
 
 		for (i = 0; i < n_parsers; i++) {
 			if (parsers[i]->method != method)

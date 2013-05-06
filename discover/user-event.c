@@ -42,22 +42,32 @@ struct user_event {
 	int socket;
 };
 
+static const char *event_action_name(enum event_action action)
+{
+	switch (action) {
+	case EVENT_ACTION_ADD:
+		return "add";
+	case EVENT_ACTION_REMOVE:
+		return "remove";
+	case EVENT_ACTION_CONF:
+		return "conf";
+	default:
+		break;
+	}
+
+	return "unknown";
+}
+
 static void user_event_print_event(struct event __attribute__((unused)) *event)
 {
-	const char *action, *params[] = {
-		"name", "image", "args",
-		NULL,
-	};
 	int i;
 
-	action = event->action == EVENT_ACTION_ADD ? "add" : "remove";
-
-	pb_log("user_event %s event:\n", action);
+	pb_log("user_event %s event:\n", event_action_name(event->action));
 	pb_log("\tdevice: %s\n", event->device);
 
-	for (i = 0; params[i]; i++)
+	for (i = 0; i < event->n_params; i++)
 		pb_log("\t%-12s => %s\n",
-				params[i], event_get_param(event, params[i]));
+			event->params[i].name, event->params[i].value);
 }
 
 static void user_event_handle_message(struct user_event *uev, char *buf,
