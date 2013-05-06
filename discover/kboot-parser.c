@@ -45,6 +45,7 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	opt->id = talloc_asprintf(opt, "%s#%s", conf->dc->device->device->id,
 			name);
 	opt->name = talloc_strdup(opt, name);
+	d_opt->option = opt;
 
 	args = talloc_strdup(opt, "");
 	initrd = conf_get_global_option(conf, "initrd");
