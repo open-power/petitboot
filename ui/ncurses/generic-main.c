@@ -231,6 +231,9 @@ int main(int argc, char *argv[])
 	if (strcmp(opts.log_file, "-")) {
 		FILE *log = fopen(opts.log_file, "a");
 
+		if (!log)
+			log = fopen("/dev/null", "a");
+
 		assert(log);
 		pb_log_set_stream(log);
 	} else
