@@ -4,9 +4,36 @@
 
 #include "log/log.h"
 #include "talloc/talloc.h"
+#include "url/url.h"
+
+#include "resource.h"
 #include "event.h"
 #include "parser-utils.h"
 #include "device-handler.h"
+
+static struct resource *user_event_resource(struct discover_boot_option *opt,
+		struct event *event, const char *param_name)
+{
+	struct resource *res;
+	struct pb_url *url;
+	const char *val;
+
+	val = event_get_param(event, param_name);
+	if (!val)
+		return NULL;
+
+	url = pb_url_parse(opt, val);
+	if (!url)
+		return NULL;
+
+	res = create_url_resource(opt, url);
+	if (!res) {
+		talloc_free(url);
+		return NULL;
+	}
+
+	return res;
+}
 
 /**
  * parse_user_event - Parse a user event.
@@ -40,27 +67,22 @@ int parse_user_event(struct discover_context *ctx, struct event *event)
 	opt->device_id = talloc_strdup(opt, dev->id);
 	opt->name = talloc_strdup(opt, p);
 
-	p = event_get_param(event, "image");
-	assert(p);
-
-	if (!p) {
-		pb_log("%s: no image found\n", __func__);
+	d_opt->boot_image = user_event_resource(d_opt, event, "image");
+	if (!d_opt->boot_image) {
+		pb_log("%s: no boot image found for %s!\n", __func__,
+				opt->name);
 		goto fail;
 	}
 
-	opt->boot_image_file = talloc_strdup(opt, p);
-
-	p = event_get_param(event, "initrd");
-	if (p)
-		opt->initrd_file = talloc_strdup(opt, p);
+	d_opt->initrd = user_event_resource(d_opt, event, "initrd");
 
 	p = event_get_param(event, "args");
-	assert(p);
 
-	opt->boot_args = talloc_strdup(opt, p);
+	if (p)
+		opt->boot_args = talloc_strdup(opt, p);
 
 	opt->description = talloc_asprintf(opt, "%s %s", opt->boot_image_file,
-		opt->boot_args);
+		opt->boot_args ? : "");
 
 	discover_context_add_boot_option(ctx, d_opt);
 
