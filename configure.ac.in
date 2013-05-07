@@ -190,7 +190,7 @@ DEFINE_HOST_PROG(WGET, wget, [/usr/bin/wget])
 
 default_cflags="--std=gnu99 -g \
 	-Wall -W -Wunused -Wstrict-prototypes -Wmissing-prototypes \
-	-Wmissing-declarations -Wredundant-decls -Winline"
+	-Wmissing-declarations -Wredundant-decls"
 
 AC_ARG_ENABLE(
 	[werror],
