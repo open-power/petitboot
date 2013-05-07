@@ -16,7 +16,6 @@ AUTOMAKE_OPTIONS = parallel-tests
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
-	-I$(includedir) \
 	$(DEFAULT_CPPFLAGS)
 
 AM_CFLAGS = \

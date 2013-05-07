@@ -15,7 +15,6 @@
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
-	-I$(includedir) \
 	$(DEFAULT_CPPFLAGS) \
 	$(twin_CFLAGS)
 
