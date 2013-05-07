@@ -225,9 +225,8 @@ static int discover_server_process_connection(void *arg)
 		write_device_add_message(server, client, device->device);
 
 		list_for_each_entry(&device->boot_options, opt, list)
-			discover_server_notify_boot_option_add(server,
+			write_boot_option_add_message(server, client,
 					opt->option);
-
 	}
 
 	waiter_register(server->waitset, client->fd, WAIT_IN,
