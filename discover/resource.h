@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+struct discover_device;
+struct device_handler;
 struct pb_url;
 
 /**
