@@ -1,0 +1,49 @@
+#!/bin/sh
+
+ui=petitboot-nc
+shell=sh
+
+detach=0
+
+while [ -n "$1" ]
+do
+	case "$1" in
+	-d)
+		detach=1
+		;;
+	--)
+		;;
+	*)
+		console=$1
+		;;
+	esac
+	shift
+done
+
+if [ -n "$console" -a "${console#/dev/}" = "$console" ]
+then
+	console="/dev/$console"
+fi
+
+pb_loop() {
+	while :
+	do
+		$ui
+		echo "Exiting petitboot. Type 'exit' to return"
+		$shell
+	done
+}
+
+if [ -n "$console" ]
+then
+	exec <$console >$console 2>&1
+fi
+
+if [ "$detach" = 1 ]
+then
+	(
+		pb_loop
+	) &
+else
+	pb_loop
+fi
