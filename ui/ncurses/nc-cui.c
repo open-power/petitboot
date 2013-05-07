@@ -61,35 +61,6 @@ void cui_resize(struct cui *cui)
 }
 
 /**
- * cui_make_item_name - Format the menu item name srting.
- *
- * Returns a talloc string.
- */
-
-static char *cui_make_item_name(struct pmenu_item *i, struct cui_opt_data *cod)
-{
-	char *name;
-
-	assert(cod->name);
-	assert(cod->bd);
-
-	name = talloc_asprintf(i, "%s:", cod->name);
-
-	if (cod->bd->image)
-		name = talloc_asprintf_append(name, " %s", cod->bd->image);
-
-	if (cod->bd->initrd)
-		name = talloc_asprintf_append(name, " initrd=%s",
-			cod->bd->initrd);
-
-	if (cod->bd->args)
-		name = talloc_asprintf_append(name, " %s", cod->bd->args);
-
-	DBGS("@%s@\n", name);
-	return name;
-}
-
-/**
  * cui_on_exit - A generic main menu ESC callback.
  */
 
@@ -167,7 +138,6 @@ static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_e
 	if (boot_editor_result == boot_editor_update) {
 		struct pmenu_item *i = pmenu_find_selected(cui->main);
 		struct cui_opt_data *cod = cod_from_item(i);
-		char *name;
 
 		assert(bd);
 
@@ -175,8 +145,7 @@ static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_e
 		talloc_free(cod->bd);
 		cod->bd = bd;
 
-		name = cui_make_item_name(i, cod);
-		pmenu_item_replace(i, name);
+		pmenu_item_replace(i, cod->name);
 
 		/* FIXME: need to make item visible somehow */
 		set_current_item(cui->main->ncm, i->nci);
@@ -358,7 +327,6 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	unsigned int insert_pt;
 	struct pmenu_item *i;
 	ITEM *selected;
-	char *name;
 	int result;
 
 	pb_log("%s: %p %s\n", __func__, opt, opt->id);
@@ -396,8 +364,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
 	cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
 
-	name = cui_make_item_name(i, cod);
-	pmenu_item_setup(cui->main, i, insert_pt, name);
+	pmenu_item_setup(cui->main, i, insert_pt, cod->name);
 
 	pb_log("%s: adding opt '%s'\n", __func__, cod->name);
 	pb_log("   image  '%s'\n", cod->bd->image);
