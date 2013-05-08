@@ -171,7 +171,7 @@ void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *boot_option)
 {
 	boot_option->source = ctx->parser;
-	list_add(&ctx->boot_options, &boot_option->list);
+	list_add_tail(&ctx->boot_options, &boot_option->list);
 	talloc_steal(ctx, boot_option);
 }
 
