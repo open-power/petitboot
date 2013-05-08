@@ -22,6 +22,9 @@ struct resource {
 	};
 };
 
+void resolve_resource_against_device(struct resource *res,
+	struct discover_device *dev, const char *path);
+
 /**
  * devpath resources.
  *
@@ -46,8 +49,6 @@ struct resource *create_url_resource(struct discover_boot_option *opt,
 
 bool resolve_devpath_resource(struct device_handler *dev,
 		struct resource *res);
-
-
 
 #endif /* RESOURCE_H */
 

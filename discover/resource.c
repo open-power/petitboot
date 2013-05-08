@@ -34,7 +34,8 @@ static struct discover_device *parse_device_string(
 
 	return device_lookup_by_name(handler, devstr);
 }
-static void resolve_devpath_against_device(struct resource *res,
+
+void resolve_resource_against_device(struct resource *res,
 	struct discover_device *dev, const char *path)
 {
 	char *resolved_path = join_paths(res, dev->mount_path, path);
@@ -67,7 +68,7 @@ struct resource *create_devpath_resource(struct discover_boot_option *opt,
 			/* we've been passed a file:// URL, which has no device
 			 * specifier. We can resolve against the original
 			 * device */
-			resolve_devpath_against_device(res, orig_device,
+			resolve_resource_against_device(res, orig_device,
 					url->path);
 			talloc_free(url);
 		}
@@ -76,7 +77,7 @@ struct resource *create_devpath_resource(struct discover_boot_option *opt,
 
 	/* if there was no device specified, we can resolve now */
 	if (!pos) {
-		resolve_devpath_against_device(res, orig_device, devpath);
+		resolve_resource_against_device(res, orig_device, devpath);
 		return res;
 	}
 
@@ -109,7 +110,7 @@ bool resolve_devpath_resource(struct device_handler *handler,
 	if (!dev)
 		return false;
 
-	resolve_devpath_against_device(res, dev, info->path);
+	resolve_resource_against_device(res, dev, info->path);
 	talloc_free(info);
 
 	return true;
