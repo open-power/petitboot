@@ -63,4 +63,12 @@ void __check_args(struct discover_boot_option *opt, const char *args,
 #define check_args(opt, args) \
 	__check_args(opt, args, __FILE__, __LINE__)
 
+/**
+ * Check that a boot option @opt has name @name
+ */
+void __check_name(struct discover_boot_option *opt, const char *name,
+		const char *file, int line);
+#define check_name(opt, name) \
+	__check_name(opt, name, __FILE__, __LINE__)
+
 #endif /* PARSER_TEST_H */

@@ -200,3 +200,17 @@ void __check_args(struct discover_boot_option *opt, const char *args,
 		exit(EXIT_FAILURE);
 	}
 }
+
+void __check_name(struct discover_boot_option *opt, const char *name,
+		const char *file, int line)
+{
+	int rc;
+
+	rc = strcmp(opt->option->name, name);
+	if (rc) {
+		fprintf(stderr, "%s%d: name check failed\n", file, line);
+		fprintf(stderr, "  got      '%s'\n", opt->option->name);
+		fprintf(stderr, "  expected '%s'\n", name);
+		exit(EXIT_FAILURE);
+	}
+}
