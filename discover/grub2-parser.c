@@ -72,12 +72,7 @@ static void grub2_finish(struct conf_context *conf)
 
 	discover_context_add_boot_option(conf->dc, state->opt);
 
-	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
-	opt = state->opt->option;
-	opt->boot_args = talloc_strdup(opt, "");
-
-	talloc_free(state->desc_image);
-	state->desc_image = NULL;
+	state->opt = NULL;
 }
 
 static void grub2_process_pair(struct conf_context *conf, const char *name,
@@ -93,9 +88,13 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 	if (streq(name, "menuentry")) {
 		char *sep;
 
-		grub2_finish(conf);
+		/* complete any existing option... */
+		if (state->opt)
+			grub2_finish(conf);
 
-		/* Then start the new image. */
+		/* ... then start the new one */
+		opt = discover_boot_option_create(conf->dc, conf->dc->device);
+		opt->option->boot_args = talloc_strdup(opt->option, "");
 
 		sep = strchr(value, '\'');
 
@@ -105,6 +104,9 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		opt->option->id = talloc_asprintf(opt->option,
 					"%s#%s", dev->id, value);
 		opt->option->name = talloc_strdup(opt->option, value);
+		opt->option->boot_args = talloc_strdup(opt, "");
+
+		state->opt = opt;
 
 		return;
 	}
@@ -179,11 +181,6 @@ static int grub2_parse(struct discover_context *dc, char *buf, int len)
 	conf->parser_info = state = talloc_zero(conf, struct grub2_state);
 
 	state->known_names = grub2_known_names;
-
-	/* opt is persistent, so must be associated with device */
-
-	state->opt = discover_boot_option_create(dc, dc->device);
-	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
 
 	conf_parse_buf(conf, buf, len);
 
