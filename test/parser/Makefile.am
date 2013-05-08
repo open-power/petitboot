@@ -25,6 +25,7 @@ AM_CPPFLAGS = \
 AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
 TESTS = test-null \
+	test-grub2-single \
 	test-kboot-single \
 	test-yaboot-single \
 	test-yaboot-external
@@ -42,6 +43,7 @@ libtest.o: $(libtest_o_OBJECTS)
 # objects under test
 parser_test_objs = $(top_srcdir)/discover/yaboot-parser.c \
 		   $(top_srcdir)/discover/kboot-parser.c \
+		   $(top_srcdir)/discover/grub2-parser.c \
 		   $(top_srcdir)/discover/resource.c \
 		   $(top_srcdir)/discover/paths.c \
 		   $(top_srcdir)/discover/device-handler.c \
