@@ -134,3 +134,27 @@ const char *event_get_param(const struct event *event, const char *name)
 
 	return NULL;
 }
+
+void event_set_param(struct event *event, const char *name, const char *value)
+{
+	struct param *param;
+	int i;
+
+	/* if it's already present, replace the value of the old param */
+	for (i = 0; i < event->n_params; i++) {
+		param = &event->params[i];
+		if (!strcasecmp(param->name, name)) {
+			talloc_free(param->value);
+			param->value = talloc_strdup(event, value);
+			return;
+		}
+	}
+
+	/* not found - create a new param */
+	event->params = talloc_realloc(event, event->params,
+				struct param, ++event->n_params);
+	param = &event->params[event->n_params - 1];
+
+	param->name = talloc_strdup(event, name);
+	param->value = talloc_strdup(event, value);
+}

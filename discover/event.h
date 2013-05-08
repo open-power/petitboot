@@ -20,13 +20,14 @@ struct event {
 	const char *device;
 
 	struct param {
-		const char *name;
-		const char *value;
+		char *name;
+		char *value;
 	} *params;
 	int n_params;
 };
 
 int event_parse_ad_message(struct event *event, char *buf, int len);
 const char *event_get_param(const struct event *event, const char *name);
+void event_set_param(struct event *event, const char *name, const char *value);
 
 #endif /* _PB_EVENT_H */
