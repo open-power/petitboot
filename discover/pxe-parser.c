@@ -28,10 +28,9 @@ static void pxe_process_pair(struct conf_context *ctx,
 		opt = discover_boot_option_create(ctx->dc, ctx->dc->device);
 		ctx->parser_info = opt;
 
-		opt->option->device_id = ctx->dc->device->device->id;
 		opt->option->name = talloc_strdup(opt, value);
 		opt->option->id = talloc_asprintf(opt, "%s@%p",
-				opt->option->device_id, opt);
+				ctx->dc->device->device->id, opt);
 		return;
 	}
 

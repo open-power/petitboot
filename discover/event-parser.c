@@ -64,7 +64,6 @@ int parse_user_event(struct discover_context *ctx, struct event *event)
 	}
 
 	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, p);
-	opt->device_id = talloc_strdup(opt, dev->id);
 	opt->name = talloc_strdup(opt, p);
 
 	d_opt->boot_image = user_event_resource(d_opt, event, "image");

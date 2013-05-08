@@ -75,6 +75,7 @@ static void boot_option_finalise(struct discover_boot_option *opt)
 	assert(!opt->option->boot_image_file);
 	assert(!opt->option->initrd_file);
 	assert(!opt->option->icon_file);
+	assert(!opt->option->device_id);
 
 	if (opt->boot_image)
 		opt->option->boot_image_file = opt->boot_image->url->full;
@@ -82,6 +83,8 @@ static void boot_option_finalise(struct discover_boot_option *opt)
 		opt->option->initrd_file = opt->initrd->url->full;
 	if (opt->icon)
 		opt->option->icon_file = opt->icon->url->full;
+
+	opt->option->device_id = opt->device->device->id;
 }
 
 static void process_boot_option_queue(struct device_handler *handler)
