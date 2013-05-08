@@ -50,22 +50,24 @@ static int udev_destructor(void *p)
 	return 0;
 }
 
-static void print_device_properties(struct udev_device *dev)
+static void udev_setup_event_params(struct udev_device *dev,
+		struct event *event)
 {
 	struct udev_list_entry *list, *entry;
 
-	assert(dev);
+	list = udev_device_get_properties_list_entry(dev);
+	if (!list)
+		return;
 
-	if (1) {
-		list = udev_device_get_properties_list_entry(dev);
+	udev_list_entry_foreach(entry, list) {
+		DBG("property: %s - %s\n",
+			udev_list_entry_get_name(entry),
+			udev_device_get_property_value(dev,
+				udev_list_entry_get_name(entry)));
 
-		assert(list);
+		event_set_param(event,udev_list_entry_get_name(entry),
+				udev_list_entry_get_value(entry));
 
-		udev_list_entry_foreach(entry, list)
-			DBG("property: %s - %s\n",
-				udev_list_entry_get_name(entry),
-				udev_device_get_property_value(dev,
-					udev_list_entry_get_name(entry)));
 	}
 }
 
@@ -122,18 +124,17 @@ static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 		return 0;
 	}
 
-	print_device_properties(dev);
-
 	event = talloc(NULL, struct event);
 
 	event->type = EVENT_TYPE_UDEV;
 	event->action = eva;
 	event->device = devpath;
 
-	event->n_params = 1;
-	event->params = talloc(event, struct param);
-	event->params->name = "DEVNAME";
-	event->params->value = devnode;
+	event->n_params = 0;
+	event->params = NULL;
+	event_set_param(event, "DEVNAME", devnode);
+
+	udev_setup_event_params(dev, event);
 
 	udev = udev_get_userdata(udev_device_get_udev(dev));
 	assert(udev);
