@@ -26,13 +26,14 @@ AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
 TESTS = test-null \
 	test-grub2-single \
+	test-grub2-f18-ppc64 \
 	test-kboot-single \
 	test-yaboot-single \
 	test-yaboot-external
 
 check_PROGRAMS = $(TESTS)
 check_LIBRARIES = $(test_libs)
-check_DATA =
+check_DATA = data/grub2-f18-ppc64.conf
 
 common_libs = $(top_builddir)/lib/libpbcore.la
 test_libs = libtest.o
