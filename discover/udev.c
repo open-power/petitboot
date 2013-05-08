@@ -102,8 +102,6 @@ static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 		return -1;
 	}
 
-	print_device_properties(dev);
-
 	/* Ignore non disk or partition, ram, loop. */
 
 	if (!(strstr(devtype, "disk") || strstr(devtype, "partition"))
@@ -123,6 +121,8 @@ static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 		pb_log("SKIP: %s: %s - %s\n", action, devtype, devnode);
 		return 0;
 	}
+
+	print_device_properties(dev);
 
 	event = talloc(NULL, struct event);
 
