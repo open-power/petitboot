@@ -30,14 +30,69 @@
 #include "types/types.h"
 #include "parser-conf.h"
 #include "parser-utils.h"
+#include "paths.h"
 #include "resource.h"
+
+struct grub2_root {
+	char *uuid;
+};
 
 struct grub2_state {
 	struct discover_boot_option *opt;
 	char *desc_image;
 	char *desc_initrd;
 	const char *const *known_names;
+	struct grub2_root *root;
 };
+
+struct grub2_resource_info {
+	struct grub2_root *root;
+	char *path;
+};
+
+/* we use slightly different resources for grub2 */
+static struct resource *create_grub2_resource(void *ctx,
+		struct discover_device *orig_device,
+		struct grub2_root *root, const char *path)
+{
+	struct grub2_resource_info *info;
+	struct resource *res;
+
+	res = talloc(ctx, struct resource);
+
+	if (root) {
+		info = talloc(res, struct grub2_resource_info);
+		info->root = root;
+		talloc_reference(info, root);
+		info->path = talloc_strdup(info, path);
+
+		res->resolved = false;
+		res->info = info;
+
+	} else
+		resolve_resource_against_device(res, orig_device, path);
+
+	return res;
+}
+
+static bool resolve_grub2_resource(struct device_handler *handler,
+		struct resource *res)
+{
+	struct grub2_resource_info *info = res->info;
+	struct discover_device *dev;
+
+	assert(!res->resolved);
+
+	dev = device_lookup_by_uuid(handler, info->root->uuid);
+
+	if (!dev)
+		return false;
+
+	resolve_resource_against_device(res, dev, info->path);
+	talloc_free(info);
+
+	return true;
+}
 
 static void grub2_finish(struct conf_context *conf)
 {
@@ -119,8 +174,8 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		if (sep)
 			*sep = 0;
 
-		opt->boot_image = create_devpath_resource(opt,
-					conf->dc->device, value);
+		opt->boot_image = create_grub2_resource(opt, conf->dc->device,
+					state->root, value);
 		state->desc_image = talloc_strdup(opt, value);
 
 		if (sep)
@@ -130,10 +185,39 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 	}
 
 	if (streq(name, "initrd")) {
-		opt->initrd = create_devpath_resource(opt,
-					conf->dc->device, value);
+		opt->initrd = create_grub2_resource(opt, conf->dc->device,
+					state->root, value);
 		state->desc_initrd = talloc_asprintf(state, "initrd=%s",
 			value);
+		return;
+	}
+
+	if (streq(name, "search")) {
+		struct grub2_root *root;
+		char *uuid;
+
+		if (!strstr(value, "--set=root")) {
+			pb_log("%s: no root\n", __func__);
+			return;
+		}
+
+		/* The UUID should be the last argument to the search command.
+		 * FIXME: this is a little fragile; would be nice to have some
+		 * parser helpers to deal with "command args" parsing
+		 */
+		uuid = strrchr(value, ' ');
+		if (!uuid)
+			return;
+
+		uuid++;
+		pb_log("%s: uuid %s\n", __func__, uuid);
+
+		if (state->root)
+			talloc_unlink(state, state->root);
+
+		root = talloc(state, struct grub2_root);
+		root->uuid = talloc_strdup(root, uuid);
+		state->root = root;
 		return;
 	}
 
@@ -162,6 +246,7 @@ static const char *grub2_known_names[] = {
 	"menuentry",
 	"linux",
 	"initrd",
+	"search",
 	NULL
 };
 
@@ -195,7 +280,7 @@ static struct parser grub2_parser = {
 	.method			= CONF_METHOD_LOCAL_FILE,
 	.parse			= grub2_parse,
 	.filenames		= grub2_conf_files,
-	.resolve_resource	= resolve_devpath_resource,
+	.resolve_resource	= resolve_grub2_resource,
 };
 
 register_parser(grub2_parser);
