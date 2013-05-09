@@ -116,6 +116,8 @@ static void iterate_parser_files(struct discover_context *ctx,
 
 		rc = read_file(ctx, path, &buf, &len);
 		if (!rc) {
+			pb_log("Running parser %s on file %s\n",
+					parser->name, *filename);
 			parser->parse(ctx, buf, len);
 			talloc_free(buf);
 		}

@@ -388,12 +388,17 @@ static bool __attribute__((used)) boot_option_is_resolved(
 		resource_is_resolved(opt->icon);
 }
 
-static bool resource_resolve(struct resource *res, struct parser *parser,
+static bool resource_resolve(struct resource *res, const char *name,
+		struct discover_boot_option *opt,
 		struct device_handler *handler)
 {
+	struct parser *parser = opt->source;
+
 	if (resource_is_resolved(res))
 		return true;
 
+	pb_log("Attempting to resolve resource %s->%s with parser %s\n",
+			opt->option->id, name, parser->name);
 	parser->resolve_resource(handler, res);
 
 	return res->resolved;
@@ -402,9 +407,9 @@ static bool resource_resolve(struct resource *res, struct parser *parser,
 static bool boot_option_resolve(struct discover_boot_option *opt,
 		struct device_handler *handler)
 {
-	return resource_resolve(opt->boot_image, opt->source, handler) &&
-		resource_resolve(opt->initrd, opt->source, handler) &&
-		resource_resolve(opt->icon, opt->source, handler);
+	return resource_resolve(opt->boot_image, "boot_image", opt, handler) &&
+		resource_resolve(opt->initrd, "initrd", opt, handler) &&
+		resource_resolve(opt->icon, "icon", opt, handler);
 }
 
 static void boot_option_finalise(struct discover_boot_option *opt)
@@ -434,8 +439,13 @@ static void process_boot_option_queue(struct device_handler *handler)
 	list_for_each_entry_safe(&handler->unresolved_boot_options,
 			opt, tmp, list) {
 
+		pb_log("queue: attempting resolution for %s\n",
+				opt->option->id);
+
 		if (!boot_option_resolve(opt, handler))
 			continue;
+
+		pb_log("\tresolved!\n");
 
 		list_remove(&opt->list);
 		list_add(&opt->device->boot_options, &opt->list);
@@ -477,6 +487,7 @@ static void context_commit(struct device_handler *handler,
 
 		/* this new device might be able to resolve existing boot
 		 * options */
+		pb_log("New device %s, processing queue\n", dev->device->id);
 		process_boot_option_queue(handler);
 	}
 
@@ -486,6 +497,9 @@ static void context_commit(struct device_handler *handler,
 		list_remove(&opt->list);
 
 		if (boot_option_resolve(opt, handler)) {
+			pb_log("boot option %s is resolved, "
+					"sending to clients\n",
+					opt->option->id);
 			list_add(&dev->boot_options, &opt->list);
 			talloc_steal(dev, opt);
 			boot_option_finalise(opt);

@@ -127,8 +127,6 @@ char *conf_get_pair(struct conf_context __attribute__((unused)) *conf, char *str
 	}
 
 exit:
-	pb_log("%s: @%s@%s@\n", __func__, *name_out, *value_out);
-
 	return end ? end + 1 : NULL;
 }
 
@@ -183,7 +181,7 @@ int conf_set_global_option(struct conf_context *conf, const char *name,
 		if (streq(name, conf->global_options[i].name)) {
 			conf->global_options[i].value
 				= talloc_strdup(conf, value);
-			pb_log("%s: @%s@%s@\n", __func__, name, value);
+			pb_log("%s: %s = '%s'\n", __func__, name, value);
 			return 1;
 		}
 	}
@@ -207,11 +205,8 @@ const char *conf_get_global_option(struct conf_context *conf,
 	assert(conf->global_options);
 
 	for (i = 0; conf->global_options[i].name ;i++)
-		if (streq(name, conf->global_options[i].name)) {
-			pb_log("%s: @%s@%s@\n", __func__, name,
-				conf->global_options[i].value);
+		if (streq(name, conf->global_options[i].name))
 			return conf->global_options[i].value;
-		}
 
 	assert(0 && "unknown global name");
 	return NULL;

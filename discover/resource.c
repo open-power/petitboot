@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <url/url.h>
+#include <log/log.h>
 #include <talloc/talloc.h>
 
 #include "device-handler.h"
@@ -81,6 +82,8 @@ struct resource *create_devpath_resource(struct discover_boot_option *opt,
 
 	devstr = talloc_strndup(res, devpath, pos - devpath);
 	path = talloc_strdup(res, pos + 1);
+
+	pb_log("%s: resource depends on device %s\n", __func__, devstr);
 
 	/* defer resolution until we can find a suitable matching device */
 	info = talloc(res, struct devpath_resource_info);

@@ -162,8 +162,6 @@ struct pb_url *pb_url_parse(void *ctx, const char *url_str)
 	struct pb_url *url;
 	const char *p;
 
-	pb_log("%s: '%s'\n", __func__, url_str);
-
 	if (!url_str || !*url_str) {
 		assert(0 && "bad url");
 		return NULL;
@@ -222,13 +220,6 @@ struct pb_url *pb_url_parse(void *ctx, const char *url_str)
 	}
 
 	pb_url_parse_path(url);
-
-	pb_log(" scheme %d\n", url->scheme);
-	pb_log(" host '%s'\n", url->host);
-	pb_log(" port '%s'\n", url->port);
-	pb_log(" path '%s'\n", url->path);
-	pb_log(" dir '%s'\n", url->dir);
-	pb_log(" file '%s'\n", url->file);
 
 	return url;
 

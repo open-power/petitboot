@@ -59,16 +59,9 @@ static void udev_setup_event_params(struct udev_device *dev,
 	if (!list)
 		return;
 
-	udev_list_entry_foreach(entry, list) {
-		DBG("property: %s - %s\n",
-			udev_list_entry_get_name(entry),
-			udev_device_get_property_value(dev,
-				udev_list_entry_get_name(entry)));
-
+	udev_list_entry_foreach(entry, list)
 		event_set_param(event,udev_list_entry_get_name(entry),
 				udev_list_entry_get_value(entry));
-
-	}
 }
 
 static int udev_handle_dev_action(struct udev_device *dev, const char *action)
