@@ -29,11 +29,13 @@ TESTS = test-null \
 	test-grub2-f18-ppc64 \
 	test-kboot-single \
 	test-yaboot-single \
-	test-yaboot-external
+	test-yaboot-external \
+	test-yaboot-rh8-ppc64
 
 check_PROGRAMS = $(TESTS)
 check_LIBRARIES = $(test_libs)
-check_DATA = data/grub2-f18-ppc64.conf
+check_DATA = data/grub2-f18-ppc64.conf \
+	     data/yaboot-rh8-ppc64.conf
 
 common_libs = $(top_builddir)/lib/libpbcore.la
 test_libs = libtest.o
