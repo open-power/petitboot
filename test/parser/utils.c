@@ -140,3 +140,42 @@ int test_run_parser(struct parser_test *test, const char *parser_name)
 
 	return rc;
 }
+
+struct discover_boot_option *get_boot_option(struct discover_context *ctx,
+		int idx)
+{
+	struct discover_boot_option *opt;
+	int i = 0;
+
+	list_for_each_entry(&ctx->boot_options, opt, list) {
+		if (i++ == idx)
+			return opt;
+	}
+
+	assert(0);
+
+	return NULL;
+}
+
+void __check_boot_option_count(struct discover_context *ctx, int count,
+		const char *file, int line)
+{
+	struct discover_boot_option *opt;
+	int i = 0;
+
+	list_for_each_entry(&ctx->boot_options, opt, list)
+		i++;
+
+	if (i == count)
+		return;
+
+	fprintf(stderr, "%s:%d: boot option count check failed\n", file, line);
+	fprintf(stderr, "expected %d options, got %d:\n", count, i);
+
+	i = 1;
+	list_for_each_entry(&ctx->boot_options, opt, list)
+		fprintf(stderr, "  %2d: %s [%s]\n", i++, opt->option->name,
+				opt->option->id);
+
+	exit(EXIT_FAILURE);
+}
