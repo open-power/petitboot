@@ -46,6 +46,9 @@ char *conf_strip_str(char *s)
 	if (!s)
 		return NULL;
 
+	if (!strlen(s))
+		return NULL;
+
 	while (*s == '"' || *s == '\'' || isspace(*s))
 		s++;
 
