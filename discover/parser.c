@@ -37,7 +37,7 @@ static int read_file(struct discover_context *ctx,
 	if (len > max_file_size)
 		goto err_close;
 
-	buf = talloc_array(ctx, char, len);
+	buf = talloc_array(ctx, char, len + 1);
 	if (!buf)
 		goto err_close;
 
@@ -54,6 +54,8 @@ static int read_file(struct discover_context *ctx,
 			goto err_free;
 
 	}
+
+	buf[len] = '\0';
 
 	close(fd);
 	*bufp = buf;
