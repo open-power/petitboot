@@ -128,7 +128,7 @@ static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 
 	event->type = EVENT_TYPE_UDEV;
 	event->action = eva;
-	event->device = devpath;
+	event->device = devnode;
 
 	event->n_params = 0;
 	event->params = NULL;
