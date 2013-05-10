@@ -48,12 +48,7 @@ static void yaboot_finish(struct conf_context *conf)
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
 
-	/* opt is persistent, so must be associated with device */
-
 	discover_context_add_boot_option(conf->dc, state->opt);
-
-	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
-	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
 }
 
 static struct resource *create_yaboot_devpath_resource(
@@ -122,12 +117,17 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	if (streq(name, "image")) {
 
 		/* First finish any previous image. */
-		if (opt->boot_image)
+		if (opt)
 			yaboot_finish(conf);
+
+		opt = discover_boot_option_create(conf->dc, conf->dc->device);
+		opt->option->boot_args = talloc_strdup(opt->option, "");
 
 		/* Then start the new image. */
 		opt->boot_image = create_yaboot_devpath_resource(conf,
 				value, &state->desc_image);
+
+		state->opt = opt;
 
 		return;
 	}
@@ -143,11 +143,15 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 	if (suse_fp) {
 		/* First finish any previous image. */
-
-		if (opt->boot_image)
+		if (opt)
 			yaboot_finish(conf);
 
 		/* Then start the new image. */
+
+		opt = discover_boot_option_create(conf->dc, conf->dc->device);
+		opt->option->boot_args = talloc_strdup(opt->option, "");
+
+		state->opt = opt;
 
 		if (*value == '/') {
 			opt->boot_image = create_yaboot_devpath_resource(
@@ -302,10 +306,7 @@ static int yaboot_parse(struct discover_context *dc, char *buf, int len)
 
 	state->known_names = yaboot_known_names;
 
-	/* opt is persistent, so must be associated with device */
-
-	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
-	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
+	state->opt = NULL;
 
 	conf_parse_buf(conf, buf, len);
 
