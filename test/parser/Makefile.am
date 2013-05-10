@@ -26,6 +26,7 @@ AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
 TESTS = test-null \
 	test-grub2-single \
+	test-grub2-multiple-resolve \
 	test-grub2-f18-ppc64 \
 	test-kboot-single \
 	test-yaboot-single \
