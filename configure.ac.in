@@ -67,6 +67,14 @@ AC_ARG_WITH(
 )
 AM_CONDITIONAL([WITH_NCURSES], [test "x$with_ncurses" = "xyes"])
 
+AS_IF(
+	[test "x$with_ncurses" = "xyes"],
+	AC_CHECK_LIB([ncurses], [initscr],
+		[],
+		[AC_MSG_FAILURE([--with-ncurses was given but the test for libncurses failed.  Try installing the package ncurses-dev or ncurses-devel.])]
+	)
+)
+
 AC_ARG_WITH(
 	[twin-x11],
 	[AS_HELP_STRING([--with-twin-x11],
@@ -102,7 +110,7 @@ AS_IF(
 				[twin],
 				[twin_feature_init],
 				[],
-				[AC_MSG_FAILURE([--with-twin was given, but test for twin failed])]
+				[AC_MSG_FAILURE([--with-twin was given but the test for libtwin failed.])]
 			)
 			LIBS="$SAVE_LIBS"
 		],
