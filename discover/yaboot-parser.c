@@ -52,6 +52,7 @@ static void yaboot_finish(struct conf_context *conf)
 }
 
 static struct resource *create_yaboot_devpath_resource(
+		struct discover_boot_option *opt,
 		struct conf_context *conf,
 		const char *path, char **desc_str)
 {
@@ -69,7 +70,7 @@ static struct resource *create_yaboot_devpath_resource(
 		devpath = talloc_strdup(conf, path);
 	}
 
-	res = create_devpath_resource(conf->dc, conf->dc->device, devpath);
+	res = create_devpath_resource(opt, conf->dc->device, devpath);
 
 	if (desc_str)
 		*desc_str = devpath;
@@ -124,8 +125,8 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		opt->option->boot_args = talloc_strdup(opt->option, "");
 
 		/* Then start the new image. */
-		opt->boot_image = create_yaboot_devpath_resource(conf,
-				value, &state->desc_image);
+		opt->boot_image = create_yaboot_devpath_resource(opt,
+				conf, value, &state->desc_image);
 
 		state->opt = opt;
 
@@ -154,16 +155,16 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		state->opt = opt;
 
 		if (*value == '/') {
-			opt->boot_image = create_yaboot_devpath_resource(
+			opt->boot_image = create_yaboot_devpath_resource(opt,
 					conf, value, &state->desc_image);
 		} else {
 			char *tmp;
 
-			opt->boot_image = create_yaboot_devpath_resource(
+			opt->boot_image = create_yaboot_devpath_resource(opt,
 					conf, suse_fp->image,
 					&state->desc_image);
 
-			opt->initrd = create_yaboot_devpath_resource(
+			opt->initrd = create_yaboot_devpath_resource(opt,
 					conf, suse_fp->initrd, &tmp);
 
 			state->desc_initrd = talloc_asprintf(opt,
@@ -182,7 +183,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	/* initrd */
 
 	if (streq(name, "initrd")) {
-		opt->initrd = create_yaboot_devpath_resource(conf,
+		opt->initrd = create_yaboot_devpath_resource(opt, conf,
 				value, &state->desc_image);
 
 		return;

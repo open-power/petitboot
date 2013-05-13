@@ -41,7 +41,7 @@ static void resolve_devpath_against_device(struct resource *res,
 	res->resolved = true;
 }
 
-struct resource *create_devpath_resource(void *ctx,
+struct resource *create_devpath_resource(struct discover_boot_option *opt,
 	struct discover_device *orig_device,
 	const char *devpath)
 {
@@ -50,7 +50,7 @@ struct resource *create_devpath_resource(void *ctx,
 	struct resource *res;
 	struct pb_url *url;
 
-	res = talloc(ctx, struct resource);
+	res = talloc(opt, struct resource);
 
 	pos = strchr(devpath, ':');
 
@@ -112,11 +112,12 @@ bool resolve_devpath_resource(struct device_handler *handler,
 	return true;
 }
 
-struct resource *create_url_resource(void *ctx, struct pb_url *url)
+struct resource *create_url_resource(struct discover_boot_option *opt,
+		struct pb_url *url)
 {
 	struct resource *res;
 
-	res = talloc(ctx, struct resource);
+	res = talloc(opt, struct resource);
 	res->url = url;
 	res->resolved = true;
 

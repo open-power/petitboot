@@ -84,7 +84,7 @@ static void kboot_process_pair(struct conf_context *conf, const char *name,
 	}
 
 out_add:
-	d_opt->boot_image = create_devpath_resource(opt,
+	d_opt->boot_image = create_devpath_resource(d_opt,
 				conf->dc->device, value);
 
 	if (root) {
@@ -94,7 +94,7 @@ out_add:
 		opt->boot_args = args;
 
 	if (initrd) {
-		d_opt->initrd = create_devpath_resource(opt,
+		d_opt->initrd = create_devpath_resource(d_opt,
 				conf->dc->device, initrd);
 
 		opt->description = talloc_asprintf(opt, "%s initrd=%s %s",

@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+struct discover_boot_option;
 struct discover_device;
 struct device_handler;
 struct pb_url;
@@ -36,11 +37,12 @@ struct resource {
  * callback.
  */
 
-struct resource *create_devpath_resource(void *ctx,
+struct resource *create_devpath_resource(struct discover_boot_option *opt,
 		struct discover_device *orig_device,
 		const char *devpath);
 
-struct resource *create_url_resource(void *ctx, struct pb_url *url);
+struct resource *create_url_resource(struct discover_boot_option *opt,
+		struct pb_url *url);
 
 bool resolve_devpath_resource(struct device_handler *dev,
 		struct resource *res);
