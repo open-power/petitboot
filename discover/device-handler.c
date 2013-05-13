@@ -235,6 +235,9 @@ static int mount_device(struct discover_device *dev)
 {
 	const char *argv[6];
 
+	if (!dev->device_path)
+		return -1;
+
 	if (!dev->mount_path)
 		dev->mount_path = join_paths(dev, mount_base(),
 						dev->device_path);
@@ -576,7 +579,7 @@ void device_handler_destroy(struct device_handler *handler)
 
 static int device_match_path(struct discover_device *dev, const char *path)
 {
-	return !strcmp(dev->device_path, path);
+	return dev->device_path && !strcmp(dev->device_path, path);
 }
 
 static int device_match_uuid(struct discover_device *dev, const char *uuid)
