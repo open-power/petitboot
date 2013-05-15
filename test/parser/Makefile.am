@@ -24,7 +24,8 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
-TESTS = test-null
+TESTS = test-null \
+	test-yaboot-single
 
 check_PROGRAMS = $(TESTS)
 check_LIBRARIES = $(test_libs)
@@ -37,7 +38,8 @@ libtest.o: $(libtest_o_OBJECTS)
 	$(LD) -o $@ -r $^
 
 # objects under test
-parser_test_objs = $(top_srcdir)/discover/resource.c \
+parser_test_objs = $(top_srcdir)/discover/yaboot-parser.c \
+		   $(top_srcdir)/discover/resource.c \
 		   $(top_srcdir)/discover/paths.c \
 		   $(top_srcdir)/discover/device-handler.c \
 		   $(top_srcdir)/discover/parser-conf.c
