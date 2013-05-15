@@ -21,7 +21,7 @@ AM_CFLAGS = \
 	$(DEFAULT_CFLAGS)
 
 dist_sbin_SCRIPTS = pb-udhcpc
-pkglibexec_SCRIPTS = pb-console
+dist_pkglibexec_SCRIPTS = pb-console
 
 sbin_PROGRAMS = pb-event
 
