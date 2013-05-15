@@ -31,6 +31,8 @@ void test_read_conf_file(struct parser_test *test, const char *filename);
 
 int test_run_parser(struct parser_test *test, const char *parser_name);
 
+void test_hotplug_device(struct parser_test *test, struct discover_device *dev);
+
 struct discover_boot_option *get_boot_option(struct discover_context *ctx,
 		int idx);
 

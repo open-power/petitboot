@@ -141,6 +141,41 @@ int test_run_parser(struct parser_test *test, const char *parser_name)
 	return rc;
 }
 
+bool resource_resolve(struct device_handler *handler, struct parser *parser,
+		struct resource *resource)
+{
+	if (!resource)
+		return true;
+	if (resource->resolved)
+		return true;
+
+	assert(parser);
+	assert(parser->resolve_resource);
+
+	return parser->resolve_resource(handler, resource);
+}
+
+void boot_option_resolve(struct device_handler *handler,
+		struct discover_boot_option *opt)
+{
+	resource_resolve(handler, opt->source, opt->boot_image);
+	resource_resolve(handler, opt->source, opt->initrd);
+	resource_resolve(handler, opt->source, opt->icon);
+}
+
+extern void device_handler_add_device(struct device_handler *handler,
+		struct discover_device *dev);
+
+void test_hotplug_device(struct parser_test *test, struct discover_device *dev)
+{
+	struct discover_boot_option *opt;
+
+	device_handler_add_device(test->handler, dev);
+
+	list_for_each_entry(&test->ctx->boot_options, opt, list)
+		boot_option_resolve(test->handler, opt);
+}
+
 struct discover_boot_option *get_boot_option(struct discover_context *ctx,
 		int idx)
 {
