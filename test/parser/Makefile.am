@@ -47,5 +47,15 @@ LDADD = $(common_libs) $(test_libs)
 
 libtest_o_SOURCES = utils.c parser-test.h handler.c main.c $(parser_test_objs)
 
+$(check_PROGRAMS): %: %.embedded-config.o
+$(check_PROGRAMS): LDADD += $@.embedded-config.o
 
-EXTRA_DIST = $(check_DATA)
+extract_config = $(srcdir)/extract-config.awk
+
+%.embedded-config.c: %.c $(extract_config)
+	gawk --file=$(extract_config) $^ > $@
+
+EXTRA_DIST = $(check_DATA) $(extract_config)
+
+CLEANFILES = $(foreach f, $(check_PROGRAMS), \
+		$(f).embedded-config.c $(f).embedded-config.o)

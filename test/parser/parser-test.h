@@ -31,4 +31,10 @@ void test_read_conf_file(struct parser_test *test, const char *filename);
 
 int test_run_parser(struct parser_test *test, const char *parser_name);
 
+/* embedded config */
+extern const char __embedded_config[];
+extern const size_t __embedded_config_size;
+#define test_read_conf_embedded(t) \
+	__test_read_conf_data(t, __embedded_config, __embedded_config_size)
+
 #endif /* PARSER_TEST_H */

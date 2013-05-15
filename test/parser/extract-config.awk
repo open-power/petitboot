@@ -1,0 +1,21 @@
+BEGIN {
+	config=0
+}
+
+/^#if\s*0\s*\/\*\s*PARSER_EMBEDDED_CONFIG/ {
+	config=1
+	print "#include <stdlib.h>"
+	print "const char __embedded_config[] = "
+	next
+}
+!config {
+	next
+}
+/^#endif/ {
+	print ";"
+	print "const size_t __embedded_config_size = sizeof(__embedded_config);"
+	exit
+}
+{
+	print "\t\"" $0 "\\n\""
+}
