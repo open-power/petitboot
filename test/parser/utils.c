@@ -214,3 +214,37 @@ void __check_name(struct discover_boot_option *opt, const char *name,
 		exit(EXIT_FAILURE);
 	}
 }
+
+void __check_resolved_local_resource(struct resource *res,
+		struct discover_device *dev, const char *local_path,
+		const char *file, int line)
+{
+	const char *exp_url, *got_url;
+
+	if (!res)
+		errx(EXIT_FAILURE, "%s:%d: No resource", file, line);
+
+	if (!res->resolved)
+		errx(EXIT_FAILURE, "%s:%d: Resource is not resolved",
+				file, line);
+
+	exp_url = talloc_asprintf(res, "file://%s%s",
+			dev->mount_path, local_path);
+	got_url = pb_url_to_string(res->url);
+
+	if (strcmp(got_url, exp_url)) {
+		errx(EXIT_FAILURE,
+				"%s:%d Resource mismatch: got %s, expected %s",
+				file, line, got_url, exp_url);
+	}
+}
+
+void __check_unresolved_resource(struct resource *res,
+		const char *file, int line)
+{
+	if (!res)
+		errx(EXIT_FAILURE, "%s:%d: No resource", file, line);
+
+	if (res->resolved)
+		errx(EXIT_FAILURE, "%s:%d: Resource is resolved", file, line);
+}

@@ -71,4 +71,23 @@ void __check_name(struct discover_boot_option *opt, const char *name,
 #define check_name(opt, name) \
 	__check_name(opt, name, __FILE__, __LINE__)
 
+/**
+ * Check that a resource (@res) is present, resolved, and has a local path
+ * (within @dev's mount point) of @path.
+ */
+#define check_resolved_local_resource(res, dev, path) \
+	__check_resolved_local_resource(res, dev, path, __FILE__, __LINE__)
+
+void __check_resolved_local_resource(struct resource *res,
+		struct discover_device *dev, const char *local_path,
+		const char *file, int line);
+
+/**
+ * Check that a resource (@res) is present but not resolved
+ */
+void __check_unresolved_resource(struct resource *res,
+		const char *file, int line);
+#define check_unresolved_resource(res) \
+	__check_unresolved_resource(res, __FILE__, __LINE__)
+
 #endif /* PARSER_TEST_H */
