@@ -1,9 +1,0 @@
-[dev  0] id: /dev/ps3da1
-[dev  0] name: (null)
-[dev  0] description: 
-[dev  0] boot_image: /usr/share/petitboot/artwork/hdd.png
-[opt  0] name: linux
-[opt  0] description: (null)
-[opt  0] boot_image: devices/parser-tests/002/ps3da1/ppc/ppc64/vmlinux
-[opt  0] initrd: devices/parser-tests/002/ps3da1/ppc/ppc64/ramdisk.image.gz
-[opt  0] boot_args: ro 
