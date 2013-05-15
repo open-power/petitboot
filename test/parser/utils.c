@@ -85,6 +85,13 @@ void test_fini(struct parser_test *test)
 	talloc_free(test);
 }
 
+void __test_read_conf_data(struct parser_test *test,
+		const char *buf, size_t len)
+{
+	test->conf.size = len;
+	test->conf.buf = talloc_memdup(test, buf, len);
+}
+
 void test_read_conf_file(struct parser_test *test, const char *filename)
 {
 	struct stat stat;

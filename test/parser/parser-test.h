@@ -22,6 +22,11 @@ void __register_parser(struct parser *parser);
 struct discover_device *test_create_device(struct discover_context *ctx,
 		const char *name);
 
+#define test_read_conf_data(t, d) \
+	__test_read_conf_data(t, d, sizeof(d))
+
+void __test_read_conf_data(struct parser_test *test,
+		const char *buf, size_t len);
 void test_read_conf_file(struct parser_test *test, const char *filename);
 
 int test_run_parser(struct parser_test *test, const char *parser_name);
