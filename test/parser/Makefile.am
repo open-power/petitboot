@@ -25,7 +25,8 @@ AM_CPPFLAGS = \
 AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
 TESTS = test-null \
-	test-yaboot-single
+	test-yaboot-single \
+	test-yaboot-external
 
 check_PROGRAMS = $(TESTS)
 check_LIBRARIES = $(test_libs)
