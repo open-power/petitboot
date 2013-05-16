@@ -6,63 +6,90 @@
 
 ui=petitboot-nc
 shell=sh
-
+getty=/sbin/getty
+use_getty=0
 detach=0
 
 usage() {
 	cat >&2 <<EOF
-pb-console [OPTIONS] console_dev
+pb-console [OPTIONS] -- [ARGS]
 OPTIONS
      -d, --detach
              Start in a detached (background) state.
+
+     -g, --getty[=PATH]
+             Start a getty (specified by PATH, otherwise $getty),
+             passing additional ARGS to the getty process
+
+     -s, --shell=PATH
+             Use PATH as the exit-to-shell shell
+
+     -u, --ui=PATH
+             Use PATH as the petitboot UI
+
      -h, --help
              Print a help message.
 EOF
 	exit 1
 }
 
-while [ -n "$1" ]
+opts=$(getopt --options 'hdg::s:u:' \
+              --long 'help,detach,getty::,shell:,ui:' \
+              -- "$@")
+[ $? = 0 ] || exit 1
+
+eval set -- "$opts"
+
+while :
 do
 	case "$1" in
-	--detach | -d)
+	-d | --detach)
 		detach=1
+		shift
+		;;
+	-g | --getty)
+		use_getty=1
+		getty_arg="$2"
+		shift 2
+		;;
+	-s | --shell)
+		shell="$2"
+		shift 2
+		;;
+	-u | --ui)
+		ui="$2"
+		shift 2
 		;;
 	--help | -h)
 		usage
 		;;
 	--)
+		shift
+		break
 		;;
 	*)
-		console=$1
-		;;
+		echo "getopt error"
+		exit 1
 	esac
-	shift
 done
 
-if [ -n "$console" -a "${console#/dev/}" = "$console" ]
+if [ "$use_getty" = 1 ]
 then
-	console="/dev/$console"
+	if [ -n "$getty_arg" ]
+	then
+		getty="$getty_arg"
+	fi
+	if [ "$detach" = 1 ]
+	then
+		$getty -l $0 "$@" &
+	else
+		exec $getty -l $0 "$@"
+	fi
 fi
 
-pb_loop() {
-	while :
-	do
-		$ui
-		echo "Exiting petitboot. Type 'exit' to return."
-		$shell
-	done
-}
-
-if [ -n "$console" ]
-then
-	exec <$console >$console 2>&1
-fi
-
-if [ "$detach" = 1 ]
-then
-	(
-		pb_loop
-	) &
-else
-	pb_loop
-fi
+while :
+do
+	$ui
+	echo "Exiting petitboot. Type 'exit' to return."
+	$shell
+done
