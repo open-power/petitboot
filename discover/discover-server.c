@@ -31,6 +31,7 @@ struct discover_server {
 struct client {
 	struct discover_server *server;
 	struct list_item list;
+	struct waiter *waiter;
 	int fd;
 };
 
@@ -54,6 +55,9 @@ static int client_destructor(void *arg)
 
 	if (client->fd >= 0)
 		close(client->fd);
+
+	if (client->waiter)
+		waiter_remove(client->waiter);
 
 	list_remove(&client->list);
 
@@ -172,8 +176,11 @@ static int discover_server_process_message(void *arg)
 
 	message = pb_protocol_read_message(client, client->fd);
 
-	if (!message)
+	if (!message) {
+		talloc_free(client);
 		return 0;
+	}
+
 
 	if (message->action != PB_PROTOCOL_ACTION_BOOT) {
 		pb_log("%s: invalid action %d\n", __func__, message->action);
@@ -207,7 +214,7 @@ static int discover_server_process_connection(void *arg)
 	}
 
 	/* add to our list of clients */
-	client = talloc(server, struct client);
+	client = talloc_zero(server, struct client);
 	list_add(&server->clients, &client->list);
 
 	talloc_set_destructor(client, client_destructor);
@@ -229,8 +236,8 @@ static int discover_server_process_connection(void *arg)
 					opt->option);
 	}
 
-	waiter_register(server->waitset, client->fd, WAIT_IN,
-			discover_server_process_message, client);
+	client->waiter = waiter_register(server->waitset, client->fd, WAIT_IN,
+				discover_server_process_message, client);
 
 	return 0;
 }
