@@ -208,7 +208,7 @@ static int discover_server_process_connection(void *arg)
 
 	/* accept the incoming connection */
 	fd = accept(server->socket, NULL, 0);
-	if (!fd) {
+	if (fd < 0) {
 		pb_log("accept: %s\n", strerror(errno));
 		return 0;
 	}
