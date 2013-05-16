@@ -203,8 +203,8 @@ static int discover_server_process_message(void *arg)
 static int discover_server_process_connection(void *arg)
 {
 	struct discover_server *server = arg;
+	int fd, rc, i, n_devices;
 	struct client *client;
-	int fd, i, n_devices;
 
 	/* accept the incoming connection */
 	fd = accept(server->socket, NULL, 0);
@@ -229,11 +229,16 @@ static int discover_server_process_connection(void *arg)
 		const struct discover_device *device;
 
 		device = device_handler_get_device(server->device_handler, i);
-		write_device_add_message(server, client, device->device);
+		rc = write_device_add_message(server, client, device->device);
+		if (rc)
+			return 0;
 
-		list_for_each_entry(&device->boot_options, opt, list)
-			write_boot_option_add_message(server, client,
+		list_for_each_entry(&device->boot_options, opt, list) {
+			rc = write_boot_option_add_message(server, client,
 					opt->option);
+			if (rc)
+				return 0;
+		}
 	}
 
 	client->waiter = waiter_register(server->waitset, client->fd, WAIT_IN,
