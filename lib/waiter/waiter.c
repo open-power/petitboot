@@ -16,7 +16,7 @@ struct waiter {
 };
 
 struct waitset {
-	struct waiter	*waiters;
+	struct waiter	**waiters;
 	int		n_waiters;
 	struct pollfd	*pollfds;
 	int		n_pollfds;
@@ -36,18 +36,22 @@ void waitset_destroy(struct waitset *set)
 struct waiter *waiter_register(struct waitset *set, int fd, int events,
 		waiter_cb callback, void *arg)
 {
-	struct waiter *waiters, *waiter;
+	struct waiter **waiters, *waiter;
 
 	waiters = talloc_realloc(set, set->waiters,
-			struct waiter, set->n_waiters + 1);
+			struct waiter *, set->n_waiters + 1);
 
 	if (!waiters)
 		return NULL;
 
-	set->n_waiters++;
 	set->waiters = waiters;
+	set->n_waiters++;
 
-	waiter = &set->waiters[set->n_waiters - 1];
+	waiter = talloc(set->waiters, struct waiter);
+	if (!waiter)
+		return NULL;
+
+	set->waiters[set->n_waiters - 1] = waiter;
 
 	waiter->set = set;
 	waiter->fd = fd;
@@ -63,15 +67,20 @@ void waiter_remove(struct waiter *waiter)
 	struct waitset *set = waiter->set;
 	int i;
 
-	i = waiter - set->waiters;
-	assert(i >= 0 && i < set->n_waiters);
+	for (i = 0; i < set->n_waiters; i++)
+		if (set->waiters[i] == waiter)
+			break;
+
+	assert(i < set->n_waiters);
 
 	set->n_waiters--;
 	memmove(&set->waiters[i], &set->waiters[i+1],
 		(set->n_waiters - i) * sizeof(set->waiters[0]));
 
-	set->waiters = talloc_realloc(set->waiters, set->waiters, struct waiter,
-			set->n_waiters);
+	set->waiters = talloc_realloc(set->waiters, set->waiters,
+			struct waiter *, set->n_waiters);
+
+	talloc_free(waiter);
 }
 
 int waiter_poll(struct waitset *set)
@@ -85,8 +94,8 @@ int waiter_poll(struct waitset *set)
 	}
 
 	for (i = 0; i < set->n_waiters; i++) {
-		set->pollfds[i].fd = set->waiters[i].fd;
-		set->pollfds[i].events = set->waiters[i].events;
+		set->pollfds[i].fd = set->waiters[i]->fd;
+		set->pollfds[i].events = set->waiters[i]->events;
 		set->pollfds[i].revents = 0;
 	}
 
@@ -97,10 +106,10 @@ int waiter_poll(struct waitset *set)
 
 	for (i = 0; i < set->n_waiters; i++) {
 		if (set->pollfds[i].revents) {
-			rc = set->waiters[i].callback(set->waiters[i].arg);
+			rc = set->waiters[i]->callback(set->waiters[i]->arg);
 
 			if (rc)
-				waiter_remove(&set->waiters[i]);
+				waiter_remove(set->waiters[i]);
 		}
 	}
 
