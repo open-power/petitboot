@@ -141,8 +141,6 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		return;
 
 	if (streq(name, "menuentry")) {
-		char *sep;
-
 		/* complete any existing option... */
 		if (state->opt)
 			grub2_finish(conf);
@@ -151,10 +149,7 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		opt = discover_boot_option_create(conf->dc, conf->dc->device);
 		opt->option->boot_args = talloc_strdup(opt->option, "");
 
-		sep = strchr(value, '\'');
-
-		if (sep)
-			*sep = 0;
+		value = strtok(value, "\'{\"");
 
 		opt->option->id = talloc_asprintf(opt->option,
 					"%s#%s", dev->id, value);
