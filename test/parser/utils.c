@@ -221,7 +221,7 @@ void __check_args(struct discover_boot_option *opt, const char *args,
 	int rc;
 
 	if (!opt->option->boot_args) {
-		fprintf(stderr, "%s%d: arg check failed\n", file, line);
+		fprintf(stderr, "%s:%d: arg check failed\n", file, line);
 		fprintf(stderr, "  no arguments parsed\n");
 		fprintf(stderr, "  expected '%s'\n", args);
 		exit(EXIT_FAILURE);
@@ -229,7 +229,7 @@ void __check_args(struct discover_boot_option *opt, const char *args,
 
 	rc = strcmp(opt->option->boot_args, args);
 	if (rc) {
-		fprintf(stderr, "%s%d: arg check failed\n", file, line);
+		fprintf(stderr, "%s:%d: arg check failed\n", file, line);
 		fprintf(stderr, "  got      '%s'\n", opt->option->boot_args);
 		fprintf(stderr, "  expected '%s'\n", args);
 		exit(EXIT_FAILURE);
@@ -243,7 +243,7 @@ void __check_name(struct discover_boot_option *opt, const char *name,
 
 	rc = strcmp(opt->option->name, name);
 	if (rc) {
-		fprintf(stderr, "%s%d: name check failed\n", file, line);
+		fprintf(stderr, "%s:%d: name check failed\n", file, line);
 		fprintf(stderr, "  got      '%s'\n", opt->option->name);
 		fprintf(stderr, "  expected '%s'\n", name);
 		exit(EXIT_FAILURE);
@@ -268,9 +268,10 @@ void __check_resolved_local_resource(struct resource *res,
 	got_url = pb_url_to_string(res->url);
 
 	if (strcmp(got_url, exp_url)) {
-		errx(EXIT_FAILURE,
-				"%s:%d Resource mismatch: got %s, expected %s",
-				file, line, got_url, exp_url);
+		fprintf(stderr, "%s:%d: Resource mismatch\n", file, line);
+		fprintf(stderr, "  got      '%s'\n", got_url);
+		fprintf(stderr, "  expected '%s'\n", exp_url);
+		exit(EXIT_FAILURE);
 	}
 }
 
