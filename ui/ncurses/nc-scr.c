@@ -102,7 +102,7 @@ void nc_scr_status_printf(struct nc_scr *scr, const char *format, ...)
 
 int nc_scr_init(struct nc_scr *scr, enum pb_nc_sig sig, int begin_x,
 	void *ui_ctx,
-	void (*process_key)(struct nc_scr *),
+	void (*process_key)(struct nc_scr *, int),
 	int (*post)(struct nc_scr *),
 	int (*unpost)(struct nc_scr *),
 	void (*resize)(struct nc_scr *))

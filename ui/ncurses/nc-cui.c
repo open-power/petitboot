@@ -210,7 +210,14 @@ static int cui_process_key(void *arg)
 	assert(cui->current);
 
 	ui_timer_disable(&cui->timer);
-	cui->current->process_key(cui->current);
+	for (;;) {
+		int c = getch();
+
+		if (c == ERR)
+			break;
+
+		cui->current->process_key(cui->current, c);
+	}
 
 	return 0;
 }

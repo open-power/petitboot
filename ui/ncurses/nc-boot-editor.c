@@ -196,81 +196,72 @@ static struct pb_boot_data *boot_editor_prepare_data(
  * Called from the cui via the scr:process_key method.
  */
 
-static void boot_editor_process_key(struct nc_scr *scr)
+static void boot_editor_process_key(struct nc_scr *scr, int key)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
 	struct pb_boot_data *bd;
 
-	while (1) {
-		int c = getch();
+	switch (key) {
+	default:
+		boot_editor_move_cursor(boot_editor, key);
+		break;
 
-		if (c == ERR)
-			return;
+	/* hot keys */
+	case 27: /* ESC */
+		boot_editor->on_exit(boot_editor,
+				boot_editor_cancel, NULL);
+		nc_flush_keys();
+		return;
+	case '\n':
+	case '\r':
+		form_driver(boot_editor->ncf, REQ_VALIDATION);
+		bd = boot_editor_prepare_data(boot_editor);
+		boot_editor->on_exit(boot_editor,
+				boot_editor_update, bd);
+		nc_flush_keys();
+		return;
 
-		/* DBGS("%d (%o)\n", c, c); */
+	/* insert mode */
+	case KEY_IC:
+		boot_editor_insert_mode_tog(boot_editor);
+		break;
 
-		switch (c) {
-		default:
-			boot_editor_move_cursor(boot_editor, c);
-			break;
+	/* form nav */
+	case KEY_PPAGE:
+		boot_editor_move_field(boot_editor, REQ_FIRST_FIELD);
+		break;
+	case KEY_NPAGE:
+		boot_editor_move_field(boot_editor, REQ_LAST_FIELD);
+		break;
+	case KEY_DOWN:
+		boot_editor_move_field(boot_editor, REQ_NEXT_FIELD);
+		break;
+	case KEY_UP:
+		boot_editor_move_field(boot_editor, REQ_PREV_FIELD);
+		break;
 
-		/* hot keys */
-		case 27: /* ESC */
-			boot_editor->on_exit(boot_editor,
-					boot_editor_cancel, NULL);
-			nc_flush_keys();
-			return;
-		case '\n':
-		case '\r':
-			form_driver(boot_editor->ncf, REQ_VALIDATION);
-			bd = boot_editor_prepare_data(boot_editor);
-			boot_editor->on_exit(boot_editor,
-					boot_editor_update, bd);
-			nc_flush_keys();
-			return;
-
-		/* insert mode */
-		case KEY_IC:
-			boot_editor_insert_mode_tog(boot_editor);
-			break;
-
-		/* form nav */
-		case KEY_PPAGE:
-			boot_editor_move_field(boot_editor, REQ_FIRST_FIELD);
-			break;
-		case KEY_NPAGE:
-			boot_editor_move_field(boot_editor, REQ_LAST_FIELD);
-			break;
-		case KEY_DOWN:
-			boot_editor_move_field(boot_editor, REQ_NEXT_FIELD);
-			break;
-		case KEY_UP:
-			boot_editor_move_field(boot_editor, REQ_PREV_FIELD);
-			break;
-
-		/* field nav */
-		case KEY_HOME:
-			boot_editor_move_cursor(boot_editor, REQ_BEG_FIELD);
-			break;
-		case KEY_END:
-			boot_editor_move_cursor(boot_editor, REQ_END_FIELD);
-			break;
-		case KEY_LEFT:
-			boot_editor_move_cursor(boot_editor, REQ_LEFT_CHAR);
-			break;
-		case KEY_RIGHT:
-			boot_editor_move_cursor(boot_editor, REQ_RIGHT_CHAR);
-			break;
-		case KEY_BACKSPACE:
-			if (boot_editor_move_cursor(boot_editor, REQ_LEFT_CHAR)
-					== E_OK)
-				boot_editor_move_cursor(boot_editor,
-						REQ_DEL_CHAR);
-			break;
-		case KEY_DC:
-			boot_editor_move_cursor(boot_editor, REQ_DEL_CHAR);
-			break;
-		}
+	/* field nav */
+	case KEY_HOME:
+		boot_editor_move_cursor(boot_editor, REQ_BEG_FIELD);
+		break;
+	case KEY_END:
+		boot_editor_move_cursor(boot_editor, REQ_END_FIELD);
+		break;
+	case KEY_LEFT:
+		boot_editor_move_cursor(boot_editor, REQ_LEFT_CHAR);
+		break;
+	case KEY_RIGHT:
+		boot_editor_move_cursor(boot_editor, REQ_RIGHT_CHAR);
+		break;
+	case KEY_BACKSPACE:
+		if (boot_editor_move_cursor(boot_editor, REQ_LEFT_CHAR)
+				== E_OK)
+			boot_editor_move_cursor(boot_editor,
+					REQ_DEL_CHAR);
+		break;
+	case KEY_DC:
+		boot_editor_move_cursor(boot_editor, REQ_DEL_CHAR);
+		break;
 	}
 }
 

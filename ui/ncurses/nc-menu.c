@@ -191,67 +191,58 @@ static void pmenu_move_cursor(struct pmenu *menu, int req)
  * pmenu_process_key - Process a user keystroke.
  */
 
-static void pmenu_process_key(struct nc_scr *scr)
+static void pmenu_process_key(struct nc_scr *scr, int key)
 {
 	struct pmenu *menu = pmenu_from_scr(scr);
 	struct pmenu_item *item = pmenu_find_selected(menu);
 
 	nc_scr_status_free(&menu->scr);
 
-	while (1) {
-		int c = getch();
+	if (menu->hot_key)
+		key = menu->hot_key(menu, item, key);
 
-		if (c == ERR)
-			return;
+	switch (key) {
+	case 27: /* ESC */
+		if (menu->on_exit)
+			menu->on_exit(menu);
+		nc_flush_keys();
+		return;
 
-		DBGS("%d (%o)\n", c, c);
-
-		if (menu->hot_key)
-			c = menu->hot_key(menu, item, c);
-
-		switch (c) {
-		case 27: /* ESC */
-			if (menu->on_exit)
-				menu->on_exit(menu);
-			nc_flush_keys();
-			return;
-
-		case KEY_PPAGE:
-			pmenu_move_cursor(menu, REQ_SCR_UPAGE);
-			break;
-		case KEY_NPAGE:
-			pmenu_move_cursor(menu, REQ_SCR_DPAGE);
-			break;
-		case KEY_HOME:
-			pmenu_move_cursor(menu, REQ_FIRST_ITEM);
-			break;
-		case KEY_END:
-			pmenu_move_cursor(menu, REQ_LAST_ITEM);
-			break;
-		case KEY_UP:
-			pmenu_move_cursor(menu, REQ_UP_ITEM);
-			break;
-		case KEY_DOWN:
-			pmenu_move_cursor(menu, REQ_DOWN_ITEM);
-			break;
-		case 'e':
-			if (item->on_edit)
-				item->on_edit(item);
-			break;
-		case 'o':
-			DBGS("on_open: %p\n", menu->on_open);
-			if (menu->on_open)
-				menu->on_open(menu);
-			break;
-		case '\n':
-		case '\r':
-			if (item->on_execute)
-				item->on_execute(item);
-			break;
-		default:
-			menu_driver(menu->ncm, c);
-			break;
-		}
+	case KEY_PPAGE:
+		pmenu_move_cursor(menu, REQ_SCR_UPAGE);
+		break;
+	case KEY_NPAGE:
+		pmenu_move_cursor(menu, REQ_SCR_DPAGE);
+		break;
+	case KEY_HOME:
+		pmenu_move_cursor(menu, REQ_FIRST_ITEM);
+		break;
+	case KEY_END:
+		pmenu_move_cursor(menu, REQ_LAST_ITEM);
+		break;
+	case KEY_UP:
+		pmenu_move_cursor(menu, REQ_UP_ITEM);
+		break;
+	case KEY_DOWN:
+		pmenu_move_cursor(menu, REQ_DOWN_ITEM);
+		break;
+	case 'e':
+		if (item->on_edit)
+			item->on_edit(item);
+		break;
+	case 'o':
+		DBGS("on_open: %p\n", menu->on_open);
+		if (menu->on_open)
+			menu->on_open(menu);
+		break;
+	case '\n':
+	case '\r':
+		if (item->on_execute)
+			item->on_execute(item);
+		break;
+	default:
+		menu_driver(menu->ncm, key);
+		break;
 	}
 }
 
