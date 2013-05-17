@@ -13,8 +13,12 @@
 #include "parser-utils.h"
 #include "paths.h"
 
-static int n_parsers;
-static struct parser **parsers;
+struct p_item {
+	struct list_item list;
+	struct parser *parser;
+};
+
+STATIC_LIST(parsers);
 
 static const int max_file_size = 1024 * 1024;
 
@@ -126,19 +130,20 @@ static void iterate_parser_files(struct discover_context *ctx,
 
 void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 {
-	int rc, i, len;
+	struct p_item* i;
+	int rc, len;
 	char *buf;
 
 	pb_log("trying parsers for %s\n", ctx->device->device->id);
 
 	switch (method) {
 	case CONF_METHOD_LOCAL_FILE:
-		for (i = 0; i < n_parsers; i++) {
-			if (parsers[i]->method != CONF_METHOD_LOCAL_FILE)
+		list_for_each_entry(&parsers, i, list) {
+			if (i->parser->method != CONF_METHOD_LOCAL_FILE)
 				continue;
 
-			pb_log("\ttrying parser '%s'\n", parsers[i]->name);
-			ctx->parser = parsers[i];
+			pb_log("\ttrying parser '%s'\n", i->parser->name);
+			ctx->parser = i->parser;
 			iterate_parser_files(ctx, ctx->parser);
 		}
 		ctx->parser = NULL;
@@ -151,13 +156,13 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 			return;
 		}
 
-		for (i = 0; i < n_parsers; i++) {
-			if (parsers[i]->method != method)
+		list_for_each_entry(&parsers, i, list) {
+			if (i->parser->method != method)
 				continue;
 
-			pb_log("\ttrying parser '%s'\n", parsers[i]->name);
-			ctx->parser = parsers[i];
-			parsers[i]->parse(ctx, buf, len);
+			pb_log("\ttrying parser '%s'\n", i->parser->name);
+			ctx->parser = i->parser;
+			i->parser->parse(ctx, buf, len);
 		}
 
 		break;
@@ -170,9 +175,10 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 
 void __register_parser(struct parser *parser)
 {
-	parsers = talloc_realloc(NULL, parsers, struct parser *, n_parsers + 1);
-	parsers[n_parsers] = parser;
-	n_parsers++;
+	struct p_item* i = talloc(NULL, struct p_item);
+
+	i->parser = parser;
+	list_add(&parsers, &i->list);
 }
 
 void parser_init(void)

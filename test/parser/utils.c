@@ -17,14 +17,19 @@
 
 #include "parser-test.h"
 
-static int n_parsers;
-static struct parser **parsers;
+struct p_item {
+	struct list_item list;
+	struct parser *parser;
+};
+
+STATIC_LIST(parsers);
 
 void __register_parser(struct parser *parser)
 {
-	parsers = talloc_realloc(NULL, parsers, struct parser *, n_parsers + 1);
-	parsers[n_parsers] = parser;
-	n_parsers++;
+	struct p_item* i = talloc(NULL, struct p_item);
+
+	i->parser = parser;
+	list_add(&parsers, &i->list);
 }
 
 static struct discover_device *test_create_device_simple(
@@ -122,23 +127,16 @@ void test_read_conf_file(struct parser_test *test, const char *filename)
 
 int test_run_parser(struct parser_test *test, const char *parser_name)
 {
-	struct parser *parser;
-	int i, rc = 0;
+	struct p_item* i;
 
-	for (i = 0; i < n_parsers; i++) {
-		parser = parsers[i];
-		if (strcmp(parser->name, parser_name))
+	list_for_each_entry(&parsers, i, list) {
+		if (strcmp(i->parser->name, parser_name))
 			continue;
-		test->ctx->parser = parser;
-		rc = parser->parse(test->ctx, test->conf.buf, test->conf.size);
-		break;
+		test->ctx->parser = i->parser;
+		return i->parser->parse(test->ctx, test->conf.buf, test->conf.size);
 	}
 
-	if (i == n_parsers)
-		errx(EXIT_FAILURE, "%s: parser '%s' not found",
-				__func__, parser_name);
-
-	return rc;
+	errx(EXIT_FAILURE, "%s: parser '%s' not found", __func__, parser_name);
 }
 
 bool resource_resolve(struct device_handler *handler, struct parser *parser,
