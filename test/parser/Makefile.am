@@ -28,6 +28,7 @@ TESTS = test-null \
 	test-grub2-single \
 	test-grub2-multiple-resolve \
 	test-grub2-f18-ppc64 \
+	test-grub2-ubuntu-13_04-x86 \
 	test-kboot-single \
 	test-yaboot-single \
 	test-yaboot-external \
@@ -36,6 +37,7 @@ TESTS = test-null \
 check_PROGRAMS = $(TESTS)
 check_LIBRARIES = $(test_libs)
 check_DATA = data/grub2-f18-ppc64.conf \
+	     data/grub2-ubuntu-13_04-x86.conf \
 	     data/yaboot-rh8-ppc64.conf
 
 common_libs = $(top_builddir)/lib/libpbcore.la
