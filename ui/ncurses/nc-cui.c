@@ -199,6 +199,19 @@ struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr)
 	return old;
 }
 
+static bool process_global_keys(struct cui *cui, int key)
+{
+	switch (key) {
+	case 0xc:
+		if (cui->current && cui->current->main_ncw) {
+			redrawwin(cui->current->main_ncw);
+			wrefresh(cui->current->main_ncw);
+		}
+		return true;
+	}
+	return false;
+}
+
 /**
  * cui_process_key - Process input on stdin.
  */
@@ -215,6 +228,9 @@ static int cui_process_key(void *arg)
 
 		if (c == ERR)
 			break;
+
+		if (process_global_keys(cui, c))
+			continue;
 
 		cui->current->process_key(cui->current, c);
 	}
