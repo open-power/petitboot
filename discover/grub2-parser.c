@@ -161,7 +161,7 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		return;
 	}
 
-	if (streq(name, "linux")) {
+	if (streq(name, "linux") || streq(name, "linux16")) {
 		char *sep;
 
 		sep = strchr(value, ' ');
@@ -240,6 +240,7 @@ static const char *const grub2_conf_files[] = {
 static const char *grub2_known_names[] = {
 	"menuentry",
 	"linux",
+	"linux16",
 	"initrd",
 	"search",
 	NULL
