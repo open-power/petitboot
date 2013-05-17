@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <asm/byteorder.h>
 
@@ -177,7 +178,8 @@ int pb_protocol_boot_option_len(const struct boot_option *opt)
 		4 + optional_strlen(opt->icon_file) +
 		4 + optional_strlen(opt->boot_image_file) +
 		4 + optional_strlen(opt->initrd_file) +
-		4 + optional_strlen(opt->boot_args);
+		4 + optional_strlen(opt->boot_args) +
+		sizeof(opt->is_default);
 }
 
 int pb_protocol_boot_len(const struct boot_command *boot)
@@ -225,6 +227,9 @@ int pb_protocol_serialise_boot_option(const struct boot_option *opt,
 	pos += pb_protocol_serialise_string(pos, opt->boot_image_file);
 	pos += pb_protocol_serialise_string(pos, opt->initrd_file);
 	pos += pb_protocol_serialise_string(pos, opt->boot_args);
+
+	*(bool *)pos = opt->is_default;
+	pos += sizeof(bool);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -420,6 +425,10 @@ int pb_protocol_deserialise_boot_option(struct boot_option *opt,
 
 	if (read_string(opt, &pos, &len, &opt->boot_args))
 		goto out;
+
+	if (len < sizeof(bool))
+		goto out;
+	opt->is_default = *(bool *)(pos);
 
 	rc = 0;
 
