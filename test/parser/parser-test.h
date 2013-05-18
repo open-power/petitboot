@@ -92,4 +92,12 @@ void __check_unresolved_resource(struct resource *res,
 #define check_unresolved_resource(res) \
 	__check_unresolved_resource(res, __FILE__, __LINE__)
 
+/**
+ * Check that a resource (@res) is not present
+ */
+void __check_not_present_resource(struct resource *res,
+		const char *file, int line);
+#define check_not_present_resource(res) \
+	__check_not_present_resource(res, __FILE__, __LINE__)
+
 #endif /* PARSER_TEST_H */

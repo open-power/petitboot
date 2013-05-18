@@ -282,3 +282,10 @@ void __check_unresolved_resource(struct resource *res,
 	if (res->resolved)
 		errx(EXIT_FAILURE, "%s:%d: Resource is resolved", file, line);
 }
+
+void __check_not_present_resource(struct resource *res,
+		const char *file, int line)
+{
+	if (res)
+		errx(EXIT_FAILURE, "%s:%d: Resource present", file, line);
+}

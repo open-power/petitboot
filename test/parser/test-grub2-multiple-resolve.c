@@ -30,12 +30,16 @@ void run_test(struct parser_test *test)
 	opt[1] = get_boot_option(ctx, 1);
 
 	check_unresolved_resource(opt[0]->boot_image);
+	check_not_present_resource(opt[0]->initrd);
 	check_unresolved_resource(opt[1]->boot_image);
+	check_not_present_resource(opt[1]->initrd);
 
 	dev = test_create_device(ctx, "external");
 	dev->uuid = "48c1b787-20ad-47ce-b9eb-b108dddc3535";
 	test_hotplug_device(test, dev);
 
 	check_resolved_local_resource(opt[0]->boot_image, dev, "/vmlinux");
+	check_not_present_resource(opt[0]->initrd);
 	check_resolved_local_resource(opt[1]->boot_image, dev, "/vmlinux");
+	check_not_present_resource(opt[1]->initrd);
 }
