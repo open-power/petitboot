@@ -1,15 +1,32 @@
 #!/bin/sh
+#
+# Petitboot utility script for running a petitboot UI program
+# on a console tty.
+#
 
 ui=petitboot-nc
 shell=sh
 
 detach=0
 
+usage() {
+	echo "pb-console [OPTIONS] console_dev" >&2
+	echo "OPTIONS" >&2
+	echo "     -d, --detach" >&2
+	echo "             Start in a detached (background) state." >&2
+	echo "     -h, --help" >&2
+	echo "             Print a help message." >&2
+	exit 1
+}
+
 while [ -n "$1" ]
 do
 	case "$1" in
-	-d)
+	--detach | -d)
 		detach=1
+		;;
+	--help | -h)
+		usage
 		;;
 	--)
 		;;
@@ -29,7 +46,7 @@ pb_loop() {
 	while :
 	do
 		$ui
-		echo "Exiting petitboot. Type 'exit' to return"
+		echo "Exiting petitboot. Type 'exit' to return."
 		$shell
 	done
 }
