@@ -32,6 +32,14 @@ void __register_parser(struct parser *parser)
 	list_add(&parsers, &i->list);
 }
 
+static void __attribute__((destructor)) __cleanup_parsers(void)
+{
+	struct p_item *item, *tmp;
+
+	list_for_each_entry_safe(&parsers, item, tmp, list)
+		talloc_free(item);
+}
+
 static struct discover_device *test_create_device_simple(
 		struct discover_context *ctx)
 {
