@@ -10,12 +10,14 @@ shell=sh
 detach=0
 
 usage() {
-	echo "pb-console [OPTIONS] console_dev" >&2
-	echo "OPTIONS" >&2
-	echo "     -d, --detach" >&2
-	echo "             Start in a detached (background) state." >&2
-	echo "     -h, --help" >&2
-	echo "             Print a help message." >&2
+	cat >&2 <<EOF
+pb-console [OPTIONS] console_dev
+OPTIONS
+     -d, --detach
+             Start in a detached (background) state.
+     -h, --help
+             Print a help message.
+EOF
 	exit 1
 }
 
