@@ -572,7 +572,7 @@ retry_start:
 	atexit(nc_atexit);
 	nc_start();
 
-	waiter_register(cui->waitset, STDIN_FILENO, WAIT_IN,
+	waiter_register_io(cui->waitset, STDIN_FILENO, WAIT_IN,
 			cui_process_key, cui);
 
 	if (js_map) {
@@ -580,7 +580,7 @@ retry_start:
 		cui->pjs = pjs_init(cui, js_map);
 
 		if (cui->pjs)
-			waiter_register(cui->waitset, pjs_get_fd(cui->pjs),
+			waiter_register_io(cui->waitset, pjs_get_fd(cui->pjs),
 					WAIT_IN, cui_process_js, cui);
 	}
 

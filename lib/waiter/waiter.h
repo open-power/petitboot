@@ -16,7 +16,10 @@ typedef int (*waiter_cb)(void *);
 struct waitset *waitset_create(void *ctx);
 void waitset_destroy(struct waitset *waitset);
 
-struct waiter *waiter_register(struct waitset *waitset, int fd, int events,
+struct waiter *waiter_register_io(struct waitset *waitset, int fd, int events,
+		waiter_cb callback, void *arg);
+
+struct waiter *waiter_register_timeout(struct waitset *set, int delay_ms,
 		waiter_cb callback, void *arg);
 
 void waiter_remove(struct waiter *waiter);

@@ -443,8 +443,8 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx,
 
 	assert(waiter_fd != -1);
 
-	waiter_register(waitset, waiter_fd, WAIT_IN, (void *)pbt_twin_waiter_cb,
-		&scr->twin_ctx);
+	waiter_register_io(waitset, waiter_fd, WAIT_IN,
+			(void *)pbt_twin_waiter_cb, &scr->twin_ctx);
 
 	return scr;
 

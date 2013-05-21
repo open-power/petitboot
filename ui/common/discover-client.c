@@ -215,8 +215,8 @@ struct discover_client* discover_client_init(struct waitset *waitset,
 		goto out_err;
 	}
 
-	waiter_register(waitset, client->fd, WAIT_IN, discover_client_process,
-			client);
+	waiter_register_io(waitset, client->fd, WAIT_IN,
+			discover_client_process, client);
 
 	return client;
 

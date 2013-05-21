@@ -241,8 +241,9 @@ static int discover_server_process_connection(void *arg)
 		}
 	}
 
-	client->waiter = waiter_register(server->waitset, client->fd, WAIT_IN,
-				discover_server_process_message, client);
+	client->waiter = waiter_register_io(server->waitset, client->fd,
+				WAIT_IN, discover_server_process_message,
+				client);
 
 	return 0;
 }
@@ -327,7 +328,7 @@ struct discover_server *discover_server_init(struct waitset *waitset)
 		goto out_err;
 	}
 
-	server->waiter = waiter_register(server->waitset, server->socket,
+	server->waiter = waiter_register_io(server->waitset, server->socket,
 			WAIT_IN, discover_server_process_connection, server);
 
 	return server;

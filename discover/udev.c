@@ -296,7 +296,7 @@ struct pb_udev *udev_init(struct waitset *waitset,
 	if (result)
 		goto fail_monitor;
 
-	waiter_register(waitset, udev_monitor_get_fd(udev->monitor), WAIT_IN,
+	waiter_register_io(waitset, udev_monitor_get_fd(udev->monitor), WAIT_IN,
 		udev_process, udev->monitor);
 
 	pb_log("%s: waiting on udev\n", __func__);

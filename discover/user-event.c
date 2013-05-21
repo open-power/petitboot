@@ -158,7 +158,8 @@ struct user_event *user_event_init(struct waitset *waitset,
 			strerror(errno));
 	}
 
-	waiter_register(waitset, uev->socket, WAIT_IN, user_event_process, uev);
+	waiter_register_io(waitset, uev->socket, WAIT_IN,
+			user_event_process, uev);
 
 	pb_log("%s: waiting on %s\n", __func__, PBOOT_USER_EVENT_SOCKET);
 
