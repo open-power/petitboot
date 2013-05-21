@@ -140,7 +140,7 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	initrd = NULL;
 	args = NULL;
 
-	if (cmd->boot_image_file) {
+	if (cmd && cmd->boot_image_file) {
 		image = pb_url_parse(opt, cmd->boot_image_file);
 	} else if (opt && opt->boot_image) {
 		image = opt->boot_image->url;
@@ -149,13 +149,13 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		return -1;
 	}
 
-	if (cmd->initrd_file) {
+	if (cmd && cmd->initrd_file) {
 		initrd = pb_url_parse(opt, cmd->initrd_file);
 	} else if (opt && opt->initrd) {
 		initrd = opt->initrd->url;
 	}
 
-	if (cmd->boot_args) {
+	if (cmd && cmd->boot_args) {
 		args = talloc_strdup(ctx, cmd->boot_args);
 	} else if (opt && opt->option->boot_args) {
 		args = talloc_strdup(ctx, opt->option->boot_args);
