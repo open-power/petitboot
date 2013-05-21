@@ -205,7 +205,6 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 			return;
 
 		uuid++;
-		pb_log("%s: uuid %s\n", __func__, uuid);
 
 		if (state->root)
 			talloc_unlink(state, state->root);
