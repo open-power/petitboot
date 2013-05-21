@@ -425,6 +425,8 @@ static int default_timeout(void *arg)
 		return 0;
 	}
 
+	pb_log("Timeout expired, booting default option %s\n", opt->option->id);
+
 	boot(handler, handler->default_boot_option, NULL,
 			handler->dry_run, boot_status, handler);
 	return 0;
@@ -438,6 +440,8 @@ static void set_default(struct device_handler *handler,
 
 	if (!handler->default_enabled)
 		return;
+
+	pb_log("Boot option %s set as default\n", opt->option->id);
 
 	handler->default_boot_option = opt;
 	handler->sec_to_boot = DEFAULT_BOOT_TIMEOUT_SEC;
@@ -819,6 +823,8 @@ void device_handler_cancel_default(struct device_handler *handler)
 	/* we only send status if we had a default boot option queued */
 	if (!handler->default_boot_option)
 		return;
+
+	pb_log("Cancelling default boot option\n");
 
 	handler->default_boot_option = NULL;
 
