@@ -53,10 +53,22 @@ static void print_device_remove(struct device *device,
 	printf("\tname: %s\n", device->name);
 }
 
+static void print_status(struct boot_status *status,
+	void __attribute__((unused)) *arg)
+{
+	printf("status:\n");
+	printf("\ttype:     %d\n", status->type);
+	printf("\tmessage:  %s\n", status->message);
+	printf("\tdetail:   %s\n", status->detail);
+	printf("\tprogress: %d\n", status->progress);
+
+}
+
 static struct discover_client_ops client_ops = {
 	.device_add = print_device_add,
 	.boot_option_add = print_boot_option_add,
 	.device_remove = print_device_remove,
+	.update_status = print_status,
 };
 
 int main(void)
