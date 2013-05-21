@@ -80,21 +80,23 @@ static void event_parse_params(struct event *event, const char *buf, int len)
 			continue;
 		}
 
-		/* find the separator */
-		sep = memchr(buf, '=', param_len);
-		if (!sep)
-			continue;
-
-		name_len = sep - buf;
-		value_len = param_len - name_len - 1;
-
 		/* update the params array */
 		event->params = talloc_realloc(event, event->params,
 					struct param, ++event->n_params);
 		param = &event->params[event->n_params - 1];
 
+		sep = memchr(buf, '=', param_len);
+		if (!sep) {
+			name_len = param_len;
+			value_len = 0;
+			param->value = "";
+		} else {
+			name_len = sep - buf;
+			value_len = param_len - name_len - 1;
+			param->value = talloc_strndup(event, sep + 1,
+					value_len);
+		}
 		param->name = talloc_strndup(event, buf, name_len);
-		param->value = talloc_strndup(event, sep + 1, value_len);
 	}
 }
 
