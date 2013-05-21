@@ -90,5 +90,6 @@ struct discover_device *device_lookup_by_id(struct device_handler *handler,
 
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd);
+void device_handler_cancel_default(struct device_handler *handler);
 
 #endif /* _DEVICE_HANDLER_H */

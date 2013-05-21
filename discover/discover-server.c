@@ -182,20 +182,30 @@ static int discover_server_process_message(void *arg)
 	}
 
 
-	if (message->action != PB_PROTOCOL_ACTION_BOOT) {
+	switch (message->action) {
+	case PB_PROTOCOL_ACTION_BOOT:
+		boot_command = talloc(client, struct boot_command);
+
+		rc = pb_protocol_deserialise_boot_command(boot_command,
+				message);
+		if (rc) {
+			pb_log("%s: no boot command?", __func__);
+			return 0;
+		}
+
+		device_handler_boot(client->server->device_handler,
+				boot_command);
+		break;
+
+	case PB_PROTOCOL_ACTION_CANCEL_DEFAULT:
+		device_handler_cancel_default(client->server->device_handler);
+		break;
+
+	default:
 		pb_log("%s: invalid action %d\n", __func__, message->action);
 		return 0;
 	}
 
-	boot_command = talloc(client, struct boot_command);
-
-	rc = pb_protocol_deserialise_boot_command(boot_command, message);
-	if (rc) {
-		pb_log("%s: no boot command?", __func__);
-		return 0;
-	}
-
-	device_handler_boot(client->server->device_handler, boot_command);
 
 	return 0;
 }

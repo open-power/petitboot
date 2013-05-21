@@ -32,6 +32,7 @@ struct device_handler {
 
 	struct waitset		*waitset;
 	struct waiter		*timeout_waiter;
+	bool			default_enabled;
 	unsigned int		sec_to_boot;
 
 	struct discover_boot_option *default_boot_option;
@@ -291,6 +292,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	handler->waitset = waitset;
 	handler->dry_run = dry_run;
 	handler->default_boot_option = NULL;
+	handler->default_enabled = true;
 	list_init(&handler->unresolved_boot_options);
 
 	/* set up our mount point base */
@@ -432,6 +434,9 @@ static void set_default(struct device_handler *handler,
 		struct discover_boot_option *opt)
 {
 	if (handler->default_boot_option)
+		return;
+
+	if (!handler->default_enabled)
 		return;
 
 	handler->default_boot_option = opt;
@@ -799,5 +804,29 @@ void device_handler_boot(struct device_handler *handler,
 	opt = find_boot_option_by_id(handler, cmd->option_id);
 
 	boot(handler, opt, cmd, handler->dry_run, boot_status, handler);
+}
+
+void device_handler_cancel_default(struct device_handler *handler)
+{
+	struct boot_status status;
+
+	if (handler->timeout_waiter)
+		waiter_remove(handler->timeout_waiter);
+
+	handler->timeout_waiter = NULL;
+	handler->default_enabled = false;
+
+	/* we only send status if we had a default boot option queued */
+	if (!handler->default_boot_option)
+		return;
+
+	handler->default_boot_option = NULL;
+
+	status.type = BOOT_STATUS_INFO;
+	status.progress = -1;
+	status.detail = NULL;
+	status.message = "Default boot cancelled";
+
+	discover_server_notify_boot_status(handler->server, &status);
 }
 #endif
