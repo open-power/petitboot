@@ -32,6 +32,7 @@ struct device_handler {
 
 	struct waitset		*waitset;
 	struct waiter		*timeout_waiter;
+	unsigned int		sec_to_boot;
 
 	struct discover_boot_option *default_boot_option;
 	struct list		unresolved_boot_options;
@@ -387,12 +388,40 @@ static void boot_status(void *arg, struct boot_status *status)
 	discover_server_notify_boot_status(handler->server, status);
 }
 
+static void countdown_status(struct device_handler *handler,
+		struct discover_boot_option *opt, unsigned int sec)
+{
+	struct boot_status status;
+
+	status.type = BOOT_STATUS_INFO;
+	status.progress = -1;
+	status.detail = NULL;
+	status.message = talloc_asprintf(handler,
+			"Booting %s in %d sec", opt->option->name, sec);
+
+	discover_server_notify_boot_status(handler->server, &status);
+
+	talloc_free(status.message);
+}
+
 static int default_timeout(void *arg)
 {
 	struct device_handler *handler = arg;
+	struct discover_boot_option *opt;
 
 	if (!handler->default_boot_option)
 		return 0;
+
+	opt = handler->default_boot_option;
+
+	if (handler->sec_to_boot) {
+		countdown_status(handler, opt, handler->sec_to_boot);
+		handler->sec_to_boot--;
+		handler->timeout_waiter = waiter_register_timeout(
+						handler->waitset, 1000,
+						default_timeout, handler);
+		return 0;
+	}
 
 	boot(handler, handler->default_boot_option, NULL,
 			handler->dry_run, boot_status, handler);
@@ -406,9 +435,8 @@ static void set_default(struct device_handler *handler,
 		return;
 
 	handler->default_boot_option = opt;
-	handler->timeout_waiter = waiter_register_timeout(handler->waitset,
-					DEFAULT_BOOT_TIMEOUT_SEC * 1000,
-					default_timeout, handler);
+	handler->sec_to_boot = DEFAULT_BOOT_TIMEOUT_SEC;
+	default_timeout(handler);
 }
 
 static bool resource_is_resolved(struct resource *res)
