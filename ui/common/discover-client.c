@@ -278,3 +278,16 @@ int discover_client_boot(struct discover_client *client,
 
 	return rc;
 }
+
+int discover_client_cancel_default(struct discover_client *client)
+{
+	struct pb_protocol_message *message;
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_CANCEL_DEFAULT, 0);
+
+	if (!message)
+		return -1;
+
+	return pb_protocol_write_message(client->fd, message);
+}

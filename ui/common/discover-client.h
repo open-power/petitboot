@@ -59,4 +59,8 @@ int discover_client_boot(struct discover_client *client,
 		const struct device *device,
 		const struct boot_option *boot_option,
 		const struct pb_boot_data *data);
+
+/* Tell the discover server to cancel the default boot option, if any
+ */
+int discover_client_cancel_default(struct discover_client *client);
 #endif
