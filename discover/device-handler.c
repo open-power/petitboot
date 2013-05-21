@@ -30,6 +30,10 @@ struct device_handler {
 	struct discover_device	**devices;
 	unsigned int		n_devices;
 
+	struct waitset		*waitset;
+	struct waiter		*timeout_waiter;
+
+	struct discover_boot_option *default_boot_option;
 	struct list		unresolved_boot_options;
 };
 
@@ -176,6 +180,7 @@ void device_handler_destroy(struct device_handler *handler)
  * to keep struct device_handler opaque. */
 struct device_handler *device_handler_init(
 		struct discover_server *server __attribute__((unused)),
+		struct waitset *waitset __attribute__((unused)),
 		int dry_run __attribute__((unused)))
 {
 	struct device_handler *handler;
@@ -274,7 +279,7 @@ static int umount_device(struct discover_device *dev)
 }
 
 struct device_handler *device_handler_init(struct discover_server *server,
-		int dry_run)
+		struct waitset *waitset, int dry_run)
 {
 	struct device_handler *handler;
 
@@ -282,7 +287,9 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	handler->devices = NULL;
 	handler->n_devices = 0;
 	handler->server = server;
+	handler->waitset = waitset;
 	handler->dry_run = dry_run;
+	handler->default_boot_option = NULL;
 	list_init(&handler->unresolved_boot_options);
 
 	/* set up our mount point base */
@@ -373,6 +380,37 @@ static void device_handler_remove(struct device_handler *handler,
 	talloc_free(device);
 }
 
+static void boot_status(void *arg, struct boot_status *status)
+{
+	struct device_handler *handler = arg;
+
+	discover_server_notify_boot_status(handler->server, status);
+}
+
+static int default_timeout(void *arg)
+{
+	struct device_handler *handler = arg;
+
+	if (!handler->default_boot_option)
+		return 0;
+
+	boot(handler, handler->default_boot_option, NULL,
+			handler->dry_run, boot_status, handler);
+	return 0;
+}
+
+static void set_default(struct device_handler *handler,
+		struct discover_boot_option *opt)
+{
+	if (handler->default_boot_option)
+		return;
+
+	handler->default_boot_option = opt;
+	handler->timeout_waiter = waiter_register_timeout(handler->waitset,
+					DEFAULT_BOOT_TIMEOUT_SEC * 1000,
+					default_timeout, handler);
+}
+
 static bool resource_is_resolved(struct resource *res)
 {
 	return !res || res->resolved;
@@ -412,7 +450,8 @@ static bool boot_option_resolve(struct discover_boot_option *opt,
 		resource_resolve(opt->icon, "icon", opt, handler);
 }
 
-static void boot_option_finalise(struct discover_boot_option *opt)
+static void boot_option_finalise(struct device_handler *handler,
+		struct discover_boot_option *opt)
 {
 	assert(boot_option_is_resolved(opt));
 
@@ -430,6 +469,9 @@ static void boot_option_finalise(struct discover_boot_option *opt)
 		opt->option->icon_file = opt->icon->url->full;
 
 	opt->option->device_id = opt->device->device->id;
+
+	if (opt->option->is_default)
+		set_default(handler, opt);
 }
 
 static void process_boot_option_queue(struct device_handler *handler)
@@ -450,7 +492,7 @@ static void process_boot_option_queue(struct device_handler *handler)
 		list_remove(&opt->list);
 		list_add_tail(&opt->device->boot_options, &opt->list);
 		talloc_steal(opt->device, opt);
-		boot_option_finalise(opt);
+		boot_option_finalise(handler, opt);
 		discover_server_notify_boot_option_add(handler->server,
 							opt->option);
 	}
@@ -502,7 +544,7 @@ static void context_commit(struct device_handler *handler,
 					opt->option->id);
 			list_add_tail(&dev->boot_options, &opt->list);
 			talloc_steal(dev, opt);
-			boot_option_finalise(opt);
+			boot_option_finalise(handler, opt);
 			discover_server_notify_boot_option_add(handler->server,
 								opt->option);
 		} else {
@@ -702,13 +744,6 @@ int device_handler_event(struct device_handler *handler,
 	}
 
 	return handlers[event->type][event->action](handler, event);
-}
-
-static void boot_status(void *arg, struct boot_status *status)
-{
-	struct device_handler *handler = arg;
-
-	discover_server_notify_boot_status(handler->server, status);
 }
 
 static struct discover_boot_option *find_boot_option_by_id(

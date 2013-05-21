@@ -3,6 +3,8 @@
 
 #include <list/list.h>
 
+#define DEFAULT_BOOT_TIMEOUT_SEC	10
+
 struct device_handler;
 struct discover_device;
 struct discover_server;
@@ -10,6 +12,7 @@ struct boot_option;
 struct boot_command;
 struct event;
 struct device;
+struct waitset;
 
 enum conf_method {
 	CONF_METHOD_LOCAL_FILE,	/* discover by looking at local files on this
@@ -57,7 +60,7 @@ struct discover_context {
 };
 
 struct device_handler *device_handler_init(struct discover_server *server,
-		int dry_run);
+		struct waitset *waitset, int dry_run);
 
 void device_handler_destroy(struct device_handler *devices);
 

@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 	if (!server)
 		return EXIT_FAILURE;
 
-	handler = device_handler_init(server, opts.dry_run == opt_yes);
+	handler = device_handler_init(server, waitset, opts.dry_run == opt_yes);
 	if (!handler)
 		return EXIT_FAILURE;
 

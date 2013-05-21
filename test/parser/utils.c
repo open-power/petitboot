@@ -86,7 +86,7 @@ struct parser_test *test_init(void)
 	struct parser_test *test;
 
 	test = talloc_zero(NULL, struct parser_test);
-	test->handler = device_handler_init(NULL, 0);
+	test->handler = device_handler_init(NULL, NULL, 0);
 	test->ctx = test_create_context(test);
 
 	return test;
