@@ -41,6 +41,7 @@ static int print_boot_option_add(struct device *dev,
 	printf("\tboot:   %s\n", opt->boot_image_file);
 	printf("\tinit:   %s\n", opt->initrd_file);
 	printf("\targs:   %s\n", opt->boot_args);
+	printf("\tdefault:%d\n", opt->is_default);
 
 	return 0;
 }
