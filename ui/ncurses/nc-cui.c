@@ -623,8 +623,6 @@ int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item)
 		if (cui->abort)
 			break;
 
-		ui_timer_process_sig(&cui->timer);
-
 		while (cui->resize) {
 			cui->resize = 0;
 			cui_handle_resize(cui);

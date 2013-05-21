@@ -180,10 +180,6 @@ static void sig_handler(int signum)
 	DBGS("%d\n", signum);
 
 	switch (signum) {
-	case SIGALRM:
-		if (pb.cui)
-			ui_timer_sigalrm(&pb.cui->timer);
-		break;
 	case SIGWINCH:
 		if (pb.cui)
 			cui_resize(pb.cui);

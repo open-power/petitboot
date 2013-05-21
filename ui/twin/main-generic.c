@@ -212,8 +212,6 @@ static int run(struct pbt_client *client)
 		if (client->signal_data.abort)
 			break;
 
-		ui_timer_process_sig(&client->signal_data.timer);
-
 		while (client->signal_data.resize) {
 			client->signal_data.resize = 0;
 			pbt_client_resize(client);
@@ -245,9 +243,6 @@ static void sig_handler(int signum)
 		return;
 
 	switch (signum) {
-	case SIGALRM:
-		ui_timer_sigalrm(&sd->timer);
-		break;
 	case SIGWINCH:
 		sd->resize = 1;
 		break;

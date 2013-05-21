@@ -19,7 +19,7 @@
 #if !defined(_PB_UI_TIMER_H)
 #define _PB_UI_TIMER_H
 
-#include <signal.h>
+#include <waiter/waiter.h>
 
 /**
  * struct ui_timer - UI timeout.
@@ -27,16 +27,15 @@
 
 struct ui_timer {
 	unsigned int timeout;
-	unsigned int disabled;
-	sig_atomic_t signaled;
+	struct waiter *waiter;
+	struct waitset *waitset;
 	void (*update_display)(struct ui_timer *timer, unsigned int timeout);
 	void (*handle_timeout)(struct ui_timer *timer);
 };
 
-void ui_timer_init(struct ui_timer *timer, unsigned int seconds);
+void ui_timer_init(struct waitset *set, struct ui_timer *timer,
+		unsigned int seconds);
 void ui_timer_kick(struct ui_timer *timer);
 void ui_timer_disable(struct ui_timer *timer);
-void ui_timer_sigalrm(struct ui_timer *timer);
-void ui_timer_process_sig(struct ui_timer *timer);
 
 #endif
