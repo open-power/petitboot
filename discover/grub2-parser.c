@@ -39,6 +39,8 @@ struct grub2_root {
 
 struct grub2_state {
 	struct discover_boot_option *opt;
+	int default_idx;
+	int cur_idx;
 	char *desc_image;
 	char *desc_initrd;
 	const char *const *known_names;
@@ -94,6 +96,13 @@ static bool resolve_grub2_resource(struct device_handler *handler,
 	return true;
 }
 
+static bool current_option_is_default(struct grub2_state *state)
+{
+	if (state->default_idx < 0)
+		return false;
+	return state->cur_idx == state->default_idx;
+}
+
 static void grub2_finish(struct conf_context *conf)
 {
 	struct device *dev = conf->dc->device->device;
@@ -123,11 +132,12 @@ static void grub2_finish(struct conf_context *conf)
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
 
-	/* opt is persistent, so must be associated with device */
+	state->opt->option->is_default = current_option_is_default(state);
 
 	discover_context_add_boot_option(conf->dc, state->opt);
 
 	state->opt = NULL;
+	state->cur_idx++;
 }
 
 static void grub2_process_pair(struct conf_context *conf, const char *name,
@@ -215,6 +225,32 @@ static void grub2_process_pair(struct conf_context *conf, const char *name,
 		return;
 	}
 
+	if (streq(name, "set")) {
+		char *sep, *var_name, *var_value;
+
+		/* this is pretty nasty, but works until we implement a proper
+		 * parser... */
+
+		sep = strchr(value, '=');
+		if (!sep)
+			return;
+
+		*sep = '\0';
+
+		var_name = value;
+		var_value = sep + 1;
+		if (var_value[0] == '"' || var_value[0] == '\'')
+			var_value++;
+
+		if (!strlen(var_name) || !strlen(var_value))
+			return;
+
+		if (streq(var_name, "default"))
+			state->default_idx = atoi(var_value);
+
+		return;
+	}
+
 	pb_log("%s: unknown name: %s\n", __func__, name);
 }
 
@@ -242,6 +278,7 @@ static const char *grub2_known_names[] = {
 	"linux16",
 	"initrd",
 	"search",
+	"set",
 	NULL
 };
 
@@ -263,6 +300,7 @@ static int grub2_parse(struct discover_context *dc, char *buf, int len)
 	conf->parser_info = state = talloc_zero(conf, struct grub2_state);
 
 	state->known_names = grub2_known_names;
+	state->default_idx = -1;
 
 	conf_parse_buf(conf, buf, len);
 
