@@ -83,6 +83,9 @@ int parse_user_event(struct discover_context *ctx, struct event *event)
 	opt->description = talloc_asprintf(opt, "%s %s", opt->boot_image_file,
 		opt->boot_args ? : "");
 
+	if (event_get_param(event, "default"))
+		opt->is_default = true;
+
 	discover_context_add_boot_option(ctx, d_opt);
 
 	return 0;
