@@ -448,7 +448,7 @@ static void process_boot_option_queue(struct device_handler *handler)
 		pb_log("\tresolved!\n");
 
 		list_remove(&opt->list);
-		list_add(&opt->device->boot_options, &opt->list);
+		list_add_tail(&opt->device->boot_options, &opt->list);
 		talloc_steal(opt->device, opt);
 		boot_option_finalise(opt);
 		discover_server_notify_boot_option_add(handler->server,
@@ -500,7 +500,7 @@ static void context_commit(struct device_handler *handler,
 			pb_log("boot option %s is resolved, "
 					"sending to clients\n",
 					opt->option->id);
-			list_add(&dev->boot_options, &opt->list);
+			list_add_tail(&dev->boot_options, &opt->list);
 			talloc_steal(dev, opt);
 			boot_option_finalise(opt);
 			discover_server_notify_boot_option_add(handler->server,
