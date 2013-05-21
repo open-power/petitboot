@@ -259,7 +259,6 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 
 	pb.mm = pb_mm_init(&pb);
-	ui_timer_disable(&pb.cui->timer);
 
 	cui_result = cui_run(pb.cui, pb.mm, 0);
 

@@ -222,7 +222,10 @@ static int cui_process_key(void *arg)
 
 	assert(cui->current);
 
-	ui_timer_disable(&cui->timer);
+	if (!cui->has_input)
+		discover_client_cancel_default(cui->client);
+	cui->has_input = true;
+
 	for (;;) {
 		int c = getch();
 
@@ -255,24 +258,6 @@ static int cui_process_js(void *arg)
 	}
 
 	return 0;
-}
-
-/**
- * cui_handle_timeout - Handle the timeout.
- */
-
-static void cui_handle_timeout(struct ui_timer *timer)
-{
-	struct cui *cui = cui_from_timer(timer);
-	struct pmenu_item *i = pmenu_find_selected(cui->main);
-
-#if defined(DEBUG)
-	{
-		struct cui_opt_data *cod = cod_from_item(i);
-		assert(cod && (cod->opt_hash == cui->default_item));
-	}
-#endif
-	i->on_execute(i);
 }
 
 /**
@@ -399,12 +384,6 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	pb_log("   initrd '%s'\n", cod->bd->initrd);
 	pb_log("   args   '%s'\n", cod->bd->args);
 
-	/* If this is the default_item select it and start timer. */
-	if (cod->opt_hash == cui->default_item) {
-		selected = i->nci;
-		ui_timer_kick(&cui->timer);
-	}
-
 	/* Re-attach the items array. */
 	result = set_menu_items(cui->main->ncm, cui->main->items);
 
@@ -459,11 +438,6 @@ static void cui_device_remove(struct device *dev, void *arg)
 
 		assert(pb_protocol_device_cmp(dev, cod->dev));
 		pmenu_remove(cui->main, i);
-
-		/* If this is the default_item disable timer. */
-
-		if (cod->opt_hash == cui->default_item)
-			ui_timer_disable(&cui->timer);
 	}
 
 	/* Re-attach the items array. */
@@ -527,7 +501,6 @@ struct cui *cui_init(void* platform_info,
 
 	cui->c_sig = pb_cui_sig;
 	cui->platform_info = platform_info;
-	cui->timer.handle_timeout = cui_handle_timeout;
 	cui->waitset = waitset_create(cui);
 
 	/* Loop here for scripts that just started the server. */

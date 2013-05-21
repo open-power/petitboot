@@ -22,7 +22,6 @@
 #include <signal.h>
 
 #include "ui/common/joystick.h"
-#include "ui/common/timer.h"
 #include "nc-menu.h"
 #include "nc-boot-editor.h"
 
@@ -49,11 +48,11 @@ struct cui_opt_data {
 
 struct cui {
 	enum pb_nc_sig c_sig;
+	bool has_input;
 	sig_atomic_t abort;
 	sig_atomic_t resize;
 	struct nc_scr *current;
 	struct pmenu *main;
-	struct ui_timer timer;
 	struct waitset *waitset;
 	struct discover_client *client;
 	struct pjs *pjs;
@@ -92,17 +91,6 @@ static inline struct cui *cui_from_pmenu(struct pmenu *menu)
 static inline struct cui *cui_from_item(struct pmenu_item *item)
 {
 	return cui_from_pmenu(item->pmenu);
-}
-
-static inline struct cui *cui_from_timer(struct ui_timer *timer)
-{
-	struct cui *cui;
-
-	cui = (struct cui *)((char *)timer
-		- (size_t)&((struct cui *)0)->timer);
-	assert(cui->c_sig == pb_cui_sig);
-
-	return cui;
 }
 
 #endif
