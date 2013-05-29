@@ -11,6 +11,7 @@
 
 #include <waiter/waiter.h>
 #include <log/log.h>
+#include <pb-config/pb-config.h>
 
 #include "udev.h"
 #include "user-event.h"
@@ -145,6 +146,8 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, sigint_handler);
 
+	config_init(NULL);
+
 	waitset = waitset_create(NULL);
 
 	server = discover_server_init(waitset);
@@ -175,6 +178,7 @@ int main(int argc, char *argv[])
 	device_handler_destroy(handler);
 	waitset_destroy(waitset);
 	udev_destroy(udev);
+	config_fini();
 
 	pb_log("--- end ---\n");
 

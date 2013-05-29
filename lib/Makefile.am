@@ -28,6 +28,12 @@ libpbcore_la_SOURCES = \
 	waiter/waiter.h \
 	pb-protocol/pb-protocol.c \
 	pb-protocol/pb-protocol.h \
+	pb-config/pb-config.c \
+	pb-config/pb-config.h \
+	pb-config/storage.h \
+	pb-config/storage-powerpc-nvram.c \
+	pb-config/storage-null.c \
+	pb-config/storage-test.c \
 	types/types.h \
 	talloc/talloc.c \
 	talloc/talloc.h \
