@@ -66,7 +66,7 @@ $(check_PROGRAMS): LDADD += $@.embedded-config.o
 extract_config = $(srcdir)/extract-config.awk
 
 %.embedded-config.c: %.c $(extract_config)
-	gawk --file=$(extract_config) $^ > $@
+	$(AWK) -f $(extract_config) $< > $@
 
 EXTRA_DIST = $(check_DATA) $(extract_config)
 
