@@ -55,3 +55,5 @@ run-url-test: Makefile $(srcdir)/run-url-test.in
 	mv $@.tmp $@
 
 CLEANFILES = run-url-test
+
+MAINTAINERCLEANFILES = Makefile.in

@@ -72,3 +72,5 @@ EXTRA_DIST = $(check_DATA) $(extract_config)
 
 CLEANFILES = $(foreach f, $(check_PROGRAMS), \
 		$(f).embedded-config.c $(f).embedded-config.o)
+
+MAINTAINERCLEANFILES = Makefile.in
