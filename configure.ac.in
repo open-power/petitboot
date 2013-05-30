@@ -195,6 +195,8 @@ DEFINE_HOST_PROG(SFTP, sftp, [/usr/bin/sftp])
 DEFINE_HOST_PROG(TFTP, tftp, [/usr/bin/tftp])
 DEFINE_HOST_PROG(UMOUNT, umount, [/bin/umount])
 DEFINE_HOST_PROG(WGET, wget, [/usr/bin/wget])
+DEFINE_HOST_PROG(IP, ip, [/sbin/ip])
+DEFINE_HOST_PROG(UDHCPC, udhcpc, [/sbin/udhcpc])
 
 default_cflags="--std=gnu99 -g \
 	-Wall -W -Wunused -Wstrict-prototypes -Wmissing-prototypes \

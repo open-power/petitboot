@@ -26,6 +26,8 @@ const struct pb_system_apps pb_system_apps = {
 	.tftp		= HOST_PROG_TFTP,
 	.umount		= HOST_PROG_UMOUNT,
 	.wget		= HOST_PROG_WGET,
+	.ip		= HOST_PROG_IP,
+	.udhcpc		= HOST_PROG_UDHCPC,
 };
 
 int pb_mkdir_recursive(const char *dir)

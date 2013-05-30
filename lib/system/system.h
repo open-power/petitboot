@@ -11,6 +11,8 @@ struct pb_system_apps {
 	const char *tftp;
 	const char *umount;
 	const char *wget;
+	const char *ip;
+	const char *udhcpc;
 };
 
 extern const struct pb_system_apps pb_system_apps;

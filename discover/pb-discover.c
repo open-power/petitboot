@@ -17,6 +17,7 @@
 #include "user-event.h"
 #include "discover-server.h"
 #include "device-handler.h"
+#include "network.h"
 
 static void print_version(void)
 {
@@ -108,6 +109,7 @@ int main(int argc, char *argv[])
 {
 	struct device_handler *handler;
 	struct discover_server *server;
+	struct network *network;
 	struct waitset *waitset;
 	struct opts opts;
 	struct pb_udev *udev;
@@ -152,6 +154,10 @@ int main(int argc, char *argv[])
 
 	server = discover_server_init(waitset);
 	if (!server)
+		return EXIT_FAILURE;
+
+	network = network_init(server, waitset, opts.dry_run == opt_yes);
+	if (!network)
 		return EXIT_FAILURE;
 
 	handler = device_handler_init(server, waitset, opts.dry_run == opt_yes);

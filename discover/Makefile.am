@@ -58,6 +58,8 @@ pb_discover_SOURCES = \
 	parser-utils.h \
 	pb-discover.c \
 	pb-discover.h \
+	network.c \
+	network.h \
 	udev.c \
 	udev.h \
 	user-event.c \
