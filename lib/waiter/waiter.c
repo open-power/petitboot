@@ -176,34 +176,32 @@ static void update_waiters(struct waitset *set)
 		set->n_time_waiters = n_time;
 	}
 
-	/* IO waiters: copy to io_waiters, populate pollfds */
-	for (i = i_io = 0; i < set->n_waiters; i++) {
-		struct waiter *waiter = set->waiters[i];
+	i_io = 0;
+	i_time = 0;
 
-		if (waiter->type != WAITER_IO)
-			continue;
-
-		set->pollfds[i_io].fd = waiter->io.fd;
-		set->pollfds[i_io].events = waiter->io.events;
-		set->io_waiters[i_io] = waiter;
-		i_io++;
-	}
-
-	/* time waiters: copy to time_waiters, calculate next expiry */
 	timerclear(&set->next_timeout);
-	for (i = i_time = 0; i < set->n_waiters; i++) {
+
+	for (i = 0; i < set->n_waiters; i++) {
 		struct waiter *waiter = set->waiters[i];
 
-		if (waiter->type != WAITER_TIME)
-			continue;
+		/* IO waiters: copy to io_waiters, populate pollfds */
+		if (waiter->type == WAITER_IO) {
+			set->pollfds[i_io].fd = waiter->io.fd;
+			set->pollfds[i_io].events = waiter->io.events;
+			set->io_waiters[i_io] = waiter;
+			i_io++;
+		}
 
-		if (!timerisset(&set->next_timeout) ||
-				timercmp(&waiter->timeout,
-					&set->next_timeout, <))
-			set->next_timeout = waiter->timeout;
+		/* time waiters: copy to time_waiters, calculate next expiry */
+		if (waiter->type == WAITER_TIME) {
+			if (!timerisset(&set->next_timeout) ||
+					timercmp(&waiter->timeout,
+						&set->next_timeout, <))
+				set->next_timeout = waiter->timeout;
 
-		set->time_waiters[i_time] = waiter;
-		i_time++;
+			set->time_waiters[i_time] = waiter;
+			i_time++;
+		}
 	}
 }
 
