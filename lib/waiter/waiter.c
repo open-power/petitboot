@@ -11,14 +11,18 @@
 #include "waiter.h"
 
 struct waiter {
+	struct waitset	*set;
 	enum {
 		WAITER_IO,
 		WAITER_TIME,
-	}		type;
-	struct waitset	*set;
-	int		fd;
-	int		events;
-	struct timeval	timeout;
+	} type;
+	union {
+		struct {
+			int	fd;
+			int	events;
+		} io;
+		struct timeval	timeout;
+	};
 	waiter_cb	callback;
 	void		*arg;
 
@@ -90,8 +94,8 @@ struct waiter *waiter_register_io(struct waitset *set, int fd, int events,
 
 	waiter->type = WAITER_IO;
 	waiter->set = set;
-	waiter->fd = fd;
-	waiter->events = events;
+	waiter->io.fd = fd;
+	waiter->io.events = events;
 	waiter->callback = callback;
 	waiter->arg = arg;
 
@@ -179,8 +183,8 @@ static void update_waiters(struct waitset *set)
 		if (waiter->type != WAITER_IO)
 			continue;
 
-		set->pollfds[i_io].fd = waiter->fd;
-		set->pollfds[i_io].events = waiter->events;
+		set->pollfds[i_io].fd = waiter->io.fd;
+		set->pollfds[i_io].events = waiter->io.events;
 		set->io_waiters[i_io] = waiter;
 		i_io++;
 	}
