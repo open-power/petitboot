@@ -134,24 +134,40 @@ static int network_send_link_query(struct network *network)
 	return 0;
 }
 
-static int interface_up(struct network *network, struct interface *interface)
+static int interface_change(struct network *network,
+		struct interface *interface,
+		bool up)
 {
 	int rc;
+	const char *statestr = up ? "up" : "down";
 	const char *argv[] = {
 		pb_system_apps.ip,
 		"link",
 		"set",
 		interface->name,
-		"up",
+		statestr,
 		NULL,
 	};
 
 	rc = pb_run_cmd(argv, 1, network->dry_run);
 	if (rc) {
-		pb_log("failed to bring interface %s up\n", interface->name);
+		pb_log("failed to bring interface %s %s\n", interface->name,
+				statestr);
 		return -1;
 	}
 	return 0;
+}
+
+static int interface_up(struct network *network,
+		struct interface *interface)
+{
+	return interface_change(network, interface, true);
+}
+
+static int interface_down(struct network *network,
+		struct interface *interface)
+{
+	return interface_change(network, interface, false);
 }
 
 static void configure_interface_dhcp(struct network *network,
@@ -417,8 +433,13 @@ err:
 
 int network_shutdown(struct network *network)
 {
+	struct interface *interface;
+
 	if (network->waiter)
 		waiter_remove(network->waiter);
+
+	list_for_each_entry(&network->interfaces, interface, list)
+		interface_down(network, interface);
 
 	close(network->netlink_sd);
 	talloc_free(network);
