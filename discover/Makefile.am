@@ -12,11 +12,14 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+pkgsysconfdir = @sysconfdir@/@PACKAGE@
+
 AM_CPPFLAGS = -I$(top_srcdir)/lib $(DEFAULT_CPPFLAGS)
 
 AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPREFIX='"$(prefix)"' \
 	-DPKG_SHARE_DIR='"$(pkgdatadir)"' \
+	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"' \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"'
 
 noinst_LIBRARIES = libparser.o

@@ -219,6 +219,7 @@ AS_IF(
 
 AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([DESTDIR])
+AC_SUBST([pkgsysconfdir], ["${sysconfdir}/${package}"])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
