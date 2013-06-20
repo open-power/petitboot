@@ -30,6 +30,7 @@ pb_event_SOURCES = pb-event.c
 dist_pkgdata_DATA = \
 	kboot.conf.sample \
 	bb-kexec-reboot \
-	logrotate.conf
+	logrotate.conf \
+	hooks/01-create-default-dtb
 
 MAINTAINERCLEANFILES = Makefile.in

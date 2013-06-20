@@ -1,0 +1,11 @@
+#!/bin/sh
+
+[ -n "$boot_dtb" ] && exit;
+[ ! -e /proc/device-tree ] && exit
+
+dtb=$(mktemp)
+
+dtc -I fs -O dtb -o $dtb /proc/device-tree
+
+echo "boot_dtb=$dtb"
+exit 2
