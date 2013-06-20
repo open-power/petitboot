@@ -1,6 +1,13 @@
 
+#define _GNU_SOURCE
+
 #include <stdbool.h>
+#include <stdlib.h>
 #include <assert.h>
+#include <dirent.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
 
 #include <log/log.h>
 #include <pb-protocol/pb-protocol.h>
@@ -12,6 +19,8 @@
 #include "boot.h"
 #include "paths.h"
 #include "resource.h"
+
+static const char *boot_hook_dir = PKG_SYSCONF_DIR "/boot.d";
 
 struct boot_task {
 	char *local_image;
@@ -139,6 +148,58 @@ static void update_status(boot_status_fn fn, void *arg, int type,
 	fn(arg, &status);
 }
 
+static int hook_filter(const struct dirent *dirent)
+{
+	return dirent->d_type == DT_REG || dirent->d_type == DT_LNK;
+}
+
+static int hook_cmp(const struct dirent **a, const struct dirent **b)
+{
+	return strcmp((*a)->d_name, (*b)->d_name);
+}
+
+static void run_boot_hooks(void *ctx, struct boot_task *task,
+		boot_status_fn status_fn, void *status_arg)
+{
+	struct dirent **hooks;
+	int i, n;
+
+	n = scandir(boot_hook_dir, &hooks, hook_filter, hook_cmp);
+	if (n < 1)
+		return;
+
+	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+			"running boot hooks");
+
+	/* pass boot data to hooks */
+	setenv("boot_image", task->local_image, 1);
+	if (task->local_initrd)
+		setenv("boot_initrd", task->local_initrd, 1);
+	if (task->local_dtb)
+		setenv("boot_dtb", task->local_dtb, 1);
+	if (task->args)
+		setenv("boot_args", task->args, 1);
+
+	for (i = 0; i < n; i++) {
+		char *path;
+		const char *argv[2] = { NULL, NULL };
+
+		path = join_paths(ctx, boot_hook_dir, hooks[i]->d_name);
+
+		if (access(path, X_OK))
+			continue;
+
+		pb_log("running boot hook %s\n", hooks[i]->d_name);
+
+		argv[0] = path;
+		pb_run_cmd(argv, 1, task->dry_run);
+
+		talloc_free(path);
+	}
+
+	free(hooks);
+}
+
 int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		int dry_run, boot_status_fn status_fn, void *status_arg)
 {
@@ -217,6 +278,8 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 			goto no_load;
 		}
 	}
+
+	run_boot_hooks(ctx, &boot_task, status_fn, status_arg);
 
 	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 			"performing kexec_load");
