@@ -21,12 +21,17 @@
 #include "resource.h"
 
 static const char *boot_hook_dir = PKG_SYSCONF_DIR "/boot.d";
+enum {
+	BOOT_HOOK_EXIT_OK	= 0,
+	BOOT_HOOK_EXIT_UPDATE	= 2,
+};
+
 
 struct boot_task {
 	char *local_image;
 	char *local_initrd;
 	char *local_dtb;
-	const char *args;
+	char *args;
 
 	bool dry_run;
 };
@@ -148,6 +153,72 @@ static void update_status(boot_status_fn fn, void *arg, int type,
 	fn(arg, &status);
 }
 
+static void boot_hook_update_param(void *ctx, struct boot_task *task,
+		const char *name, const char *value)
+{
+	struct p {
+		const char *name;
+		char **p;
+	} *param, params[] = {
+		{ "boot_image",		&task->local_image },
+		{ "boot_initrd",	&task->local_initrd },
+		{ "boot_dtb",		&task->local_dtb },
+		{ "boot_args",		&task->args },
+		{ NULL, NULL },
+	};
+
+	for (param = params; param->name; param++) {
+		if (strcmp(param->name, name))
+			continue;
+
+		*param->p = talloc_strdup(ctx, value);
+		return;
+	}
+}
+
+static void boot_hook_update(void *ctx, const char *hookname,
+		struct boot_task *task, char *buf)
+{
+	char *line, *name, *val, *sep;
+	char *saveptr;
+
+	for (;; buf = NULL) {
+
+		line = strtok_r(buf, "\n", &saveptr);
+		if (!line)
+			break;
+
+		sep = strchr(line, '=');
+		if (!sep)
+			continue;
+
+		*sep = '\0';
+		name = line;
+		val = sep + 1;
+
+		boot_hook_update_param(ctx, task, name, val);
+
+		pb_log("boot hook %s specified %s=%s\n",
+				hookname, name, val);
+	}
+}
+
+static void boot_hook_setenv(struct boot_task *task)
+{
+	unsetenv("boot_image");
+	unsetenv("boot_initrd");
+	unsetenv("boot_dtb");
+	unsetenv("boot_args");
+
+	setenv("boot_image", task->local_image, 1);
+	if (task->local_initrd)
+		setenv("boot_initrd", task->local_initrd, 1);
+	if (task->local_dtb)
+		setenv("boot_dtb", task->local_dtb, 1);
+	if (task->args)
+		setenv("boot_args", task->args, 1);
+}
+
 static int hook_filter(const struct dirent *dirent)
 {
 	return dirent->d_type == DT_REG || dirent->d_type == DT_LNK;
@@ -171,18 +242,12 @@ static void run_boot_hooks(void *ctx, struct boot_task *task,
 	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 			"running boot hooks");
 
-	/* pass boot data to hooks */
-	setenv("boot_image", task->local_image, 1);
-	if (task->local_initrd)
-		setenv("boot_initrd", task->local_initrd, 1);
-	if (task->local_dtb)
-		setenv("boot_dtb", task->local_dtb, 1);
-	if (task->args)
-		setenv("boot_args", task->args, 1);
+	boot_hook_setenv(task);
 
 	for (i = 0; i < n; i++) {
-		char *path;
 		const char *argv[2] = { NULL, NULL };
+		char *path, *buf;
+		int buf_len, rc;
 
 		path = join_paths(ctx, boot_hook_dir, hooks[i]->d_name);
 
@@ -192,8 +257,18 @@ static void run_boot_hooks(void *ctx, struct boot_task *task,
 		pb_log("running boot hook %s\n", hooks[i]->d_name);
 
 		argv[0] = path;
-		pb_run_cmd(argv, 1, task->dry_run);
+		rc = pb_run_cmd_pipe(argv, 1, task->dry_run, ctx,
+				&buf, &buf_len);
 
+		/* if the hook returned with BOOT_HOOK_EXIT_UPDATE,
+		 * then we process stdout to look for updated params
+		 */
+		if (rc == BOOT_HOOK_EXIT_UPDATE) {
+			boot_hook_update(ctx, hooks[i]->d_name, task, buf);
+			boot_hook_setenv(task);
+		}
+
+		talloc_free(buf);
 		talloc_free(path);
 	}
 

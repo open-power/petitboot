@@ -159,9 +159,9 @@ int pb_run_cmd_pipe(const char *const *cmd_argv, int wait, int dry_run,
 	int status, pipefd[2];
 	pid_t pid;
 
-	assert(!wait && stdout_buf);
-	assert(!!ctx != !!stdout_buf);
-	assert(!!stdout_buf != !!stdout_buf_len);
+	assert(!stdout_buf || wait);
+	assert(!stdout_buf || ctx);
+	assert(!stdout_buf || stdout_buf_len);
 
 	if (do_debug) {
 		const char *const *p = cmd_argv;
