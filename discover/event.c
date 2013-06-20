@@ -22,10 +22,17 @@
 static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 	char **device)
 {
+	int headerlen;
 	char *sep;
 
 	*action = 0;
 	*device = NULL;
+	headerlen = strnlen(buf, len);
+
+	if (!headerlen) {
+		pb_log("%s: bad header, no data\n", __func__);
+		return -1;
+	}
 
 	/* we should see an <action>@<device>\0 at the head of the buffer */
 	sep = strchr(buf, '@');
@@ -36,7 +43,6 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 
 	/* terminate the action string */
 	*sep = '\0';
-	len -= sep - buf + 1;
 
 	if (streq(buf, "add"))
 		*action = EVENT_ACTION_ADD;
@@ -55,7 +61,7 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 	}
 
 	*device = sep + 1;
-	return 0;
+	return headerlen;
 }
 
 /**
@@ -102,26 +108,24 @@ static void event_parse_params(struct event *event, const char *buf, int len)
 
 int event_parse_ad_message(struct event *event, char *buf, int len)
 {
-	int result;
-	char *device;
 	enum event_action action;
-	int device_len;
+	int headerlen;
+	char *device;
 
-	result = event_parse_ad_header(buf, len, &action, &device);
+	headerlen = event_parse_ad_header(buf, len, &action, &device);
 
-	if (result)
+	if (headerlen <= 0)
 		return -1;
-
-	device_len = strlen(device);
 
 	/* now we have an action and a device, we can construct the event */
 	event->action = action;
-	event->device = talloc_strndup(event, device, device_len);
+	event->device = talloc_strdup(event, device);
 	event->n_params = 0;
 	event->params = NULL;
 
-	len -= device_len + 1;
-	event_parse_params(event, device + device_len + 1, len);
+	len -= headerlen + 1;
+	buf += headerlen + 1;
+	event_parse_params(event, buf, len);
 
 	return 0;
 }
