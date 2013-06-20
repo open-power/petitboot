@@ -18,6 +18,8 @@ struct pb_system_apps {
 extern const struct pb_system_apps pb_system_apps;
 
 int pb_run_cmd(const char *const *cmd_argv, int wait, int dry_run);
+int pb_run_cmd_pipe(const char *const *cmd_argv, int wait, int dry_run,
+		void *ctx, char **buf, int *buf_len);
 int pb_mkdir_recursive(const char *dir);
 int pb_rmdir_recursive(const char *base, const char *dir);
 
