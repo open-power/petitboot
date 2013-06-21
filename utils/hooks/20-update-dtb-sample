@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# This is a sample boot hook to add a single property to the new kernel's
+# device tree.
+
+[ -z "$boot_dtb" ] && exit
+
+dtb_in=$boot_dtb
+dtb_out=$(mktemp)
+
+# Convert the dtb to dts, append our extra property, and convert back to dtb
+(
+	dtc -I dtb -O dts $dtb_in
+	echo '/ { petitboot,test = "test"; };'
+) | dtc -I dts -O dtb -o $dtb_out
+
+# If we have a good dtb (ie, the compile succeeded), replace the existing
+# dtb file.
+if [ $? = 0 ]
+then
+	mv $dtb_out $dtb_in
+fi

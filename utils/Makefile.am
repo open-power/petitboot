@@ -31,6 +31,7 @@ dist_pkgdata_DATA = \
 	kboot.conf.sample \
 	bb-kexec-reboot \
 	logrotate.conf \
-	hooks/01-create-default-dtb
+	hooks/01-create-default-dtb \
+	hooks/20-update-dtb-sample
 
 MAINTAINERCLEANFILES = Makefile.in
