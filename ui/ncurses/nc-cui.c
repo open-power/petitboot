@@ -436,9 +436,8 @@ static void cui_device_remove(struct device *dev, void *arg)
 
 	list_for_each_entry(&dev->boot_options, opt, list) {
 		struct pmenu_item *i = pmenu_item_from_arg(opt->ui_info);
-		struct cui_opt_data *cod = cod_from_item(i);
 
-		assert(pb_protocol_device_cmp(dev, cod->dev));
+		assert(pb_protocol_device_cmp(dev, cod_from_item(i)->dev));
 		pmenu_remove(cui->main, i);
 	}
 
