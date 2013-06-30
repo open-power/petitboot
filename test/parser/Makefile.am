@@ -23,7 +23,7 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
-LDADD = $(top_builddir)/lib/libpbcore.la libtest.o
+LDADD = $(top_builddir)/lib/libpbcore.la libtest.ro
 
 TESTS = \
 	test-null \
@@ -54,18 +54,17 @@ parser_objs = \
 	$(top_srcdir)/discover/device-handler.c \
 	$(top_srcdir)/discover/parser-conf.c
 
-libtest_o_SOURCES = \
+libtest_ro_SOURCES = \
 	main.c \
 	utils.c \
 	handler.c \
 	parser-test.h \
 	$(parser_objs)
 
-libtest.o: $(libtest_o_OBJECTS)
+libtest.ro: $(libtest_ro_OBJECTS)
 	$(LD) -o $@ -r $^
 
-check_PROGRAMS = $(TESTS)
-check_LIBRARIES = libtest.o
+check_PROGRAMS = $(TESTS) libtest.ro
 
 check_DATA = \
 	data/grub2-f18-ppc64.conf \

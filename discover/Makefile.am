@@ -22,9 +22,9 @@ AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"' \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"'
 
-noinst_LIBRARIES = libparser.o
+noinst_PROGRAMS = libparser.ro
 
-libparser_o_SOURCES = \
+libparser_ro_SOURCES = \
 	parser.c \
 	parser.h \
 	parser-conf.c \
@@ -38,7 +38,7 @@ libparser_o_SOURCES = \
 	yaboot-parser.c \
 	pxe-parser.c
 
-libparser.o: $(libparser_o_OBJECTS)
+libparser.ro: $(libparser_ro_OBJECTS)
 	$(LD) -r -o $@ $^
 
 EXTRA_DIST = native-parser.c
@@ -68,7 +68,7 @@ pb_discover_SOURCES = \
 	user-event.c \
 	user-event.h
 
-pb_discover_LDADD = libparser.o $(top_builddir)/lib/libpbcore.la
+pb_discover_LDADD = libparser.ro $(top_builddir)/lib/libpbcore.la
 
 pb_discover_LDFLAGS = -ludev
 
