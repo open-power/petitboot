@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
+#include <pb-config/pb-config.h>
 #include <talloc/talloc.h>
 #include <list/list.h>
 #include <log/log.h>
@@ -292,7 +293,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	handler->waitset = waitset;
 	handler->dry_run = dry_run;
 	handler->default_boot_option = NULL;
-	handler->default_enabled = true;
+	handler->default_enabled = config_get()->autoboot_enabled;
 	list_init(&handler->unresolved_boot_options);
 
 	/* set up our mount point base */
