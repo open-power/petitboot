@@ -12,7 +12,6 @@
 #include "storage.h"
 
 static const char *partition = "common";
-static const char *prefix = "petitboot,";
 
 struct param {
 	char			*name;
@@ -26,11 +25,32 @@ struct powerpc_nvram_storage {
 	struct list		params;
 };
 
+static const char *known_params[] = {
+	"auto-boot?",
+	"petitboot,network",
+	NULL,
+};
+
 #define to_powerpc_nvram_storage(s) \
 	container_of(s, struct powerpc_nvram_storage, storage)
 
 /* a partition max a max size of 64k * 16bytes = 1M */
 static const int max_partition_size = 64 * 1024 * 16;
+
+static bool param_is_known(const char *param, unsigned int len)
+{
+	const char *known_param;
+	unsigned int i;
+
+	for (i = 0; known_params[i]; i++) {
+		known_param = known_params[i];
+		if (len == strlen(known_param) &&
+				!strncmp(param, known_param, len))
+			return true;
+	}
+
+	return false;
+}
 
 static int parse_nvram_params(struct powerpc_nvram_storage *nv,
 		char *buf, int len)
@@ -70,13 +90,10 @@ static int parse_nvram_params(struct powerpc_nvram_storage *nv,
 			continue;
 
 		namelen = name - value;
-		if (namelen <= strlen(prefix))
+
+		if (!param_is_known(name, namelen))
 			continue;
 
-		if (strncmp(name, prefix, strlen(prefix)))
-			continue;
-
-		name += strlen(prefix);
 		value++;
 
 		param = talloc(nv, struct param);
@@ -249,7 +266,7 @@ static void populate_network_config(struct powerpc_nvram_storage *nv,
 	char *val;
 	int i;
 
-	cval = get_param(nv, "network");
+	cval = get_param(nv, "petitboot,network");
 	if (!cval || !strlen(cval))
 		return;
 
