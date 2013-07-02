@@ -78,9 +78,16 @@ static int parse_nvram_params(struct powerpc_nvram_storage *nv,
 		return -1;
 	}
 
-	for (pos = buf + i; pos < buf + len; pos += paramlen) {
+	for (pos = buf + i; pos < buf + len; pos += paramlen + 1) {
 		unsigned int namelen;
 		struct param *param;
+		char *newline;
+
+		newline = strchr(pos, '\n');
+		if (!newline)
+			break;
+
+		*newline = '\0';
 
 		paramlen = strlen(pos);
 
@@ -89,7 +96,9 @@ static int parse_nvram_params(struct powerpc_nvram_storage *nv,
 		if (!value)
 			continue;
 
-		namelen = name - value;
+		namelen = value - name;
+		if (namelen == 0)
+			continue;
 
 		if (!param_is_known(name, namelen))
 			continue;
