@@ -21,6 +21,9 @@ static void pxe_process_pair(struct conf_context *ctx,
 	struct discover_boot_option *opt = ctx->parser_info;
 	struct pb_url *url;
 
+	if (!name)
+		return;
+
 	if (streq(name, "LABEL")) {
 		if (opt)
 			pxe_finish(ctx);
