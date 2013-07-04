@@ -133,6 +133,12 @@ void test_read_conf_file(struct parser_test *test, const char *filename)
 	talloc_free(path);
 }
 
+void test_set_conf_source(struct parser_test *test, const char *url)
+{
+	test->ctx->conf_url = pb_url_parse(test, url);
+	assert(test->ctx->conf_url);
+}
+
 int test_run_parser(struct parser_test *test, const char *parser_name)
 {
 	struct p_item* i;
