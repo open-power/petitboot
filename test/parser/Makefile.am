@@ -34,7 +34,9 @@ TESTS = \
 	test-kboot-single \
 	test-yaboot-single \
 	test-yaboot-external \
-	test-yaboot-rh8-ppc64
+	test-yaboot-rh8-ppc64 \
+	test-pxe-single \
+	test-pxe-initrd-in-append
 
 $(TESTS): %: %.embedded-config.o
 $(TESTS): LDADD += $@.embedded-config.o
@@ -49,6 +51,7 @@ parser_objs = \
 	$(top_srcdir)/discover/yaboot-parser.c \
 	$(top_srcdir)/discover/kboot-parser.c \
 	$(top_srcdir)/discover/grub2-parser.c \
+	$(top_srcdir)/discover/pxe-parser.c \
 	$(top_srcdir)/discover/resource.c \
 	$(top_srcdir)/discover/paths.c \
 	$(top_srcdir)/discover/device-handler.c \
