@@ -12,7 +12,6 @@
 
 static void pxe_finish(struct conf_context *conf)
 {
-	printf("%s\n", __func__);
 	discover_context_add_boot_option(conf->dc, conf->parser_info);
 }
 
