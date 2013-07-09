@@ -87,6 +87,14 @@ then
 	fi
 fi
 
+for f in /etc/environment /etc/locale
+do
+	if [ -e "$f" ]
+	then
+		export $(cat "$f")
+	fi
+done
+
 while :
 do
 	$ui
