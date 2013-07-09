@@ -287,6 +287,26 @@ void __check_resolved_local_resource(struct resource *res,
 	}
 }
 
+void __check_resolved_url_resource(struct resource *res,
+		const char *url, const char *file, int line)
+{
+	char *res_url;
+
+	if (!res)
+		errx(EXIT_FAILURE, "%s:%d: No resource", file, line);
+
+	if (!res->resolved)
+		errx(EXIT_FAILURE, "%s:%d: Resource is not resolved",
+				file, line);
+
+	res_url = pb_url_to_string(res->url);
+	if (strcmp(url, res_url)) {
+		fprintf(stderr, "%s:%d: Resource mismatch\n", file, line);
+		fprintf(stderr, "  got      '%s'\n", res_url);
+		fprintf(stderr, "  expected '%s'\n", url);
+		exit(EXIT_FAILURE);
+	}
+}
 void __check_unresolved_resource(struct resource *res,
 		const char *file, int line)
 {

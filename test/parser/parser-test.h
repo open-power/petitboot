@@ -86,6 +86,14 @@ void __check_resolved_local_resource(struct resource *res,
 		const char *file, int line);
 
 /**
+ * Check that a resource (@res) is present, resolved, and has a URL of
+ * @url.
+ */
+#define check_resolved_url_resource(res, url) \
+	__check_resolved_url_resource(res, url, __FILE__, __LINE__)
+void __check_resolved_url_resource(struct resource *res,
+		const char *url, const char *file, int line);
+/**
  * Check that a resource (@res) is present but not resolved
  */
 void __check_unresolved_resource(struct resource *res,
