@@ -1,4 +1,5 @@
 
+#define _GNU_SOURCE
 #include <string.h>
 
 #include <talloc/talloc.h>
@@ -20,6 +21,13 @@ static void pxe_process_pair(struct conf_context *ctx,
 {
 	struct discover_boot_option *opt = ctx->parser_info;
 	struct pb_url *url;
+
+	/* quirk in the syslinux config format: initrd can be separated
+	 * by an '=' */
+	if (!name && !strncasecmp(value, "initrd=", strlen("initrd="))) {
+		name = "initrd";
+		value += strlen("initrd=");
+	}
 
 	if (!name)
 		return;
@@ -45,10 +53,26 @@ static void pxe_process_pair(struct conf_context *ctx,
 		url = pb_url_join(ctx->dc, ctx->dc->conf_url, value);
 		opt->boot_image = create_url_resource(opt, url);
 
+	} else if (streq(name, "INITRD")) {
+		url = pb_url_join(ctx->dc, ctx->dc->conf_url, value);
+		opt->initrd = create_url_resource(opt, url);
+
 	} else if (streq(name, "APPEND")) {
+		char *str, *end;
+
 		opt->option->boot_args = talloc_strdup(opt->option, value);
-		/* todo: initrd extraction */
+
+		str = strcasestr(value, "INITRD=");
+		if (str) {
+			str += strlen("INITRD=");
+			end = strchrnul(str, ' ');
+			*end = '\0';
+
+			url = pb_url_join(ctx->dc, ctx->dc->conf_url, str);
+			opt->initrd = create_url_resource(opt, url);
+		}
 	}
+
 }
 
 static int pxe_parse(struct discover_context *dc, char *buf, int len)
