@@ -6,6 +6,7 @@
 #include <sys/time.h>
 
 #include <talloc/talloc.h>
+#include <list/list.h>
 
 #include "waiter.h"
 
@@ -20,6 +21,9 @@ struct waiter {
 	struct timeval	timeout;
 	waiter_cb	callback;
 	void		*arg;
+
+	bool			active;
+	struct list_item	list;
 };
 
 struct waitset {
@@ -38,11 +42,14 @@ struct waitset {
 	int		n_io_waiters;
 	struct waiter	**time_waiters;
 	int		n_time_waiters;
+
+	struct list	free_list;
 };
 
 struct waitset *waitset_create(void *ctx)
 {
 	struct waitset *set = talloc_zero(ctx, struct waitset);
+	list_init(&set->free_list);
 	return set;
 }
 
@@ -72,6 +79,7 @@ static struct waiter *waiter_new(struct waitset *set)
 	set->n_waiters++;
 
 	set->waiters[set->n_waiters - 1] = waiter;
+	waiter->active = true;
 	return waiter;
 }
 
@@ -130,7 +138,8 @@ void waiter_remove(struct waiter *waiter)
 			struct waiter *, set->n_waiters);
 	set->waiters_changed = true;
 
-	talloc_free(waiter);
+	waiter->active = false;
+	list_add(&set->free_list, &waiter->list);
 }
 
 static void update_waiters(struct waitset *set)
@@ -197,6 +206,7 @@ static void update_waiters(struct waitset *set)
 int waiter_poll(struct waitset *set)
 {
 	struct timeval now, timeout;
+	struct waiter *waiter, *tmp;
 	int timeout_ms;
 	int i, rc;
 
@@ -219,10 +229,13 @@ int waiter_poll(struct waitset *set)
 	rc = poll(set->pollfds, set->n_io_waiters, timeout_ms);
 
 	if (rc < 0)
-		return rc;
+		goto out;
 
 	for (i = 0; i < set->n_io_waiters; i++) {
 		struct waiter *waiter = set->io_waiters[i];
+
+		if (!waiter->active)
+			continue;
 
 		if (!set->pollfds[i].revents)
 			continue;
@@ -238,6 +251,9 @@ int waiter_poll(struct waitset *set)
 	for (i = 0; i < set->n_time_waiters; i++) {
 		struct waiter *waiter = set->time_waiters[i];
 
+		if (!waiter->active)
+			continue;
+
 		if (timercmp(&waiter->timeout, &now, >))
 			continue;
 
@@ -246,5 +262,13 @@ int waiter_poll(struct waitset *set)
 		waiter_remove(waiter);
 	}
 
-	return 0;
+	rc = 0;
+
+out:
+	/* free any waiters that have been removed */
+	list_for_each_entry_safe(&set->free_list, waiter, tmp, list)
+		talloc_free(waiter);
+	list_init(&set->free_list);
+
+	return rc;
 }
