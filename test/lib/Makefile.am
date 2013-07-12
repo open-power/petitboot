@@ -16,10 +16,9 @@ AUTOMAKE_OPTIONS = parallel-tests
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
-	$(DEFAULT_CPPFLAGS)
+	-DDEBUG
 
-AM_CFLAGS = \
-	$(DEFAULT_CFLAGS)
+AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
 list_test_SOURCES = list-test.c
 list_test_LDADD = ../../lib/libpbcore.la
