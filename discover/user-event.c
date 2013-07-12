@@ -170,17 +170,6 @@ out_err:
 	return NULL;
 }
 
-/**
- * user_event_trigger - Trigger known user events
- *
- * SIGUSR1 causes udhcpc to renew the current lease or obtain a new lease.
- */
-
-void user_event_trigger(struct user_event __attribute__((unused)) *uev)
-{
-	/* FIXME: todo */
-}
-
 void user_event_destroy(struct user_event *uev)
 {
 	talloc_free(uev);
