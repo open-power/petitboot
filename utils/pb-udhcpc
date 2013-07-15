@@ -13,7 +13,7 @@ resolve_url() {
 	file="$1"
 
 	# URL? use as-is.
-	tmp=${file#://*}
+	tmp=${file%://*}
 	if [ "$tmp" != "$file" ]
 	then
 		echo "$file"
@@ -45,7 +45,7 @@ do_pxe() {
 	ip_hex=$(printf '%02X%02X%02X%02X' $(echo $ip | tr '.' ' '))
 	for i in $(seq 8 -1 1)
 	do
-		frag=${hex_ip:0:$i}
+		frag=${ip_hex:0:$i}
 		pb-event $params url=$basedir/$frag
 	done
 
@@ -57,7 +57,7 @@ pb_add () {
 
 	# Look for an explicit config file location in the DHCP config-file
 	# parameter
-	if [ -n ${conffile} ]
+	if [ -n "${conffile}" ]
 	then
 		url=$(resolve_url ${conffile})
 		pb-event conf@/net/${interface} url=$url method=dhcp
@@ -67,7 +67,7 @@ pb_add () {
 	# Otherwise, we'll need the boot-file parameter. Looks like udhcpc
 	# will give us different names, depending if the parameter was in
 	# the header, or specified by options
-	[ -n "$bootfile" ] && bootfile=${boot_file}
+	[ -z "$bootfile" ] && bootfile=${boot_file}
 
 	if [ -z "$bootfile" ]
 	then
@@ -89,7 +89,7 @@ pb_add () {
 	k_root_dir=${rootpath#*:}
 
 	args=
-	if [ -n $rootpath ]
+	if [ -n "$rootpath" ]
 	then
 		[ ${k_server_ip} != ${rootpath} ] || k_server_ip=${serverid}
 		args="root=/dev/nfs ip=any nfsroot=${k_server_ip}:${k_root_dir}"
