@@ -38,8 +38,8 @@ do_pxe() {
 	params="conf@/net/${interface} method=dhcp"
 
 	# first, try by MAC
-	mac=$(cat /sys/class/net/$interface/address)
-	pb-event $params url=$basedir/$mac
+	mac=$(tr ':' '-' < /sys/class/net/$interface/address)
+	pb-event $params url=$basedir/01-$mac
 
 	# try decreasing fragments of IP lease
 	ip_hex=$(printf '%02X%02X%02X%02X' $(echo $ip | tr '.' ' '))
