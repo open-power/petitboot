@@ -302,6 +302,5 @@ char *load_url(void *ctx, struct pb_url *url, unsigned int *tempfile)
 	if (tempfile)
 		*tempfile = tmp;
 
-	talloc_free(url);
 	return local;
 }
