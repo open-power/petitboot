@@ -38,7 +38,7 @@ libparser_ro_SOURCES = \
 	yaboot-parser.c \
 	pxe-parser.c
 
-libparser.ro: $(libparser_ro_OBJECTS)
+libparser.ro$(EXEEXT): $(libparser_ro_OBJECTS)
 	$(LD) -r -o $@ $^
 
 EXTRA_DIST = native-parser.c

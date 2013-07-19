@@ -64,7 +64,7 @@ libtest_ro_SOURCES = \
 	parser-test.h \
 	$(parser_objs)
 
-libtest.ro: $(libtest_ro_OBJECTS)
+libtest.ro$(EXEEXT): $(libtest_ro_OBJECTS)
 	$(LD) -o $@ -r $^
 
 check_PROGRAMS = $(TESTS) libtest.ro
