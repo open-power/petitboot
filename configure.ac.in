@@ -28,13 +28,28 @@ AC_PROG_INSTALL
 AM_INIT_AUTOMAKE
 LT_INIT
 
-AC_CHECK_HEADERS([stdarg.h])
-AC_CHECK_HEADERS([varargs.h])
+AX_WITH_CURSES
+AX_WITH_CURSES_MENU
+AX_WITH_CURSES_FORM
+
+AM_CONDITIONAL([WITH_NCURSES], [test "x$ax_cv_curses" = "xyes"])
+
+if test "x$ax_cv_curses" = xyes; then
+	if test "x$ax_cv_menu" != xyes; then
+		AC_MSG_ERROR([--with-ncurses requires the ncurses menu library])
+	fi
+	if test "x$ax_cv_form" != xyes; then
+		AC_MSG_ERROR([--with-ncurses requires the ncurses form library])
+	fi
+fi
 
 AC_CHECK_LIB([udev], [udev_new],
 	[],
 	[AC_MSG_FAILURE([The libudev development library is required by petitboot.  Try installing the package libudev-dev or libudev-devel.])]
 )
+
+AC_CHECK_HEADERS([stdarg.h])
+AC_CHECK_HEADERS([varargs.h])
 
 dnl Checking for va_copy availability
 AC_MSG_CHECKING([for va_copy])
@@ -56,24 +71,6 @@ else
         AC_DEFINE(HAVE___VA_COPY,1,[Whether __va_copy() is available])
     fi
 fi
-
-AC_ARG_WITH(
-	[ncurses],
-	[AS_HELP_STRING([--with-ncurses],
-		[build text console UI programs using ncurses [default=yes]]
-	)],
-	[],
-	[with_ncurses=yes]
-)
-AM_CONDITIONAL([WITH_NCURSES], [test "x$with_ncurses" = "xyes"])
-
-AS_IF(
-	[test "x$with_ncurses" = "xyes"],
-	AC_CHECK_LIB([ncurses], [initscr],
-		[],
-		[AC_MSG_FAILURE([--with-ncurses was given but the test for libncurses failed.  Try installing the package ncurses-dev or ncurses-devel.])]
-	)
-)
 
 AC_ARG_WITH(
 	[twin-x11],

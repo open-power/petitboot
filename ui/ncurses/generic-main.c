@@ -18,11 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#if defined(HAVE_CONFIG_H)
 #include "config.h"
-#endif
 
 #define _GNU_SOURCE
+
+#include <assert.h>
 #include <errno.h>
 #include <getopt.h>
 #include <signal.h>

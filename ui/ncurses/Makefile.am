@@ -20,12 +20,11 @@ AM_CPPFLAGS = \
 AM_CFLAGS = \
 	$(DEFAULT_CFLAGS)
 
-AM_LDFLAGS = -lmenu -lform -lncurses
-
 common_libs = \
 	libpbnc.la \
 	$(top_builddir)/ui/common/libpbui.la \
-	$(top_builddir)/lib/libpbcore.la
+	$(top_builddir)/lib/libpbcore.la \
+	@MENU_LIB@ @FORM_LIB@ @CURSES_LIB@
 
 noinst_LTLIBRARIES = libpbnc.la
 

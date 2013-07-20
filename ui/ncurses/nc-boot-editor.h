@@ -19,9 +19,16 @@
 #if !defined(_PB_NC_KED_H)
 #define _PB_NC_KED_H
 
-#include <assert.h>
 #include <linux/input.h> /* This must be included before ncurses.h */
-#include <form.h>
+#if defined HAVE_NCURSESW_FORM_H
+#  include <ncursesw/form.h>
+#elif defined HAVE_NCURSES_FORM_H
+#  include <ncurses/form.h>
+#elif defined HAVE_FORM_H
+#  include <form.h>
+#else
+#  error "Curses form.h not found."
+#endif
 
 #include "types/types.h"
 #include "ui/common/ui-system.h"

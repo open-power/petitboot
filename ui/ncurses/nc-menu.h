@@ -19,9 +19,16 @@
 #if !defined(_PB_NC_MENU_H)
 #define _PB_NC_MENU_H
 
-#include <assert.h>
 #include <linux/input.h> /* This must be included before ncurses.h */
-#include <menu.h>
+#if defined HAVE_NCURSESW_MENU_H
+#  include <ncursesw/menu.h>
+#elif defined HAVE_NCURSES_MENU_H
+#  include <ncurses/menu.h>
+#elif defined HAVE_MENU_H
+#  include <menu.h>
+#else
+#  error "Curses menu.h not found."
+#endif
 
 #include "log/log.h"
 #include "types/types.h"
