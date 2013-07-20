@@ -261,6 +261,7 @@ static const char *const grub2_conf_files[] = {
 	"/grub2/grub.cfg",
 	"/grub/menu.lst",
 	"/boot/grub/grub.cfg",
+	"/boot/grub2/grub.cfg",
 	"/boot/grub/menu.lst",
 	"/GRUB.CFG",
 	"/MENU.LST",
