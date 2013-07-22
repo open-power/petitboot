@@ -33,7 +33,7 @@ struct device_handler {
 
 	struct waitset		*waitset;
 	struct waiter		*timeout_waiter;
-	bool			default_enabled;
+	bool			autoboot_enabled;
 	unsigned int		sec_to_boot;
 
 	struct discover_boot_option *default_boot_option;
@@ -293,7 +293,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	handler->waitset = waitset;
 	handler->dry_run = dry_run;
 	handler->default_boot_option = NULL;
-	handler->default_enabled = config_get()->autoboot_enabled;
+	handler->autoboot_enabled = config_get()->autoboot_enabled;
 	list_init(&handler->unresolved_boot_options);
 
 	/* set up our mount point base */
@@ -439,7 +439,7 @@ static void set_default(struct device_handler *handler,
 	if (handler->default_boot_option)
 		return;
 
-	if (!handler->default_enabled)
+	if (!handler->autoboot_enabled)
 		return;
 
 	pb_log("Boot option %s set as default\n", opt->option->id);
@@ -824,7 +824,7 @@ void device_handler_cancel_default(struct device_handler *handler)
 		waiter_remove(handler->timeout_waiter);
 
 	handler->timeout_waiter = NULL;
-	handler->default_enabled = false;
+	handler->autoboot_enabled = false;
 
 	/* we only send status if we had a default boot option queued */
 	if (!handler->default_boot_option)
