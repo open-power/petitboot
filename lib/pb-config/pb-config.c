@@ -23,8 +23,8 @@ static void dump_config(struct config *config)
 
 	pb_log("configuration:\n");
 
-	pb_log(" autoboot enabled: %s\n",
-			config->autoboot_enabled ? "yes" : "no");
+	pb_log(" autoboot: %s\n",
+			config->autoboot_enabled ? "enabled" : "disabled");
 
 	if (config->n_network_configs > 0)
 		pb_log(" network configuration:\n");
@@ -72,6 +72,14 @@ int config_init(void *ctx)
 const struct config *config_get(void)
 {
 	return config;
+}
+
+void config_set_autoboot(bool autoboot_enabled)
+{
+	config->autoboot_enabled = autoboot_enabled;
+
+	pb_log("set autoboot: %s\n",
+			config->autoboot_enabled ? "enabled" : "disabled");
 }
 
 int config_fini(void)

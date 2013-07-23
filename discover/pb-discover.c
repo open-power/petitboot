@@ -157,6 +157,9 @@ int main(int argc, char *argv[])
 
 	config_init(NULL);
 
+	if (opts.no_autoboot == opt_yes)
+		config_set_autoboot(false);
+
 	waitset = waitset_create(NULL);
 
 	server = discover_server_init(waitset);

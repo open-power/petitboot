@@ -33,6 +33,7 @@ struct config {
 
 int config_init(void *ctx);
 const struct config *config_get(void);
+void config_set_autoboot(bool autoboot_enabled);
 int config_fini(void);
 
 #endif /* CONFIGURATION_H */
