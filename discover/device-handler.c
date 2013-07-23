@@ -400,7 +400,7 @@ static void countdown_status(struct device_handler *handler,
 	status.progress = -1;
 	status.detail = NULL;
 	status.message = talloc_asprintf(handler,
-			"Booting %s in %d sec", opt->option->name, sec);
+			"Booting %s in %u sec", opt->option->name, sec);
 
 	discover_server_notify_boot_status(handler->server, &status);
 
@@ -442,10 +442,12 @@ static void set_default(struct device_handler *handler,
 	if (!handler->autoboot_enabled)
 		return;
 
-	pb_log("Boot option %s set as default\n", opt->option->id);
-
 	handler->default_boot_option = opt;
 	handler->sec_to_boot = DEFAULT_BOOT_TIMEOUT_SEC;
+
+	pb_log("Boot option %s set as default, timeout %u sec.\n",
+	       opt->option->id, handler->sec_to_boot);
+
 	default_timeout(handler);
 }
 
