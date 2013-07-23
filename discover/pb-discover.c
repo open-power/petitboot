@@ -28,7 +28,8 @@ static void print_usage(void)
 {
 	print_version();
 	printf(
-"Usage: pb-discover [-h, --help] [-l, --log log-file] [-V, --version]\n");
+"Usage: pb-discover [-a, --no-autoboot] [-h, --help] [-l, --log log-file]\n"
+"                   [-n, --dry-run] [-V, --version]\n");
 }
 
 /**
@@ -42,10 +43,11 @@ enum opt_value {opt_undef = 0, opt_yes, opt_no};
  */
 
 struct opts {
+	enum opt_value no_autoboot;
 	enum opt_value show_help;
 	const char *log_file;
-	enum opt_value show_version;
 	enum opt_value dry_run;
+	enum opt_value show_version;
 };
 
 /**
@@ -55,14 +57,16 @@ struct opts {
 static int opts_parse(struct opts *opts, int argc, char *argv[])
 {
 	static const struct option long_options[] = {
+		{"no-autoboot",    no_argument,       NULL, 'a'},
 		{"help",           no_argument,       NULL, 'h'},
 		{"log",            required_argument, NULL, 'l'},
 		{"dry-run",        no_argument,       NULL, 'n'},
 		{"version",        no_argument,       NULL, 'V'},
 		{ NULL, 0, NULL, 0},
 	};
-	static const char short_options[] = "hl:nV";
+	static const char short_options[] = "ahl:nV";
 	static const struct opts default_values = {
+		.no_autoboot = opt_no,
 		.log_file = "/var/log/petitboot/pb-discover.log",
 		.dry_run = opt_no,
 	};
@@ -77,6 +81,9 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 			break;
 
 		switch (c) {
+		case 'a':
+			opts->no_autoboot = opt_yes;
+			break;
 		case 'h':
 			opts->show_help = opt_yes;
 			break;
