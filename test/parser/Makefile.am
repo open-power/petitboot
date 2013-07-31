@@ -34,6 +34,7 @@ TESTS = \
 	test-kboot-single \
 	test-yaboot-single \
 	test-yaboot-external \
+	test-yaboot-root-global \
 	test-yaboot-rh8-ppc64 \
 	test-pxe-single \
 	test-pxe-initrd-in-append

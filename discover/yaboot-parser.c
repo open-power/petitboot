@@ -175,7 +175,8 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		return;
 	}
 
-	if (!opt->boot_image) {
+	/* all other processing requires an image */
+	if (!opt) {
 		pb_log("%s: unknown name: %s\n", __func__, name);
 		return;
 	}
