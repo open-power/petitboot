@@ -321,6 +321,9 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 
 	result = -1;
 
+	boot_task.local_initrd = NULL;
+	boot_task.local_dtb = NULL;
+
 	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 			"loading kernel");
 	boot_task.local_image = load_url(NULL, image, &clean_image);
@@ -330,7 +333,6 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		goto no_load;
 	}
 
-	boot_task.local_initrd = NULL;
 	if (initrd) {
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"loading initrd");
@@ -342,7 +344,6 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		}
 	}
 
-	boot_task.local_dtb = NULL;
 	if (dtb) {
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"loading device tree");
