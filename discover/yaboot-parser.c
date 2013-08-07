@@ -12,12 +12,38 @@
 #include "resource.h"
 
 struct yaboot_state {
-	struct discover_boot_option *opt;
 	char *desc_image;
 	char *desc_initrd;
 	int globals_done;
 	const char *const *known_names;
+
+	/* current option data */
+	struct discover_boot_option *opt;
+	const char *initrd_size;
+	const char *literal;
+	const char *ramdisk;
+	const char *root;
+	bool read_only;
+	bool read_write;
 };
+
+static struct discover_boot_option *state_start_new_option(
+		struct conf_context *conf,
+		struct yaboot_state *state)
+{
+	state->desc_initrd = NULL;
+
+	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
+	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
+
+	/* old allocated values will get freed with the state */
+	state->initrd_size = conf_get_global_option(conf, "initrd_size");
+	state->literal = conf_get_global_option(conf, "literal");
+	state->ramdisk = conf_get_global_option(conf, "ramdisk");
+	state->root = conf_get_global_option(conf, "root");
+
+	return state->opt;
+}
 
 static void yaboot_finish(struct conf_context *conf)
 {
@@ -37,13 +63,44 @@ static void yaboot_finish(struct conf_context *conf)
 	assert(opt->name);
 	assert(opt->boot_args);
 
+	/* populate the boot option from state data */
+	if (state->initrd_size) {
+		opt->boot_args = talloc_asprintf(opt, "ramdisk_size=%s %s",
+					state->initrd_size, opt->boot_args);
+	}
+
+	if (state->ramdisk) {
+		opt->boot_args = talloc_asprintf(opt, "ramdisk=%s %s",
+					state->initrd_size, opt->boot_args);
+	}
+
+	if (state->root) {
+		opt->boot_args = talloc_asprintf(opt, "root=%s %s",
+					state->root, opt->boot_args);
+	}
+
+	if (state->read_only && state->read_write) {
+		pb_log("boot option %s specified both 'ro' and 'rw', "
+				"using 'rw'\n", opt->name);
+		state->read_only = false;
+	}
+
+	if (state->read_only || state->read_write) {
+		opt->boot_args = talloc_asprintf(opt, "%s %s",
+					state->read_only ? "ro" : "rw",
+					opt->boot_args);
+	}
+
+	if (state->literal) {
+		opt->boot_args = talloc_strdup(opt, state->literal);
+	}
+
 	opt->description = talloc_asprintf(opt, "%s %s %s",
 		state->desc_image,
 		(state->desc_initrd ? state->desc_initrd : ""),
-		opt->boot_args);
+		opt->boot_args ? opt->boot_args : "");
 
 	talloc_free(state->desc_initrd);
-	state->desc_initrd = NULL;
 
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
@@ -121,14 +178,11 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		if (opt)
 			yaboot_finish(conf);
 
-		opt = discover_boot_option_create(conf->dc, conf->dc->device);
-		opt->option->boot_args = talloc_strdup(opt->option, "");
-
 		/* Then start the new image. */
+		opt = state_start_new_option(conf, state);
+
 		opt->boot_image = create_yaboot_devpath_resource(opt,
 				conf, value, &state->desc_image);
-
-		state->opt = opt;
 
 		return;
 	}
@@ -148,11 +202,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 			yaboot_finish(conf);
 
 		/* Then start the new image. */
-
-		opt = discover_boot_option_create(conf->dc, conf->dc->device);
-		opt->option->boot_args = talloc_strdup(opt->option, "");
-
-		state->opt = opt;
+		opt = state_start_new_option(conf, state);
 
 		if (*value == '/') {
 			opt->boot_image = create_yaboot_devpath_resource(opt,
@@ -208,42 +258,32 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	}
 
 	if (streq(name, "initrd-size")) {
-		opt->option->boot_args = talloc_asprintf_append(
-			opt->option->boot_args, "ramdisk_size=%s ", value);
+		state->initrd_size = talloc_strdup(state, value);
 		return;
 	}
 
 	if (streq(name, "literal")) {
-		if (*opt->option->boot_args) {
-			pb_log("%s: literal over writes '%s'\n", __func__,
-				opt->option->boot_args);
-			talloc_free(opt->option->boot_args);
-		}
-		talloc_asprintf(opt->option, "%s ", value);
+		state->literal = talloc_strdup(state, value);
 		return;
 	}
 
 	if (streq(name, "ramdisk")) {
-		opt->option->boot_args = talloc_asprintf_append(
-			opt->option->boot_args, "ramdisk=%s ", value);
+		state->ramdisk = talloc_strdup(state, value);
 		return;
 	}
 
 	if (streq(name, "read-only")) {
-		opt->option->boot_args = talloc_asprintf_append(
-			opt->option->boot_args, "ro ");
+		state->read_only = true;
 		return;
 	}
 
 	if (streq(name, "read-write")) {
-		opt->option->boot_args = talloc_asprintf_append(
-			opt->option->boot_args, "rw ");
+		state->read_write = true;
 		return;
 	}
 
 	if (streq(name, "root")) {
-		opt->option->boot_args = talloc_asprintf_append(
-			opt->option->boot_args, "root=%s ", value);
+		state->root = talloc_strdup(state, value);
 		return;
 	}
 
@@ -251,10 +291,14 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 }
 
 static struct conf_global_option yaboot_global_options[] = {
+	{ .name = "root" },
 	{ .name = "boot" },
 	{ .name = "initrd" },
+	{ .name = "initrd_size" },
 	{ .name = "partition" },
 	{ .name = "video" },
+	{ .name = "literal" },
+	{ .name = "ramdisk" },
 	{ .name = NULL },
 };
 
