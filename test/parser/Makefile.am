@@ -37,6 +37,7 @@ TESTS = \
 	test-yaboot-root-global \
 	test-yaboot-root-override \
 	test-yaboot-device-override \
+	test-yaboot-default \
 	test-yaboot-rh8-ppc64 \
 	test-pxe-single \
 	test-pxe-initrd-in-append

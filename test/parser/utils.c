@@ -262,6 +262,16 @@ void __check_name(struct discover_boot_option *opt, const char *name,
 	}
 }
 
+void __check_is_default(struct discover_boot_option *opt,
+		const char *file, int line)
+{
+	if (opt->option->is_default)
+		return;
+
+	fprintf(stderr, "%s:%d: default check failed\n", file, line);
+	exit(EXIT_FAILURE);
+}
+
 void __check_resolved_local_resource(struct resource *res,
 		struct discover_device *dev, const char *local_path,
 		const char *file, int line)

@@ -87,6 +87,7 @@ static struct resource *create_yaboot_devpath_resource(
 static void yaboot_finish(struct conf_context *conf)
 {
 	struct yaboot_state *state = conf->parser_info;
+	const char *default_label;
 	struct boot_option *opt;
 
 	assert(state->opt);
@@ -142,6 +143,11 @@ static void yaboot_finish(struct conf_context *conf)
 
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
+
+	default_label = conf_get_global_option(conf, "default");
+	if (default_label &&
+			!strcasecmp(state->opt->option->name, default_label))
+		state->opt->option->is_default = true;
 
 	discover_context_add_boot_option(conf->dc, state->opt);
 }
@@ -302,6 +308,7 @@ static struct conf_global_option yaboot_global_options[] = {
 	{ .name = "video" },
 	{ .name = "literal" },
 	{ .name = "ramdisk" },
+	{ .name = "default" },
 	{ .name = NULL },
 };
 

@@ -75,6 +75,14 @@ void __check_name(struct discover_boot_option *opt, const char *name,
 	__check_name(opt, name, __FILE__, __LINE__)
 
 /**
+ * Check that a boot option @opt is marked as default
+ */
+void __check_is_default(struct discover_boot_option *opt,
+		const char *file, int line);
+#define check_is_default(opt) \
+	__check_is_default(opt, __FILE__, __LINE__)
+
+/**
  * Check that a resource (@res) is present, resolved, and has a local path
  * (within @dev's mount point) of @path.
  */
