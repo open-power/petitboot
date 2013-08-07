@@ -12,13 +12,15 @@
 #include "resource.h"
 
 struct yaboot_state {
-	char *desc_image;
-	char *desc_initrd;
 	int globals_done;
 	const char *const *known_names;
 
 	/* current option data */
 	struct discover_boot_option *opt;
+	const char *device;
+	const char *partition;
+	const char *boot_image;
+	const char *initrd;
 	const char *initrd_size;
 	const char *literal;
 	const char *ramdisk;
@@ -31,12 +33,12 @@ static struct discover_boot_option *state_start_new_option(
 		struct conf_context *conf,
 		struct yaboot_state *state)
 {
-	state->desc_initrd = NULL;
-
 	state->opt = discover_boot_option_create(conf->dc, conf->dc->device);
 	state->opt->option->boot_args = talloc_strdup(state->opt->option, "");
 
 	/* old allocated values will get freed with the state */
+	state->device = conf_get_global_option(conf, "device");
+	state->partition = conf_get_global_option(conf, "partition");
 	state->initrd_size = conf_get_global_option(conf, "initrd_size");
 	state->literal = conf_get_global_option(conf, "literal");
 	state->ramdisk = conf_get_global_option(conf, "ramdisk");
@@ -45,16 +47,47 @@ static struct discover_boot_option *state_start_new_option(
 	return state->opt;
 }
 
+static struct resource *create_yaboot_devpath_resource(
+		struct yaboot_state *state,
+		struct conf_context *conf,
+		const char *path)
+{
+	struct discover_boot_option *opt = state->opt;
+	const char *dev, *part;
+	struct resource *res;
+	char *devpath;
+
+	dev = state->device;
+	part = state->partition;
+
+	if (!dev)
+		dev = conf_get_global_option(conf, "device");
+	if (!part)
+		part = conf_get_global_option(conf, "partition");
+
+	if (strchr(path, ':')) {
+		devpath = talloc_strdup(conf, path);
+
+	} else if (dev && part) {
+		devpath = talloc_asprintf(conf,
+				"%s%s:%s", dev, part, path);
+	} else if (dev) {
+		devpath = talloc_asprintf(conf, "%s:%s", dev, path);
+	} else {
+		devpath = talloc_strdup(conf, path);
+	}
+
+	res = create_devpath_resource(opt, conf->dc->device, devpath);
+
+	talloc_free(devpath);
+
+	return res;
+}
+
 static void yaboot_finish(struct conf_context *conf)
 {
 	struct yaboot_state *state = conf->parser_info;
-	struct device *dev = conf->dc->device->device;
 	struct boot_option *opt;
-
-	if (!state->desc_image) {
-		pb_log("%s: %s: no image found\n", __func__, dev->id);
-		return;
-	}
 
 	assert(state->opt);
 
@@ -64,6 +97,13 @@ static void yaboot_finish(struct conf_context *conf)
 	assert(opt->boot_args);
 
 	/* populate the boot option from state data */
+	state->opt->boot_image = create_yaboot_devpath_resource(state,
+				conf, state->boot_image);
+	if (state->initrd) {
+		state->opt->initrd = create_yaboot_devpath_resource(state,
+				conf, state->initrd);
+	}
+
 	if (state->initrd_size) {
 		opt->boot_args = talloc_asprintf(opt, "ramdisk_size=%s %s",
 					state->initrd_size, opt->boot_args);
@@ -96,47 +136,15 @@ static void yaboot_finish(struct conf_context *conf)
 	}
 
 	opt->description = talloc_asprintf(opt, "%s %s %s",
-		state->desc_image,
-		(state->desc_initrd ? state->desc_initrd : ""),
+		state->boot_image,
+		(state->initrd ? state->initrd : ""),
 		opt->boot_args ? opt->boot_args : "");
-
-	talloc_free(state->desc_initrd);
 
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
 
 	discover_context_add_boot_option(conf->dc, state->opt);
 }
-
-static struct resource *create_yaboot_devpath_resource(
-		struct discover_boot_option *opt,
-		struct conf_context *conf,
-		const char *path, char **desc_str)
-{
-	const char *g_boot = conf_get_global_option(conf, "boot");
-	const char *g_part = conf_get_global_option(conf, "partition");
-	struct resource *res;
-	char *devpath;
-
-	if (g_boot && g_part) {
-		devpath = talloc_asprintf(conf,
-				"%s%s:%s", g_boot, g_part, path);
-	} else if (g_boot) {
-		devpath = talloc_asprintf(conf, "%s:%s", g_boot, path);
-	} else {
-		devpath = talloc_strdup(conf, path);
-	}
-
-	res = create_devpath_resource(opt, conf->dc->device, devpath);
-
-	if (desc_str)
-		*desc_str = devpath;
-	else
-		talloc_free(devpath);
-
-	return res;
-}
-
 
 static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		char *value)
@@ -181,8 +189,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		/* Then start the new image. */
 		opt = state_start_new_option(conf, state);
 
-		opt->boot_image = create_yaboot_devpath_resource(opt,
-				conf, value, &state->desc_image);
+		state->boot_image = talloc_strdup(state, value);
 
 		return;
 	}
@@ -205,21 +212,11 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		opt = state_start_new_option(conf, state);
 
 		if (*value == '/') {
-			opt->boot_image = create_yaboot_devpath_resource(opt,
-					conf, value, &state->desc_image);
+			state->boot_image = talloc_strdup(state, value);
 		} else {
-			char *tmp;
-
-			opt->boot_image = create_yaboot_devpath_resource(opt,
-					conf, suse_fp->image,
-					&state->desc_image);
-
-			opt->initrd = create_yaboot_devpath_resource(opt,
-					conf, suse_fp->initrd, &tmp);
-
-			state->desc_initrd = talloc_asprintf(opt,
-				"initrd=%s", tmp);
-			talloc_free(tmp);
+			state->boot_image = talloc_strdup(state,
+							suse_fp->image);
+			state->initrd = talloc_strdup(state, suse_fp->initrd);
 		}
 
 		return;
@@ -232,16 +229,12 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	}
 
 	/* initrd */
-
 	if (streq(name, "initrd")) {
-		opt->initrd = create_yaboot_devpath_resource(opt, conf,
-				value, &state->desc_image);
-
+		state->initrd = talloc_strdup(state, value);
 		return;
 	}
 
 	/* label */
-
 	if (streq(name, "label")) {
 		opt->option->id = talloc_asprintf(opt->option, "%s#%s",
 			conf->dc->device->device->id, value);
@@ -250,6 +243,16 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	}
 
 	/* args */
+	if (streq(name, "device")) {
+		printf("option device : %s", value);
+		state->device = talloc_strdup(state, value);
+		return;
+	}
+
+	if (streq(name, "parititon")) {
+		state->partition = talloc_strdup(state, value);
+		return;
+	}
 
 	if (streq(name, "append")) {
 		opt->option->boot_args = talloc_asprintf_append(
@@ -292,10 +295,10 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 static struct conf_global_option yaboot_global_options[] = {
 	{ .name = "root" },
-	{ .name = "boot" },
+	{ .name = "device" },
+	{ .name = "partition" },
 	{ .name = "initrd" },
 	{ .name = "initrd_size" },
-	{ .name = "partition" },
 	{ .name = "video" },
 	{ .name = "literal" },
 	{ .name = "ramdisk" },
@@ -329,6 +332,8 @@ static const char *yaboot_known_names[] = {
 	"read-only",
 	"read-write",
 	"root",
+	"device",
+	"partition",
 	NULL
 };
 

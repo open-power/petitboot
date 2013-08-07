@@ -5,7 +5,6 @@ void run_test(struct parser_test *test)
 {
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
-	struct discover_device *dev;
 
 	test_read_conf_file(test, "yaboot-rh8-ppc64.conf");
 	test_run_parser(test, "yaboot");
@@ -16,15 +15,9 @@ void run_test(struct parser_test *test)
 
 	opt = get_boot_option(ctx, 0);
 
-	check_unresolved_resource(opt->boot_image);
-	check_unresolved_resource(opt->initrd);
-
-	dev = test_create_device(ctx, "sdb1");
-	test_hotplug_device(test, dev);
-
-	check_resolved_local_resource(opt->boot_image, dev,
+	check_resolved_local_resource(opt->boot_image, test->ctx->device,
 			"/boot/vmlinuz-1.0-20121219-1");
-	check_resolved_local_resource(opt->initrd, dev,
+	check_resolved_local_resource(opt->initrd, test->ctx->device,
 			"/boot/initrd-1.0-20121219-1.img");
 
 	check_args(opt, "root=/dev/sdb2 root=/dev/sdb2 ro crashkernel=auto "
