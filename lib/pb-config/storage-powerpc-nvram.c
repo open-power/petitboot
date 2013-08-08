@@ -188,7 +188,7 @@ static const char *get_param(struct powerpc_nvram_storage *nv,
 	return NULL;
 }
 
-static int parse_hwaddr(struct network_config *config, char *str)
+static int parse_hwaddr(struct interface_config *ifconf, char *str)
 {
 	int i;
 
@@ -207,65 +207,76 @@ static int parse_hwaddr(struct network_config *config, char *str)
 		if (endp != byte + 2)
 			return -1;
 
-		config->hwaddr[i] = x & 0xff;
+		ifconf->hwaddr[i] = x & 0xff;
 	}
 
 	return 0;
 }
 
-static int parse_one_network_config(struct network_config *config,
+static int parse_one_interface_config(struct config *config,
 		char *confstr)
 {
+	struct interface_config *ifconf;
 	char *tok, *saveptr;
 
+	ifconf = talloc(config, struct interface_config);
+
 	if (!confstr || !strlen(confstr))
-		return -1;
+		goto out_err;
 
 	/* first token should be the mac address */
 	tok = strtok_r(confstr, ",", &saveptr);
 	if (!tok)
-		return -1;
+		goto out_err;
 
-	if (parse_hwaddr(config, tok))
-		return -1;
+	if (parse_hwaddr(ifconf, tok))
+		goto out_err;
 
 	/* second token is the method */
 	tok = strtok_r(NULL, ",", &saveptr);
 	if (!tok || !strlen(tok) || !strcmp(tok, "ignore")) {
-		config->ignore = true;
-		return 0;
-	}
+		ifconf->ignore = true;
 
-	if (!strcmp(tok, "dhcp")) {
-		config->method = CONFIG_METHOD_DHCP;
+	} else if (!strcmp(tok, "dhcp")) {
+		ifconf->method = CONFIG_METHOD_DHCP;
 
 	} else if (!strcmp(tok, "static")) {
-		config->method = CONFIG_METHOD_STATIC;
+		ifconf->method = CONFIG_METHOD_STATIC;
 
 		/* ip/mask, [optional] gateway, [optional] dns */
 		tok = strtok_r(NULL, ",", &saveptr);
 		if (!tok)
-			return -1;
-		config->static_config.address =
-			talloc_strdup(config, tok);
+			goto out_err;
+		ifconf->static_config.address =
+			talloc_strdup(ifconf, tok);
 
 		tok = strtok_r(NULL, ",", &saveptr);
 		if (tok) {
-			config->static_config.gateway =
-				talloc_strdup(config, tok);
+			ifconf->static_config.gateway =
+				talloc_strdup(ifconf, tok);
 			tok = strtok_r(NULL, ",", &saveptr);
 		}
 
 		if (tok) {
-			config->static_config.dns =
+			ifconf->static_config.dns =
 				talloc_strdup(config, tok);
 		}
 	} else {
 		pb_log("Unknown network configuration method %s\n", tok);
-		return -1;
+		goto out_err;
 	}
 
+	config->network.interfaces = talloc_realloc(config,
+			config->network.interfaces,
+			struct interface_config *,
+			++config->network.n_interfaces);
+
+	config->network.interfaces[config->network.n_interfaces - 1] = ifconf;
+
 	return 0;
+out_err:
+	talloc_free(ifconf);
+	return -1;
 }
 
 static void populate_network_config(struct powerpc_nvram_storage *nv,
@@ -282,29 +293,14 @@ static void populate_network_config(struct powerpc_nvram_storage *nv,
 	val = talloc_strdup(config, cval);
 
 	for (i = 0; ; i++) {
-		struct network_config *netconf;
 		char *tok, *saveptr;
-		int rc;
 
 		tok = strtok_r(i == 0 ? val : NULL, " ", &saveptr);
 		if (!tok)
 			break;
 
-		netconf = talloc(nv, struct network_config);
+		parse_one_interface_config(config, tok);
 
-		rc = parse_one_network_config(netconf, tok);
-		if (rc) {
-			talloc_free(netconf);
-			continue;
-		}
-
-		config->network_configs = talloc_realloc(nv,
-						config->network_configs,
-						struct network_config *,
-						++config->n_network_configs);
-
-		config->network_configs[config->n_network_configs - 1] =
-						netconf;
 	}
 
 	talloc_free(val);

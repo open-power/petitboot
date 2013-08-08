@@ -7,12 +7,12 @@
 #include "pb-config.h"
 #include "storage.h"
 
-struct network_config net1 = {
+struct interface_config net1 = {
 	.hwaddr = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55 },
 	.method = CONFIG_METHOD_DHCP,
 };
 
-struct network_config net2 = {
+struct interface_config net2 = {
 	.hwaddr = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x56 },
 	.method = CONFIG_METHOD_STATIC,
 	.static_config = {
@@ -21,14 +21,16 @@ struct network_config net2 = {
 	},
 };
 
-struct network_config *network_configs[] = { &net1, &net2 };
+struct interface_config *interface_configs[] = { &net1, &net2 };
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 struct config test_config = {
 	.autoboot_enabled = true,
-	.network_configs = network_configs,
-	.n_network_configs = ARRAY_SIZE(network_configs),
+	.network = {
+		.interfaces = interface_configs,
+		.n_interfaces = ARRAY_SIZE(interface_configs),
+	}
 };
 
 struct test_storage {

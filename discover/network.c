@@ -53,7 +53,7 @@ struct network {
 	bool		dry_run;
 };
 
-static const struct network_config *find_config_by_hwaddr(
+static const struct interface_config *find_config_by_hwaddr(
 		uint8_t *hwaddr)
 {
 	const struct config *config;
@@ -63,11 +63,11 @@ static const struct network_config *find_config_by_hwaddr(
 	if (!config)
 		return NULL;
 
-	for (i = 0; i < config->n_network_configs; i++) {
-		struct network_config *netconf = config->network_configs[i];
+	for (i = 0; i < config->network.n_interfaces; i++) {
+		struct interface_config *ifconf = config->network.interfaces[i];
 
-		if (!memcmp(netconf->hwaddr, hwaddr, HWADDR_SIZE))
-			return netconf;
+		if (!memcmp(ifconf->hwaddr, hwaddr, HWADDR_SIZE))
+			return ifconf;
 	}
 
 	return NULL;
@@ -191,7 +191,7 @@ static void configure_interface_dhcp(struct network *network,
 
 static void configure_interface_static(struct network *network,
 		struct interface *interface,
-		const struct network_config *config)
+		const struct interface_config *config)
 {
 	const char *addr_argv[] = {
 		pb_system_apps.ip,
@@ -242,7 +242,7 @@ static void configure_interface_static(struct network *network,
 static void configure_interface(struct network *network,
 		struct interface *interface, bool up, bool link)
 {
-	const struct network_config *config = NULL;
+	const struct interface_config *config = NULL;
 
 	if (interface->state == IFSTATE_IGNORED)
 		return;

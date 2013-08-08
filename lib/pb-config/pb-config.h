@@ -6,7 +6,7 @@
 
 #define HWADDR_SIZE	6
 
-struct network_config {
+struct interface_config {
 	uint8_t	hwaddr[HWADDR_SIZE];
 	bool	ignore;
 	enum {
@@ -24,10 +24,14 @@ struct network_config {
 	};
 };
 
+struct network_config {
+	struct interface_config	**interfaces;
+	int			n_interfaces;
+};
+
 struct config {
 	bool			autoboot_enabled;
-	struct network_config	**network_configs;
-	int			n_network_configs;
+	struct network_config	network;
 };
 
 

@@ -13,8 +13,8 @@ static struct config_storage	*storage;
 static void config_set_defaults(struct config *config)
 {
 	config->autoboot_enabled = true;
-	config->network_configs = NULL;
-	config->n_network_configs = 0;
+	config->network.interfaces = NULL;
+	config->network.n_interfaces = 0;
 }
 
 static void dump_config(struct config *config)
@@ -29,27 +29,27 @@ static void dump_config(struct config *config)
 	if (config->n_network_configs > 0)
 		pb_log(" network configuration:\n");
 
-	for (i = 0; i < config->n_network_configs; i++) {
-		struct network_config *netconf = config->network_configs[i];
+	for (i = 0; i < config->network.n_interfaces; i++) {
+		struct interface_config *ifconf =
+			config->network.interfaces[i];
 
 		pb_log("  interface %02x:%02x:%02x:%02x:%02x:%02x\n",
-				netconf->hwaddr[0], netconf->hwaddr[1],
-				netconf->hwaddr[2], netconf->hwaddr[3],
-				netconf->hwaddr[4], netconf->hwaddr[5]);
+				ifconf->hwaddr[0], ifconf->hwaddr[1],
+				ifconf->hwaddr[2], ifconf->hwaddr[3],
+				ifconf->hwaddr[4], ifconf->hwaddr[5]);
 
-		if (netconf->ignore) {
+		if (ifconf->ignore) {
 			pb_log("   ignore\n");
 			continue;
 		}
 
-		if (netconf->method == CONFIG_METHOD_DHCP) {
+		if (ifconf->method == CONFIG_METHOD_DHCP) {
 			pb_log("   dhcp\n");
 
-		} else if (netconf->method == CONFIG_METHOD_STATIC) {
+		} else if (ifconf->method == CONFIG_METHOD_STATIC) {
 			pb_log("   static:\n");
-			pb_log("    ip:  %s\n", netconf->static_config.address);
-			pb_log("    gw:  %s\n", netconf->static_config.gateway);
-			pb_log("    dns: %s\n", netconf->static_config.dns);
+			pb_log("    ip:  %s\n", ifconf->static_config.address);
+			pb_log("    gw:  %s\n", ifconf->static_config.gateway);
 
 		}
 	}
