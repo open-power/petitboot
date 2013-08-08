@@ -22,25 +22,6 @@ AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"' \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"'
 
-noinst_PROGRAMS = libparser.ro
-
-libparser_ro_SOURCES = \
-	parser.c \
-	parser.h \
-	parser-conf.c \
-	parser-conf.h \
-	paths.c \
-	paths.h \
-	resource.c \
-	resource.h \
-	kboot-parser.c \
-	grub2-parser.c \
-	yaboot-parser.c \
-	pxe-parser.c
-
-libparser.ro$(EXEEXT): $(libparser_ro_OBJECTS)
-	$(LD) -r -o $@ $^
-
 EXTRA_DIST = native-parser.c
 
 sbin_PROGRAMS = pb-discover
@@ -57,18 +38,30 @@ pb_discover_SOURCES = \
 	event-parser.c \
 	params.c \
 	params.h \
+	parser.c \
+	parser.h \
+	parser-conf.c \
+	parser-conf.h \
 	parser-utils.c \
 	parser-utils.h \
+	paths.c \
+	paths.h \
 	pb-discover.c \
 	pb-discover.h \
+	resource.c \
+	resource.h \
 	network.c \
 	network.h \
 	udev.c \
 	udev.h \
 	user-event.c \
-	user-event.h
+	user-event.h \
+	kboot-parser.c \
+	grub2-parser.c \
+	yaboot-parser.c \
+	pxe-parser.c
 
-pb_discover_LDADD = libparser.ro $(top_builddir)/lib/libpbcore.la
+pb_discover_LDADD = $(top_builddir)/lib/libpbcore.la
 
 pb_discover_LDFLAGS = -ludev
 
