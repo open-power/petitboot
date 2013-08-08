@@ -17,6 +17,8 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -74,4 +76,45 @@ err_free:
 err_close:
 	close(fd);
 	return -1;
+}
+
+static int write_fd(int fd, char *buf, int len)
+{
+	int i, rc;
+
+	for (i = 0; i < len; i += rc) {
+		rc = write(fd, buf + i, len - i);
+		if (rc < 0 && errno != -EINTR)
+			return rc;
+	}
+
+	return 0;
+}
+
+int replace_file(const char *filename, char *buf, int len)
+{
+	char *tempfile;
+	mode_t oldmask;
+	int rc, fd;
+
+	tempfile = talloc_asprintf(NULL, "%s.XXXXXX", filename);
+
+	oldmask = umask(0644);
+	fd = mkstemp(tempfile);
+	umask(oldmask);
+	if (fd < 0) {
+		free(tempfile);
+		return fd;
+	}
+
+	rc = write_fd(fd, buf, len);
+	if (rc) {
+		unlink(tempfile);
+	} else {
+		rc = rename(tempfile, filename);
+	}
+
+	free(tempfile);
+	close(fd);
+	return rc;
 }

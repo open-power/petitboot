@@ -18,6 +18,7 @@
 #define FILE_H
 
 int read_file(void *ctx, const char *filename, char **bufp, int *lenp);
+int replace_file(const char *filename, char *buf, int len);
 
 #endif /* FILE_H */
 
