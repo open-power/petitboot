@@ -243,7 +243,7 @@ static int parse_one_interface_config(struct config *config,
 	} else if (!strcmp(tok, "static")) {
 		ifconf->method = CONFIG_METHOD_STATIC;
 
-		/* ip/mask, [optional] gateway, [optional] dns */
+		/* ip/mask, [optional] gateway */
 		tok = strtok_r(NULL, ",", &saveptr);
 		if (!tok)
 			goto out_err;
@@ -254,13 +254,8 @@ static int parse_one_interface_config(struct config *config,
 		if (tok) {
 			ifconf->static_config.gateway =
 				talloc_strdup(ifconf, tok);
-			tok = strtok_r(NULL, ",", &saveptr);
 		}
 
-		if (tok) {
-			ifconf->static_config.dns =
-				talloc_strdup(config, tok);
-		}
 	} else {
 		pb_log("Unknown network configuration method %s\n", tok);
 		goto out_err;
@@ -277,6 +272,27 @@ static int parse_one_interface_config(struct config *config,
 out_err:
 	talloc_free(ifconf);
 	return -1;
+}
+
+static int parse_one_dns_config(struct config *config,
+		char *confstr)
+{
+	char *tok, *saveptr;
+
+	for (tok = strtok_r(confstr, ",", &saveptr); tok;
+			tok = strtok_r(NULL, ",", &saveptr)) {
+
+		char *server = talloc_strdup(config, tok);
+
+		config->network.dns_servers = talloc_realloc(config,
+				config->network.dns_servers, const char *,
+				++config->network.n_dns_servers);
+
+		config->network.dns_servers[config->network.n_dns_servers - 1]
+				= server;
+	}
+
+	return 0;
 }
 
 static void populate_network_config(struct powerpc_nvram_storage *nv,
@@ -299,7 +315,10 @@ static void populate_network_config(struct powerpc_nvram_storage *nv,
 		if (!tok)
 			break;
 
-		parse_one_interface_config(config, tok);
+		if (strncmp(tok, "dns,", strlen("dns,")))
+			parse_one_dns_config(config, tok + strlen("dns,"));
+		else
+			parse_one_interface_config(config, tok);
 
 	}
 

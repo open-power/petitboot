@@ -22,6 +22,7 @@ struct interface_config net2 = {
 };
 
 struct interface_config *interface_configs[] = { &net1, &net2 };
+const char *dns_servers[] = { "192.168.1.1", "192.168.1.2" };
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -30,6 +31,8 @@ struct config test_config = {
 	.network = {
 		.interfaces = interface_configs,
 		.n_interfaces = ARRAY_SIZE(interface_configs),
+		.dns_servers = dns_servers,
+		.n_dns_servers = ARRAY_SIZE(dns_servers),
 	}
 };
 

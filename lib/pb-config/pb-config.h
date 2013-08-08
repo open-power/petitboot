@@ -19,7 +19,6 @@ struct interface_config {
 		struct {
 			char *address;
 			char *gateway;
-			char *dns;
 		} static_config;
 	};
 };
@@ -27,6 +26,8 @@ struct interface_config {
 struct network_config {
 	struct interface_config	**interfaces;
 	int			n_interfaces;
+	const char		**dns_servers;
+	int			n_dns_servers;
 };
 
 struct config {
