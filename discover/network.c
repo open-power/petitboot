@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <linux/if.h>
 #include <linux/netlink.h>
@@ -15,6 +16,7 @@
 #include <pb-config/pb-config.h>
 #include <system/system.h>
 
+#include "file.h"
 #include "network.h"
 
 #define HWADDR_SIZE	6
@@ -399,6 +401,59 @@ static int network_netlink_process(void *arg)
 	return 0;
 }
 
+static void network_init_dns(struct network *network)
+{
+	const struct config *config;
+	int i, rc, len;
+	bool modified;
+	char *buf;
+
+	if (network->dry_run)
+		return;
+
+	config = config_get();
+	if (!config || !config->network.n_dns_servers)
+		return;
+
+	rc = read_file(network, "/etc/resolv.conf", &buf, &len);
+
+	if (rc) {
+		buf = talloc_strdup(network, "");
+		len = 0;
+	}
+
+	modified = false;
+
+	for (i = 0; i < config->network.n_dns_servers; i++) {
+		int dns_conf_len;
+		char *dns_conf;
+
+		dns_conf = talloc_asprintf(network, "server %s\n",
+				config->network.dns_servers[i]);
+
+		if (strstr(buf, dns_conf)) {
+			talloc_free(dns_conf);
+			continue;
+		}
+
+		dns_conf_len = strlen(dns_conf);
+		buf = talloc_realloc(network, buf, char, len + dns_conf_len);
+		memcpy(buf + len, dns_conf, dns_conf_len);
+		len += dns_conf_len;
+		modified = true;
+	}
+
+	if (!modified)
+		return;
+
+	rc = replace_file("/etc/resolv.conf", buf, len);
+	if (rc) {
+		pb_log("error replacing resolv.conf: %s\n", strerror(errno));
+		return;
+	}
+
+}
+
 struct network *network_init(void *ctx, struct waitset *waitset, bool dry_run)
 {
 	struct network *network;
@@ -408,6 +463,8 @@ struct network *network_init(void *ctx, struct waitset *waitset, bool dry_run)
 	list_init(&network->interfaces);
 	network->manual_config = false;
 	network->dry_run = dry_run;
+
+	network_init_dns(network);
 
 	rc = network_init_netlink(network);
 	if (rc)

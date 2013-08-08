@@ -315,7 +315,7 @@ static void populate_network_config(struct powerpc_nvram_storage *nv,
 		if (!tok)
 			break;
 
-		if (strncmp(tok, "dns,", strlen("dns,")))
+		if (!strncasecmp(tok, "dns,", strlen("dns,")))
 			parse_one_dns_config(config, tok + strlen("dns,"));
 		else
 			parse_one_interface_config(config, tok);

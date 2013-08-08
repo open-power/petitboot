@@ -26,7 +26,7 @@ static void dump_config(struct config *config)
 	pb_log(" autoboot: %s\n",
 			config->autoboot_enabled ? "enabled" : "disabled");
 
-	if (config->n_network_configs > 0)
+	if (config->network.n_interfaces || config->network.n_dns_servers)
 		pb_log(" network configuration:\n");
 
 	for (i = 0; i < config->network.n_interfaces; i++) {
@@ -53,6 +53,8 @@ static void dump_config(struct config *config)
 
 		}
 	}
+	for (i = 0; i < config->network.n_dns_servers; i++)
+		pb_log("  dns server %s\n", config->network.dns_servers[i]);
 }
 
 int config_init(void *ctx)
