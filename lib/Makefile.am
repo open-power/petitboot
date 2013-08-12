@@ -34,6 +34,8 @@ libpbcore_la_SOURCES = \
 	pb-config/storage-powerpc-nvram.c \
 	pb-config/storage-null.c \
 	pb-config/storage-test.c \
+	process/process.c \
+	process/process.h \
 	types/types.h \
 	talloc/talloc.c \
 	talloc/talloc.h \
