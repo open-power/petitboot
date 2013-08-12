@@ -102,66 +102,21 @@ int pb_rmdir_recursive(const char *base, const char *dir)
 	return 0;
 }
 
-static int read_pipe(void *ctx, int fd, char **bufp, int *lenp)
-{
-	int rc, len, alloc_len;
-	char *buf;
-
-	alloc_len = 4096;
-	len = 0;
-
-	buf = talloc_array(ctx, char, alloc_len);
-
-	for (;;) {
-		rc = read(fd, buf, alloc_len - len - 1);
-		if (rc <= 0)
-			break;
-
-		len += rc;
-		if (len == alloc_len - 1) {
-			alloc_len *= 2;
-			buf = talloc_realloc(ctx, buf, char, alloc_len);
-		}
-	}
-
-	if (rc < 0) {
-		talloc_free(buf);
-		return rc;
-	}
-
-	buf[len] = '\0';
-	*bufp = buf;
-	*lenp = len;
-
-	return 0;
-}
-
 /**
  * pb_run_cmd - Run the supplied command.
  * @cmd_argv: An argument list array for execv.
  * @wait: Wait for the child process to complete before returning.
  * @dry_run: Don't actually fork and exec.
  */
-
 int pb_run_cmd(const char *const *cmd_argv, int wait, int dry_run)
-{
-	return pb_run_cmd_pipe(cmd_argv, wait, dry_run, NULL, NULL, NULL);
-}
-
-int pb_run_cmd_pipe(const char *const *cmd_argv, int wait, int dry_run,
-		void *ctx, char **stdout_buf, int *stdout_buf_len)
 {
 #if defined(DEBUG)
 	enum {do_debug = 1};
 #else
 	enum {do_debug = 0};
 #endif
-	int status, pipefd[2];
+	int status;
 	pid_t pid;
-
-	assert(!stdout_buf || wait);
-	assert(!stdout_buf || ctx);
-	assert(!stdout_buf || stdout_buf_len);
 
 	if (do_debug) {
 		const char *const *p = cmd_argv;
@@ -177,21 +132,8 @@ int pb_run_cmd_pipe(const char *const *cmd_argv, int wait, int dry_run,
 		pb_log("%s: %s%s\n", __func__, (dry_run ? "(dry-run) " : ""),
 			cmd_argv[0]);
 
-	if (stdout_buf) {
-		*stdout_buf = NULL;
-		*stdout_buf_len = 0;
-	}
-
 	if (dry_run)
 		return 0;
-
-	if (stdout_buf) {
-		status = pipe(pipefd);
-		if (status) {
-			pb_log("pipe failed");
-			return -1;
-		}
-	}
 
 	pid = fork();
 
@@ -206,13 +148,8 @@ int pb_run_cmd_pipe(const char *const *cmd_argv, int wait, int dry_run,
 
 		/* Redirect child output to log. */
 
-		if (stdout_buf) {
-			status = dup2(pipefd[1], STDOUT_FILENO);
-		} else {
-			status = dup2(log, STDOUT_FILENO);
-		}
+		status = dup2(log, STDOUT_FILENO);
 		assert(status != -1);
-
 		status = dup2(log, STDERR_FILENO);
 		assert(status != -1);
 
@@ -223,13 +160,6 @@ int pb_run_cmd_pipe(const char *const *cmd_argv, int wait, int dry_run,
 
 	if (!wait && !waitpid(pid, &status, WNOHANG))
 		return 0;
-
-	if (stdout_buf) {
-		close(pipefd[1]);
-		status = read_pipe(ctx, pipefd[0], stdout_buf, stdout_buf_len);
-		if (status)
-			return -1;
-	}
 
 	if (waitpid(pid, &status, 0) == -1) {
 		pb_log("%s: waitpid failed: %s\n", __func__,

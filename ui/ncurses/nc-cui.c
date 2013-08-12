@@ -31,6 +31,7 @@
 #include "pb-protocol/pb-protocol.h"
 #include "talloc/talloc.h"
 #include "waiter/waiter.h"
+#include "process/process.h"
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
 
@@ -506,6 +507,8 @@ struct cui *cui_init(void* platform_info,
 	cui->c_sig = pb_cui_sig;
 	cui->platform_info = platform_info;
 	cui->waitset = waitset_create(cui);
+
+	process_init(cui, cui->waitset);
 
 	setlocale(LC_ALL, "");
 

@@ -12,6 +12,7 @@
 #include <waiter/waiter.h>
 #include <log/log.h>
 #include <pb-config/pb-config.h>
+#include <process/process.h>
 
 #include "udev.h"
 #include "user-event.h"
@@ -118,6 +119,7 @@ int main(int argc, char *argv[])
 	struct discover_server *server;
 	struct network *network;
 	struct waitset *waitset;
+	struct procset *procset;
 	struct opts opts;
 	struct pb_udev *udev;
 	struct user_event *uev;
@@ -164,6 +166,10 @@ int main(int argc, char *argv[])
 
 	server = discover_server_init(waitset);
 	if (!server)
+		return EXIT_FAILURE;
+
+	procset = process_init(server, waitset);
+	if (!procset)
 		return EXIT_FAILURE;
 
 	network = network_init(server, waitset, opts.dry_run == opt_yes);

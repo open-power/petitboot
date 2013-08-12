@@ -7,6 +7,7 @@
 #include <talloc/talloc.h>
 #include <list/list.h>
 #include <log/log.h>
+#include <process/process.h>
 
 #include "pb-config.h"
 #include "storage.h"
@@ -117,64 +118,35 @@ static int parse_nvram_params(struct powerpc_nvram_storage *nv,
 
 static int parse_nvram(struct powerpc_nvram_storage *nv)
 {
-	int rc, len, buf_len;
-	int pipefds[2], status;
-	char *buf;
-	pid_t pid;
+	struct process *process;
+	const char *argv[5];
+	int rc;
 
-	rc = pipe(pipefds);
-	if (rc) {
-		perror("pipe");
-		return -1;
-	}
+	argv[0] = "nvram";
+	argv[1] = "--print-config";
+	argv[2] = "--partition";
+	argv[3] = partition;
+	argv[4] = NULL;
 
-	pid = fork();
+	process = process_create(nv);
+	process->path = "nvram";
+	process->argv = argv;
+	process->keep_stdout = true;
 
-	if (pid < 0) {
-		perror("fork");
-		return -1;
-	}
+	rc = process_run_sync(process);
 
-	if (pid == 0) {
-		close(STDIN_FILENO);
-		close(pipefds[0]);
-		dup2(pipefds[1], STDOUT_FILENO);
-		execlp("nvram", "nvram", "--print-config",
-				"--partition", partition, NULL);
-		exit(EXIT_FAILURE);
-	}
-
-	close(pipefds[1]);
-
-	len = 0;
-	buf_len = max_partition_size;
-	buf = talloc_array(nv, char, buf_len);
-
-	for (;;) {
-		rc = read(pipefds[0], buf + len, buf_len - len);
-
-		if (rc < 0) {
-			perror("read");
-			break;
-		}
-
-		if (rc == 0)
-			break;
-
-		len += rc;
-	}
-
-	waitpid(pid, &status, 0);
-	if (!WIFEXITED(status) || WEXITSTATUS(status)) {
+	if (rc || !WIFEXITED(process->exit_status)
+			|| WEXITSTATUS(process->exit_status)) {
 		fprintf(stderr, "nvram process returned "
 				"non-zero exit status\n");
-		return -1;
+		rc = -1;
+	} else {
+		rc = parse_nvram_params(nv, process->stdout_buf,
+					    process->stdout_len);
 	}
 
-	if (rc < 0)
-		return rc;
-
-	return parse_nvram_params(nv, buf, len);
+	process_release(process);
+	return rc;
 }
 
 static const char *get_param(struct powerpc_nvram_storage *nv,

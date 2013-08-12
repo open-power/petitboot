@@ -11,6 +11,7 @@
 
 #include <log/log.h>
 #include <pb-protocol/pb-protocol.h>
+#include <process/process.h>
 #include <system/system.h>
 #include <talloc/talloc.h>
 #include <url/url.h>
@@ -244,29 +245,44 @@ static void run_boot_hooks(struct boot_task *task, boot_status_fn status_fn,
 
 	for (i = 0; i < n; i++) {
 		const char *argv[2] = { NULL, NULL };
-		char *path, *buf;
-		int buf_len, rc;
+		struct process *process;
+		char *path;
+		int rc;
 
 		path = join_paths(task, boot_hook_dir, hooks[i]->d_name);
 
-		if (access(path, X_OK))
+		if (access(path, X_OK)) {
+			talloc_free(path);
 			continue;
+		}
+
+		process = process_create(task);
+
+		argv[0] = path;
+		process->path = path;
+		process->argv = argv;
+		process->keep_stdout = true;
 
 		pb_log("running boot hook %s\n", hooks[i]->d_name);
 
-		argv[0] = path;
-		rc = pb_run_cmd_pipe(argv, 1, task->dry_run, task,
-				&buf, &buf_len);
+		rc = process_run_sync(process);
+		if (rc) {
+			pb_log("boot hook exec failed!\n");
 
-		/* if the hook returned with BOOT_HOOK_EXIT_UPDATE,
-		 * then we process stdout to look for updated params
-		 */
-		if (rc == BOOT_HOOK_EXIT_UPDATE) {
-			boot_hook_update(task, hooks[i]->d_name, buf);
-			boot_hook_setenv(task);
+		} else if (WIFEXITED(process->exit_status) &&
+			   WEXITSTATUS(process->exit_status)
+				== BOOT_HOOK_EXIT_UPDATE) {
+			/* if the hook returned with BOOT_HOOK_EXIT_UPDATE,
+			 * then we process stdout to look for updated params
+			 */
+			if (rc == BOOT_HOOK_EXIT_UPDATE) {
+				boot_hook_update(task, hooks[i]->d_name,
+						process->stdout_buf);
+				boot_hook_setenv(task);
+			}
 		}
 
-		talloc_free(buf);
+		process_release(process);
 		talloc_free(path);
 	}
 

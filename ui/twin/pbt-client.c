@@ -30,6 +30,7 @@
 #include "log/log.h"
 #include "talloc/talloc.h"
 #include "waiter/waiter.h"
+#include "process/process.h"
 #include "ui/common/discover-client.h"
 
 static struct pb_opt_data *pbt_opt_data_from_item(struct pbt_item *item)
@@ -268,6 +269,8 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 	talloc_set_destructor(pbt_client, (void *)pbt_client_destructor);
 
 	pbt_client->waitset = waitset_create(pbt_client);
+
+	process_init(pbt_client, pbt_client->waitset);
 
 	pbt_client->sig = "pbt_client";
 	pbt_client->frame.scr = pbt_scr_init(pbt_client, pbt_client->waitset,
