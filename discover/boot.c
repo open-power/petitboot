@@ -53,20 +53,22 @@ static int kexec_load(struct boot_task *boot_task)
 	*p++ = "-l";			/* 2 */
 
 	if (boot_task->local_initrd) {
-		s_initrd = talloc_asprintf(NULL, "--initrd=%s",
+		s_initrd = talloc_asprintf(boot_task, "--initrd=%s",
 				boot_task->local_initrd);
 		assert(s_initrd);
 		*p++ = s_initrd;	 /* 3 */
 	}
 
 	if (boot_task->local_dtb) {
-		s_dtb = talloc_asprintf(NULL, "--dtb=%s", boot_task->local_dtb);
+		s_dtb = talloc_asprintf(boot_task, "--dtb=%s",
+						boot_task->local_dtb);
 		assert(s_dtb);
 		*p++ = s_dtb;		 /* 4 */
 	}
 
 	if (boot_task->args) {
-		s_args = talloc_asprintf(NULL, "--append=%s", boot_task->args);
+		s_args = talloc_asprintf(boot_task, "--append=%s",
+						boot_task->args);
 		assert(s_args);
 		*p++ = s_args;		/* 5 */
 	}
@@ -78,10 +80,6 @@ static int kexec_load(struct boot_task *boot_task)
 
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
-
-	talloc_free(s_initrd);
-	talloc_free(s_dtb);
-	talloc_free(s_args);
 
 	return result;
 }
@@ -176,8 +174,8 @@ static void boot_hook_update_param(void *ctx, struct boot_task *task,
 	}
 }
 
-static void boot_hook_update(void *ctx, const char *hookname,
-		struct boot_task *task, char *buf)
+static void boot_hook_update(struct boot_task *task, const char *hookname,
+		char *buf)
 {
 	char *line, *name, *val, *sep;
 	char *saveptr;
@@ -196,7 +194,7 @@ static void boot_hook_update(void *ctx, const char *hookname,
 		name = line;
 		val = sep + 1;
 
-		boot_hook_update_param(ctx, task, name, val);
+		boot_hook_update_param(task, task, name, val);
 
 		pb_log("boot hook %s specified %s=%s\n",
 				hookname, name, val);
@@ -229,8 +227,8 @@ static int hook_cmp(const struct dirent **a, const struct dirent **b)
 	return strcmp((*a)->d_name, (*b)->d_name);
 }
 
-static void run_boot_hooks(void *ctx, struct boot_task *task,
-		boot_status_fn status_fn, void *status_arg)
+static void run_boot_hooks(struct boot_task *task, boot_status_fn status_fn,
+		void *status_arg)
 {
 	struct dirent **hooks;
 	int i, n;
@@ -249,7 +247,7 @@ static void run_boot_hooks(void *ctx, struct boot_task *task,
 		char *path, *buf;
 		int buf_len, rc;
 
-		path = join_paths(ctx, boot_hook_dir, hooks[i]->d_name);
+		path = join_paths(task, boot_hook_dir, hooks[i]->d_name);
 
 		if (access(path, X_OK))
 			continue;
@@ -257,14 +255,14 @@ static void run_boot_hooks(void *ctx, struct boot_task *task,
 		pb_log("running boot hook %s\n", hooks[i]->d_name);
 
 		argv[0] = path;
-		rc = pb_run_cmd_pipe(argv, 1, task->dry_run, ctx,
+		rc = pb_run_cmd_pipe(argv, 1, task->dry_run, task,
 				&buf, &buf_len);
 
 		/* if the hook returned with BOOT_HOOK_EXIT_UPDATE,
 		 * then we process stdout to look for updated params
 		 */
 		if (rc == BOOT_HOOK_EXIT_UPDATE) {
-			boot_hook_update(ctx, hooks[i]->d_name, task, buf);
+			boot_hook_update(task, hooks[i]->d_name, buf);
 			boot_hook_setenv(task);
 		}
 
@@ -278,7 +276,7 @@ static void run_boot_hooks(void *ctx, struct boot_task *task,
 int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		int dry_run, boot_status_fn status_fn, void *status_arg)
 {
-	struct boot_task boot_task;
+	struct boot_task *boot_task;
 	struct pb_url *image, *initrd, *dtb;
 	unsigned int clean_image = 0;
 	unsigned int clean_initrd = 0;
@@ -288,7 +286,6 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	image = NULL;
 	initrd = NULL;
 	dtb = NULL;
-	boot_task.dry_run = dry_run;
 
 	if (cmd && cmd->boot_image_file) {
 		image = pb_url_parse(opt, cmd->boot_image_file);
@@ -298,6 +295,9 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		pb_log("%s: no image specified", __func__);
 		return -1;
 	}
+
+	boot_task = talloc_zero(ctx, struct boot_task);
+	boot_task->dry_run = dry_run;
 
 	if (cmd && cmd->initrd_file) {
 		initrd = pb_url_parse(opt, cmd->initrd_file);
@@ -312,22 +312,20 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	}
 
 	if (cmd && cmd->boot_args) {
-		boot_task.args = talloc_strdup(ctx, cmd->boot_args);
+		boot_task->args = talloc_strdup(boot_task, cmd->boot_args);
 	} else if (opt && opt->option->boot_args) {
-		boot_task.args = talloc_strdup(ctx, opt->option->boot_args);
+		boot_task->args = talloc_strdup(boot_task,
+						opt->option->boot_args);
 	} else {
-		boot_task.args = NULL;
+		boot_task->args = NULL;
 	}
 
 	result = -1;
 
-	boot_task.local_initrd = NULL;
-	boot_task.local_dtb = NULL;
-
 	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 			"loading kernel");
-	boot_task.local_image = load_url(NULL, image, &clean_image);
-	if (!boot_task.local_image) {
+	boot_task->local_image = load_url(NULL, image, &clean_image);
+	if (!boot_task->local_image) {
 		update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
 				"Couldn't load kernel image");
 		goto no_load;
@@ -336,8 +334,8 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	if (initrd) {
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"loading initrd");
-		boot_task.local_initrd = load_url(NULL, initrd, &clean_initrd);
-		if (!boot_task.local_initrd) {
+		boot_task->local_initrd = load_url(NULL, initrd, &clean_initrd);
+		if (!boot_task->local_initrd) {
 			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
 					"Couldn't load initrd image");
 			goto no_load;
@@ -347,20 +345,20 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	if (dtb) {
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"loading device tree");
-		boot_task.local_dtb = load_url(NULL, dtb, &clean_dtb);
-		if (!boot_task.local_dtb) {
+		boot_task->local_dtb = load_url(NULL, dtb, &clean_dtb);
+		if (!boot_task->local_dtb) {
 			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
 					"Couldn't load device tree");
 			goto no_load;
 		}
 	}
 
-	run_boot_hooks(ctx, &boot_task, status_fn, status_arg);
+	run_boot_hooks(boot_task, status_fn, status_arg);
 
 	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 			"performing kexec_load");
 
-	result = kexec_load(&boot_task);
+	result = kexec_load(boot_task);
 
 	if (result) {
 		update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
@@ -369,21 +367,19 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 
 no_load:
 	if (clean_image)
-		unlink(boot_task.local_image);
+		unlink(boot_task->local_image);
 	if (clean_initrd)
-		unlink(boot_task.local_initrd);
+		unlink(boot_task->local_initrd);
 	if (clean_dtb)
-		unlink(boot_task.local_dtb);
+		unlink(boot_task->local_dtb);
 
-	talloc_free(boot_task.local_image);
-	talloc_free(boot_task.local_initrd);
-	talloc_free(boot_task.local_dtb);
+	talloc_free(boot_task);
 
 	if (!result) {
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"performing kexec reboot");
 
-		result = kexec_reboot(boot_task.dry_run);
+		result = kexec_reboot(boot_task->dry_run);
 
 		if (result) {
 			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
