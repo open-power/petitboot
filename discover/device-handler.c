@@ -13,6 +13,7 @@
 #include <log/log.h>
 #include <types/types.h>
 #include <system/system.h>
+#include <process/process.h>
 #include <url/url.h>
 
 #include "device-handler.h"
@@ -207,7 +208,7 @@ void device_handler_add_device(struct device_handler *handler,
 
 static int mount_device(struct discover_device *dev)
 {
-	const char *argv[6];
+	int rc;
 
 	if (!dev->device_path)
 		return -1;
@@ -220,29 +221,20 @@ static int mount_device(struct discover_device *dev)
 		pb_log("couldn't create mount directory %s: %s\n",
 				dev->mount_path, strerror(errno));
 
-	argv[0] = pb_system_apps.mount;
-	argv[1] = dev->device_path;
-	argv[2] = dev->mount_path;
-	argv[3] = "-o";
-	argv[4] = "ro";
-	argv[5] = NULL;
+	rc = process_run_simple(dev, pb_system_apps.mount,
+			dev->device_path, dev->mount_path,
+			"-o", "ro", NULL);
 
-	if (pb_run_cmd(argv, 1, 0)) {
+	if (!rc)
+		return 0;
 
-		/* Retry mount without ro option. */
+	/* Retry mount without ro option. */
+	rc = process_run_simple(dev, pb_system_apps.mount,
+			dev->device_path, dev->mount_path, NULL);
 
-		argv[0] = pb_system_apps.mount;
-		argv[1] = dev->device_path;
-		argv[2] = dev->mount_path;
-		argv[3] = NULL;
+	if (!rc)
+		return 0;
 
-		if (pb_run_cmd(argv, 1, 0))
-			goto out_rmdir;
-	}
-
-	return 0;
-
-out_rmdir:
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 	return -1;
 }
@@ -250,28 +242,12 @@ out_rmdir:
 static int umount_device(struct discover_device *dev)
 {
 	int status;
-	pid_t pid;
 
 	if (!dev->mount_path)
 		return 0;
 
-	pid = fork();
-	if (pid == -1) {
-		pb_log("%s: fork failed: %s\n", __func__, strerror(errno));
-		return -1;
-	}
-
-	if (pid == 0) {
-		execl(pb_system_apps.umount, pb_system_apps.umount,
-						dev->mount_path, NULL);
-		exit(EXIT_FAILURE);
-	}
-
-	if (waitpid(pid, &status, 0) == -1) {
-		pb_log("%s: waitpid failed: %s\n", __func__,
-				strerror(errno));
-		return -1;
-	}
+	status = process_run_simple(dev, pb_system_apps.umount,
+			dev->mount_path, NULL);
 
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
 		return -1;

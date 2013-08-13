@@ -28,6 +28,7 @@
 
 #include "log/log.h"
 #include <system/system.h>
+#include <process/process.h>
 #include "talloc/talloc.h"
 #include "ui-system.h"
 
@@ -35,22 +36,27 @@
  * pb_start_daemon - start the pb-discover daemon.
  */
 
-int pb_start_daemon(void)
+int pb_start_daemon(void *ctx)
 {
+	struct process *process;
+	const char **argv;
 	int result;
-	const char *argv[2];
-	char *name = talloc_asprintf(NULL, "%s/sbin/pb-discover",
-		pb_system_apps.prefix);
+	char *name;
+
+	process = process_create(ctx);
+
+	argv = talloc_array(process, const char *, 2);
+	name = talloc_asprintf(process, "%s/sbin/pb-discover",
+			pb_system_apps.prefix);
 
 	argv[0] = name;
-	argv[1] =  NULL;
+	argv[1] = NULL;
 
-	result = pb_run_cmd(argv, 0, 0);
+	process->path = name;
+	process->argv = argv;
 
-	talloc_free(name);
-
-	if (result)
-		pb_log("%s: failed: (%d)\n", __func__, result);
+	result = process_run_async(process);
+	process_release(process);
 
 	return result;
 }

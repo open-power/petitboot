@@ -28,7 +28,7 @@
 
 #include <signal.h>
 
-int pb_start_daemon(void);
+int pb_start_daemon(void *ctx);
 
 unsigned int pb_elf_hash(const char *str);
 unsigned int pb_cat_hash(const char *a, const char *b);

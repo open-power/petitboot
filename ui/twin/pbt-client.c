@@ -298,7 +298,7 @@ retry_start:
 
 		start_deamon = 0;
 
-		result = pb_start_daemon();
+		result = pb_start_daemon(pbt_client);
 
 		if (!result)
 			goto retry_start;

@@ -14,6 +14,7 @@
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
 #include <pb-config/pb-config.h>
+#include <process/process.h>
 #include <system/system.h>
 
 #include "file.h"
@@ -45,6 +46,7 @@ struct interface {
 	} state;
 
 	struct list_item list;
+	struct process *udhcpc_process;
 };
 
 struct network {
@@ -136,22 +138,21 @@ static int network_send_link_query(struct network *network)
 	return 0;
 }
 
-static int interface_change(struct network *network,
-		struct interface *interface,
-		bool up)
+static int interface_change(struct interface *interface, bool up)
 {
-	int rc;
 	const char *statestr = up ? "up" : "down";
-	const char *argv[] = {
-		pb_system_apps.ip,
-		"link",
-		"set",
-		interface->name,
-		statestr,
-		NULL,
-	};
+	int rc;
 
-	rc = pb_run_cmd(argv, 1, network->dry_run);
+	if (!up && interface->udhcpc_process) {
+		/* we don't care about the callback from here */
+		interface->udhcpc_process->exit_cb = NULL;
+		interface->udhcpc_process->data = NULL;
+		process_stop_async(interface->udhcpc_process);
+		process_release(interface->udhcpc_process);
+	}
+
+	rc = process_run_simple(interface, pb_system_apps.ip,
+			"link", "set", interface->name, statestr, NULL);
 	if (rc) {
 		pb_log("failed to bring interface %s %s\n", interface->name,
 				statestr);
@@ -160,22 +161,30 @@ static int interface_change(struct network *network,
 	return 0;
 }
 
-static int interface_up(struct network *network,
-		struct interface *interface)
+static int interface_up(struct interface *interface)
 {
-	return interface_change(network, interface, true);
+	return interface_change(interface, true);
 }
 
-static int interface_down(struct network *network,
-		struct interface *interface)
+static int interface_down(struct interface *interface)
 {
-	return interface_change(network, interface, false);
+	return interface_change(interface, false);
 }
 
-static void configure_interface_dhcp(struct network *network,
-		struct interface *interface)
+static void udhcpc_process_exit(struct process *process)
 {
+	struct interface *interface = process->data;
+	pb_log("udhcp client [pid %d] for interface %s exited, rc %d\n",
+			process->pid, interface->name, process->exit_status);
+	interface->udhcpc_process = NULL;
+	process_release(process);
+}
+
+static void configure_interface_dhcp(struct interface *interface)
+{
+	struct process *process;
 	char pidfile[256];
+	int rc;
 	const char *argv[] = {
 		pb_system_apps.udhcpc,
 		"-R",
@@ -187,36 +196,33 @@ static void configure_interface_dhcp(struct network *network,
 	snprintf(pidfile, sizeof(pidfile), "%s/udhcpc-%s.pid",
 			PIDFILE_BASE, interface->name);
 
-	pb_run_cmd(argv, 0, network->dry_run);
+	process = process_create(interface);
+
+	process->path = pb_system_apps.udhcpc;
+	process->argv = argv;
+	process->exit_cb = udhcpc_process_exit;
+	process->data = interface;
+
+	rc = process_run_async(process);
+
+	if (rc)
+		process_release(process);
+	else
+		interface->udhcpc_process = process;
+
 	return;
 }
 
-static void configure_interface_static(struct network *network,
-		struct interface *interface,
+static void configure_interface_static(struct interface *interface,
 		const struct interface_config *config)
 {
-	const char *addr_argv[] = {
-		pb_system_apps.ip,
-		"address",
-		"add",
-		config->static_config.address,
-		"dev",
-		interface->name,
-		NULL,
-	};
-	const char *route_argv[] = {
-		pb_system_apps.ip,
-		"route",
-		"add",
-		"default",
-		"via",
-		config->static_config.gateway,
-		NULL,
-	};
 	int rc;
 
+	rc = process_run_simple(interface, pb_system_apps.ip,
+			"address", "add", config->static_config.address,
+			"dev", interface->name, NULL);
 
-	rc = pb_run_cmd(addr_argv, 1, network->dry_run);
+
 	if (rc) {
 		pb_log("failed to add address %s to interface %s\n",
 				config->static_config.address,
@@ -225,12 +231,15 @@ static void configure_interface_static(struct network *network,
 	}
 
 	/* we need the interface up before we can route through it */
-	rc = interface_up(network, interface);
+	rc = interface_up(interface);
 	if (rc)
 		return;
 
 	if (config->static_config.gateway)
-		rc = pb_run_cmd(route_argv, 1, network->dry_run);
+		rc = process_run_simple(interface, pb_system_apps.ip,
+				"route", "add", "default",
+				"via", config->static_config.gateway,
+				NULL);
 
 	if (rc) {
 		pb_log("failed to add default route %s on interface %s\n",
@@ -262,7 +271,7 @@ static void configure_interface(struct network *network,
 	/* always up the lookback, no other handling required */
 	if (!strcmp(interface->name, "lo")) {
 		if (interface->state == IFSTATE_NEW)
-			interface_up(network, interface);
+			interface_up(interface);
 		interface->state = IFSTATE_CONFIGURED;
 		return;
 	}
@@ -286,7 +295,7 @@ static void configure_interface(struct network *network,
 	/* new interface? bring up to the point so we can detect a link */
 	if (interface->state == IFSTATE_NEW) {
 		if (!up) {
-			interface_up(network, interface);
+			interface_up(interface);
 			pb_log("network: bringing up interface %s\n",
 					interface->name);
 			return;
@@ -303,10 +312,10 @@ static void configure_interface(struct network *network,
 	pb_log("network: configuring interface %s\n", interface->name);
 
 	if (!config || config->method == CONFIG_METHOD_DHCP) {
-		configure_interface_dhcp(network, interface);
+		configure_interface_dhcp(interface);
 
 	} else if (config->method == CONFIG_METHOD_STATIC) {
-		configure_interface_static(network, interface, config);
+		configure_interface_static(interface, config);
 	}
 }
 
@@ -497,7 +506,7 @@ int network_shutdown(struct network *network)
 		waiter_remove(network->waiter);
 
 	list_for_each_entry(&network->interfaces, interface, list)
-		interface_down(network, interface);
+		interface_down(interface);
 
 	close(network->netlink_sd);
 	talloc_free(network);

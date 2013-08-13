@@ -6,6 +6,7 @@
 
 #include <talloc/talloc.h>
 #include <system/system.h>
+#include <process/process.h>
 #include <url/url.h>
 #include <log/log.h>
 
@@ -56,11 +57,8 @@ static char *local_name(void *ctx)
  */
 static char *load_nfs(void *ctx, struct pb_url *url)
 {
+	char *local, *opts;
 	int result;
-	const char *argv[8];
-	const char **p;
-	char *local;
-	char *opts;
 
 	local = local_name(ctx);
 
@@ -77,17 +75,8 @@ static char *load_nfs(void *ctx, struct pb_url *url)
 	if (url->port)
 		opts = talloc_asprintf_append(opts, ",port=%s", url->port);
 
-	p = argv;
-	*p++ = pb_system_apps.mount;	/* 1 */
-	*p++ = "-t";			/* 2 */
-	*p++ = "nfs";			/* 3 */
-	*p++ = opts;			/* 4 */
-	*p++ = url->host;		/* 5 */
-	*p++ = url->dir;		/* 6 */
-	*p++ = local;			/* 7 */
-	*p++ = NULL;			/* 8 */
-
-	result = pb_run_cmd(argv, 1, 0);
+	result = process_run_simple(ctx, pb_system_apps.mount, "-t", "nfs",
+			opts, url->host, url->dir, local, NULL);
 
 	talloc_free(opts);
 
@@ -113,23 +102,18 @@ fail:
  */
 static char *load_sftp(void *ctx, struct pb_url *url)
 {
+	char *host_path, *local;
 	int result;
-	const char *argv[4];
-	const char **p;
-	char *local;
 
 	local = local_name(ctx);
 
 	if (!local)
 		return NULL;
 
-	p = argv;
-	*p++ = pb_system_apps.sftp;					/* 1 */
-	*p++ = talloc_asprintf(local, "%s:%s", url->host, url->path);	/* 2 */
-	*p++ = local;							/* 3 */
-	*p++ = NULL;							/* 4 */
+	host_path = talloc_asprintf(local, "%s:%s", url->host, url->path);
 
-	result = pb_run_cmd(argv, 1, 0);
+	result = process_run_simple(ctx, pb_system_apps.sftp, host_path,
+			local, NULL);
 
 	if (result)
 		goto fail;
@@ -174,7 +158,7 @@ static char *load_tftp(void *ctx, struct pb_url *url)
 		*p++ = url->port;	/* 8 */
 	*p++ = NULL;			/* 9 */
 
-	result = pb_run_cmd(argv, 1, 0);
+	result = process_run_simple_argv(ctx, argv);
 
 	if (!result)
 		return local;
@@ -194,7 +178,7 @@ static char *load_tftp(void *ctx, struct pb_url *url)
 	*p++ = local;			/* 9 */
 	*p++ = NULL;			/* 10 */
 
-	result = pb_run_cmd(argv, 1, 0);
+	result = process_run_simple_argv(ctx, argv);
 
 	if (!result)
 		return local;
@@ -239,7 +223,7 @@ static char *load_wget(void *ctx, struct pb_url *url, enum wget_flags flags)
 		*p++ = "--no-check-certificate";	/* 6 */
 	*p++ = NULL;					/* 7 */
 
-	result = pb_run_cmd(argv, 1, 0);
+	result = process_run_simple_argv(ctx, argv);
 
 	if (result)
 		goto fail;

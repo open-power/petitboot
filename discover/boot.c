@@ -77,7 +77,7 @@ static int kexec_load(struct boot_task *boot_task)
 	*p++ = boot_task->local_image;	/* 6 */
 	*p++ = NULL;			/* 7 */
 
-	result = pb_run_cmd(argv, 1, boot_task->dry_run);
+	result = process_run_simple_argv(boot_task, argv);
 
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
@@ -91,31 +91,18 @@ static int kexec_load(struct boot_task *boot_task)
  * Must only be called after a successful call to kexec_load().
  */
 
-static int kexec_reboot(bool dry_run)
+static int kexec_reboot(struct boot_task *task)
 {
-	int result = 0;
-	const char *argv[4];
-	const char **p;
+	int result;
 
 	/* First try running shutdown.  Init scripts should run 'exec -e' */
-
-	p = argv;
-	*p++ = pb_system_apps.shutdown;	/* 1 */
-	*p++ =  "-r";			/* 2 */
-	*p++ =  "now";			/* 3 */
-	*p++ =  NULL;			/* 4 */
-
-	result = pb_run_cmd(argv, 1, dry_run);
+	result = process_run_simple(task, pb_system_apps.shutdown, "-r",
+			"now", NULL);
 
 	/* On error, force a kexec with the -e option */
-
 	if (result) {
-		p = argv;
-		*p++ = pb_system_apps.kexec;	/* 1 */
-		*p++ = "-e";			/* 2 */
-		*p++ = NULL;			/* 3 */
-
-		result = pb_run_cmd(argv, 1, 0);
+		result = process_run_simple(task, pb_system_apps.kexec,
+						"-e", NULL);
 	}
 
 	if (result)
@@ -123,13 +110,8 @@ static int kexec_reboot(bool dry_run)
 
 	/* okay, kexec -e -f */
 	if (result) {
-		p = argv;
-		*p++ = pb_system_apps.kexec;	/* 1 */
-		*p++ = "-e";			/* 2 */
-		*p++ = "-f";			/* 3 */
-		*p++ = NULL;			/* 4 */
-
-		result = pb_run_cmd(argv, 1, 0);
+		result = process_run_simple(task, pb_system_apps.kexec,
+						"-e", "-f", NULL);
 	}
 
 	if (result)
@@ -395,7 +377,7 @@ no_load:
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"performing kexec reboot");
 
-		result = kexec_reboot(boot_task->dry_run);
+		result = kexec_reboot(boot_task);
 
 		if (result) {
 			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,

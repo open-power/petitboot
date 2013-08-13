@@ -81,13 +81,13 @@ int cui_run_cmd(struct pmenu_item *item)
 {
 	int result;
 	struct cui *cui = cui_from_item(item);
-	const char *const *cmd_argv = item->data;
+	const char **cmd_argv = item->data;
 
 	nc_scr_status_printf(cui->current, "Running %s...", cmd_argv[0]);
 
 	def_prog_mode();
 
-	result = pb_run_cmd(cmd_argv, 1, 0);
+	result = process_run_simple_argv(item, cmd_argv);
 
 	reset_prog_mode();
 	redrawwin(cui->current->main_ncw);
@@ -529,7 +529,7 @@ retry_start:
 
 		start_deamon = 0;
 
-		result = pb_start_daemon();
+		result = pb_start_daemon(cui);
 
 		if (!result)
 			goto retry_start;
