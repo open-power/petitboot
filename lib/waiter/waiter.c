@@ -66,7 +66,7 @@ static struct waiter *waiter_new(struct waitset *set)
 {
 	struct waiter **waiters, *waiter;
 
-	waiter = talloc(set->waiters, struct waiter);
+	waiter = talloc(set, struct waiter);
 	if (!waiter)
 		return NULL;
 
