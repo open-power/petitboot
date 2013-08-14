@@ -20,10 +20,16 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
 
-list_test_SOURCES = list-test.c
-list_test_LDADD = ../../lib/libpbcore.la
+LDADD = ../../lib/libpbcore.la
 
-check_PROGRAMS = list-test
-TESTS = list-test
+check_PROGRAMS = list-test \
+	test-process-noargs \
+	test-process-sync \
+	test-process-sync-stdout \
+	test-process-async \
+	test-process-async-stdout \
+	test-process-both
+
+TESTS = $(check_PROGRAMS)
 
 MAINTAINERCLEANFILES = Makefile.in
