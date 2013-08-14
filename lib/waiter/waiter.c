@@ -138,7 +138,7 @@ void waiter_remove(struct waiter *waiter)
 	memmove(&set->waiters[i], &set->waiters[i+1],
 		(set->n_waiters - i) * sizeof(set->waiters[0]));
 
-	set->waiters = talloc_realloc(set->waiters, set->waiters,
+	set->waiters = talloc_realloc(set, set->waiters,
 			struct waiter *, set->n_waiters);
 	set->waiters_changed = true;
 
