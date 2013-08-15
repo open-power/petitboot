@@ -115,6 +115,9 @@ int replace_file(const char *filename, char *buf, int len)
 	}
 
 	free(tempfile);
+
+	fchmod(fd, 0644);
+
 	close(fd);
 	return rc;
 }
