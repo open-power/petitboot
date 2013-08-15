@@ -428,7 +428,7 @@ static void network_init_dns(struct network *network)
 		int dns_conf_len;
 		char *dns_conf;
 
-		dns_conf = talloc_asprintf(network, "server %s\n",
+		dns_conf = talloc_asprintf(network, "nameserver %s\n",
 				config->network.dns_servers[i]);
 
 		if (strstr(buf, dns_conf)) {
