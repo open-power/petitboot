@@ -441,17 +441,18 @@ static void network_init_dns(struct network *network)
 		memcpy(buf + len, dns_conf, dns_conf_len);
 		len += dns_conf_len;
 		modified = true;
+
+		talloc_free(dns_conf);
 	}
 
-	if (!modified)
-		return;
-
-	rc = replace_file("/etc/resolv.conf", buf, len);
-	if (rc) {
-		pb_log("error replacing resolv.conf: %s\n", strerror(errno));
-		return;
+	if (modified) {
+		rc = replace_file("/etc/resolv.conf", buf, len);
+		if (rc)
+			pb_log("error replacing resolv.conf: %s\n",
+					strerror(errno));
 	}
 
+	talloc_free(buf);
 }
 
 struct network *network_init(void *ctx, struct waitset *waitset, bool dry_run)
