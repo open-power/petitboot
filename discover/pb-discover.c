@@ -192,7 +192,6 @@ int main(int argc, char *argv[])
 	}
 
 	device_handler_destroy(handler);
-	waitset_destroy(waitset);
 	udev_destroy(udev);
 	config_fini();
 

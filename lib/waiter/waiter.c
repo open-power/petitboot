@@ -57,11 +57,6 @@ struct waitset *waitset_create(void *ctx)
 	return set;
 }
 
-void waitset_destroy(struct waitset *set)
-{
-	talloc_free(set);
-}
-
 static struct waiter *waiter_new(struct waitset *set)
 {
 	struct waiter **waiters, *waiter;
