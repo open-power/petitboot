@@ -11,6 +11,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+if ENABLE_TEST_VALGRIND
+LOG_COMPILER = valgrind
+AM_LOG_FLAGS = --leak-check=full --error-exitcode=1
+export LOG_COMPILER AM_LOG_FLAGS
+endif
 
 SUBDIRS = lib parser urls
 
