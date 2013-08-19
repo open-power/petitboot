@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include <list/list.h>
+#include <talloc/talloc.h>
 
 
 int main(void)
@@ -36,10 +37,13 @@ int main(void)
 	STATIC_LIST(tester);
 	struct item *item;
 	struct item *tmp;
+	void *ctx;
 	int i;
 
+	ctx = talloc_new(NULL);
+
 	for (i = 0; i < 5; i++) {
-		struct item *item = malloc(sizeof(struct item));
+		struct item *item = talloc(ctx, struct item);
 
 		item->value = i;
 
@@ -83,5 +87,8 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 	fprintf(stderr, "-- done --\n");
+
+	talloc_free(ctx);
+
 	return EXIT_SUCCESS;
 }
