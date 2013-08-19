@@ -204,7 +204,7 @@ static int run(struct pbt_client *client)
 	while (1) {
 		int result = waiter_poll(client->waitset);
 
-		if (result < 0 && errno != EINTR) {
+		if (result < 0) {
 			pb_log("%s: poll: %s\n", __func__, strerror(errno));
 			break;
 		}

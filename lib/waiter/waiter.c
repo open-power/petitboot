@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 #include <sys/time.h>
 
 #include <talloc/talloc.h>
@@ -222,11 +223,13 @@ int waiter_poll(struct waitset *set)
 		timeout_ms = -1;
 	}
 
-
 	rc = poll(set->pollfds, set->n_io_waiters, timeout_ms);
 
-	if (rc < 0)
+	if (rc < 0) {
+		if (errno == EINTR)
+			rc = 0;
 		goto out;
+	}
 
 	for (i = 0; i < set->n_io_waiters; i++) {
 		struct waiter *waiter = set->io_waiters[i];

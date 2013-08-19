@@ -594,7 +594,7 @@ int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item)
 	while (1) {
 		int result = waiter_poll(cui->waitset);
 
-		if (result < 0 && errno != EINTR) {
+		if (result < 0) {
 			pb_log("%s: poll: %s\n", __func__, strerror(errno));
 			break;
 		}
