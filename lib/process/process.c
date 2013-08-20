@@ -355,8 +355,13 @@ int process_run_sync(struct process *process)
 
 	process_read_stdout(procinfo);
 
-	rc = waitpid(process->pid, &process->exit_status, 0);
-	if (rc == -1) {
+	for (;;) {
+		rc = waitpid(process->pid, &process->exit_status, 0);
+		if (rc >= 0)
+			break;
+		if (errno == EINTR)
+			continue;
+
 		pb_log("%s: waitpid failed: %s\n", __func__, strerror(errno));
 		return rc;
 	}
