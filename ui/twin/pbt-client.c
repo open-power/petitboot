@@ -270,7 +270,7 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 
 	pbt_client->waitset = waitset_create(pbt_client);
 
-	process_init(pbt_client, pbt_client->waitset);
+	process_init(pbt_client, pbt_client->waitset, false);
 
 	pbt_client->sig = "pbt_client";
 	pbt_client->frame.scr = pbt_scr_init(pbt_client, pbt_client->waitset,

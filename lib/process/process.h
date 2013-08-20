@@ -47,7 +47,7 @@ struct process {
  * process_create. The pointer returned can be talloc_free()-ed, or can be
  * automatically freed through destruction of the ctx talloc tree.
  */
-struct procset *process_init(void *ctx, struct waitset *set);
+struct procset *process_init(void *ctx, struct waitset *set, bool dry_run);
 
 struct process *process_create(void *ctx);
 

@@ -29,6 +29,7 @@ struct procset {
 	struct list		async_list;
 	int			sigchld_pipe[2];
 	struct waiter		*sigchld_waiter;
+	bool			dry_run;
 };
 
 /* Internal data type for process handling
@@ -245,13 +246,14 @@ static int process_fini(void *p)
 	return 0;
 }
 
-struct procset *process_init(void *ctx, struct waitset *set)
+struct procset *process_init(void *ctx, struct waitset *set, bool dry_run)
 {
 	struct sigaction sa;
 	int rc;
 
 	procset = talloc(ctx, struct procset);
 	procset->waitset = set;
+	procset->dry_run = dry_run;
 	list_init(&procset->async_list);
 
 	rc = pipe(procset->sigchld_pipe);
@@ -330,6 +332,8 @@ static int process_run_common(struct process_info *procinfo)
 
 	if (pid == 0) {
 		process_setup_stdout_child(procinfo);
+		if (procset->dry_run)
+			exit(EXIT_SUCCESS);
 		execvp(process->path, (char * const *)process->argv);
 		exit(EXIT_FAILURE);
 	}

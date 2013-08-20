@@ -508,7 +508,7 @@ struct cui *cui_init(void* platform_info,
 	cui->platform_info = platform_info;
 	cui->waitset = waitset_create(cui);
 
-	process_init(cui, cui->waitset);
+	process_init(cui, cui->waitset, false);
 
 	setlocale(LC_ALL, "");
 

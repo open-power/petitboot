@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 	if (!server)
 		return EXIT_FAILURE;
 
-	procset = process_init(server, waitset);
+	procset = process_init(server, waitset, opts.dry_run == opt_yes);
 	if (!procset)
 		return EXIT_FAILURE;
 
