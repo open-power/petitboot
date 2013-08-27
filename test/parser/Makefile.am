@@ -33,6 +33,7 @@ TESTS = \
 	test-grub2-ubuntu-13_04-x86 \
 	test-kboot-single \
 	test-yaboot-single \
+	test-yaboot-partition \
 	test-yaboot-external \
 	test-yaboot-root-global \
 	test-yaboot-root-override \
