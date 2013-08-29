@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -53,9 +54,9 @@ static struct resource *create_yaboot_devpath_resource(
 		const char *path)
 {
 	struct discover_boot_option *opt = state->opt;
-	const char *dev, *part;
+	const char *dev, *part, *devpos;
 	struct resource *res;
-	char *devpath;
+	char *devpath, *devstr;
 
 	dev = state->device;
 	part = state->partition;
@@ -69,8 +70,19 @@ static struct resource *create_yaboot_devpath_resource(
 		devpath = talloc_strdup(conf, path);
 
 	} else if (dev && part) {
-		devpath = talloc_asprintf(conf,
-				"%s%s:%s", dev, part, path);
+		devpos = &dev[strlen(dev) - 1];
+		if (isdigit(*devpos)) {
+			while (isdigit(*devpos))
+				devpos--;
+
+			devstr = talloc_strndup(conf, dev, devpos - dev + 1);
+			devpath = talloc_asprintf(conf, "%s%s:%s", devstr,
+					part, path);
+			talloc_free(devstr);
+		} else {
+			devpath = talloc_asprintf(conf,
+					"%s%s:%s", dev, part, path);
+		}
 	} else if (dev) {
 		devpath = talloc_asprintf(conf, "%s:%s", dev, path);
 	} else {
