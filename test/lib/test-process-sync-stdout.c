@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 
 	waitset = waitset_create(ctx);
 
-	process_init(ctx, waitset);
+	process_init(ctx, waitset, false);
 
 	child_argv[0] = argv[0];
 	child_argv[1] = "child";

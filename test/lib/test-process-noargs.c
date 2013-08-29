@@ -17,7 +17,7 @@ int main(void)
 
 	waitset = waitset_create(ctx);
 
-	process_init(ctx, waitset);
+	process_init(ctx, waitset, false);
 
 	result = process_run_simple(ctx, "true", NULL);
 

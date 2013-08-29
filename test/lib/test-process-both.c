@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
 	waitset = waitset_create(test);
 
-	process_init(test, waitset);
+	process_init(test, waitset, false);
 
 	sync_child_argv[0] = argv[0];
 	sync_child_argv[1] = "sync-child";
