@@ -34,6 +34,7 @@ TESTS = \
 	test-kboot-single \
 	test-yaboot-single \
 	test-yaboot-partition \
+	test-yaboot-partition-override \
 	test-yaboot-external \
 	test-yaboot-root-global \
 	test-yaboot-root-override \
