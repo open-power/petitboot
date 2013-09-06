@@ -17,6 +17,7 @@ resolve_url() {
 	if [ "$tmp" != "$file" ]
 	then
 		echo "$file"
+		return
 	fi
 
 	# Otherwise, TFTP using an appropriate host. Start with the
