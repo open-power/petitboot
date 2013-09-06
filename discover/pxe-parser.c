@@ -12,7 +12,8 @@
 
 static void pxe_finish(struct conf_context *conf)
 {
-	discover_context_add_boot_option(conf->dc, conf->parser_info);
+	if (conf->parser_info)
+		discover_context_add_boot_option(conf->dc, conf->parser_info);
 }
 
 static void pxe_process_pair(struct conf_context *ctx,
