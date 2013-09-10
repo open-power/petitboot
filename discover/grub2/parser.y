@@ -4,7 +4,13 @@
 %parse-param { struct grub2_parser *parser }
 
 %{
+#include "grub2.h"
+#include "parser.h"
 #include "lexer.h"
+
+#define YYLEX_PARAM parser->scanner
+
+static void yyerror(struct grub2_parser *, char const *s);
 %}
 
 %union {
@@ -41,9 +47,41 @@
 %token	TOKEN_WORD
 
 %start	script
+%debug
 
 %%
 
-script: /* empty */
+script: statements
+	;
+
+statements: statement
+	| statements statement
+	;
+
+statement: TOKEN_EOL
+	| words TOKEN_EOL
+	| '{' statements '}'
+	| "if" TOKEN_DELIM statement
+		"then" TOKEN_EOL
+		statements
+		"fi" TOKEN_EOL
+	| "menuentry" TOKEN_DELIM words TOKEN_DELIM
+		'{' statements '}'
+		TOKEN_EOL
+	;
+
+words:	| word
+	| words TOKEN_DELIM word
+	;
+
+word:	TOKEN_WORD
+	| word TOKEN_WORD
+	;
 
 %%
+void yyerror(struct grub2_parser *parser, char const *s)
+{
+	fprintf(stderr, "%d: error: %s '%s'\n",
+			yyget_lineno(parser->scanner),
+			s, yyget_text(parser->scanner));
+}
