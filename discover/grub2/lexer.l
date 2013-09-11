@@ -1,5 +1,6 @@
 
 %{
+#include "grub2.h"
 #include "parser.h"
 #include <talloc/talloc.h>
 %}
@@ -50,16 +51,15 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 
  /* anything that's not a metachar: return as a plain word */
 {WORD}	{
-		yylval->strval = talloc_strdup(yyscanner, yytext);
-		yylval->expand = 0;
+		yylval->word = create_word(yyget_extra(yyscanner), yytext,
+						false, false);
 		return TOKEN_WORD;
 	}
 
 \${VARNAME} |
 \$\{{VARNAME}\} {
-		yylval->strval = talloc_strdup(yyscanner, yytext);
-		yylval->expand = 1;
-		yylval->split = 1;
+		yylval->word = create_word(yyget_extra(yyscanner), yytext,
+						true, true);
 		return TOKEN_WORD;
 	}
 
@@ -69,12 +69,11 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 	}
 <sqstring>\' {
 		yy_pop_state(yyscanner);
-		return TOKEN_WORD;
 	}
 <sqstring>[^']+ {
-		yylval->expand = 0;
-		yylval->split = 0;
-		yylval->strval = talloc_strdup(yyscanner, yytext);
+		yylval->word = create_word(yyget_extra(yyscanner), yytext,
+						false, false);
+		return TOKEN_WORD;
 	}
 
  /* double-quoted strings: return a single, expanded word token */
@@ -83,12 +82,11 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 	}
 <dqstring>\" {
 		yy_pop_state(yyscanner);
-		return TOKEN_WORD;
 	}
 <dqstring>([^"]|\\\")+ {
-		yylval->expand = 1;
-		yylval->split = 0;
-		yylval->strval = talloc_strdup(yyscanner, yytext);
+		yylval->word = create_word(yyget_extra(yyscanner), yytext,
+						true, false);
+		return TOKEN_WORD;
 	}
 
 

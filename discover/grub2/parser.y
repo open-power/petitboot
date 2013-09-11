@@ -14,7 +14,10 @@ static void yyerror(struct grub2_parser *, char const *s);
 %}
 
 %union {
-	struct grub2_word *word;
+	struct grub2_word	*word;
+	struct grub2_argv	*argv;
+	struct grub2_statement	*statement;
+	struct grub2_statements	*statements;
 }
 
 /* reserved words */
@@ -37,42 +40,66 @@ static void yyerror(struct grub2_parser *, char const *s);
 %token	TOKEN_UTIL		"until"
 %token	TOKEN_WHILE		"while"
 
+%type <statement>	statement
+%type <statements>	statements
+%type <argv>		words
+%type <word>		word
+
 /* syntax */
 %token	TOKEN_EOL
 %token	TOKEN_DELIM
-%token	TOKEN_WORD
+%token	<word> TOKEN_WORD
 
 %start	script
 %debug
 
 %%
 
-script: statements
-	;
+script: statements {
+		parser->statements = $1;
+	}
 
-statements: statement
-	| statements statement
-	;
+statements: statement {
+		$$ = create_statements(parser);
+		statement_append($$, $1);
+	}
+	| statements statement {
+		statement_append($1, $2);
+	}
 
-statement: TOKEN_EOL
-	| words TOKEN_EOL
-	| '{' statements '}'
+statement: TOKEN_EOL {
+		$$ = NULL;
+	}
+	| words TOKEN_EOL {
+		   $$ = create_statement_simple(parser, $1);
+	}
+	| '{' statements '}' { $$ = NULL; }
 	| "if" TOKEN_DELIM statement
 		"then" TOKEN_EOL
 		statements
-		"fi" TOKEN_EOL
+		"fi" TOKEN_EOL {
+		$$ = create_statement_if(parser, $3, $6, NULL);
+	}
 	| "menuentry" TOKEN_DELIM words TOKEN_DELIM
 		'{' statements '}'
-		TOKEN_EOL
-	;
+		TOKEN_EOL {
+		$$ = create_statement_menuentry(parser, $3, $6);
+	}
 
-words:	| word
-	| words TOKEN_DELIM word
-	;
+words:	word {
+		$$ = create_argv(parser);
+		argv_append($$, $1);
+	}
+	| words TOKEN_DELIM word {
+		argv_append($1, $3);
+		$$ = $1;
+	}
 
 word:	TOKEN_WORD
-	| word TOKEN_WORD
-	;
+	| word TOKEN_WORD {
+		word_append($1, $2);
+		$$ = $1;
+	}
 
 %%
 void yyerror(struct grub2_parser *parser, char const *s)
