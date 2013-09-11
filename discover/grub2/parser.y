@@ -14,11 +14,7 @@ static void yyerror(struct grub2_parser *, char const *s);
 %}
 
 %union {
-	struct {
-		char	*strval;
-		int	expand;
-		int	split;
-	};
+	struct grub2_word *word;
 }
 
 /* reserved words */
