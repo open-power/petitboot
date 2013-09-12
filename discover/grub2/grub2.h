@@ -1,6 +1,7 @@
 #ifndef GRUB2_H
 #define GRUB2_H
 
+#include <regex.h>
 #include <stdbool.h>
 #include <list/list.h>
 
@@ -57,6 +58,8 @@ struct grub2_statement_block {
 
 struct grub2_script {
 	struct grub2_statements	*statements;
+	struct list		environment;
+	regex_t			var_re;
 };
 
 struct grub2_parser {
