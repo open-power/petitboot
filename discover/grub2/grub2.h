@@ -55,9 +55,13 @@ struct grub2_statement_block {
 	struct grub2_statements	*statements;
 };
 
+struct grub2_script {
+	struct grub2_statements	*statements;
+};
+
 struct grub2_parser {
 	void			*scanner;
-	struct grub2_statements	*statements;
+	struct grub2_script	*script;
 };
 
 struct grub2_statements *create_statements(struct grub2_parser *parser);
@@ -87,6 +91,10 @@ void statement_append(struct grub2_statements *stmts,
 void argv_append(struct grub2_argv *argv, struct grub2_word *word);
 
 void word_append(struct grub2_word *w1, struct grub2_word *w2);
+
+/* script interface */
+
+struct grub2_script *create_script(void *ctx);
 
 #endif /* GRUB2_H */
 

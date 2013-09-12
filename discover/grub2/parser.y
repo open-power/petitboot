@@ -56,7 +56,7 @@ static void yyerror(struct grub2_parser *, char const *s);
 %%
 
 script: statements {
-		parser->statements = $1;
+		parser->script->statements = $1;
 	}
 
 statements: statement {
