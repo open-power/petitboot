@@ -14,20 +14,22 @@ struct grub2_statements *create_statements(struct grub2_parser *parser)
 struct grub2_statement *create_statement_simple(struct grub2_parser *parser,
 		struct grub2_argv *argv)
 {
-	struct grub2_statement *stmt = talloc(parser, struct grub2_statement);
-	stmt->type = STMT_TYPE_SIMPLE;
-	stmt->simple.argv = argv;
-	return stmt;
+	struct grub2_statement_simple *stmt =
+		talloc(parser, struct grub2_statement_simple);
+	stmt->st.type = STMT_TYPE_SIMPLE;
+	stmt->argv = argv;
+	return &stmt->st;
 }
 
 struct grub2_statement *create_statement_menuentry(struct grub2_parser *parser,
 		struct grub2_argv *argv, struct grub2_statements *stmts)
 {
-	struct grub2_statement *stmt = talloc(parser, struct grub2_statement);
-	stmt->type = STMT_TYPE_MENUENTRY;
-	stmt->menuentry.argv = argv;
-	stmt->menuentry.statements = stmts;
-	return stmt;
+	struct grub2_statement_menuentry *stmt =
+		talloc(parser, struct grub2_statement_menuentry);
+	stmt->st.type = STMT_TYPE_MENUENTRY;
+	stmt->argv = argv;
+	stmt->statements = stmts;
+	return &stmt->st;
 }
 
 struct grub2_statement *create_statement_if(struct grub2_parser *parser,
@@ -35,21 +37,23 @@ struct grub2_statement *create_statement_if(struct grub2_parser *parser,
 		struct grub2_statements *true_case,
 		struct grub2_statements *false_case)
 {
-	struct grub2_statement *stmt = talloc(parser, struct grub2_statement);
-	stmt->type = STMT_TYPE_IF;
-	stmt->ifstmt.condition = condition;
-	stmt->ifstmt.true_case = true_case;
-	stmt->ifstmt.false_case = false_case;
-	return stmt;
+	struct grub2_statement_if *stmt =
+		talloc(parser, struct grub2_statement_if);
+	stmt->st.type = STMT_TYPE_IF;
+	stmt->condition = condition;
+	stmt->true_case = true_case;
+	stmt->false_case = false_case;
+	return &stmt->st;
 }
 
 struct grub2_statement *create_statement_block(struct grub2_parser *parser,
 		struct grub2_statements *stmts)
 {
-	struct grub2_statement *stmt = talloc(parser, struct grub2_statement);
-	stmt->type = STMT_TYPE_BLOCK;
-	stmt->block.statements = stmts;
-	return stmt;
+	struct grub2_statement_block *stmt =
+		talloc(parser, struct grub2_statement_block);
+	stmt->st.type = STMT_TYPE_BLOCK;
+	stmt->statements = stmts;
+	return &stmt->st;
 }
 
 void statement_append(struct grub2_statements *stmts,

@@ -18,23 +18,8 @@ struct grub2_argv {
 	struct list		words;
 };
 
-struct grub2_statement_simple {
-	struct grub2_argv	*argv;
-};
-
-struct grub2_statement_menuentry {
-	struct grub2_argv	*argv;
-	struct grub2_statements	*statements;
-};
-
-struct grub2_statement_if {
-	struct grub2_statement	*condition;
-	struct grub2_statements	*true_case;
-	struct grub2_statements	*false_case;
-};
-
-struct grub2_statement_block {
-	struct grub2_statements	*statements;
+struct grub2_statements {
+	struct list		list;
 };
 
 struct grub2_statement {
@@ -45,16 +30,29 @@ struct grub2_statement {
 		STMT_TYPE_IF,
 		STMT_TYPE_BLOCK,
 	} type;
-	union {
-		struct grub2_statement_simple		simple;
-		struct grub2_statement_menuentry	menuentry;
-		struct grub2_statement_if		ifstmt;
-		struct grub2_statement_block		block;
-	};
 };
 
-struct grub2_statements {
-	struct list		list;
+struct grub2_statement_simple {
+	struct grub2_statement	st;
+	struct grub2_argv	*argv;
+};
+
+struct grub2_statement_menuentry {
+	struct grub2_statement	st;
+	struct grub2_argv	*argv;
+	struct grub2_statements	*statements;
+};
+
+struct grub2_statement_if {
+	struct grub2_statement	st;
+	struct grub2_statement	*condition;
+	struct grub2_statements	*true_case;
+	struct grub2_statements	*false_case;
+};
+
+struct grub2_statement_block {
+	struct grub2_statement	st;
+	struct grub2_statements	*statements;
 };
 
 struct grub2_parser {
