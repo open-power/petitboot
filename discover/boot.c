@@ -27,13 +27,24 @@ enum {
 	BOOT_HOOK_EXIT_UPDATE	= 2,
 };
 
+enum boot_process_state {
+	BOOT_STATE_INITIAL,
+	BOOT_STATE_IMAGE_LOADING,
+	BOOT_STATE_INITRD_LOADING,
+	BOOT_STATE_FINISH,
+	BOOT_STATE_UNKNOWN,
+};
+
 
 struct boot_task {
 	char *local_image;
 	char *local_initrd;
 	char *local_dtb;
 	char *args;
-
+	struct pb_url *image, *initrd, *dtb;
+	boot_status_fn status_fn;
+	void *status_arg;
+	enum boot_process_state state;
 	bool dry_run;
 };
 
@@ -216,8 +227,7 @@ static int hook_cmp(const struct dirent **a, const struct dirent **b)
 	return strcmp((*a)->d_name, (*b)->d_name);
 }
 
-static void run_boot_hooks(struct boot_task *task, boot_status_fn status_fn,
-		void *status_arg)
+static void run_boot_hooks(struct boot_task *task)
 {
 	struct dirent **hooks;
 	int i, n;
@@ -226,7 +236,7 @@ static void run_boot_hooks(struct boot_task *task, boot_status_fn status_fn,
 	if (n < 1)
 		return;
 
-	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
 			"running boot hooks");
 
 	boot_hook_setenv(task);
@@ -277,20 +287,126 @@ static void run_boot_hooks(struct boot_task *task, boot_status_fn status_fn,
 	free(hooks);
 }
 
+static void boot_process(void *ctx, int *status)
+{
+	struct boot_task *task = ctx;
+	unsigned int clean_image = 0;
+	unsigned int clean_initrd = 0;
+	unsigned int clean_dtb = 0;
+	int result = -1;
+
+	if (task->state == BOOT_STATE_INITIAL) {
+		update_status(task->status_fn, task->status_arg,
+				BOOT_STATUS_INFO, "loading kernel");
+		task->local_image = load_url_async(task, task->image,
+					&clean_image, boot_process);
+		if (!task->local_image) {
+			update_status(task->status_fn, task->status_arg,
+					BOOT_STATUS_ERROR,
+					"Couldn't load kernel image");
+			goto no_load;
+		} else {
+			task->state = BOOT_STATE_IMAGE_LOADING;
+			*status = 0;
+			return;
+		}
+	}
+
+	if (task->state == BOOT_STATE_IMAGE_LOADING) {
+		if (task->initrd) {
+			update_status(task->status_fn, task->status_arg,
+					BOOT_STATUS_INFO, "loading initrd");
+			task->local_initrd = load_url_async(task, task->initrd,
+					&clean_initrd, boot_process);
+			if (!task->local_initrd) {
+				update_status(task->status_fn, task->status_arg,
+						BOOT_STATUS_ERROR,
+						"Couldn't load initrd image");
+				goto no_load;
+			} else {
+				task->state = BOOT_STATE_INITRD_LOADING;
+				*status = 0;
+				return;
+			}
+		} else {
+			task->state = BOOT_STATE_INITRD_LOADING;
+		}
+	}
+
+	if (task->state == BOOT_STATE_INITRD_LOADING) {
+		if (task->dtb) {
+			update_status(task->status_fn, task->status_arg,
+					BOOT_STATUS_INFO,
+					"loading device tree");
+			task->local_dtb = load_url_async(task, task->dtb,
+						&clean_dtb, boot_process);
+			if (!task->local_dtb) {
+				update_status(task->status_fn, task->status_arg,
+						BOOT_STATUS_ERROR,
+						"Couldn't load device tree");
+				goto no_load;
+			} else {
+				task->state = BOOT_STATE_FINISH;
+				*status = 0;
+				return;
+			}
+		} else {
+			task->state = BOOT_STATE_FINISH;
+		}
+	}
+
+	if (task->state != BOOT_STATE_FINISH) {
+		task->state = BOOT_STATE_UNKNOWN;
+		*status = -1;
+		return;
+	}
+
+	run_boot_hooks(task);
+
+	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
+			"performing kexec_load");
+
+	result = kexec_load(task);
+
+	if (result) {
+		update_status(task->status_fn, task->status_arg,
+				BOOT_STATUS_ERROR, "kexec load failed");
+	}
+
+no_load:
+	if (clean_image)
+		unlink(task->local_image);
+	if (clean_initrd)
+		unlink(task->local_initrd);
+	if (clean_dtb)
+		unlink(task->local_dtb);
+
+	if (!result) {
+		update_status(task->status_fn, task->status_arg,
+				BOOT_STATUS_INFO,
+				"performing kexec reboot");
+
+		result = kexec_reboot(task);
+
+		if (result) {
+			update_status(task->status_fn, task->status_arg,
+					BOOT_STATUS_ERROR,
+					"kexec reboot failed");
+		}
+	}
+
+	talloc_free(task);
+
+	*status = result;
+}
+
 int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		int dry_run, boot_status_fn status_fn, void *status_arg)
 {
 	struct boot_task *boot_task;
-	struct pb_url *image, *initrd, *dtb;
-	unsigned int clean_image = 0;
-	unsigned int clean_initrd = 0;
-	unsigned int clean_dtb = 0;
+	struct pb_url *image = NULL;
 	const char *boot_desc;
 	int result;
-
-	image = NULL;
-	initrd = NULL;
-	dtb = NULL;
 
 	if (opt && opt->option->name)
 		boot_desc = opt->option->name;
@@ -314,18 +430,22 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	}
 
 	boot_task = talloc_zero(ctx, struct boot_task);
+	boot_task->image = image;
 	boot_task->dry_run = dry_run;
+	boot_task->status_fn = status_fn;
+	boot_task->status_arg = status_arg;
+	boot_task->state = BOOT_STATE_INITIAL;
 
 	if (cmd && cmd->initrd_file) {
-		initrd = pb_url_parse(opt, cmd->initrd_file);
+		boot_task->initrd = pb_url_parse(opt, cmd->initrd_file);
 	} else if (opt && opt->initrd) {
-		initrd = opt->initrd->url;
+		boot_task->initrd = opt->initrd->url;
 	}
 
 	if (cmd && cmd->dtb_file) {
-		dtb = pb_url_parse(opt, cmd->dtb_file);
+		boot_task->dtb = pb_url_parse(opt, cmd->dtb_file);
 	} else if (opt && opt->dtb) {
-		dtb = opt->dtb->url;
+		boot_task->dtb = opt->dtb->url;
 	}
 
 	if (cmd && cmd->boot_args) {
@@ -337,72 +457,7 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		boot_task->args = NULL;
 	}
 
-	result = -1;
-
-	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
-			"loading kernel");
-	boot_task->local_image = load_url(NULL, image, &clean_image);
-	if (!boot_task->local_image) {
-		update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
-				"Couldn't load kernel image");
-		goto no_load;
-	}
-
-	if (initrd) {
-		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
-				"loading initrd");
-		boot_task->local_initrd = load_url(NULL, initrd, &clean_initrd);
-		if (!boot_task->local_initrd) {
-			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
-					"Couldn't load initrd image");
-			goto no_load;
-		}
-	}
-
-	if (dtb) {
-		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
-				"loading device tree");
-		boot_task->local_dtb = load_url(NULL, dtb, &clean_dtb);
-		if (!boot_task->local_dtb) {
-			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
-					"Couldn't load device tree");
-			goto no_load;
-		}
-	}
-
-	run_boot_hooks(boot_task, status_fn, status_arg);
-
-	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
-			"performing kexec_load");
-
-	result = kexec_load(boot_task);
-
-	if (result) {
-		update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
-				"kexec load failed");
-	}
-
-no_load:
-	if (clean_image)
-		unlink(boot_task->local_image);
-	if (clean_initrd)
-		unlink(boot_task->local_initrd);
-	if (clean_dtb)
-		unlink(boot_task->local_dtb);
-
-	if (!result) {
-		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
-				"performing kexec reboot");
-
-		result = kexec_reboot(boot_task);
-
-		if (result) {
-			update_status(status_fn, status_arg, BOOT_STATUS_ERROR,
-					"kexec reboot failed");
-		}
-	}
-
-	talloc_free(boot_task);
+	boot_process(boot_task, &result);
 
 	return result;
 }
