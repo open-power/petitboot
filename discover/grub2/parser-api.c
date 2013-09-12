@@ -42,6 +42,16 @@ struct grub2_statement *create_statement_if(struct grub2_parser *parser,
 	stmt->ifstmt.false_case = false_case;
 	return stmt;
 }
+
+struct grub2_statement *create_statement_block(struct grub2_parser *parser,
+		struct grub2_statements *stmts)
+{
+	struct grub2_statement *stmt = talloc(parser, struct grub2_statement);
+	stmt->type = STMT_TYPE_BLOCK;
+	stmt->block.statements = stmts;
+	return stmt;
+}
+
 void statement_append(struct grub2_statements *stmts,
 		struct grub2_statement *stmt)
 {

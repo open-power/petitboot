@@ -33,17 +33,23 @@ struct grub2_statement_if {
 	struct grub2_statements	*false_case;
 };
 
+struct grub2_statement_block {
+	struct grub2_statements	*statements;
+};
+
 struct grub2_statement {
 	struct list_item	list;
 	enum {
 		STMT_TYPE_SIMPLE,
 		STMT_TYPE_MENUENTRY,
 		STMT_TYPE_IF,
+		STMT_TYPE_BLOCK,
 	} type;
 	union {
 		struct grub2_statement_simple		simple;
 		struct grub2_statement_menuentry	menuentry;
 		struct grub2_statement_if		ifstmt;
+		struct grub2_statement_block		block;
 	};
 };
 
@@ -68,6 +74,9 @@ struct grub2_statement *create_statement_if(struct grub2_parser *parser,
 		struct grub2_statement *condition,
 		struct grub2_statements *true_case,
 		struct grub2_statements *false_case);
+
+struct grub2_statement *create_statement_block(struct grub2_parser *parser,
+		struct grub2_statements *stmts);
 
 struct grub2_word *create_word(struct grub2_parser *parser, const char *text,
 		bool expand, bool split);

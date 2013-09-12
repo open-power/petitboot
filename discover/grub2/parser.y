@@ -73,7 +73,9 @@ statement: TOKEN_EOL {
 	| words TOKEN_EOL {
 		   $$ = create_statement_simple(parser, $1);
 	}
-	| '{' statements '}' { $$ = NULL; }
+	| '{' statements '}' {
+		$$ = create_statement_block(parser, $2);
+	}
 	| "if" TOKEN_DELIM statement
 		"then" TOKEN_EOL
 		statements
