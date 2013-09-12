@@ -14,6 +14,12 @@
 
 #define DEVICE_MOUNT_BASE (LOCAL_STATE_DIR "/petitboot/mnt")
 
+struct load_url_async_data {
+	load_url_callback url_cb;
+	void *ctx;
+	int status;
+};
+
 const char *mount_base(void)
 {
 	return DEVICE_MOUNT_BASE;
@@ -49,34 +55,70 @@ static char *local_name(void *ctx)
 	return ret;
 }
 
+static void load_url_exit_cb(struct process *process)
+{
+	struct load_url_async_data *url_data = process->data;
+
+	pb_log("The download client '%s' [pid %d] exited, rc %d\n",
+			process->path, process->pid, process->exit_status);
+
+	if (!url_data->status)
+		url_data->url_cb(url_data->ctx, &(url_data->status));
+
+	process_release(process);
+}
+
 /**
  * pb_load_nfs - Mounts the NFS export and returns the local file path.
  *
  * Returns the local file path in a talloc'ed character string on success,
  * or NULL on error.
  */
-static char *load_nfs(void *ctx, struct pb_url *url)
+static char *load_nfs(void *ctx, struct pb_url *url,
+		struct load_url_async_data *url_data)
 {
 	char *local, *opts;
 	int result;
+	struct process *process;
+	const char *argv[] = {
+			pb_system_apps.mount,
+			"-t", "nfs",
+			NULL,
+			url->host,
+			url->dir,
+			NULL,
+			NULL,
+	};
 
 	local = local_name(ctx);
-
 	if (!local)
 		return NULL;
+	argv[6] = local;
 
 	result = pb_mkdir_recursive(local);
-
 	if (result)
 		goto fail;
 
 	opts = talloc_strdup(NULL, "ro,nolock,nodiratime");
+	argv[3] = opts;
 
 	if (url->port)
 		opts = talloc_asprintf_append(opts, ",port=%s", url->port);
 
-	result = process_run_simple(ctx, pb_system_apps.mount, "-t", "nfs",
-			opts, url->host, url->dir, local, NULL);
+	if (url_data) {
+		process = process_create(ctx);
+
+		process->path = pb_system_apps.mount;
+		process->argv = argv;
+		process->exit_cb = load_url_exit_cb;
+		process->data = url_data;
+
+		result = process_run_async(process);
+		if (result)
+			process_release(process);
+	} else {
+		result = process_run_simple_argv(ctx, argv);
+	}
 
 	talloc_free(opts);
 
@@ -100,20 +142,41 @@ fail:
  * Returns the local file path in a talloc'ed character string on success,
  * or NULL on error.
  */
-static char *load_sftp(void *ctx, struct pb_url *url)
+static char *load_sftp(void *ctx, struct pb_url *url,
+		struct load_url_async_data *url_data)
 {
 	char *host_path, *local;
 	int result;
+	struct process *process;
+	const char *argv[] = {
+			pb_system_apps.sftp,
+			NULL,
+			NULL,
+			NULL,
+	};
 
 	local = local_name(ctx);
-
 	if (!local)
 		return NULL;
+	argv[2] = local;
 
 	host_path = talloc_asprintf(local, "%s:%s", url->host, url->path);
+	argv[1] = host_path;
 
-	result = process_run_simple(ctx, pb_system_apps.sftp, host_path,
-			local, NULL);
+	if (url_data) {
+		process = process_create(ctx);
+
+		process->path = pb_system_apps.sftp;
+		process->argv = argv;
+		process->exit_cb = load_url_exit_cb;
+		process->data = url_data;
+
+		result = process_run_async(process);
+		if (result)
+			process_release(process);
+	} else {
+		result = process_run_simple_argv(ctx, argv);
+	}
 
 	if (result)
 		goto fail;
@@ -132,12 +195,14 @@ fail:
  * or NULL on error.
  */
 
-static char *load_tftp(void *ctx, struct pb_url *url)
+static char *load_tftp(void *ctx, struct pb_url *url,
+		struct load_url_async_data *url_data)
 {
 	int result;
 	const char *argv[10];
 	const char **p;
 	char *local;
+	struct process *process;
 
 	local = local_name(ctx);
 
@@ -158,13 +223,23 @@ static char *load_tftp(void *ctx, struct pb_url *url)
 		*p++ = url->port;	/* 8 */
 	*p++ = NULL;			/* 9 */
 
-	result = process_run_simple_argv(ctx, argv);
+	if (url_data) {
+		process = process_create(ctx);
+
+		process->path = pb_system_apps.tftp;
+		process->argv = argv;
+		process->exit_cb = load_url_exit_cb;
+		process->data = url_data;
+
+		result = process_run_async(process);
+	} else {
+		result = process_run_simple_argv(ctx, argv);
+	}
 
 	if (!result)
 		return local;
 
 	/* next try tftp-hpa args */
-
 	p = argv;
 	*p++ = pb_system_apps.tftp;	/* 1 */
 	*p++ = "-m";			/* 2 */
@@ -178,7 +253,14 @@ static char *load_tftp(void *ctx, struct pb_url *url)
 	*p++ = local;			/* 9 */
 	*p++ = NULL;			/* 10 */
 
-	result = process_run_simple_argv(ctx, argv);
+	if (url_data) {
+		process->argv = argv;
+		result = process_run_async(process);
+		if (result)
+			process_release(process);
+	} else {
+		result = process_run_simple_argv(ctx, argv);
+	}
 
 	if (!result)
 		return local;
@@ -199,12 +281,14 @@ enum wget_flags {
  * or NULL on error.
  */
 
-static char *load_wget(void *ctx, struct pb_url *url, enum wget_flags flags)
+static char *load_wget(void *ctx, struct pb_url *url, enum wget_flags flags,
+		struct load_url_async_data *url_data)
 {
 	int result;
 	const char *argv[7];
 	const char **p;
 	char *local;
+	struct process *process;
 
 	local = local_name(ctx);
 
@@ -223,7 +307,20 @@ static char *load_wget(void *ctx, struct pb_url *url, enum wget_flags flags)
 		*p++ = "--no-check-certificate";	/* 6 */
 	*p++ = NULL;					/* 7 */
 
-	result = process_run_simple_argv(ctx, argv);
+	if (url_data) {
+		process = process_create(ctx);
+
+		process->path = pb_system_apps.wget;
+		process->argv = argv;
+		process->exit_cb = load_url_exit_cb;
+		process->data = url_data;
+
+		result = process_run_async(process);
+		if (result)
+			process_release(process);
+	} else {
+		result = process_run_simple_argv(ctx, argv);
+	}
 
 	if (result)
 		goto fail;
@@ -239,42 +336,56 @@ fail:
  * load_url - Loads a (possibly) remote URL and returns the local file
  * path.
  * @ctx: The talloc context to associate with the returned string.
- * @URL: The remote file URL.
+ * @url: The remote file URL.
  * @tempfile: An optional variable pointer to be set when a temporary local
  *  file is created.
+ * @url_cb: An optional callback pointer if the caller wants to load url
+ *  asynchronously.
  *
  * Returns the local file path in a talloc'ed character string on success,
  * or NULL on error.
  */
 
-char *load_url(void *ctx, struct pb_url *url, unsigned int *tempfile)
+char *load_url_async(void *ctx, struct pb_url *url, unsigned int *tempfile,
+		load_url_callback url_cb)
 {
 	char *local;
 	int tmp = 0;
+	struct load_url_async_data *url_data;
 
 	if (!url)
 		return NULL;
 
+	url_data = NULL;
+
+	if (url_cb) {
+		url_data = talloc_zero(ctx, struct load_url_async_data);
+		url_data->url_cb = url_cb;
+		url_data->ctx = ctx;
+		url_data->status = 0;
+	}
+
 	switch (url->scheme) {
 	case pb_url_ftp:
 	case pb_url_http:
-		local = load_wget(ctx, url, 0);
+		local = load_wget(ctx, url, 0, url_data);
 		tmp = !!local;
 		break;
 	case pb_url_https:
-		local = load_wget(ctx, url, wget_no_check_certificate);
+		local = load_wget(ctx, url, wget_no_check_certificate,
+				url_data);
 		tmp = !!local;
 		break;
 	case pb_url_nfs:
-		local = load_nfs(ctx, url);
+		local = load_nfs(ctx, url, url_data);
 		tmp = !!local;
 		break;
 	case pb_url_sftp:
-		local = load_sftp(ctx, url);
+		local = load_sftp(ctx, url, url_data);
 		tmp = !!local;
 		break;
 	case pb_url_tftp:
-		local = load_tftp(ctx, url);
+		local = load_tftp(ctx, url, url_data);
 		tmp = !!local;
 		break;
 	default:
@@ -287,4 +398,9 @@ char *load_url(void *ctx, struct pb_url *url, unsigned int *tempfile)
 		*tempfile = tmp;
 
 	return local;
+}
+
+char *load_url(void *ctx, struct pb_url *url, unsigned int *tempfile)
+{
+	return load_url_async(ctx, url, tempfile, NULL);
 }
