@@ -75,6 +75,7 @@ struct grub2_word *create_word_text(struct grub2_parser *parser,
 	word->type = GRUB2_WORD_TEXT;
 	word->text = talloc_strdup(word, text);
 	word->next = NULL;
+	word->last = word;
 	return word;
 }
 
@@ -86,6 +87,7 @@ struct grub2_word *create_word_var(struct grub2_parser *parser,
 	word->var.name = talloc_strdup(word, name);
 	word->var.split = split;
 	word->next = NULL;
+	word->last = word;
 	return word;
 }
 
@@ -103,5 +105,6 @@ void argv_append(struct grub2_argv *argv, struct grub2_word *word)
 
 void word_append(struct grub2_word *w1, struct grub2_word *w2)
 {
-	w1->next = w2;
+	w1->last->next = w2;
+	w1->last = w2;
 }

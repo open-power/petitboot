@@ -19,6 +19,7 @@ struct grub2_word {
 		} var;
 	};
 	struct grub2_word	*next;
+	struct grub2_word	*last;
 	struct list_item	argv_list;
 };
 
