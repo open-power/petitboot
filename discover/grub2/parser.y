@@ -65,6 +65,7 @@ statements: statement {
 	}
 	| statements statement {
 		statement_append($1, $2);
+		$$ = $1;
 	}
 
 statement: TOKEN_EOL {
