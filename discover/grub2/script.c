@@ -10,6 +10,8 @@
 	container_of(stmt, struct grub2_statement_simple, st)
 #define to_stmt_if(stmt) \
 	container_of(stmt, struct grub2_statement_if, st)
+#define to_stmt_menuentry(stmt) \
+	container_of(stmt, struct grub2_statement_menuentry, st)
 
 struct env_entry {
 	const char		*name;
@@ -117,6 +119,17 @@ int statement_if_execute(struct grub2_script *script,
 		rc = 0;
 
 	return rc;
+}
+
+int statement_menuentry_execute(struct grub2_script *script,
+		struct grub2_statement *statement)
+{
+	struct grub2_statement_menuentry *st = to_stmt_menuentry(statement);
+
+	process_expansions(script, st->argv);
+	statements_execute(script, st->statements);
+
+	return 0;
 }
 
 static void init_env(struct grub2_script *script)

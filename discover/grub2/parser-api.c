@@ -28,7 +28,7 @@ struct grub2_statement *create_statement_menuentry(struct grub2_parser *parser,
 	struct grub2_statement_menuentry *stmt =
 		talloc(parser, struct grub2_statement_menuentry);
 	stmt->st.type = STMT_TYPE_MENUENTRY;
-	stmt->st.exec = NULL;
+	stmt->st.exec = statement_menuentry_execute;
 	stmt->argv = argv;
 	stmt->statements = stmts;
 	return &stmt->st;

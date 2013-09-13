@@ -114,6 +114,8 @@ int statement_simple_execute(struct grub2_script *script,
 		struct grub2_statement *statement);
 int statement_if_execute(struct grub2_script *script,
 		struct grub2_statement *statement);
+int statement_menuentry_execute(struct grub2_script *script,
+		struct grub2_statement *statement);
 
 struct grub2_script *create_script(void *ctx);
 
