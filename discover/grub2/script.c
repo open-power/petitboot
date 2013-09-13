@@ -23,8 +23,6 @@ static const char *env_lookup(struct grub2_script *script,
 {
 	struct env_entry *entry;
 
-	printf("%s: %.*s\n", __func__, name_len, name);
-
 	list_for_each_entry(&script->environment, entry, list)
 		if (!strncmp(entry->name, name, name_len)
 				&& entry->name[name_len] == '\0')
@@ -43,7 +41,6 @@ static bool expand_word(struct grub2_script *script, struct grub2_word *word)
 	src = word->text;
 
 	n = regexec(&script->var_re, src, 1, &match, 0);
-	printf("%s %s: %d\n", __func__, word->text, n);
 	if (n != 0)
 		return false;
 
@@ -55,8 +52,6 @@ static bool expand_word(struct grub2_script *script, struct grub2_word *word)
 				 match.rm_eo - match.rm_so - 1 - (i * 2));
 	if (!val)
 		val = "";
-
-	printf("repl: %s\n", val);
 
 	dest = talloc_strndup(script, src, match.rm_so);
 	dest = talloc_asprintf_append(dest, "%s%s", val, src + match.rm_eo);
