@@ -1,16 +1,23 @@
 #ifndef GRUB2_H
 #define GRUB2_H
 
-#include <regex.h>
 #include <stdbool.h>
 #include <list/list.h>
 
 struct grub2_script;
 
 struct grub2_word {
-	const char		*text;
-	bool			expand;
-	bool			split;
+	enum {
+		GRUB2_WORD_TEXT,
+		GRUB2_WORD_VAR,
+	} type;
+	union {
+		char	*text;
+		struct {
+			const char	*name;
+			bool		split;
+		} var;
+	};
 	struct grub2_word	*next;
 	struct list_item	argv_list;
 };
@@ -61,7 +68,6 @@ struct grub2_statement_block {
 struct grub2_script {
 	struct grub2_statements	*statements;
 	struct list		environment;
-	regex_t			var_re;
 };
 
 struct grub2_parser {
@@ -85,8 +91,11 @@ struct grub2_statement *create_statement_if(struct grub2_parser *parser,
 struct grub2_statement *create_statement_block(struct grub2_parser *parser,
 		struct grub2_statements *stmts);
 
-struct grub2_word *create_word(struct grub2_parser *parser, const char *text,
-		bool expand, bool split);
+struct grub2_word *create_word_text(struct grub2_parser *parser,
+		const char *text);
+
+struct grub2_word *create_word_var(struct grub2_parser *parser,
+		const char *name, bool split);
 
 struct grub2_argv *create_argv(struct grub2_parser *parser);
 

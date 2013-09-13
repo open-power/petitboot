@@ -68,13 +68,23 @@ void statement_append(struct grub2_statements *stmts,
 	list_add_tail(&stmts->list, &stmt->list);
 }
 
-struct grub2_word *create_word(struct grub2_parser *parser, const char *text,
-		bool expand, bool split)
+struct grub2_word *create_word_text(struct grub2_parser *parser,
+		const char *text)
 {
 	struct grub2_word *word = talloc(parser, struct grub2_word);
+	word->type = GRUB2_WORD_TEXT;
 	word->text = talloc_strdup(word, text);
-	word->expand = expand;
-	word->split = split;
+	word->next = NULL;
+	return word;
+}
+
+struct grub2_word *create_word_var(struct grub2_parser *parser,
+		const char *name, bool split)
+{
+	struct grub2_word *word = talloc(parser, struct grub2_word);
+	word->type = GRUB2_WORD_VAR;
+	word->var.name = talloc_strdup(word, name);
+	word->var.split = split;
 	word->next = NULL;
 	return word;
 }

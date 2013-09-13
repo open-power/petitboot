@@ -51,15 +51,19 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 
  /* anything that's not a metachar: return as a plain word */
 {WORD}	{
-		yylval->word = create_word(yyget_extra(yyscanner), yytext,
-						false, false);
+		yylval->word = create_word_text(yyget_extra(yyscanner), yytext);
 		return TOKEN_WORD;
 	}
 
 \${VARNAME} |
 \$\{{VARNAME}\} {
-		yylval->word = create_word(yyget_extra(yyscanner), yytext,
-						true, true);
+		if (yytext[1] == '{') {
+			yytext[yyleng-1] = '\0';
+			yytext++;
+		}
+		yytext++;
+		yylval->word = create_word_var(yyget_extra(yyscanner), yytext,
+						true);
 		return TOKEN_WORD;
 	}
 
@@ -71,8 +75,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 		yy_pop_state(yyscanner);
 	}
 <sqstring>[^']+ {
-		yylval->word = create_word(yyget_extra(yyscanner), yytext,
-						false, false);
+		yylval->word = create_word_text(yyget_extra(yyscanner), yytext);
 		return TOKEN_WORD;
 	}
 
@@ -83,11 +86,22 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 <dqstring>\" {
 		yy_pop_state(yyscanner);
 	}
-<dqstring>([^"]|\\\")+ {
-		yylval->word = create_word(yyget_extra(yyscanner), yytext,
-						true, false);
+<dqstring>([^"\$]|\\\")+ {
+		yylval->word = create_word_text(yyget_extra(yyscanner), yytext);
 		return TOKEN_WORD;
 	}
+<dqstring>\${VARNAME} |
+<dqstring>\$\{{VARNAME}\} {
+		if (yytext[1] == '{') {
+			yytext[yyleng-1] = '\0';
+			yytext++;
+		}
+		yytext++;
+		yylval->word = create_word_var(yyget_extra(yyscanner), yytext,
+						false);
+		return TOKEN_WORD;
+	}
+
 
 
  /* blocks */

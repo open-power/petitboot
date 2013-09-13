@@ -1,6 +1,5 @@
 
 #include <sys/types.h>
-#include <regex.h>
 #include <string.h>
 
 #include <talloc/talloc.h>
@@ -19,50 +18,32 @@ struct env_entry {
 };
 
 static const char *env_lookup(struct grub2_script *script,
-		const char *name, int name_len)
+		const char *name)
 {
 	struct env_entry *entry;
 
 	list_for_each_entry(&script->environment, entry, list)
-		if (!strncmp(entry->name, name, name_len)
-				&& entry->name[name_len] == '\0')
+		if (!strcmp(entry->name, name))
 			return entry->value;
 
 	return NULL;
 }
 
-static bool expand_word(struct grub2_script *script, struct grub2_word *word)
+static bool expand_var(struct grub2_script *script, struct grub2_word *word)
 {
-	const char *val, *src;
-	char *dest = NULL;
-	regmatch_t match;
-	int n, i;
+	const char *val;
 
-	src = word->text;
-
-	n = regexec(&script->var_re, src, 1, &match, 0);
-	if (n != 0)
-		return false;
-
-	i = 0;
-	if (src[match.rm_so + 1] == '{')
-		i++;
-
-	val = env_lookup(script, src + match.rm_so + 1 + i,
-				 match.rm_eo - match.rm_so - 1 - (i * 2));
+	val = env_lookup(script, word->var.name);
 	if (!val)
 		val = "";
 
-	dest = talloc_strndup(script, src, match.rm_so);
-	dest = talloc_asprintf_append(dest, "%s%s", val, src + match.rm_eo);
+	word->type = GRUB2_WORD_TEXT;
+	word->text = talloc_strdup(script, val);
 
-	word->text = dest;
 	return true;
 }
 
-/* iterate through the words in an argv, looking for expansions. If a
- * word is marked with expand == true, then we process any variable
- * substitutions.
+/* iterate through the words in an argv, looking for GRUB2_WORD_VAR expansions.
  *
  * Once that's done, we may (if split == true) have to split the word to create
  * new argv items
@@ -70,13 +51,23 @@ static bool expand_word(struct grub2_script *script, struct grub2_word *word)
 static void process_expansions(struct grub2_script *script,
 		struct grub2_argv *argv)
 {
-	struct grub2_word *word;
+	struct grub2_word *top_word, *word;
 
-	list_for_each_entry(&argv->words, word, argv_list) {
-		if (!word->expand)
-			continue;
+	list_for_each_entry(&argv->words, top_word, argv_list) {
+		/* expand vars and squash the list of words into the top struct.
+		 * todo: splitting
+		 */
+		for (word = top_word; word; word = word->next) {
+			if (word->type == GRUB2_WORD_VAR)
+				expand_var(script, word);
 
-		expand_word(script, word);
+			if (word == top_word)
+				continue;
+
+			top_word->text = talloc_asprintf_append(top_word->text,
+					"%s", word->text);
+		}
+		top_word->next = NULL;
 	}
 }
 
@@ -147,32 +138,11 @@ void script_execute(struct grub2_script *script)
 	statements_execute(script, script->statements);
 }
 
-static int script_destroy(void *p)
-{
-	struct grub2_script *script = p;
-	regfree(&script->var_re);
-	return 0;
-}
-
 struct grub2_script *create_script(void *ctx)
 {
 	struct grub2_script *script;
-	int rc;
 
 	script = talloc(ctx, struct grub2_script);
-
-	rc = regcomp(&script->var_re,
-		"\\$\\{?([[:alpha:]][_[:alnum:]]*|[0-9]|[\\?@\\*#])\\}?",
-			REG_EXTENDED);
-	if (rc) {
-		char err[200];
-		regerror(rc, &script->var_re, err, sizeof(err));
-		fprintf(stderr, "RE error %d: %s\n", rc, err);
-		talloc_free(script);
-		return NULL;
-
-	}
-	talloc_set_destructor(script, script_destroy);
 
 	init_env(script);
 
