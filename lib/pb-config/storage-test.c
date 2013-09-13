@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <array-size/array-size.h>
+
 #include "pb-config.h"
 #include "storage.h"
 
@@ -23,8 +25,6 @@ struct interface_config net2 = {
 
 struct interface_config *interface_configs[] = { &net1, &net2 };
 const char *dns_servers[] = { "192.168.1.1", "192.168.1.2" };
-
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 struct config test_config = {
 	.autoboot_enabled = true,
