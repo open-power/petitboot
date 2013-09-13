@@ -19,8 +19,7 @@ struct env_entry {
 	struct list_item	list;
 };
 
-static const char *env_lookup(struct grub2_script *script,
-		const char *name)
+const char *script_env_get(struct grub2_script *script, const char *name)
 {
 	struct env_entry *entry;
 
@@ -31,11 +30,32 @@ static const char *env_lookup(struct grub2_script *script,
 	return NULL;
 }
 
+void script_env_set(struct grub2_script *script,
+		const char *name, const char *value)
+{
+	struct env_entry *e, *entry = NULL;
+
+	list_for_each_entry(&script->environment, e, list) {
+		if (!strcmp(e->name, name)) {
+			entry = e;
+			break;
+		}
+	}
+
+	if (!entry) {
+		entry = talloc(script, struct env_entry);
+		entry->name = name;
+		list_add(&script->environment, &entry->list);
+	}
+
+	entry->value = value;
+}
+
 static bool expand_var(struct grub2_script *script, struct grub2_word *word)
 {
 	const char *val;
 
-	val = env_lookup(script, word->var.name);
+	val = script_env_get(script, word->var.name);
 	if (!val)
 		val = "";
 
@@ -45,7 +65,8 @@ static bool expand_var(struct grub2_script *script, struct grub2_word *word)
 	return true;
 }
 
-/* iterate through the words in an argv, looking for GRUB2_WORD_VAR expansions.
+/* iterate through the words in an argv_list, looking for GRUB2_WORD_VAR
+ * expansions.
  *
  * Once that's done, we may (if split == true) have to split the word to create
  * new argv items
@@ -54,8 +75,13 @@ static void process_expansions(struct grub2_script *script,
 		struct grub2_argv *argv)
 {
 	struct grub2_word *top_word, *word;
+	int i;
+
+	argv->argc = 0;
 
 	list_for_each_entry(&argv->words, top_word, argv_list) {
+		argv->argc++;
+
 		/* expand vars and squash the list of words into the top struct.
 		 * todo: splitting
 		 */
@@ -71,6 +97,12 @@ static void process_expansions(struct grub2_script *script,
 		}
 		top_word->next = NULL;
 	}
+
+	argv->argv = talloc_array(script, char *, argv->argc);
+	i = 0;
+
+	list_for_each_entry(&argv->words, word, argv_list)
+		argv->argv[i++] = word->text;
 }
 
 int statements_execute(struct grub2_script *script,
@@ -90,13 +122,26 @@ int statement_simple_execute(struct grub2_script *script,
 		struct grub2_statement *statement)
 {
 	struct grub2_statement_simple *st = to_stmt_simple(statement);
+	struct grub2_command *cmd;
+	int rc;
 
 	if (!st->argv)
 		return 0;
 
 	process_expansions(script, st->argv);
 
-	return 0;
+	if (!st->argv->argc)
+		return 0;
+
+	cmd = script_lookup_command(script, st->argv->argv[0]);
+	if (!cmd) {
+		fprintf(stderr, "undefined command '%s'\n", st->argv->argv[0]);
+		return 0;
+	}
+
+	rc = cmd->exec(script, st->argv->argc, st->argv->argv);
+
+	return rc;
 }
 
 int statement_if_execute(struct grub2_script *script,
@@ -145,6 +190,25 @@ static void init_env(struct grub2_script *script)
 	list_add(&script->environment, &env->list);
 }
 
+struct grub2_command *script_lookup_command(struct grub2_script *script,
+		const char *name)
+{
+	struct grub2_command *command;
+
+	list_for_each_entry(&script->commands, command, list) {
+		if (!strcmp(command->name, name))
+			return command;
+	}
+
+	return NULL;
+}
+
+void script_register_command(struct grub2_script *script,
+		struct grub2_command *command)
+{
+	list_add(&script->commands, &command->list);
+}
+
 
 void script_execute(struct grub2_script *script)
 {
@@ -158,6 +222,8 @@ struct grub2_script *create_script(void *ctx)
 	script = talloc(ctx, struct grub2_script);
 
 	init_env(script);
+	list_init(&script->commands);
+	register_builtins(script);
 
 	return script;
 }

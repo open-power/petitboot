@@ -25,6 +25,11 @@ struct grub2_word {
 
 struct grub2_argv {
 	struct list		words;
+
+	/* postprocessing (with process_expansions) populates these to hand to
+	 * the grub2_command callbacks */
+	char			**argv;
+	int			argc;
 };
 
 struct grub2_statements {
@@ -66,9 +71,18 @@ struct grub2_statement_block {
 	struct grub2_statements	*statements;
 };
 
+struct grub2_command {
+	const char		*name;
+	int			(*exec)(struct grub2_script *script,
+					int argc, char *argv[]);
+	struct list_item	list;
+};
+
 struct grub2_script {
 	struct grub2_statements	*statements;
 	struct list		environment;
+	struct list		commands;
+	struct list		symtab;
 };
 
 struct grub2_parser {
@@ -119,5 +133,17 @@ int statement_menuentry_execute(struct grub2_script *script,
 
 struct grub2_script *create_script(void *ctx);
 
+const char *script_env_get(struct grub2_script *script, const char *name);
+
+void script_env_set(struct grub2_script *script,
+		const char *name, const char *value);
+
+void script_register_command(struct grub2_script *script,
+		struct grub2_command *command);
+
+struct grub2_command *script_lookup_command(struct grub2_script *script,
+		const char *name);
+
+void register_builtins(struct grub2_script *script);
 #endif /* GRUB2_H */
 
