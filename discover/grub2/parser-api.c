@@ -17,6 +17,7 @@ struct grub2_statement *create_statement_simple(struct grub2_parser *parser,
 	struct grub2_statement_simple *stmt =
 		talloc(parser, struct grub2_statement_simple);
 	stmt->st.type = STMT_TYPE_SIMPLE;
+	stmt->st.exec = statement_simple_execute;
 	stmt->argv = argv;
 	return &stmt->st;
 }
@@ -27,6 +28,7 @@ struct grub2_statement *create_statement_menuentry(struct grub2_parser *parser,
 	struct grub2_statement_menuentry *stmt =
 		talloc(parser, struct grub2_statement_menuentry);
 	stmt->st.type = STMT_TYPE_MENUENTRY;
+	stmt->st.exec = NULL;
 	stmt->argv = argv;
 	stmt->statements = stmts;
 	return &stmt->st;
@@ -40,6 +42,7 @@ struct grub2_statement *create_statement_if(struct grub2_parser *parser,
 	struct grub2_statement_if *stmt =
 		talloc(parser, struct grub2_statement_if);
 	stmt->st.type = STMT_TYPE_IF;
+	stmt->st.exec = statement_if_execute;
 	stmt->condition = condition;
 	stmt->true_case = true_case;
 	stmt->false_case = false_case;
@@ -52,6 +55,7 @@ struct grub2_statement *create_statement_block(struct grub2_parser *parser,
 	struct grub2_statement_block *stmt =
 		talloc(parser, struct grub2_statement_block);
 	stmt->st.type = STMT_TYPE_BLOCK;
+	stmt->st.exec = NULL;
 	stmt->statements = stmts;
 	return &stmt->st;
 }

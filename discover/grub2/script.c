@@ -7,6 +7,11 @@
 
 #include "grub2.h"
 
+#define to_stmt_simple(stmt) \
+	container_of(stmt, struct grub2_statement_simple, st)
+#define to_stmt_if(stmt) \
+	container_of(stmt, struct grub2_statement_if, st)
+
 struct env_entry {
 	const char		*name;
 	const char		*value;
@@ -39,12 +44,13 @@ static bool expand_word(struct grub2_script *script, struct grub2_word *word)
 	src = word->text;
 
 	n = regexec(&script->var_re, src, 1, &match, 0);
-	if (n == 0)
+	printf("%s %s: %d\n", __func__, word->text, n);
+	if (n != 0)
 		return false;
 
 	val = env_lookup(script, src + match.rm_so,
 				 match.rm_eo - match.rm_so);
-	if (val)
+	if (!val)
 		val = "";
 
 	dest = talloc_strndup(script, src, match.rm_so);
@@ -72,6 +78,61 @@ static void process_expansions(struct grub2_script *script,
 
 		expand_word(script, word);
 	}
+}
+
+int statements_execute(struct grub2_script *script,
+		struct grub2_statements *stmts)
+{
+	struct grub2_statement *stmt;
+	int rc = 0;
+
+	list_for_each_entry(&stmts->list, stmt, list) {
+		if (stmt->exec)
+			rc = stmt->exec(script, stmt);
+		printf("%s(%p)\n", __func__, stmt);
+	}
+	return rc;
+}
+
+int statement_simple_execute(struct grub2_script *script,
+		struct grub2_statement *statement)
+{
+	struct grub2_statement_simple *st = to_stmt_simple(statement);
+
+	if (!st->argv)
+		return 0;
+
+	process_expansions(script, st->argv);
+
+	return 0;
+}
+
+int statement_if_execute(struct grub2_script *script,
+		struct grub2_statement *statement)
+{
+	struct grub2_statement_if *st = to_stmt_if(statement);
+	struct grub2_statements *case_stmts;
+	int rc;
+
+	rc = st->condition->exec(script, st->condition);
+
+	if (rc == 0)
+		case_stmts = st->true_case;
+	else
+		case_stmts = st->false_case;
+
+	if (case_stmts)
+		statements_execute(script, case_stmts);
+	else
+		rc = 0;
+
+	return rc;
+}
+
+
+void script_execute(struct grub2_script *script)
+{
+	statements_execute(script, script->statements);
 }
 
 static int script_destroy(void *p)

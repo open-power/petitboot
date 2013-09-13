@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <list/list.h>
 
-struct grub2_parser;
+struct grub2_script;
 
 struct grub2_word {
 	const char		*text;
@@ -31,6 +31,8 @@ struct grub2_statement {
 		STMT_TYPE_IF,
 		STMT_TYPE_BLOCK,
 	} type;
+	int			(*exec)(struct grub2_script *,
+					struct grub2_statement *);
 };
 
 struct grub2_statement_simple {
@@ -96,6 +98,12 @@ void argv_append(struct grub2_argv *argv, struct grub2_word *word);
 void word_append(struct grub2_word *w1, struct grub2_word *w2);
 
 /* script interface */
+void script_execute(struct grub2_script *script);
+
+int statement_simple_execute(struct grub2_script *script,
+		struct grub2_statement *statement);
+int statement_if_execute(struct grub2_script *script,
+		struct grub2_statement *statement);
 
 struct grub2_script *create_script(void *ctx);
 
