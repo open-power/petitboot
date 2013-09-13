@@ -22,13 +22,12 @@ static const char *env_lookup(struct grub2_script *script,
 		const char *name, int name_len)
 {
 	struct env_entry *entry;
-	const char *str;
 
-	str = talloc_strndup(script, name, name_len);
-	printf("%s: %s\n", __func__, str);
+	printf("%s: %.*s\n", __func__, name_len, name);
 
 	list_for_each_entry(&script->environment, entry, list)
-		if (!strncmp(entry->name, name, name_len))
+		if (!strncmp(entry->name, name, name_len)
+				&& entry->name[name_len] == '\0')
 			return entry->value;
 
 	return NULL;
@@ -39,7 +38,7 @@ static bool expand_word(struct grub2_script *script, struct grub2_word *word)
 	const char *val, *src;
 	char *dest = NULL;
 	regmatch_t match;
-	int n;
+	int n, i;
 
 	src = word->text;
 
@@ -48,10 +47,16 @@ static bool expand_word(struct grub2_script *script, struct grub2_word *word)
 	if (n != 0)
 		return false;
 
-	val = env_lookup(script, src + match.rm_so,
-				 match.rm_eo - match.rm_so);
+	i = 0;
+	if (src[match.rm_so + 1] == '{')
+		i++;
+
+	val = env_lookup(script, src + match.rm_so + 1 + i,
+				 match.rm_eo - match.rm_so - 1 - (i * 2));
 	if (!val)
 		val = "";
+
+	printf("repl: %s\n", val);
 
 	dest = talloc_strndup(script, src, match.rm_so);
 	dest = talloc_asprintf_append(dest, "%s%s", val, src + match.rm_eo);
@@ -89,7 +94,6 @@ int statements_execute(struct grub2_script *script,
 	list_for_each_entry(&stmts->list, stmt, list) {
 		if (stmt->exec)
 			rc = stmt->exec(script, stmt);
-		printf("%s(%p)\n", __func__, stmt);
 	}
 	return rc;
 }
@@ -129,6 +133,19 @@ int statement_if_execute(struct grub2_script *script,
 	return rc;
 }
 
+static void init_env(struct grub2_script *script)
+{
+	struct env_entry *env;
+
+	list_init(&script->environment);
+
+	env = talloc(script, struct env_entry);
+	env->name = talloc_strdup(env, "prefix");
+	env->value = talloc_strdup(env, "/");
+
+	list_add(&script->environment, &env->list);
+}
+
 
 void script_execute(struct grub2_script *script)
 {
@@ -162,7 +179,7 @@ struct grub2_script *create_script(void *ctx)
 	}
 	talloc_set_destructor(script, script_destroy);
 
-	list_init(&script->environment);
+	init_env(script);
 
 	return script;
 }
