@@ -20,6 +20,26 @@ struct env_entry {
 	struct list_item	list;
 };
 
+struct grub2_symtab_entry {
+	const char		*name;
+	grub2_function		fn;
+	void			*data;
+	struct list_item	list;
+};
+
+static struct grub2_symtab_entry *script_lookup_function(
+		struct grub2_script *script, const char *name)
+{
+	struct grub2_symtab_entry *entry;
+
+	list_for_each_entry(&script->symtab, entry, list) {
+		if (!strcmp(entry->name, name))
+			return entry;
+	}
+
+	return NULL;
+}
+
 const char *script_env_get(struct grub2_script *script, const char *name)
 {
 	struct env_entry *entry;
@@ -208,7 +228,7 @@ int statement_simple_execute(struct grub2_script *script,
 		struct grub2_statement *statement)
 {
 	struct grub2_statement_simple *st = to_stmt_simple(statement);
-	struct grub2_command *cmd;
+	struct grub2_symtab_entry *entry;
 	int rc;
 
 	if (!st->argv)
@@ -219,13 +239,13 @@ int statement_simple_execute(struct grub2_script *script,
 	if (!st->argv->argc)
 		return 0;
 
-	cmd = script_lookup_command(script, st->argv->argv[0]);
-	if (!cmd) {
-		fprintf(stderr, "undefined command '%s'\n", st->argv->argv[0]);
+	entry = script_lookup_function(script, st->argv->argv[0]);
+	if (!entry) {
+		fprintf(stderr, "undefined function '%s'\n", st->argv->argv[0]);
 		return 0;
 	}
 
-	rc = cmd->exec(script, st->argv->argc, st->argv->argv);
+	rc = entry->fn(script, entry->data, st->argv->argc, st->argv->argv);
 
 	return rc;
 }
@@ -290,23 +310,17 @@ static void init_env(struct grub2_script *script)
 	list_add(&script->environment, &env->list);
 }
 
-struct grub2_command *script_lookup_command(struct grub2_script *script,
-		const char *name)
+void script_register_function(struct grub2_script *script,
+		const char *name, grub2_function fn,
+		void *data)
 {
-	struct grub2_command *command;
+	struct grub2_symtab_entry *entry;
 
-	list_for_each_entry(&script->commands, command, list) {
-		if (!strcmp(command->name, name))
-			return command;
-	}
-
-	return NULL;
-}
-
-void script_register_command(struct grub2_script *script,
-		struct grub2_command *command)
-{
-	list_add(&script->commands, &command->list);
+	entry = talloc(script, struct grub2_symtab_entry);
+	entry->fn = fn;
+	entry->name = name;
+	entry->data = data;
+	list_add(&script->symtab, &entry->list);
 }
 
 
@@ -326,7 +340,7 @@ struct grub2_script *create_script(struct grub2_parser *parser,
 	script->ctx = ctx;
 	script->opt = NULL;
 
-	list_init(&script->commands);
+	list_init(&script->symtab);
 	register_builtins(script);
 
 	return script;

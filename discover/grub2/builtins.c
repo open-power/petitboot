@@ -8,7 +8,9 @@
 #include "grub2.h"
 
 
-static int builtin_set(struct grub2_script *script, int argc, char *argv[])
+static int builtin_set(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc, char *argv[])
 {
 	char *name, *value, *p;
 	int i;
@@ -31,10 +33,13 @@ static int builtin_set(struct grub2_script *script, int argc, char *argv[])
 	return 0;
 }
 
-static struct grub2_command commands[] = {
+static struct {
+	const char *name;
+	grub2_function fn;
+} builtins[] = {
 	{
 		.name = "set",
-		.exec = builtin_set
+		.fn = builtin_set
 	},
 };
 
@@ -42,6 +47,7 @@ void register_builtins(struct grub2_script *script)
 {
 	unsigned int i;
 
-	for (i = 0; i < ARRAY_SIZE(commands); i++)
-		script_register_command(script, &commands[i]);
+	for (i = 0; i < ARRAY_SIZE(builtins); i++)
+		script_register_function(script, builtins[i].name,
+				builtins[i].fn, NULL);
 }

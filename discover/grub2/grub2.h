@@ -71,17 +71,10 @@ struct grub2_statement_block {
 	struct grub2_statements	*statements;
 };
 
-struct grub2_command {
-	const char		*name;
-	int			(*exec)(struct grub2_script *script,
-					int argc, char *argv[]);
-	struct list_item	list;
-};
 
 struct grub2_script {
 	struct grub2_statements		*statements;
 	struct list			environment;
-	struct list			commands;
 	struct list			symtab;
 	struct discover_context		*ctx;
 	struct discover_boot_option	*opt;
@@ -95,6 +88,10 @@ struct grub2_parser {
 struct grub2_root {
 	char *uuid;
 };
+
+/* type for builtin functions */
+typedef int (*grub2_function)(struct grub2_script *script, void *data,
+				int argc, char *argv[]);
 
 struct grub2_statements *create_statements(struct grub2_parser *parser);
 
@@ -145,11 +142,8 @@ const char *script_env_get(struct grub2_script *script, const char *name);
 void script_env_set(struct grub2_script *script,
 		const char *name, const char *value);
 
-void script_register_command(struct grub2_script *script,
-		struct grub2_command *command);
-
-struct grub2_command *script_lookup_command(struct grub2_script *script,
-		const char *name);
+void script_register_function(struct grub2_script *script,
+		const char *name, grub2_function fn, void *data);
 
 void register_builtins(struct grub2_script *script);
 
