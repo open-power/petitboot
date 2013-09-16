@@ -12,12 +12,10 @@ struct grub2_word {
 		GRUB2_WORD_VAR,
 	} type;
 	union {
-		char	*text;
-		struct {
-			const char	*name;
-			bool		split;
-		} var;
+		char		*text;
+		const char	*name;
 	};
+	bool			split;
 	struct grub2_word	*next;
 	struct grub2_word	*last;
 	struct list_item	argv_list;
