@@ -190,7 +190,7 @@ static void process_expansions(struct grub2_script *script,
 		argv->argv[i++] = word->text;
 }
 
-int statements_execute(struct grub2_script *script,
+static int statements_execute(struct grub2_script *script,
 		struct grub2_statements *stmts)
 {
 	struct grub2_statement *stmt;

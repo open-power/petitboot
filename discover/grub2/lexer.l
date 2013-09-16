@@ -6,6 +6,7 @@
 %}
 
 %option nounput noinput
+%option batch never-interactive
 %option warn
 %option noyywrap
 %option stack noyy_top_state

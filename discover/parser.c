@@ -125,6 +125,8 @@ void __register_parser(struct parser *parser)
 {
 	struct p_item* i = talloc(NULL, struct p_item);
 
+	printf("%s: %s\n", __func__, parser->name);
+
 	i->parser = parser;
 	list_add(&parsers, &i->list);
 }

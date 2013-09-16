@@ -23,6 +23,8 @@ AC_PREFIX_DEFAULT([/usr/local])
 AS_IF([test "x$CFLAGS" = "x"], [AC_SUBST([CFLAGS], [""])])
 
 AC_PROG_CC
+AC_PROG_LEX
+AC_PROG_YACC
 AC_PROG_INSTALL
 
 AM_INIT_AUTOMAKE
@@ -230,6 +232,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 	Makefile
 	discover/Makefile
+	discover/grub2/Makefile
 	lib/Makefile
 	man/Makefile
 	test/Makefile

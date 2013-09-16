@@ -12,11 +12,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-pkgsysconfdir = @sysconfdir@/@PACKAGE@
-
-SUBDIRS = grub2
-
-AM_CPPFLAGS = -I$(top_srcdir)/lib $(DEFAULT_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir) $(DEFAULT_CPPFLAGS)
 
 AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPREFIX='"$(prefix)"' \
@@ -24,47 +20,29 @@ AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"' \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"'
 
-EXTRA_DIST = native-parser.c
+AM_YFLAGS = -d
 
-sbin_PROGRAMS = pb-discover
+noinst_PROGRAMS = grub2-parser.ro
 
-pb_discover_SOURCES = \
-	boot.c \
-	boot.h \
-	device-handler.c \
-	device-handler.h \
-	discover-server.c \
-	discover-server.h \
-	event.c \
-	event.h \
-	file.c \
-	file.h \
-	params.c \
-	params.h \
-	parser.c \
-	parser.h \
-	parser-conf.c \
-	parser-conf.h \
-	parser-utils.c \
-	parser-utils.h \
-	paths.c \
-	paths.h \
-	pb-discover.c \
-	pb-discover.h \
-	resource.c \
-	resource.h \
-	network.c \
-	network.h \
-	udev.c \
-	udev.h \
-	user-event.c \
-	user-event.h \
-	kboot-parser.c \
-	yaboot-parser.c \
-	pxe-parser.c
+grub2-parser.ro$(EXEEXT): $(grub2_parser_ro_OBJECTS)
+	$(LD) -r -o $@ $^
 
-pb_discover_LDADD = $(top_builddir)/lib/libpbcore.la grub2/grub2-parser.ro
 
-pb_discover_LDFLAGS = -ludev
+grub2_parser_ro_SOURCES = \
+	builtins.c \
+	grub2.h \
+	grub2.c \
+	lexer.l \
+	parser.y \
+	script.c \
+	parser.c
 
-MAINTAINERCLEANFILES = Makefile.in
+BUILT_SOURCES = parser.h lexer.h
+
+# ylwrap doesn't handle flex header files well; use our own rule here.
+lexer.h lexer.c: lexer.l
+	$(LEX) $(LFLAGS) --header-file=lexer.h -o lexer.c $^
+
+lexer.o: CFLAGS+=-Wno-unused-parameter -Wno-missing-prototypes \
+		       -Wno-missing-declarations
+

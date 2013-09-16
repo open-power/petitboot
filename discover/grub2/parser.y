@@ -220,3 +220,28 @@ void word_append(struct grub2_word *w1, struct grub2_word *w2)
 	w1->last->next = w2;
 	w1->last = w2;
 }
+
+struct grub2_parser *grub2_parser_create(void *ctx)
+{
+	struct grub2_parser *parser;
+
+	parser = talloc(ctx, struct grub2_parser);
+	yylex_init_extra(parser, &parser->scanner);
+	parser->script = create_script(parser);
+
+	return parser;
+}
+
+void grub2_parser_parse(struct grub2_parser *parser, char *buf, int len)
+{
+	YY_BUFFER_STATE bufstate;
+
+	bufstate = yy_scan_bytes(buf, len - 1, parser->scanner);
+
+	yyparse(parser);
+
+	yy_delete_buffer(bufstate, parser->scanner);
+
+	script_execute(parser->script);
+}
+

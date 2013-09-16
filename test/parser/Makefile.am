@@ -58,7 +58,6 @@ extract_config = $(srcdir)/extract-config.awk
 parser_objs = \
 	$(top_srcdir)/discover/yaboot-parser.c \
 	$(top_srcdir)/discover/kboot-parser.c \
-	$(top_srcdir)/discover/grub2-parser.c \
 	$(top_srcdir)/discover/pxe-parser.c \
 	$(top_srcdir)/discover/resource.c \
 	$(top_srcdir)/discover/paths.c \
@@ -72,7 +71,10 @@ libtest_ro_SOURCES = \
 	parser-test.h \
 	$(parser_objs)
 
-libtest.ro$(EXEEXT): $(libtest_ro_OBJECTS)
+libtest_ro_LDADD = \
+	../../discover/grub2/grub2-parser.ro
+
+libtest.ro$(EXEEXT): $(libtest_ro_OBJECTS) $(libtest_ro_LDADD)
 	$(LD) -o $@ -r $^
 
 check_PROGRAMS = $(TESTS) libtest.ro

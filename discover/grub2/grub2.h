@@ -1,6 +1,8 @@
 #ifndef GRUB2_H
 #define GRUB2_H
 
+#include <discover/device-handler.h>
+
 #include <stdbool.h>
 #include <list/list.h>
 
@@ -88,6 +90,10 @@ struct grub2_parser {
 	struct grub2_script	*script;
 };
 
+struct grub2_root {
+	char *uuid;
+};
+
 struct grub2_statements *create_statements(struct grub2_parser *parser);
 
 struct grub2_statement *create_statement_simple(struct grub2_parser *parser,
@@ -143,5 +149,17 @@ struct grub2_command *script_lookup_command(struct grub2_script *script,
 		const char *name);
 
 void register_builtins(struct grub2_script *script);
+
+/* resources */
+struct resource *create_grub2_resource(void *ctx,
+		struct discover_device *orig_device,
+		struct grub2_root *root, const char *path);
+
+bool resolve_grub2_resource(struct device_handler *handler,
+		struct resource *res);
+
+/* external parser api */
+struct grub2_parser *grub2_parser_create(void *ctx);
+void grub2_parser_parse(struct grub2_parser *parser, char *buf, int len);
 #endif /* GRUB2_H */
 
