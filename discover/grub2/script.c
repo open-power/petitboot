@@ -300,13 +300,16 @@ void script_execute(struct grub2_script *script)
 	statements_execute(script, script->statements);
 }
 
-struct grub2_script *create_script(void *ctx)
+struct grub2_script *create_script(struct grub2_parser *parser,
+		struct discover_context *ctx)
 {
 	struct grub2_script *script;
 
-	script = talloc(ctx, struct grub2_script);
+	script = talloc(parser, struct grub2_script);
 
 	init_env(script);
+	script->ctx = ctx;
+
 	list_init(&script->commands);
 	register_builtins(script);
 

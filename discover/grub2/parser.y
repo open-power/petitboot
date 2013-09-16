@@ -221,13 +221,13 @@ void word_append(struct grub2_word *w1, struct grub2_word *w2)
 	w1->last = w2;
 }
 
-struct grub2_parser *grub2_parser_create(void *ctx)
+struct grub2_parser *grub2_parser_create(struct discover_context *ctx)
 {
 	struct grub2_parser *parser;
 
 	parser = talloc(ctx, struct grub2_parser);
 	yylex_init_extra(parser, &parser->scanner);
-	parser->script = create_script(parser);
+	parser->script = create_script(parser, ctx);
 
 	return parser;
 }

@@ -79,10 +79,11 @@ struct grub2_command {
 };
 
 struct grub2_script {
-	struct grub2_statements	*statements;
-	struct list		environment;
-	struct list		commands;
-	struct list		symtab;
+	struct grub2_statements		*statements;
+	struct list			environment;
+	struct list			commands;
+	struct list			symtab;
+	struct discover_context		*ctx;
 };
 
 struct grub2_parser {
@@ -135,7 +136,8 @@ int statement_if_execute(struct grub2_script *script,
 int statement_menuentry_execute(struct grub2_script *script,
 		struct grub2_statement *statement);
 
-struct grub2_script *create_script(void *ctx);
+struct grub2_script *create_script(struct grub2_parser *parser,
+		struct discover_context *ctx);
 
 const char *script_env_get(struct grub2_script *script, const char *name);
 
@@ -159,7 +161,7 @@ bool resolve_grub2_resource(struct device_handler *handler,
 		struct resource *res);
 
 /* external parser api */
-struct grub2_parser *grub2_parser_create(void *ctx);
+struct grub2_parser *grub2_parser_create(struct discover_context *ctx);
 void grub2_parser_parse(struct grub2_parser *parser, char *buf, int len);
 #endif /* GRUB2_H */
 
