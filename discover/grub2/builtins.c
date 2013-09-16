@@ -97,6 +97,32 @@ static int builtin_initrd(struct grub2_script *script,
 	return 0;
 }
 
+static int builtin_search(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc, char *argv[])
+{
+	const char *env_var, *spec;
+	int i;
+
+	env_var = NULL;
+
+	for (i = 1; i < argc - 1; i++) {
+		if (!strncmp(argv[i], "--set=", strlen("--set="))) {
+			env_var = argv[i] + strlen("--set=");
+			break;
+		}
+	}
+
+	if (!env_var)
+		return 0;
+
+	spec = argv[argc - 1];
+
+	script_env_set(script, env_var, spec);
+
+	return 0;
+}
+
 static struct {
 	const char *name;
 	grub2_function fn;
@@ -112,6 +138,10 @@ static struct {
 	{
 		.name = "initrd",
 		.fn = builtin_initrd,
+	},
+	{
+		.name = "search",
+		.fn = builtin_search,
 	}
 };
 
