@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <string.h>
 
+#include <types/types.h>
 #include <talloc/talloc.h>
 
 #include "grub2.h"
@@ -255,9 +256,23 @@ int statement_menuentry_execute(struct grub2_script *script,
 		struct grub2_statement *statement)
 {
 	struct grub2_statement_menuentry *st = to_stmt_menuentry(statement);
+	struct discover_boot_option *opt;
 
 	process_expansions(script, st->argv);
+
+	opt = discover_boot_option_create(script->ctx, script->ctx->device);
+	if (st->argv->argc > 0) {
+		opt->option->name = talloc_strdup(opt, st->argv->argv[0]);
+	} else {
+		opt->option->name = talloc_strdup(opt, "(unknown)");
+	}
+
+	script->opt = opt;
+
 	statements_execute(script, st->statements);
+
+	discover_context_add_boot_option(script->ctx, opt);
+	script->opt = NULL;
 
 	return 0;
 }
@@ -309,6 +324,7 @@ struct grub2_script *create_script(struct grub2_parser *parser,
 
 	init_env(script);
 	script->ctx = ctx;
+	script->opt = NULL;
 
 	list_init(&script->commands);
 	register_builtins(script);

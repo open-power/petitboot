@@ -84,6 +84,7 @@ struct grub2_script {
 	struct list			commands;
 	struct list			symtab;
 	struct discover_context		*ctx;
+	struct discover_boot_option	*opt;
 };
 
 struct grub2_parser {
