@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <log/log.h>
+#include <types/types.h>
 #include <talloc/talloc.h>
 #include <array-size/array-size.h>
 
@@ -33,14 +35,84 @@ static int builtin_set(struct grub2_script *script,
 	return 0;
 }
 
+static int builtin_linux(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc, char *argv[])
+{
+	struct discover_boot_option *opt = script->opt;
+	const char *root;
+	int i;
+
+	if (!opt) {
+		pb_log("grub2 syntax error: 'linux' statement outside "
+				"a menuentry.\n");
+		return -1;
+	}
+
+	if (argc < 2) {
+		pb_log("grub2 syntax error: no filename provided to "
+				"linux statement\n");
+		return -1;
+	}
+
+	root = script_env_get(script, "root");
+
+	opt->boot_image = create_grub2_resource(opt, script->ctx->device,
+						root, argv[1]);
+	opt->option->boot_args = NULL;
+
+	if (argc > 2)
+		opt->option->boot_args = talloc_strdup(opt, argv[2]);
+
+	for (i = 3; i < argc; i++)
+		opt->option->boot_args = talloc_asprintf_append(
+						opt->option->boot_args,
+						" %s", argv[i]);
+	return 0;
+}
+
+static int builtin_initrd(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc, char *argv[])
+{
+	struct discover_boot_option *opt = script->opt;
+	const char *root;
+
+	if (!opt) {
+		pb_log("grub2 syntax error: 'initrd' statement outside "
+				"a menuentry.\n");
+		return -1;
+	}
+
+	if (argc < 2) {
+		pb_log("grub2 syntax error: no filename provided to "
+				"initrd statement\n");
+		return -1;
+	}
+
+	root = script_env_get(script, "root");
+	opt->initrd = create_grub2_resource(opt, script->ctx->device,
+						root, argv[1]);
+
+	return 0;
+}
+
 static struct {
 	const char *name;
 	grub2_function fn;
 } builtins[] = {
 	{
 		.name = "set",
-		.fn = builtin_set
+		.fn = builtin_set,
 	},
+	{
+		.name = "linux",
+		.fn = builtin_linux,
+	},
+	{
+		.name = "initrd",
+		.fn = builtin_initrd,
+	}
 };
 
 void register_builtins(struct grub2_script *script)

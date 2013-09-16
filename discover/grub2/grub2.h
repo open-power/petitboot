@@ -85,10 +85,6 @@ struct grub2_parser {
 	struct grub2_script	*script;
 };
 
-struct grub2_root {
-	char *uuid;
-};
-
 /* type for builtin functions */
 typedef int (*grub2_function)(struct grub2_script *script, void *data,
 				int argc, char *argv[]);
@@ -150,7 +146,7 @@ void register_builtins(struct grub2_script *script);
 /* resources */
 struct resource *create_grub2_resource(void *ctx,
 		struct discover_device *orig_device,
-		struct grub2_root *root, const char *path);
+		const char *root, const char *path);
 
 bool resolve_grub2_resource(struct device_handler *handler,
 		struct resource *res);

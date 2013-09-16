@@ -31,14 +31,14 @@ static const char *const grub2_conf_files[] = {
 };
 
 struct grub2_resource_info {
-	struct grub2_root *root;
+	char *root;
 	char *path;
 };
 
 /* we use slightly different resources for grub2 */
 struct resource *create_grub2_resource(void *ctx,
 		struct discover_device *orig_device,
-		struct grub2_root *root, const char *path)
+		const char *root, const char *path)
 {
 	struct grub2_resource_info *info;
 	struct resource *res;
@@ -47,8 +47,8 @@ struct resource *create_grub2_resource(void *ctx,
 
 	if (root) {
 		info = talloc(res, struct grub2_resource_info);
-		info->root = root;
 		talloc_reference(info, root);
+		info->root = talloc_strdup(info, root);
 		info->path = talloc_strdup(info, path);
 
 		res->resolved = false;
@@ -68,7 +68,7 @@ bool resolve_grub2_resource(struct device_handler *handler,
 
 	assert(!res->resolved);
 
-	dev = device_lookup_by_uuid(handler, info->root->uuid);
+	dev = device_lookup_by_uuid(handler, info->root);
 
 	if (!dev)
 		return false;
