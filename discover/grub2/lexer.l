@@ -37,6 +37,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 "do"         return TOKEN_DO;
 "done"       return TOKEN_DONE;
 "elif"       return TOKEN_ELIF;
+"else"       return TOKEN_ELSE;
 "esac"       return TOKEN_ESAC;
 "fi"         return TOKEN_FI;
 "for"        return TOKEN_FOR;

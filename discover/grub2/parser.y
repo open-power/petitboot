@@ -29,6 +29,7 @@ static void yyerror(struct grub2_parser *, char const *s);
 %token	TOKEN_DO		"do"
 %token	TOKEN_DONE		"done"
 %token	TOKEN_ELIF		"elif"
+%token	TOKEN_ELSE		"else"
 %token	TOKEN_ESAC		"esac"
 %token	TOKEN_FI		"fi"
 %token	TOKEN_FOR		"for"
@@ -84,6 +85,14 @@ statement: TOKEN_EOL {
 		statements
 		"fi" TOKEN_EOL {
 		$$ = create_statement_if(parser, $3, $6, NULL);
+	}
+	| "if" TOKEN_DELIM statement
+		"then" TOKEN_EOL
+		statements
+		"else" TOKEN_EOL
+		statements
+		"fi" TOKEN_EOL {
+		$$ = create_statement_if(parser, $3, $6, $9);
 	}
 	| "menuentry" TOKEN_DELIM words TOKEN_DELIM
 		'{' statements '}'
