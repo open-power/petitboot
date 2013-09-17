@@ -13,6 +13,8 @@
 	container_of(stmt, struct grub2_statement_if, st)
 #define to_stmt_menuentry(stmt) \
 	container_of(stmt, struct grub2_statement_menuentry, st)
+#define to_stmt_function(stmt) \
+	container_of(stmt, struct grub2_statement_function, st)
 
 struct env_entry {
 	const char		*name;
@@ -293,6 +295,37 @@ int statement_menuentry_execute(struct grub2_script *script,
 
 	discover_context_add_boot_option(script->ctx, opt);
 	script->opt = NULL;
+
+	return 0;
+}
+
+static int function_invoke(struct grub2_script *script,
+		void *data, int argc, char **argv)
+{
+	struct grub2_statement_function *fn = data;
+	char *name;
+	int i;
+
+	/* set positional parameters */
+	for (i = 0; i < argc; i++) {
+		name = talloc_asprintf(script, "$%d", i);
+		script_env_set(script, name, argv[i]);
+	}
+
+	return statements_execute(script, fn->body);
+}
+
+int statement_function_execute(struct grub2_script *script,
+		struct grub2_statement *statement)
+{
+	struct grub2_statement_function *st = to_stmt_function(statement);
+	const char *name;
+
+	if (st->name->type == GRUB2_WORD_VAR)
+		expand_var(script, st->name);
+
+	name = st->name->text;
+	script_register_function(script, name, function_invoke, st);
 
 	return 0;
 }

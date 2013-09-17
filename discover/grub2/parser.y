@@ -95,6 +95,9 @@ statement: TOKEN_EOL {
 		"fi" TOKEN_EOL {
 		$$ = create_statement_if(parser, $3, $6, $9);
 	}
+	| "function" TOKEN_DELIM word TOKEN_DELIM '{' statements '}' {
+		$$ = create_statement_function(parser, $3, $6);
+	}
 	| "menuentry" TOKEN_DELIM words TOKEN_DELIM
 		'{' statements '}'
 		TOKEN_EOL {
@@ -178,6 +181,17 @@ struct grub2_statement *create_statement_block(struct grub2_parser *parser,
 	stmt->st.type = STMT_TYPE_BLOCK;
 	stmt->st.exec = NULL;
 	stmt->statements = stmts;
+	return &stmt->st;
+}
+
+struct grub2_statement *create_statement_function(struct grub2_parser *parser,
+		struct grub2_word *name, struct grub2_statements *body)
+{
+	struct grub2_statement_function *stmt =
+		talloc(parser, struct grub2_statement_function);
+	stmt->st.exec = statement_function_execute;
+	stmt->name = name;
+	stmt->body = body;
 	return &stmt->st;
 }
 
