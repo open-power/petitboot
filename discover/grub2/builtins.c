@@ -123,6 +123,14 @@ static int builtin_search(struct grub2_script *script,
 	return 0;
 }
 
+static int builtin_nop(struct grub2_script *script __attribute__((unused)),
+		void *data __attribute__((unused)),
+		int argc __attribute__((unused)),
+		char *argv[] __attribute__((unused)))
+{
+	return 0;
+}
+
 static struct {
 	const char *name;
 	grub2_function fn;
@@ -145,6 +153,10 @@ static struct {
 	}
 };
 
+static const char *nops[] = {
+	"echo", "export", "insmod", "loadfont", "terminfo",
+};
+
 void register_builtins(struct grub2_script *script)
 {
 	unsigned int i;
@@ -152,4 +164,7 @@ void register_builtins(struct grub2_script *script)
 	for (i = 0; i < ARRAY_SIZE(builtins); i++)
 		script_register_function(script, builtins[i].name,
 				builtins[i].fn, NULL);
+
+	for (i = 0; i < ARRAY_SIZE(nops); i++)
+		script_register_function(script, nops[i], builtin_nop, NULL);
 }
