@@ -2,6 +2,7 @@
 %pure-parser
 %lex-param { yyscan_t scanner }
 %parse-param { struct grub2_parser *parser }
+%error-verbose
 
 %{
 #include <talloc/talloc.h>
@@ -244,13 +245,15 @@ struct grub2_parser *grub2_parser_create(struct discover_context *ctx)
 void grub2_parser_parse(struct grub2_parser *parser, char *buf, int len)
 {
 	YY_BUFFER_STATE bufstate;
+	int rc;
 
 	bufstate = yy_scan_bytes(buf, len - 1, parser->scanner);
 
-	yyparse(parser);
+	rc = yyparse(parser);
 
 	yy_delete_buffer(bufstate, parser->scanner);
 
-	script_execute(parser->script);
+	if (!rc)
+		script_execute(parser->script);
 }
 

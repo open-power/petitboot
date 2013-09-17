@@ -12,6 +12,7 @@
 %option stack noyy_top_state
 %option reentrant
 %option bison-bridge
+%option yylineno
 %option noyyalloc noyyfree noyyrealloc
 %option extra-type="struct grub2_parser *"
 %option header-file="lexer.h"
