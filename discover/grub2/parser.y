@@ -227,7 +227,7 @@ struct grub2_statement *create_statement_block(struct grub2_parser *parser,
 	struct grub2_statement_block *stmt =
 		talloc(parser, struct grub2_statement_block);
 	stmt->st.type = STMT_TYPE_BLOCK;
-	stmt->st.exec = NULL;
+	stmt->st.exec = statement_block_execute;
 	stmt->statements = stmts;
 	return &stmt->st;
 }

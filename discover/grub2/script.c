@@ -9,6 +9,8 @@
 
 #define to_stmt_simple(stmt) \
 	container_of(stmt, struct grub2_statement_simple, st)
+#define to_stmt_block(stmt) \
+	container_of(stmt, struct grub2_statement_block, st)
 #define to_stmt_if(stmt) \
 	container_of(stmt, struct grub2_statement_if, st)
 #define to_stmt_menuentry(stmt) \
@@ -252,6 +254,13 @@ int statement_simple_execute(struct grub2_script *script,
 	rc = entry->fn(script, entry->data, st->argv->argc, st->argv->argv);
 
 	return rc;
+}
+
+int statement_block_execute(struct grub2_script *script,
+		struct grub2_statement *statement)
+{
+	struct grub2_statement_block *st = to_stmt_block(statement);
+	return statements_execute(script, st->statements);
 }
 
 /* returns 0 if the statement was executed, 1 otherwise */
