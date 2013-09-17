@@ -60,23 +60,23 @@ static void yyerror(struct grub2_parser *, char const *s);
 
 %%
 
-script: statements {
+script:	statements {
 		parser->script->statements = $1;
 	}
 
-statements: statement {
+statements: /* empty */ {
 		$$ = create_statements(parser);
-		statement_append($$, $1);
 	}
-	| statements statement {
+	| statements statement TOKEN_EOL {
 		statement_append($1, $2);
 		$$ = $1;
 	}
-
-statement: TOKEN_EOL {
-		$$ = NULL;
+	| statements TOKEN_EOL {
+		$$ = $1;
 	}
-	| words TOKEN_EOL {
+
+statement:
+	words {
 		   $$ = create_statement_simple(parser, $1);
 	}
 	| '{' statements '}' {
@@ -85,7 +85,7 @@ statement: TOKEN_EOL {
 	| "if" TOKEN_DELIM statement
 		"then" TOKEN_EOL
 		statements
-		"fi" TOKEN_EOL {
+		"fi" {
 		$$ = create_statement_if(parser, $3, $6, NULL);
 	}
 	| "if" TOKEN_DELIM statement
@@ -93,20 +93,18 @@ statement: TOKEN_EOL {
 		statements
 		"else" TOKEN_EOL
 		statements
-		"fi" TOKEN_EOL {
+		"fi" {
 		$$ = create_statement_if(parser, $3, $6, $9);
 	}
 	| "function" TOKEN_DELIM word TOKEN_DELIM '{' statements '}' {
 		$$ = create_statement_function(parser, $3, $6);
 	}
 	| "menuentry" TOKEN_DELIM words TOKEN_DELIM
-		'{' statements '}'
-		TOKEN_EOL {
+		'{' statements '}' {
 		$$ = create_statement_menuentry(parser, $3, $6);
 	}
 	| "submenu" TOKEN_DELIM words TOKEN_DELIM
-		'{' statements '}'
-		TOKEN_EOL {
+		'{' statements '}' {
 		/* we just flatten everything */
 		$$ = create_statement_block(parser, $6);
 	}
