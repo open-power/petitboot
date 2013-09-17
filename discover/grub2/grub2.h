@@ -43,6 +43,7 @@ struct grub2_statement {
 		STMT_TYPE_MENUENTRY,
 		STMT_TYPE_IF,
 		STMT_TYPE_BLOCK,
+		STMT_TYPE_CONDITIONAL,
 	} type;
 	int			(*exec)(struct grub2_script *,
 					struct grub2_statement *);
@@ -59,11 +60,16 @@ struct grub2_statement_menuentry {
 	struct grub2_statements	*statements;
 };
 
-struct grub2_statement_if {
+struct grub2_statement_conditional {
 	struct grub2_statement	st;
 	struct grub2_statement	*condition;
-	struct grub2_statements	*true_case;
-	struct grub2_statements	*false_case;
+	struct grub2_statements	*statements;
+};
+
+struct grub2_statement_if {
+	struct grub2_statement	st;
+	struct grub2_statement	*conditional;
+	struct grub2_statements	*else_case;
 };
 
 struct grub2_statement_block {
@@ -102,10 +108,13 @@ struct grub2_statement *create_statement_simple(struct grub2_parser *parser,
 struct grub2_statement *create_statement_menuentry(struct grub2_parser *parser,
 		struct grub2_argv *argv, struct grub2_statements *stmts);
 
+struct grub2_statement *create_statement_conditional(
+		struct grub2_parser *parser, struct grub2_statement *condition,
+		struct grub2_statements *statements);
+
 struct grub2_statement *create_statement_if(struct grub2_parser *parser,
-		struct grub2_statement *condition,
-		struct grub2_statements *true_case,
-		struct grub2_statements *false_case);
+		struct grub2_statement *conditional,
+		struct grub2_statements *else_case);
 
 struct grub2_statement *create_statement_block(struct grub2_parser *parser,
 		struct grub2_statements *stmts);

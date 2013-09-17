@@ -47,6 +47,7 @@ static void yyerror(struct grub2_parser *, char const *s);
 
 %type <statement>	statement
 %type <statements>	statements
+%type <statement>	conditional
 %type <argv>		words
 %type <word>		word
 
@@ -75,6 +76,10 @@ statements: /* empty */ {
 		$$ = $1;
 	}
 
+conditional: statement TOKEN_EOL "then" TOKEN_EOL statements {
+		$$ = create_statement_conditional(parser, $1, $5);
+	}
+
 statement:
 	words {
 		   $$ = create_statement_simple(parser, $1);
@@ -82,19 +87,14 @@ statement:
 	| '{' statements '}' {
 		$$ = create_statement_block(parser, $2);
 	}
-	| "if" TOKEN_DELIM statement
-		"then" TOKEN_EOL
-		statements
-		"fi" {
-		$$ = create_statement_if(parser, $3, $6, NULL);
+	| "if" TOKEN_DELIM conditional "fi" {
+		$$ = create_statement_if(parser, $3, NULL);
 	}
-	| "if" TOKEN_DELIM statement
-		"then" TOKEN_EOL
-		statements
+	| "if" TOKEN_DELIM conditional
 		"else" TOKEN_EOL
 		statements
 		"fi" {
-		$$ = create_statement_if(parser, $3, $6, $9);
+		$$ = create_statement_if(parser, $3, $6);
 	}
 	| "function" TOKEN_DELIM word TOKEN_DELIM '{' statements '}' {
 		$$ = create_statement_function(parser, $3, $6);
@@ -163,18 +163,29 @@ struct grub2_statement *create_statement_menuentry(struct grub2_parser *parser,
 	return &stmt->st;
 }
 
-struct grub2_statement *create_statement_if(struct grub2_parser *parser,
+struct grub2_statement *create_statement_conditional(
+		struct grub2_parser *parser,
 		struct grub2_statement *condition,
-		struct grub2_statements *true_case,
-		struct grub2_statements *false_case)
+		struct grub2_statements *statements)
+{
+	struct grub2_statement_conditional *stmt =
+		talloc(parser, struct grub2_statement_conditional);
+	stmt->st.type = STMT_TYPE_CONDITIONAL;
+	stmt->condition = condition;
+	stmt->statements = statements;
+	return &stmt->st;
+}
+
+struct grub2_statement *create_statement_if(struct grub2_parser *parser,
+		struct grub2_statement *conditional,
+		struct grub2_statements *else_case)
 {
 	struct grub2_statement_if *stmt =
 		talloc(parser, struct grub2_statement_if);
 	stmt->st.type = STMT_TYPE_IF;
 	stmt->st.exec = statement_if_execute;
-	stmt->condition = condition;
-	stmt->true_case = true_case;
-	stmt->false_case = false_case;
+	stmt->conditional = conditional;
+	stmt->else_case = else_case;
 	return &stmt->st;
 }
 

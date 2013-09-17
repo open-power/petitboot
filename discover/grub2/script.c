@@ -15,6 +15,8 @@
 	container_of(stmt, struct grub2_statement_menuentry, st)
 #define to_stmt_function(stmt) \
 	container_of(stmt, struct grub2_statement_function, st)
+#define to_stmt_conditional(stmt) \
+	container_of(stmt, struct grub2_statement_conditional, st)
 
 struct env_entry {
 	const char		*name;
@@ -252,24 +254,36 @@ int statement_simple_execute(struct grub2_script *script,
 	return rc;
 }
 
+/* returns 0 if the statement was executed, 1 otherwise */
+static int statement_conditional_execute(struct grub2_script *script,
+		struct grub2_statement *statement, bool *executed)
+{
+	struct grub2_statement_conditional *st = to_stmt_conditional(statement);
+	int rc;
+
+	rc = st->condition->exec(script, st->condition);
+	*executed = (!rc);
+	if (*executed)
+		rc = statements_execute(script, st->statements);
+
+	return rc;
+}
+
 int statement_if_execute(struct grub2_script *script,
 		struct grub2_statement *statement)
 {
 	struct grub2_statement_if *st = to_stmt_if(statement);
-	struct grub2_statements *case_stmts;
+	struct grub2_statement *conditional;
+	bool executed;
 	int rc;
 
-	rc = st->condition->exec(script, st->condition);
+	conditional = st->conditional;
 
-	if (rc == 0)
-		case_stmts = st->true_case;
-	else
-		case_stmts = st->false_case;
+	rc = statement_conditional_execute(script,
+			conditional, &executed);
 
-	if (case_stmts)
-		statements_execute(script, case_stmts);
-	else
-		rc = 0;
+	if (!executed && st->else_case)
+		rc = statements_execute(script, st->else_case);
 
 	return rc;
 }
