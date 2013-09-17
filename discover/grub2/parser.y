@@ -39,6 +39,7 @@ static void yyerror(struct grub2_parser *, char const *s);
 %token	TOKEN_IN		"in"
 %token	TOKEN_MENUENTRY		"menuentry"
 %token	TOKEN_SELECT		"select"
+%token	TOKEN_SUBMENU		"submenu"
 %token	TOKEN_THEN		"then"
 %token	TOKEN_TIME		"time"
 %token	TOKEN_UTIL		"until"
@@ -102,6 +103,12 @@ statement: TOKEN_EOL {
 		'{' statements '}'
 		TOKEN_EOL {
 		$$ = create_statement_menuentry(parser, $3, $6);
+	}
+	| "submenu" TOKEN_DELIM words TOKEN_DELIM
+		'{' statements '}'
+		TOKEN_EOL {
+		/* we just flatten everything */
+		$$ = create_statement_block(parser, $6);
 	}
 
 words:	word {

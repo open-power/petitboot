@@ -47,6 +47,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 "in"         return TOKEN_IN;
 "menuentry"  return TOKEN_MENUENTRY;
 "select"     return TOKEN_SELECT;
+"submenu"    return TOKEN_SUBMENU;
 "then"       return TOKEN_THEN;
 "time"       return TOKEN_TIME;
 "until"      return TOKEN_UTIL;
