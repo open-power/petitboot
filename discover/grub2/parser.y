@@ -48,6 +48,8 @@ static void yyerror(struct grub2_parser *, char const *s);
 %type <statement>	statement
 %type <statements>	statements
 %type <statement>	conditional
+%type <statement>	elif
+%type <statements>	elifs
 %type <argv>		words
 %type <word>		word
 
@@ -80,6 +82,18 @@ conditional: statement TOKEN_EOL "then" TOKEN_EOL statements {
 		$$ = create_statement_conditional(parser, $1, $5);
 	}
 
+elif: "elif" TOKEN_DELIM conditional {
+		$$ = $3;
+      }
+
+elifs: /* empty */ {
+		$$ = create_statements(parser);
+	}
+	| elifs elif {
+		statement_append($1, $2);
+		$$ = $1;
+	}
+
 statement:
 	words {
 		   $$ = create_statement_simple(parser, $1);
@@ -87,14 +101,15 @@ statement:
 	| '{' statements '}' {
 		$$ = create_statement_block(parser, $2);
 	}
-	| "if" TOKEN_DELIM conditional "fi" {
-		$$ = create_statement_if(parser, $3, NULL);
+	| "if" TOKEN_DELIM conditional elifs "fi" {
+		$$ = create_statement_if(parser, $3, $4, NULL);
 	}
 	| "if" TOKEN_DELIM conditional
+		elifs
 		"else" TOKEN_EOL
 		statements
 		"fi" {
-		$$ = create_statement_if(parser, $3, $6);
+		$$ = create_statement_if(parser, $3, $4, $7);
 	}
 	| "function" TOKEN_DELIM word TOKEN_DELIM '{' statements '}' {
 		$$ = create_statement_function(parser, $3, $6);
@@ -178,13 +193,17 @@ struct grub2_statement *create_statement_conditional(
 
 struct grub2_statement *create_statement_if(struct grub2_parser *parser,
 		struct grub2_statement *conditional,
+		struct grub2_statements *elifs,
 		struct grub2_statements *else_case)
 {
 	struct grub2_statement_if *stmt =
 		talloc(parser, struct grub2_statement_if);
+
+	list_add(&elifs->list, &conditional->list);
+
 	stmt->st.type = STMT_TYPE_IF;
 	stmt->st.exec = statement_if_execute;
-	stmt->conditional = conditional;
+	stmt->conditionals = elifs;
 	stmt->else_case = else_case;
 	return &stmt->st;
 }

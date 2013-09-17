@@ -277,10 +277,12 @@ int statement_if_execute(struct grub2_script *script,
 	bool executed;
 	int rc;
 
-	conditional = st->conditional;
-
-	rc = statement_conditional_execute(script,
-			conditional, &executed);
+	list_for_each_entry(&st->conditionals->list, conditional, list) {
+		rc = statement_conditional_execute(script,
+				conditional, &executed);
+		if (executed)
+			break;
+	}
 
 	if (!executed && st->else_case)
 		rc = statements_execute(script, st->else_case);

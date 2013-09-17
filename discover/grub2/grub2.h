@@ -68,7 +68,7 @@ struct grub2_statement_conditional {
 
 struct grub2_statement_if {
 	struct grub2_statement	st;
-	struct grub2_statement	*conditional;
+	struct grub2_statements	*conditionals;
 	struct grub2_statements	*else_case;
 };
 
@@ -114,6 +114,7 @@ struct grub2_statement *create_statement_conditional(
 
 struct grub2_statement *create_statement_if(struct grub2_parser *parser,
 		struct grub2_statement *conditional,
+		struct grub2_statements *elifs,
 		struct grub2_statements *else_case);
 
 struct grub2_statement *create_statement_block(struct grub2_parser *parser,
