@@ -304,6 +304,9 @@ int statement_menuentry_execute(struct grub2_script *script,
 	} else {
 		opt->option->name = talloc_strdup(opt, "(unknown)");
 	}
+	opt->option->id = talloc_asprintf(opt->option, "%s#%s",
+			script->ctx->device->device->id,
+			opt->option->name);
 
 	script->opt = opt;
 
