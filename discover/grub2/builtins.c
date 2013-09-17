@@ -123,6 +123,114 @@ static int builtin_search(struct grub2_script *script,
 	return 0;
 }
 
+static bool builtin_test_op(int argc, char **argv, int *consumed)
+{
+	char *op;
+
+	if (argc >= 3) {
+		const char *a1, *a2;
+
+		a1 = argv[0];
+		op = argv[1];
+		a2 = argv[2];
+
+		if (!strcmp(op, "=") || !strcmp(op, "==")) {
+			*consumed = 3;
+			return !strcmp(a1, a2);
+		}
+
+		if (!strcmp(op, "!=")) {
+			*consumed = 3;
+			return strcmp(a1, a2);
+		}
+
+		if (!strcmp(op, "<")) {
+			*consumed = 3;
+			return strcmp(a1, a2) < 0;
+		}
+
+		if (!strcmp(op, ">")) {
+			*consumed = 3;
+			return strcmp(a1, a2) > 0;
+		}
+	}
+
+	if (argc >= 2) {
+		const char *a1;
+
+		op = argv[0];
+		a1 = argv[1];
+
+		if (!strcmp(op, "-z")) {
+			*consumed = 2;
+			return strlen(a1) == 0;
+		}
+
+		if (!strcmp(op, "-n")) {
+			*consumed = 2;
+			return strlen(a1) != 0;
+		}
+
+		/* todo: implement file checks */
+		if (!strcmp(op, "-s") || !strcmp(op, "-f")) {
+			*consumed = 2;
+			return false;
+		}
+	}
+
+	*consumed = 1;
+	return strlen(op) > 0;
+}
+
+static int builtin_test(struct grub2_script *script __attribute__((unused)),
+		void *data __attribute__((unused)),
+		int argc, char *argv[])
+{
+	int consumed;
+	bool not, rc;
+
+	if (!strcmp(argv[0], "[") && !strcmp(argv[argc - 1], "]"))
+		argc--;
+
+	/* skip command name */
+	argc--;
+	argv++;
+
+	not = false;
+	rc = false;
+
+	for (consumed = 0; argc > 0; argv += consumed, argc -= consumed) {
+
+		if (!strcmp(argv[0], "!")) {
+			not = true;
+			consumed = 1;
+			continue;
+		}
+
+		if (!strcmp(argv[0], "-a")) {
+			if (!rc)
+				return 1;
+			consumed = 1;
+			continue;
+		}
+
+		if (!strcmp(argv[0], "-o")) {
+			if (rc)
+				return 0;
+			consumed = 1;
+			continue;
+		}
+
+		rc = builtin_test_op(argc, argv, &consumed);
+		if (not) {
+			rc = !rc;
+			not = false;
+		}
+	}
+
+	return rc ? 0 : 1;
+}
+
 static int builtin_nop(struct grub2_script *script __attribute__((unused)),
 		void *data __attribute__((unused)),
 		int argc __attribute__((unused)),
@@ -150,7 +258,15 @@ static struct {
 	{
 		.name = "search",
 		.fn = builtin_search,
-	}
+	},
+	{
+		.name = "[",
+		.fn = builtin_test,
+	},
+	{
+		.name = "test",
+		.fn = builtin_test,
+	},
 };
 
 static const char *nops[] = {
