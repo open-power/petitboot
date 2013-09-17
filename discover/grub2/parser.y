@@ -11,7 +11,10 @@
 #include "parser.h"
 #include "lexer.h"
 
+static void print_token(FILE *fp, int type, YYSTYPE value);
+
 #define YYLEX_PARAM parser->scanner
+#define YYPRINT(f, t, v) print_token(f, t, v)
 
 static void yyerror(struct grub2_parser *, char const *s);
 %}
@@ -145,6 +148,13 @@ void yyerror(struct grub2_parser *parser, char const *s)
 	fprintf(stderr, "%d: error: %s '%s'\n",
 			yyget_lineno(parser->scanner),
 			s, yyget_text(parser->scanner));
+}
+
+static void print_token(FILE *fp, int type, YYSTYPE value)
+{
+	if (type != TOKEN_WORD)
+		return;
+	fprintf(fp, "%s", value.word->text);
 }
 
 struct grub2_statements *create_statements(struct grub2_parser *parser)
