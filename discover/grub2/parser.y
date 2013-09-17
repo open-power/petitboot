@@ -60,6 +60,7 @@ static void yyerror(struct grub2_parser *, char const *s);
 %token	TOKEN_EOL
 %token	TOKEN_DELIM
 %token	<word> TOKEN_WORD
+%token	TOKEN_EOF 0
 
 %start	script
 %debug
@@ -70,10 +71,12 @@ script:	statements {
 		parser->script->statements = $1;
 	}
 
+eol:	TOKEN_EOL | TOKEN_EOF;
+
 statements: /* empty */ {
 		$$ = create_statements(parser);
 	}
-	| statements statement TOKEN_EOL {
+	| statements statement eol {
 		statement_append($1, $2);
 		$$ = $1;
 	}
