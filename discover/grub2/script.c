@@ -246,7 +246,7 @@ int statement_simple_execute(struct grub2_script *script,
 	entry = script_lookup_function(script, st->argv->argv[0]);
 	if (!entry) {
 		fprintf(stderr, "undefined function '%s'\n", st->argv->argv[0]);
-		return 0;
+		return 1;
 	}
 
 	rc = entry->fn(script, entry->data, st->argv->argc, st->argv->argv);
