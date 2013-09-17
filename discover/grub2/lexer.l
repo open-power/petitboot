@@ -21,7 +21,7 @@
 %x sqstring
 %x dqstring
 
-WORD	[^{}|&$;<> \t\n'"]+
+WORD	[^{}|&$;<> \t\n'"#]+
 VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 
 %%
@@ -116,8 +116,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 [ \t]*(;|\n)[ \t]*	return TOKEN_EOL;
 
  /* strip comments */
-#.*$	;
-
+#.*	;
 
 .	printf("unknown token '%s'\n", yytext); exit(1);
 
