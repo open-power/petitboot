@@ -1,6 +1,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -29,6 +30,7 @@ struct powerpc_nvram_storage {
 static const char *known_params[] = {
 	"auto-boot?",
 	"petitboot,network",
+	"petitboot,timeout",
 	NULL,
 };
 
@@ -301,11 +303,23 @@ static void populate_config(struct powerpc_nvram_storage *nv,
 		struct config *config)
 {
 	const char *val;
+	char *end;
+	unsigned long timeout;
 
 	/* if the "auto-boot?' property is present and "false", disable auto
 	 * boot */
 	val = get_param(nv, "auto-boot?");
 	config->autoboot_enabled = !val || strcmp(val, "false");
+
+	val = get_param(nv, "petitboot,timeout");
+	if (val) {
+		timeout = strtoul(val, &end, 10);
+		if (end != val) {
+			if (timeout >= INT_MAX)
+				timeout = INT_MAX;
+			config->autoboot_timeout_sec = (int)timeout;
+		}
+	}
 
 	populate_network_config(nv, config);
 }
