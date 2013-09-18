@@ -125,7 +125,8 @@ static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 
 	event->n_params = 0;
 	event->params = NULL;
-	event_set_param(event, "DEVNAME", devnode);
+	event_set_param(event, "path", devpath);
+	event_set_param(event, "node", devnode);
 	event_set_param(event, "type", devtype);
 
 	udev_setup_event_params(dev, event);

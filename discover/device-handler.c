@@ -86,11 +86,6 @@ struct discover_boot_option *discover_boot_option_create(
 	return opt;
 }
 
-static int device_match_path(struct discover_device *dev, const char *path)
-{
-	return dev->device_path && !strcmp(dev->device_path, path);
-}
-
 static int device_match_uuid(struct discover_device *dev, const char *uuid)
 {
 	return dev->uuid && !strcmp(dev->uuid, uuid);
@@ -130,26 +125,10 @@ static struct discover_device *device_lookup(
 struct discover_device *device_lookup_by_name(struct device_handler *handler,
 		const char *name)
 {
-	struct discover_device *dev;
-	char *path;
+	if (!strncmp(name, "/dev/", strlen("/dev/")))
+		name += strlen("/dev/");
 
-	if (strncmp(name, "/dev/", strlen("/dev/")))
-		path = talloc_asprintf(NULL, "/dev/%s", name);
-	else
-		path = talloc_strdup(NULL, name);
-
-	dev = device_lookup_by_path(handler, path);
-
-	talloc_free(path);
-
-	return dev;
-}
-
-struct discover_device *device_lookup_by_path(
-		struct device_handler *device_handler,
-		const char *path)
-{
-	return device_lookup(device_handler, device_match_path, path);
+	return device_lookup_by_id(handler, name);
 }
 
 struct discover_device *device_lookup_by_uuid(
@@ -331,7 +310,7 @@ static struct discover_device *discover_device_create(
 		struct event *event)
 {
 	struct discover_device *dev;
-	const char *devname;
+	const char *devnode;
 
 	dev = find_device(handler, event->device);
 	if (dev)
@@ -341,9 +320,9 @@ static struct discover_device *discover_device_create(
 	dev->device = talloc_zero(dev, struct device);
 	list_init(&dev->boot_options);
 
-	devname = event_get_param(ctx->event, "DEVNAME");
-	if (devname)
-		dev->device_path = talloc_strdup(dev, devname);
+	devnode = event_get_param(ctx->event, "node");
+	if (devnode)
+		dev->device_path = talloc_strdup(dev, devnode);
 
 	dev->device->id = talloc_strdup(dev, event->device);
 	dev->device->type = event_device_type(dev->device, event);

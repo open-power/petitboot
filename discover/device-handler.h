@@ -78,8 +78,6 @@ int device_handler_event(struct device_handler *handler, struct event *event);
 
 struct discover_device *device_lookup_by_name(struct device_handler *handler,
 		const char *name);
-struct discover_device *device_lookup_by_path(struct device_handler *handler,
-		const char *path);
 struct discover_device *device_lookup_by_uuid(struct device_handler *handler,
 		const char *uuid);
 struct discover_device *device_lookup_by_label(struct device_handler *handler,
