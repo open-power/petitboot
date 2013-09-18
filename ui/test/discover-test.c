@@ -3,6 +3,21 @@
 
 #include "ui/common/discover-client.h"
 
+static const char *device_type_string(enum device_type type)
+{
+	switch (type) {
+	case DEVICE_TYPE_DISK:
+		return "disk";
+	case DEVICE_TYPE_NETWORK:
+		return "network";
+	case DEVICE_TYPE_OPTICAL:
+		return "optical";
+	case DEVICE_TYPE_UNKNOWN:
+		return "unknown";
+	}
+	return "invalid";
+}
+
 static int print_device_add(struct device *device,
 	void __attribute__((unused)) *arg)
 {
@@ -10,6 +25,7 @@ static int print_device_add(struct device *device,
 
 	printf("new device:\n");
 	printf("\tid:   %s\n", device->id);
+	printf("\ttype: %s\n", device_type_string(device->type));
 	printf("\tname: %s\n", device->name);
 	printf("\tdesc: %s\n", device->description);
 	printf("\ticon: %s\n", device->icon_file);

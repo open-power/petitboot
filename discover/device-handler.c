@@ -304,6 +304,27 @@ static struct discover_device *find_device(struct device_handler *handler,
 	return NULL;
 }
 
+static enum device_type event_device_type(struct device *device,
+		struct event *event)
+{
+	const char *param;
+
+	param = event_get_param(event, "type");
+	if (!param) {
+		pb_log("%s: empty type\n", device->id);
+		return DEVICE_TYPE_UNKNOWN;
+	}
+
+	if (!strcmp(param, "disk") || !strcmp(param, "partition"))
+		return DEVICE_TYPE_DISK;
+
+	if (!strcmp(param, "net"))
+		return DEVICE_TYPE_NETWORK;
+
+	pb_log("%s: unknown type '%s'\n", device->id, param);
+	return DEVICE_TYPE_UNKNOWN;
+}
+
 static struct discover_device *discover_device_create(
 		struct device_handler *handler,
 		struct discover_context *ctx,
@@ -325,6 +346,7 @@ static struct discover_device *discover_device_create(
 		dev->device_path = talloc_strdup(dev, devname);
 
 	dev->device->id = talloc_strdup(dev, event->device);
+	dev->device->type = event_device_type(dev->device, event);
 
 	talloc_set_destructor(dev, destroy_device);
 
