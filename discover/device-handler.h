@@ -3,8 +3,6 @@
 
 #include <list/list.h>
 
-#define DEFAULT_BOOT_TIMEOUT_SEC	10
-
 struct device_handler;
 struct discover_device;
 struct discover_server;

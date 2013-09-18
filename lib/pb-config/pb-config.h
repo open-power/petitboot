@@ -32,6 +32,7 @@ struct network_config {
 
 struct config {
 	bool			autoboot_enabled;
+	int			autoboot_timeout_sec;
 	struct network_config	network;
 };
 

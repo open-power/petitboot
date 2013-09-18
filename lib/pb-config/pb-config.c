@@ -13,6 +13,7 @@ static struct config_storage	*storage;
 static void config_set_defaults(struct config *config)
 {
 	config->autoboot_enabled = true;
+	config->autoboot_timeout_sec = 10;
 	config->network.interfaces = NULL;
 	config->network.n_interfaces = 0;
 }
@@ -23,8 +24,11 @@ static void dump_config(struct config *config)
 
 	pb_log("configuration:\n");
 
-	pb_log(" autoboot: %s\n",
-			config->autoboot_enabled ? "enabled" : "disabled");
+	if (config->autoboot_enabled)
+		pb_log(" autoboot: enabled, %d sec\n",
+				config->autoboot_timeout_sec);
+	else
+		pb_log(" autoboot: disabled\n");
 
 	if (config->network.n_interfaces || config->network.n_dns_servers)
 		pb_log(" network configuration:\n");

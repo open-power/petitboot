@@ -419,7 +419,7 @@ static void set_default(struct device_handler *handler,
 		return;
 
 	handler->default_boot_option = opt;
-	handler->sec_to_boot = DEFAULT_BOOT_TIMEOUT_SEC;
+	handler->sec_to_boot = config_get()->autoboot_timeout_sec;
 
 	pb_log("Boot option %s set as default, timeout %u sec.\n",
 	       opt->option->id, handler->sec_to_boot);
