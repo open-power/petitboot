@@ -4,8 +4,16 @@
 #include <stdbool.h>
 #include <list/list.h>
 
+enum device_type {
+	DEVICE_TYPE_NETWORK,
+	DEVICE_TYPE_DISK,
+	DEVICE_TYPE_OPTICAL,
+	DEVICE_TYPE_UNKNOWN,
+};
+
 struct device {
 	char		*id;
+	enum device_type type;
 	char		*name;
 	char		*description;
 	char		*icon_file;

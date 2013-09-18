@@ -22,6 +22,7 @@
  * action = 0x1: device add message
  *  payload:
  *   4-byte len, id
+ *   1-byte type
  *   4-byte len, name
  *   4-byte len, description
  *   4-byte len, icon_file
@@ -166,6 +167,7 @@ static int optional_strlen(const char *str)
 int pb_protocol_device_len(const struct device *dev)
 {
 	return	4 + optional_strlen(dev->id) +
+		sizeof(dev->type) +
 		4 + optional_strlen(dev->name) +
 		4 + optional_strlen(dev->description) +
 		4 + optional_strlen(dev->icon_file);
@@ -209,6 +211,8 @@ int pb_protocol_serialise_device(const struct device *dev,
 	char *pos = buf;
 
 	pos += pb_protocol_serialise_string(pos, dev->id);
+	*(enum device_type *)pos = dev->type;
+	pos += sizeof(enum device_type);
 	pos += pb_protocol_serialise_string(pos, dev->name);
 	pos += pb_protocol_serialise_string(pos, dev->description);
 	pos += pb_protocol_serialise_string(pos, dev->icon_file);
@@ -383,6 +387,12 @@ int pb_protocol_deserialise_device(struct device *dev,
 
 	if (read_string(dev, &pos, &len, &dev->id))
 		goto out;
+
+	if (len < sizeof(enum device_type))
+		goto out;
+	dev->type = *(enum device_type *)(pos);
+	pos += sizeof(enum device_type);
+	len -= sizeof(enum device_type);
 
 	if (read_string(dev, &pos, &len, &dev->name))
 		goto out;
