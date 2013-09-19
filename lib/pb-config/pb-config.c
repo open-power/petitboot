@@ -16,6 +16,8 @@ static void config_set_defaults(struct config *config)
 	config->autoboot_timeout_sec = 10;
 	config->network.interfaces = NULL;
 	config->network.n_interfaces = 0;
+	config->network.dns_servers = NULL;
+	config->network.n_dns_servers = 0;
 }
 
 static void dump_config(struct config *config)
