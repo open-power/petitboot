@@ -371,8 +371,6 @@ no_load:
 	if (clean_dtb)
 		unlink(boot_task->local_dtb);
 
-	talloc_free(boot_task);
-
 	if (!result) {
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"performing kexec reboot");
@@ -384,6 +382,8 @@ no_load:
 					"kexec reboot failed");
 		}
 	}
+
+	talloc_free(boot_task);
 
 	return result;
 }
