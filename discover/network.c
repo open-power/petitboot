@@ -325,6 +325,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 	struct interface *interface;
 	struct ifinfomsg *info;
 	struct rtattr *attr;
+	unsigned int mtu;
 	uint8_t ifaddr[6];
 	char ifname[IFNAMSIZ+1];
 	int attrlen, type;
@@ -355,13 +356,17 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 			strncpy(ifname, data, IFNAMSIZ);
 			have_ifname = true;
 			break;
+
+		case IFLA_MTU:
+			mtu = *(unsigned int *)data;
+			break;
 		}
 	}
 
 	if (!have_ifaddr || !have_ifname)
 		return -1;
 
-	if (type == RTM_DELLINK) {
+	if (type == RTM_DELLINK || mtu == 0) {
 		interface = find_interface_by_ifindex(network, info->ifi_index);
 		if (!interface)
 			return 0;
