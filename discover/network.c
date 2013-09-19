@@ -138,6 +138,18 @@ static int network_send_link_query(struct network *network)
 	return 0;
 }
 
+static void add_interface(struct network *network,
+		struct interface *interface)
+{
+	list_add(&network->interfaces, &interface->list);
+}
+
+static void remove_interface(struct interface *interface)
+{
+	list_remove(&interface->list);
+	talloc_free(interface);
+}
+
 static int interface_change(struct interface *interface, bool up)
 {
 	const char *statestr = up ? "up" : "down";
@@ -371,8 +383,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		if (!interface)
 			return 0;
 		pb_log("network: interface %s removed\n", interface->name);
-		list_remove(&interface->list);
-		talloc_free(interface);
+		remove_interface(interface);
 		return 0;
 	}
 
@@ -384,6 +395,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		interface->state = IFSTATE_NEW;
 		memcpy(interface->hwaddr, ifaddr, sizeof(interface->hwaddr));
 		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
+		add_interface(network, interface);
 	}
 
 	configure_interface(network, interface,
