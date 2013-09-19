@@ -1,5 +1,6 @@
 
 #include <log/log.h>
+#include <types/types.h>
 #include <talloc/talloc.h>
 
 #include "pb-config.h"
@@ -18,6 +19,13 @@ static void config_set_defaults(struct config *config)
 	config->network.n_interfaces = 0;
 	config->network.dns_servers = NULL;
 	config->network.n_dns_servers = 0;
+
+	config->n_boot_priorities = 2;
+	config->boot_priorities = talloc_array(config, struct boot_priority,
+						config->n_boot_priorities);
+	config->boot_priorities[0].type = DEVICE_TYPE_NETWORK;
+	config->boot_priorities[1].type = DEVICE_TYPE_DISK;
+
 }
 
 static void dump_config(struct config *config)

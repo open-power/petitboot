@@ -334,17 +334,50 @@ static int default_timeout(void *arg)
 	return 0;
 }
 
+static bool priority_match(struct boot_priority *prio,
+		struct discover_boot_option *opt)
+{
+	return prio->type == opt->device->device->type;
+}
+
+static int default_option_priority(struct discover_boot_option *opt)
+{
+	const struct config *config;
+	struct boot_priority *prio;
+	int i;
+
+	config = config_get();
+
+	for (i = 0; i < config->n_boot_priorities; i++) {
+		prio = &config->boot_priorities[i];
+		if (priority_match(prio, opt))
+			break;
+	}
+
+	return i;
+}
+
 static void set_default(struct device_handler *handler,
 		struct discover_boot_option *opt)
 {
-	if (handler->default_boot_option)
-		return;
-
 	if (!handler->autoboot_enabled)
 		return;
 
-	handler->default_boot_option = opt;
+	/* Resolve any conflicts: if we have a new default option, it only
+	 * replaces the current if it has a higher priority. */
+	if (handler->default_boot_option) {
+		int new_prio, cur_prio;
+
+		new_prio = default_option_priority(opt);
+		cur_prio = default_option_priority(
+					handler->default_boot_option);
+
+		if (new_prio >= cur_prio)
+			return;
+	}
+
 	handler->sec_to_boot = config_get()->autoboot_timeout_sec;
+	handler->default_boot_option = opt;
 
 	pb_log("Boot option %s set as default, timeout %u sec.\n",
 	       opt->option->id, handler->sec_to_boot);

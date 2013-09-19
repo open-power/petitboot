@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <types/types.h>
+
 #define HWADDR_SIZE	6
 
 struct interface_config {
@@ -30,10 +32,16 @@ struct network_config {
 	int			n_dns_servers;
 };
 
+struct boot_priority {
+	enum device_type	type;
+};
+
 struct config {
 	bool			autoboot_enabled;
 	int			autoboot_timeout_sec;
 	struct network_config	network;
+	struct boot_priority	*boot_priorities;
+	int			n_boot_priorities;
 };
 
 
