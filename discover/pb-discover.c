@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
 	struct opts opts;
 	struct pb_udev *udev;
 	struct user_event *uev;
+	FILE *log;
 
 	if (opts_parse(&opts, argc, argv)) {
 		print_usage();
@@ -139,17 +140,17 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
+	log = stderr;
 	if (strcmp(opts.log_file, "-")) {
-		FILE *log = fopen(opts.log_file, "a");
+		log = fopen(opts.log_file, "a");
+		if (!log) {
+			fprintf(stderr, "can't open log file %s, logging to "
+					"stderr\n", opts.log_file);
+			log = stderr;
+		}
+	}
+	pb_log_init(log);
 
-		assert(log);
-		pb_log_set_stream(log);
-	} else
-		pb_log_set_stream(stderr);
-
-#if defined(DEBUG)
-	pb_log_always_flush(1);
-#endif
 	pb_log("--- pb-discover ---\n");
 
 	/* we look for closed sockets when we write, so ignore SIGPIPE */

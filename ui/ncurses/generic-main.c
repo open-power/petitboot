@@ -206,6 +206,7 @@ int main(int argc, char *argv[])
 	int result;
 	int cui_result;
 	struct opts opts;
+	FILE *log;
 
 	result = opts_parse(&opts, argc, argv);
 
@@ -224,20 +225,15 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
+	log = stderr;
 	if (strcmp(opts.log_file, "-")) {
-		FILE *log = fopen(opts.log_file, "a");
+		log = fopen(opts.log_file, "a");
 
 		if (!log)
 			log = fopen("/dev/null", "a");
+	}
 
-		assert(log);
-		pb_log_set_stream(log);
-	} else
-		pb_log_set_stream(stderr);
-
-#if defined(DEBUG)
-	pb_log_always_flush(1);
-#endif
+	pb_log_init(log);
 
 	pb_log("--- petitboot-nc ---\n");
 

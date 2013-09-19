@@ -8,16 +8,11 @@
 int main(int argc, char **argv)
 {
 	struct pb_url *url;
-	FILE *null;
 
 	if (argc != 2 && argc != 3) {
 		fprintf(stderr, "Usage: %s <URL> [update]\n", argv[0]);
 		return EXIT_FAILURE;
 	}
-
-	/* discard log output */
-	null = fopen("/dev/null", "w");
-	pb_log_set_stream(null);
 
 	url = pb_url_parse(NULL, argv[1]);
 	if (!url)

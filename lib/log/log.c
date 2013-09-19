@@ -1,38 +1,54 @@
 
+#include <assert.h>
 #include <stdarg.h>
 
 #include "log.h"
 
 static FILE *logf;
-static int always_flush;
+static bool debug;
+
+static void __log(const char *fmt, va_list ap)
+{
+	if (!logf)
+		return;
+	vfprintf(logf, fmt, ap);
+	if (debug)
+		fflush(logf);
+}
 
 void pb_log(const char *fmt, ...)
 {
 	va_list ap;
-	FILE *stream;
-
-	stream = logf ? logf : stderr;
-
 	va_start(ap, fmt);
-	vfprintf(stream, fmt, ap);
+	__log(fmt, ap);
 	va_end(ap);
-
-	if (always_flush)
-		fflush(stream);
 }
 
-void pb_log_set_stream(FILE *stream)
+void pb_debug(const char *fmt, ...)
 {
-	fflush(logf ? logf : stderr);
-	logf = stream;
+	va_list ap;
+	if (!debug)
+		return;
+	va_start(ap, fmt);
+	__log(fmt, ap);
+	va_end(ap);
 }
 
-FILE * pb_log_get_stream(void)
+void __pb_log_init(FILE *fp, bool _debug)
 {
-	return logf ? logf : stderr;
+	if (logf)
+		fflush(logf);
+	logf = fp;
+	debug = _debug;
 }
 
-void pb_log_always_flush(int state)
+FILE *pb_log_get_stream(void)
 {
-	always_flush = state;
+	static FILE *null_stream;
+	if (!logf) {
+		if (!null_stream)
+			null_stream = fopen("/dev/null", "a");
+		return null_stream;
+	}
+	return logf;
 }
