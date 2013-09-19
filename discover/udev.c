@@ -13,6 +13,7 @@
 #include <sys/un.h>
 
 #include <log/log.h>
+#include <types/types.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
 #include <system/system.h>
@@ -50,93 +51,102 @@ static int udev_destructor(void *p)
 	return 0;
 }
 
-static void udev_setup_event_params(struct udev_device *dev,
-		struct event *event)
+static void udev_setup_device_params(struct udev_device *udev,
+		struct discover_device *dev)
 {
 	struct udev_list_entry *list, *entry;
 
-	list = udev_device_get_properties_list_entry(dev);
+	list = udev_device_get_properties_list_entry(udev);
 	if (!list)
 		return;
 
 	udev_list_entry_foreach(entry, list)
-		event_set_param(event,udev_list_entry_get_name(entry),
+		discover_device_set_param(dev,
+				udev_list_entry_get_name(entry),
 				udev_list_entry_get_value(entry));
 }
 
+static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
+{
+	struct discover_device *ddev;
+	const char *typestr;
+	const char *path;
+	const char *name;
+
+	name = udev_device_get_sysname(dev);
+	if (!name) {
+		pb_debug("udev_device_get_sysname failed\n");
+		return -1;
+	}
+
+	typestr = udev_device_get_devtype(dev);
+	if (!typestr) {
+		pb_debug("udev_device_get_devtype failed\n");
+		return -1;
+	}
+
+	if (!(!strcmp(typestr, "disk") || !strcmp(typestr, "partition"))) {
+		pb_debug("SKIP %s: invalid type %s\n", name, typestr);
+		return 0;
+	}
+
+	path = udev_device_get_devpath(dev);
+	if (path && (strstr(path, "virtual/block/loop")
+			|| strstr(path, "virtual/block/ram"))) {
+		pb_debug("SKIP: %s: ignored (path=%s)\n", name, path);
+		return 0;
+	}
+
+	/* We have enough info to create the device and start discovery */
+	ddev = device_lookup_by_id(udev->handler, name);
+	if (ddev) {
+		pb_debug("device %s is already present?\n", name);
+		return -1;
+	}
+
+	ddev = discover_device_create(udev->handler, name);
+
+	ddev->device_path = udev_device_get_devnode(dev);
+	ddev->uuid = udev_device_get_property_value(dev, "ID_FS_UUID");
+	ddev->label = udev_device_get_property_value(dev, "ID_FS_LABEL");
+	ddev->device->type = DEVICE_TYPE_DISK;
+
+	udev_setup_device_params(dev, ddev);
+
+	device_handler_discover(udev->handler, ddev, CONF_METHOD_LOCAL_FILE);
+
+	return 0;
+}
+
+static int udev_handle_dev_remove(struct pb_udev *udev, struct udev_device *dev)
+{
+	struct discover_device *ddev;
+	const char *name;
+
+	name = udev_device_get_sysname(dev);
+	if (!name) {
+		pb_debug("udev_device_get_sysname failed\n");
+		return -1;
+	}
+
+	ddev = device_lookup_by_id(udev->handler, name);
+	if (!ddev)
+		return 0;
+
+	device_handler_remove(udev->handler, ddev);
+
+	return 0;
+}
 static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 {
-	const char *devtype;
-	const char *devpath;
-	const char *devnode;
-	struct pb_udev *udev;
-	struct event *event;
-	enum event_action eva = 0;
+	struct pb_udev *udev = udev_get_userdata(udev_device_get_udev(dev));
 
-	assert(dev);
-	assert(action);
+	if (!strcmp(action, "add"))
+		return udev_handle_dev_add(udev, dev);
 
-	devtype = udev_device_get_devtype(dev); /* DEVTYPE */
+	else if (!strcmp(action, "remove"))
+		return udev_handle_dev_remove(udev, dev);
 
-	if (!devtype) {
-		pb_log("udev_device_get_devtype failed\n");
-		return -1;
-	}
-
-	devpath = udev_device_get_devpath(dev); /* DEVPATH */
-
-	if (!devpath) {
-		pb_log("udev_device_get_devpath failed\n");
-		return -1;
-	}
-
-	devnode = udev_device_get_devnode(dev); /* DEVNAME */
-
-	if (!devnode) {
-		pb_log("udev_device_get_devnode failed\n");
-		return -1;
-	}
-
-	/* Ignore non disk or partition, ram, loop. */
-
-	if (!(strstr(devtype, "disk") || strstr(devtype, "partition"))
-		|| strstr(devpath, "virtual/block/loop")
-		|| strstr(devpath, "virtual/block/ram")) {
-		pb_log("SKIP: %s - %s\n", devtype, devnode);
-		return 0;
-	}
-
-	if (!strcmp(action, "add")) {
-		pb_log("ADD: %s - %s\n", devtype, devnode);
-		eva = EVENT_ACTION_ADD;
-	} else if (!strcmp(action, "remove")) {
-		pb_log("REMOVE: %s - %s\n", devtype, devnode);
-		eva = EVENT_ACTION_REMOVE;
-	} else {
-		pb_log("SKIP: %s: %s - %s\n", action, devtype, devnode);
-		return 0;
-	}
-
-	event = talloc(NULL, struct event);
-
-	event->type = EVENT_TYPE_UDEV;
-	event->action = eva;
-	event->device = devnode;
-
-	event->n_params = 0;
-	event->params = NULL;
-	event_set_param(event, "path", devpath);
-	event_set_param(event, "node", devnode);
-	event_set_param(event, "type", devtype);
-
-	udev_setup_event_params(dev, event);
-
-	udev = udev_get_userdata(udev_device_get_udev(dev));
-	assert(udev);
-
-	device_handler_event(udev->handler, event);
-
-	talloc_free(event);
 	return 0;
 }
 

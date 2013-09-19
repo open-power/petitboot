@@ -29,10 +29,13 @@
 #include <sys/un.h>
 
 #include <log/log.h>
+#include <url/url.h>
+#include <types/types.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
 
 #include "device-handler.h"
+#include "resource.h"
 #include "event.h"
 #include "user-event.h"
 
@@ -70,6 +73,156 @@ static void user_event_print_event(struct event __attribute__((unused)) *event)
 			event->params[i].name, event->params[i].value);
 }
 
+static enum conf_method parse_conf_method(const char *str)
+{
+
+	if (!strcasecmp(str, "dhcp")) {
+		return CONF_METHOD_DHCP;
+	}
+	return CONF_METHOD_UNKNOWN;
+}
+
+static struct resource *user_event_resource(struct discover_boot_option *opt,
+		struct event *event, const char *param_name)
+{
+	struct resource *res;
+	struct pb_url *url;
+	const char *val;
+
+	val = event_get_param(event, param_name);
+	if (!val)
+		return NULL;
+
+	url = pb_url_parse(opt, val);
+	if (!url)
+		return NULL;
+
+	res = create_url_resource(opt, url);
+	if (!res) {
+		talloc_free(url);
+		return NULL;
+	}
+
+	return res;
+}
+
+static int parse_user_event(struct discover_context *ctx, struct event *event)
+{
+	struct discover_boot_option *d_opt;
+	struct boot_option *opt;
+	struct device *dev;
+	const char *p;
+
+	dev = ctx->device->device;
+
+	d_opt = discover_boot_option_create(ctx, ctx->device);
+	opt = d_opt->option;
+
+	if (!d_opt)
+		goto fail;
+
+	p = event_get_param(event, "name");
+
+	if (!p) {
+		pb_log("%s: no name found\n", __func__);
+		goto fail;
+	}
+
+	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, p);
+	opt->name = talloc_strdup(opt, p);
+
+	d_opt->boot_image = user_event_resource(d_opt, event, "image");
+	if (!d_opt->boot_image) {
+		pb_log("%s: no boot image found for %s!\n", __func__,
+				opt->name);
+		goto fail;
+	}
+
+	d_opt->initrd = user_event_resource(d_opt, event, "initrd");
+
+	p = event_get_param(event, "args");
+
+	if (p)
+		opt->boot_args = talloc_strdup(opt, p);
+
+	opt->description = talloc_asprintf(opt, "%s %s", opt->boot_image_file,
+		opt->boot_args ? : "");
+
+	if (event_get_param(event, "default"))
+		opt->is_default = true;
+
+	discover_context_add_boot_option(ctx, d_opt);
+
+	return 0;
+
+fail:
+	talloc_free(d_opt);
+	return -1;
+}
+
+static int user_event_conf(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	struct discover_device *dev;
+	enum conf_method method;
+	struct pb_url *url;
+	const char *val;
+
+	val = event_get_param(event, "url");
+	if (!val)
+		return 0;
+
+	url = pb_url_parse(event, val);
+	if (!url)
+		return 0;
+
+	val = event_get_param(event, "method");
+	if (!val)
+		return 0;
+
+	method = parse_conf_method(val);
+	if (method == CONF_METHOD_UNKNOWN)
+		return 0;
+
+	dev = discover_device_create(handler, event->device);
+
+	device_handler_conf(handler, dev, url, method);
+
+	return 0;
+}
+
+static int user_event_add(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	struct discover_context *ctx;
+	struct discover_device *dev;
+
+	dev = discover_device_create(handler, event->device);
+	ctx = device_handler_discover_context_create(handler, dev);
+
+	parse_user_event(ctx, event);
+
+	device_handler_discover_context_commit(handler, ctx);
+
+	talloc_free(ctx);
+
+	return 0;
+}
+
+static int user_event_remove(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	struct discover_device *dev;
+
+	dev = device_lookup_by_id(handler, event->device);
+	if (!dev)
+		return 0;
+
+	device_handler_remove(handler, dev);
+
+	return 0;
+}
+
 static void user_event_handle_message(struct user_event *uev, char *buf,
 	int len)
 {
@@ -85,7 +238,21 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		return;
 
 	user_event_print_event(event);
-	device_handler_event(uev->handler, event);
+
+	switch (event->action) {
+	case EVENT_ACTION_ADD:
+		result = user_event_add(uev, event);
+		break;
+	case EVENT_ACTION_REMOVE:
+		result = user_event_remove(uev, event);
+		break;
+	case EVENT_ACTION_CONF:
+		result = user_event_conf(uev, event);
+		break;
+	default:
+		break;
+	}
+
 	talloc_free(event);
 
 	return;

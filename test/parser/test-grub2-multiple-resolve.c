@@ -34,7 +34,7 @@ void run_test(struct parser_test *test)
 	check_unresolved_resource(opt[1]->boot_image);
 	check_not_present_resource(opt[1]->initrd);
 
-	dev = test_create_device(ctx, "external");
+	dev = test_create_device(test, "external");
 	dev->uuid = "48c1b787-20ad-47ce-b9eb-b108dddc3535";
 	test_hotplug_device(test, dev);
 

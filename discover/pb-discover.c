@@ -158,8 +158,6 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, sigint_handler);
 
-	config_init(NULL);
-
 	if (opts.no_autoboot == opt_yes)
 		config_set_autoboot(false);
 
@@ -172,6 +170,8 @@ int main(int argc, char *argv[])
 	procset = process_init(server, waitset, opts.dry_run == opt_yes);
 	if (!procset)
 		return EXIT_FAILURE;
+
+	config_init(NULL);
 
 	network = network_init(server, waitset, opts.dry_run == opt_yes);
 	if (!network)

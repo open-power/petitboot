@@ -9,6 +9,7 @@
 struct parser_test {
 	struct device_handler *handler;
 	struct discover_context *ctx;
+	struct config *config;
 	struct {
 		void	*buf;
 		size_t	size;
@@ -19,7 +20,7 @@ struct parser_test {
 void __register_parser(struct parser *parser);
 
 /* test functions */
-struct discover_device *test_create_device(struct discover_context *ctx,
+struct discover_device *test_create_device(struct parser_test *test,
 		const char *name);
 
 #define test_read_conf_data(t, d) \

@@ -26,7 +26,7 @@ void run_test(struct parser_test *test)
 	check_name(opt, "linux");
 	check_unresolved_resource(opt->boot_image);
 
-	dev = test_create_device(ctx, "sda2");
+	dev = test_create_device(test, "sda2");
 	test_hotplug_device(test, dev);
 
 	check_resolved_local_resource(opt->boot_image, dev, "/vmlinux");

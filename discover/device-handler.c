@@ -21,7 +21,6 @@
 #include "event.h"
 #include "parser.h"
 #include "resource.h"
-#include "udev.h"
 #include "paths.h"
 #include "boot.h"
 
@@ -40,6 +39,9 @@ struct device_handler {
 	struct discover_boot_option *default_boot_option;
 	struct list		unresolved_boot_options;
 };
+
+static int mount_device(struct discover_device *dev);
+static int umount_device(struct discover_device *dev);
 
 void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *boot_option)
@@ -157,83 +159,82 @@ void device_handler_destroy(struct device_handler *handler)
 	talloc_free(handler);
 }
 
-#ifdef PETITBOOT_TEST
-
-/* we have a simplified interface for petitboot testing, but still want
- * to keep struct device_handler opaque. */
-struct device_handler *device_handler_init(
-		struct discover_server *server __attribute__((unused)),
-		struct waitset *waitset __attribute__((unused)),
-		int dry_run __attribute__((unused)))
+static int destroy_device(void *arg)
 {
-	struct device_handler *handler;
+	struct discover_device *dev = arg;
 
-	handler = talloc_zero(NULL, struct device_handler);
-	list_init(&handler->unresolved_boot_options);
-
-	return handler;
-}
-
-void device_handler_add_device(struct device_handler *handler,
-		struct discover_device *dev)
-{
-	handler->n_devices++;
-	handler->devices = talloc_realloc(handler, handler->devices,
-		struct discover_device *, handler->n_devices);
-	handler->devices[handler->n_devices - 1] = dev;
-}
-
-#else
-
-static int mount_device(struct discover_device *dev)
-{
-	int rc;
-
-	if (!dev->device_path)
-		return -1;
-
-	if (!dev->mount_path)
-		dev->mount_path = join_paths(dev, mount_base(),
-						dev->device_path);
-
-	if (pb_mkdir_recursive(dev->mount_path))
-		pb_log("couldn't create mount directory %s: %s\n",
-				dev->mount_path, strerror(errno));
-
-	rc = process_run_simple(dev, pb_system_apps.mount,
-			dev->device_path, dev->mount_path,
-			"-o", "ro", NULL);
-
-	if (!rc)
-		return 0;
-
-	/* Retry mount without ro option. */
-	rc = process_run_simple(dev, pb_system_apps.mount,
-			dev->device_path, dev->mount_path, NULL);
-
-	if (!rc)
-		return 0;
-
-	pb_rmdir_recursive(mount_base(), dev->mount_path);
-	return -1;
-}
-
-static int umount_device(struct discover_device *dev)
-{
-	int status;
-
-	if (!dev->mount_path)
-		return 0;
-
-	status = process_run_simple(dev, pb_system_apps.umount,
-			dev->mount_path, NULL);
-
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-		return -1;
-
-	pb_rmdir_recursive(mount_base(), dev->mount_path);
+	umount_device(dev);
 
 	return 0;
+}
+
+struct discover_device *discover_device_create(struct device_handler *handler,
+		const char *id)
+{
+	struct discover_device *dev;
+
+	dev = device_lookup_by_id(handler, id);
+	if (dev)
+		return dev;
+
+	dev = talloc_zero(handler, struct discover_device);
+	dev->device = talloc_zero(dev, struct device);
+	dev->device->id = talloc_strdup(dev->device, id);
+	list_init(&dev->params);
+	list_init(&dev->boot_options);
+
+	talloc_set_destructor(dev, destroy_device);
+
+	return dev;
+}
+
+struct discover_device_param {
+	char			*name;
+	char			*value;
+	struct list_item	list;
+};
+
+void discover_device_set_param(struct discover_device *device,
+		const char *name, const char *value)
+{
+	struct discover_device_param *param;
+	bool found = false;
+
+	list_for_each_entry(&device->params, param, list) {
+		if (!strcmp(param->name, name)) {
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		if (!value)
+			return;
+		param = talloc(device, struct discover_device_param);
+		param->name = talloc_strdup(param, name);
+		list_add(&device->params, &param->list);
+	} else {
+		if (!value) {
+			list_remove(&param->list);
+			talloc_free(param);
+			return;
+		}
+		talloc_free(param->value);
+	}
+
+	param->value = talloc_strdup(param, value);
+}
+
+const char *discover_device_get_param(struct discover_device *device,
+		const char *name)
+{
+	struct discover_device_param *param;
+
+	list_for_each_entry(&device->params, param, list) {
+		if (!strcmp(param->name, name))
+			return param->name;
+	}
+	return NULL;
 }
 
 struct device_handler *device_handler_init(struct discover_server *server,
@@ -241,14 +242,12 @@ struct device_handler *device_handler_init(struct discover_server *server,
 {
 	struct device_handler *handler;
 
-	handler = talloc(NULL, struct device_handler);
-	handler->devices = NULL;
-	handler->n_devices = 0;
+	handler = talloc_zero(NULL, struct device_handler);
 	handler->server = server;
 	handler->waitset = waitset;
 	handler->dry_run = dry_run;
-	handler->default_boot_option = NULL;
 	handler->autoboot_enabled = config_get()->autoboot_enabled;
+
 	list_init(&handler->unresolved_boot_options);
 
 	/* set up our mount point base */
@@ -259,85 +258,8 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	return handler;
 }
 
-static int destroy_device(void *arg)
-{
-	struct discover_device *dev = arg;
-
-	umount_device(dev);
-
-	return 0;
-}
-
-static struct discover_device *find_device(struct device_handler *handler,
-		const char *id)
-{
-	struct discover_device *dev;
-	unsigned int i;
-
-	for (i = 0; i < handler->n_devices; i++) {
-		dev = handler->devices[i];
-		if (!strcmp(dev->device->id, id))
-			return dev;
-	}
-
-	return NULL;
-}
-
-static enum device_type event_device_type(struct device *device,
-		struct event *event)
-{
-	const char *param;
-
-	param = event_get_param(event, "type");
-	if (!param) {
-		pb_log("%s: empty type\n", device->id);
-		return DEVICE_TYPE_UNKNOWN;
-	}
-
-	if (!strcmp(param, "disk") || !strcmp(param, "partition"))
-		return DEVICE_TYPE_DISK;
-
-	if (!strcmp(param, "net"))
-		return DEVICE_TYPE_NETWORK;
-
-	pb_log("%s: unknown type '%s'\n", device->id, param);
-	return DEVICE_TYPE_UNKNOWN;
-}
-
-static struct discover_device *discover_device_create(
-		struct device_handler *handler,
-		struct discover_context *ctx,
-		struct event *event)
-{
-	struct discover_device *dev;
-	const char *devnode;
-
-	dev = find_device(handler, event->device);
-	if (dev)
-		return dev;
-
-	dev = talloc_zero(ctx, struct discover_device);
-	dev->device = talloc_zero(dev, struct device);
-	list_init(&dev->boot_options);
-
-	devnode = event_get_param(ctx->event, "node");
-	if (devnode)
-		dev->device_path = talloc_strdup(dev, devnode);
-
-	dev->device->id = talloc_strdup(dev, event->device);
-	dev->device->type = event_device_type(dev->device, event);
-
-	talloc_set_destructor(dev, destroy_device);
-
-	return dev;
-}
-
-/**
- * device_handler_remove - Remove a device from the handler device array.
- */
-
-static void device_handler_remove(struct device_handler *handler,
-	struct discover_device *device)
+void device_handler_remove(struct device_handler *handler,
+		struct discover_device *device)
 {
 	unsigned int i;
 
@@ -346,7 +268,7 @@ static void device_handler_remove(struct device_handler *handler,
 			break;
 
 	if (i == handler->n_devices) {
-		assert(0 && "unknown device");
+		talloc_free(device);
 		return;
 	}
 
@@ -356,7 +278,9 @@ static void device_handler_remove(struct device_handler *handler,
 	handler->devices = talloc_realloc(handler, handler->devices,
 		struct discover_device *, handler->n_devices);
 
-	discover_server_notify_device_remove(handler->server, device->device);
+	if (device->notified)
+		discover_server_notify_device_remove(handler->server,
+							device->device);
 
 	talloc_free(device);
 }
@@ -496,6 +420,18 @@ static void boot_option_finalise(struct device_handler *handler,
 		set_default(handler, opt);
 }
 
+static void notify_boot_option(struct device_handler *handler,
+		struct discover_boot_option *opt)
+{
+	struct discover_device *dev = opt->device;
+
+	if (!dev->notified)
+		discover_server_notify_device_add(handler->server,
+						  opt->device->device);
+	dev->notified = true;
+	discover_server_notify_boot_option_add(handler->server, opt->option);
+}
+
 static void process_boot_option_queue(struct device_handler *handler)
 {
 	struct discover_boot_option *opt, *tmp;
@@ -515,46 +451,36 @@ static void process_boot_option_queue(struct device_handler *handler)
 		list_add_tail(&opt->device->boot_options, &opt->list);
 		talloc_steal(opt->device, opt);
 		boot_option_finalise(handler, opt);
-		discover_server_notify_boot_option_add(handler->server,
-							opt->option);
+		notify_boot_option(handler, opt);
 	}
+}
+
+struct discover_context *device_handler_discover_context_create(
+		struct device_handler *handler,
+		struct discover_device *device)
+{
+	struct discover_context *ctx;
+
+	ctx = talloc(handler, struct discover_context);
+	ctx->device = device;
+	ctx->conf_url = NULL;
+	list_init(&ctx->boot_options);
+
+	return ctx;
 }
 
 /**
  * context_commit - Commit a temporary discovery context to the handler,
  * and notify the clients about any new options / devices
  */
-static void context_commit(struct device_handler *handler,
+void device_handler_discover_context_commit(struct device_handler *handler,
 		struct discover_context *ctx)
 {
 	struct discover_device *dev = ctx->device;
 	struct discover_boot_option *opt, *tmp;
-	unsigned int i, existing_device = 0;
 
-	/* do we already have this device? */
-	for (i = 0; i < handler->n_devices; i++) {
-		if (ctx->device == handler->devices[i]) {
-			existing_device = 1;
-			break;
-		}
-	}
-
-	/* if not already present, add the device to the handler's array */
-	if (!existing_device) {
-		handler->n_devices++;
-		handler->devices = talloc_realloc(handler, handler->devices,
-			struct discover_device *, handler->n_devices);
-		handler->devices[handler->n_devices - 1] = dev;
-		talloc_steal(handler, dev);
-
-		discover_server_notify_device_add(handler->server, dev->device);
-
-		/* this new device might be able to resolve existing boot
-		 * options */
-		pb_log("New device %s, processing queue\n", dev->device->id);
-		process_boot_option_queue(handler);
-	}
-
+	if (!device_lookup_by_id(handler, dev->device->id))
+		device_handler_add_device(handler, dev);
 
 	/* move boot options from the context to the device */
 	list_for_each_entry_safe(&ctx->boot_options, opt, tmp, list) {
@@ -567,8 +493,7 @@ static void context_commit(struct device_handler *handler,
 			list_add_tail(&dev->boot_options, &opt->list);
 			talloc_steal(dev, opt);
 			boot_option_finalise(handler, opt);
-			discover_server_notify_boot_option_add(handler->server,
-								opt->option);
+			notify_boot_option(handler, opt);
 		} else {
 			if (!opt->source->resolve_resource) {
 				pb_log("parser %s gave us an unresolved "
@@ -588,184 +513,60 @@ static void context_commit(struct device_handler *handler,
 	}
 }
 
-static int handle_add_udev_event(struct device_handler *handler,
-		struct event *event)
+void device_handler_add_device(struct device_handler *handler,
+		struct discover_device *device)
+{
+	handler->n_devices++;
+	handler->devices = talloc_realloc(handler, handler->devices,
+				struct discover_device *, handler->n_devices);
+	handler->devices[handler->n_devices - 1] = device;
+
+}
+
+/* Start discovery on a hotplugged device. The device will be in our devices
+ * array, but has only just been initialised by the hotplug source.
+ */
+int device_handler_discover(struct device_handler *handler,
+		struct discover_device *dev, enum conf_method method)
 {
 	struct discover_context *ctx;
-	struct discover_device *dev;
-	const char *param;
-	int rc;
+
+	process_boot_option_queue(handler);
 
 	/* create our context */
-	ctx = talloc(handler, struct discover_context);
-	ctx->event = event;
-	list_init(&ctx->boot_options);
+	ctx = device_handler_discover_context_create(handler, dev);
 
-	/* create our top-level device */
-	dev = discover_device_create(handler, ctx, event);
-
-	ctx->device = dev;
-
-	/* try to parse UUID and labels */
-	param = event_get_param(ctx->event, "ID_FS_UUID");
-	if (param)
-		dev->uuid = talloc_strdup(dev, param);
-
-	param = event_get_param(ctx->event, "ID_FS_LABEL");
-	if (param)
-		dev->label = talloc_strdup(dev, param);
-
-	rc = mount_device(dev);
-	if (rc) {
-		talloc_free(ctx);
-		return 0;
-	}
+	mount_device(dev);
 
 	/* run the parsers. This will populate the ctx's boot_option list. */
-	iterate_parsers(ctx, CONF_METHOD_LOCAL_FILE);
+	iterate_parsers(ctx, method);
 
 	/* add discovered stuff to the handler */
-	context_commit(handler, ctx);
+	device_handler_discover_context_commit(handler, ctx);
 
 	talloc_free(ctx);
 
 	return 0;
 }
 
-static int handle_remove_udev_event(struct device_handler *handler,
-		struct event *event)
-{
-	struct discover_device *dev;
-
-	dev = find_device(handler, event->device);
-	if (!dev)
-		return 0;
-
-	/* remove device from handler device array */
-	device_handler_remove(handler, dev);
-
-	return 0;
-}
-
-static int handle_add_user_event(struct device_handler *handler,
-		struct event *event)
+/* incoming conf event */
+int device_handler_conf(struct device_handler *handler,
+		struct discover_device *dev, struct pb_url *url,
+		enum conf_method method)
 {
 	struct discover_context *ctx;
-	struct discover_device *dev;
-	int rc;
 
-	assert(event->device);
-
-	ctx = talloc(handler, struct discover_context);
-	ctx->event = event;
-	list_init(&ctx->boot_options);
-
-	dev = discover_device_create(handler, ctx, event);
-	ctx->device = dev;
-
-	rc = parse_user_event(ctx, event);
-
-	if (!rc)
-		context_commit(handler, ctx);
-
-	return rc;
-}
-
-static int handle_remove_user_event(struct device_handler *handler,
-		struct event *event)
-{
-	struct discover_device *dev = find_device(handler, event->device);
-
-	if (!dev)
-		return 0;
-
-	/* remove device from handler device array */
-	device_handler_remove(handler, dev);
-
-	return 0;
-}
-
-static enum conf_method parse_conf_method(const char *str)
-{
-
-	if (!strcasecmp(str, "dhcp")) {
-		return CONF_METHOD_DHCP;
-	}
-	return CONF_METHOD_UNKNOWN;
-}
-
-static int handle_conf_user_event(struct device_handler *handler,
-		struct event *event)
-{
-	struct discover_context *ctx;
-	struct discover_device *dev;
-	enum conf_method method;
-	const char *val;
-
-	ctx = talloc(handler, struct discover_context);
-	ctx->event = event;
-	list_init(&ctx->boot_options);
-
-	val = event_get_param(event, "url");
-	if (!val) {
-		talloc_free(ctx);
-		return 0;
-	}
-
-	ctx->conf_url = pb_url_parse(ctx, val);
-	if (!ctx->conf_url) {
-		talloc_free(ctx);
-		return 0;
-	}
-
-	val = event_get_param(event, "method");
-	if (!val) {
-		talloc_free(ctx);
-		return 0;
-	}
-
-	method = parse_conf_method(val);
-	if (method == CONF_METHOD_UNKNOWN) {
-		talloc_free(ctx);
-		return 0;
-	}
-
-	dev = discover_device_create(handler, ctx, event);
-	ctx->device = dev;
+	/* create our context */
+	ctx = device_handler_discover_context_create(handler, dev);
+	ctx->conf_url = url;
 
 	iterate_parsers(ctx, method);
 
-	context_commit(handler, ctx);
+	device_handler_discover_context_commit(handler, ctx);
+
+	talloc_free(ctx);
 
 	return 0;
-}
-
-typedef int (*event_handler)(struct device_handler *, struct event *);
-
-static event_handler handlers[EVENT_TYPE_MAX][EVENT_ACTION_MAX] = {
-	[EVENT_TYPE_UDEV] = {
-		[EVENT_ACTION_ADD]	= handle_add_udev_event,
-		[EVENT_ACTION_REMOVE]	= handle_remove_udev_event,
-	},
-	[EVENT_TYPE_USER] = {
-		[EVENT_ACTION_ADD]	= handle_add_user_event,
-		[EVENT_ACTION_REMOVE]	= handle_remove_user_event,
-		[EVENT_ACTION_CONF]	= handle_conf_user_event,
-	}
-};
-
-int device_handler_event(struct device_handler *handler,
-		struct event *event)
-{
-	if (event->type >= EVENT_TYPE_MAX ||
-			event->action >= EVENT_ACTION_MAX ||
-			!handlers[event->type][event->action]) {
-		pb_log("%s unknown type/action: %d/%d\n", __func__,
-				event->type, event->action);
-		return 0;
-	}
-
-	return handlers[event->type][event->action](handler, event);
 }
 
 static struct discover_boot_option *find_boot_option_by_id(
@@ -820,4 +621,70 @@ void device_handler_cancel_default(struct device_handler *handler)
 
 	discover_server_notify_boot_status(handler->server, &status);
 }
+
+#ifndef PETITBOOT_TEST
+static int mount_device(struct discover_device *dev)
+{
+	int rc;
+
+	if (!dev->device_path)
+		return -1;
+
+	if (!dev->mount_path)
+		dev->mount_path = join_paths(dev, mount_base(),
+						dev->device_path);
+
+	if (pb_mkdir_recursive(dev->mount_path))
+		pb_log("couldn't create mount directory %s: %s\n",
+				dev->mount_path, strerror(errno));
+
+	rc = process_run_simple(dev, pb_system_apps.mount,
+			dev->device_path, dev->mount_path,
+			"-o", "ro", NULL);
+
+	if (!rc)
+		return 0;
+
+	/* Retry mount without ro option. */
+	rc = process_run_simple(dev, pb_system_apps.mount,
+			dev->device_path, dev->mount_path, NULL);
+
+	if (!rc)
+		return 0;
+
+	pb_rmdir_recursive(mount_base(), dev->mount_path);
+	return -1;
+}
+
+static int umount_device(struct discover_device *dev)
+{
+	int status;
+
+	if (!dev->mount_path)
+		return 0;
+
+	status = process_run_simple(dev, pb_system_apps.umount,
+			dev->mount_path, NULL);
+
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+		return -1;
+
+	pb_rmdir_recursive(mount_base(), dev->mount_path);
+
+	return 0;
+}
+#else
+
+static int umount_device(struct discover_device *dev __attribute__((unused)))
+{
+	return 0;
+}
+
+static int __attribute__((unused)) mount_device(
+		struct discover_device *dev __attribute__((unused)))
+{
+	return 0;
+}
+
 #endif
+

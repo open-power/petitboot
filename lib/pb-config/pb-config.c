@@ -77,6 +77,18 @@ int config_init(void *ctx)
 	return 0;
 }
 
+/* A non-exported function to allow the test infrastructure to initialise
+ * (and change) the configuration variables */
+struct parser_test;
+struct config __attribute__((unused)) *test_config_init(
+		struct parser_test *test);
+struct config *test_config_init(struct parser_test *test)
+{
+	config = talloc(test, struct config);
+	config_set_defaults(config);
+	return config;
+}
+
 const struct config *config_get(void)
 {
 	return config;

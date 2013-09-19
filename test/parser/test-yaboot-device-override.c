@@ -63,7 +63,7 @@ void run_test(struct parser_test *test)
 	/* hotplug all dependent devices */
 	for (i = 0; i < 4; i++) {
 		devname = talloc_asprintf(test, "sda%d", i + 1);
-		dev[i] = test_create_device(ctx, devname);
+		dev[i] = test_create_device(test, devname);
 		test_hotplug_device(test, dev[i]);
 	}
 

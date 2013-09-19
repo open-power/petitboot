@@ -35,7 +35,6 @@ pb_discover_SOURCES = \
 	discover-server.h \
 	event.c \
 	event.h \
-	event-parser.c \
 	file.c \
 	file.h \
 	params.c \

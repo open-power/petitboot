@@ -28,7 +28,7 @@ void run_test(struct parser_test *test)
 	check_unresolved_resource(opt->boot_image);
 	check_unresolved_resource(opt->initrd);
 
-	dev = test_create_device(ctx, "external");
+	dev = test_create_device(test, "external");
 	test_hotplug_device(test, dev);
 
 	check_resolved_local_resource(opt->boot_image, dev, "/vmlinux");

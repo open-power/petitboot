@@ -41,25 +41,22 @@ static void __attribute__((destructor)) __cleanup_parsers(void)
 }
 
 static struct discover_device *test_create_device_simple(
-		struct discover_context *ctx)
+		struct parser_test *test)
 {
 	static int dev_idx;
 	char name[10];
 
 	sprintf(name, "__test%d", dev_idx++);
 
-	return test_create_device(ctx, name);
+	return test_create_device(test, name);
 }
 
-struct discover_device *test_create_device(struct discover_context *ctx,
+struct discover_device *test_create_device(struct parser_test *test,
 		const char *name)
 {
 	struct discover_device *dev;
 
-	dev = talloc_zero(ctx, struct discover_device);
-	dev->device = talloc_zero(dev, struct device);
-
-	list_init(&dev->boot_options);
+	dev = discover_device_create(test->handler, name);
 
 	dev->device->id = talloc_strdup(dev, name);
 	dev->device_path = talloc_asprintf(dev, "/dev/%s", name);
@@ -76,16 +73,20 @@ static struct discover_context *test_create_context(struct parser_test *test)
 	assert(ctx);
 
 	list_init(&ctx->boot_options);
-	ctx->device = test_create_device_simple(ctx);
+	ctx->device = test_create_device_simple(test);
+	device_handler_add_device(test->handler, ctx->device);
 
 	return ctx;
 }
+
+extern struct config *test_config_init(struct parser_test *test);
 
 struct parser_test *test_init(void)
 {
 	struct parser_test *test;
 
 	test = talloc_zero(NULL, struct parser_test);
+	test->config = test_config_init(test);
 	test->handler = device_handler_init(NULL, NULL, 0);
 	test->ctx = test_create_context(test);
 
@@ -174,9 +175,6 @@ void boot_option_resolve(struct device_handler *handler,
 	resource_resolve(handler, opt->source, opt->initrd);
 	resource_resolve(handler, opt->source, opt->icon);
 }
-
-extern void device_handler_add_device(struct device_handler *handler,
-		struct discover_device *dev);
 
 void test_hotplug_device(struct parser_test *test, struct discover_device *dev)
 {

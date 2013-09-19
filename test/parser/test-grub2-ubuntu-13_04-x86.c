@@ -44,7 +44,7 @@ void run_test(struct parser_test *test)
 
 	/* hotplug a device with a maching UUID, and check that our
 	 * resources become resolved */
-	dev = test_create_device(ctx, "external");
+	dev = test_create_device(test, "external");
 	dev->uuid = "29beca39-9181-4780-bbb2-ab5d4be59aaf";
 	test_hotplug_device(test, dev);
 
