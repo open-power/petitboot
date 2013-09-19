@@ -11,6 +11,7 @@
 
 #include <log/log.h>
 #include <list/list.h>
+#include <types/types.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
 #include <pb-config/pb-config.h>
@@ -19,6 +20,7 @@
 
 #include "file.h"
 #include "network.h"
+#include "device-handler.h"
 
 #define HWADDR_SIZE	6
 #define PIDFILE_BASE	(LOCAL_STATE_DIR "/petitboot/")
@@ -47,14 +49,16 @@ struct interface {
 
 	struct list_item list;
 	struct process *udhcpc_process;
+	struct discover_device *dev;
 };
 
 struct network {
-	struct list	interfaces;
-	struct waiter	*waiter;
-	int		netlink_sd;
-	bool		manual_config;
-	bool		dry_run;
+	struct list		interfaces;
+	struct device_handler	*handler;
+	struct waiter		*waiter;
+	int			netlink_sd;
+	bool			manual_config;
+	bool			dry_run;
 };
 
 static const struct interface_config *find_config_by_hwaddr(
@@ -142,10 +146,16 @@ static void add_interface(struct network *network,
 		struct interface *interface)
 {
 	list_add(&network->interfaces, &interface->list);
+	interface->dev = discover_device_create(network->handler,
+					interface->name);
+	interface->dev->device->type = DEVICE_TYPE_NETWORK;
+	device_handler_add_device(network->handler, interface->dev);
 }
 
-static void remove_interface(struct interface *interface)
+static void remove_interface(struct network *network,
+		struct interface *interface)
 {
+	device_handler_remove(network->handler, interface->dev);
 	list_remove(&interface->list);
 	talloc_free(interface);
 }
@@ -383,7 +393,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		if (!interface)
 			return 0;
 		pb_log("network: interface %s removed\n", interface->name);
-		remove_interface(interface);
+		remove_interface(network, interface);
 		return 0;
 	}
 
@@ -481,13 +491,15 @@ static void network_init_dns(struct network *network)
 	talloc_free(buf);
 }
 
-struct network *network_init(void *ctx, struct waitset *waitset, bool dry_run)
+struct network *network_init(struct device_handler *handler,
+		struct waitset *waitset, bool dry_run)
 {
 	struct network *network;
 	int rc;
 
-	network = talloc(ctx, struct network);
+	network = talloc(handler, struct network);
 	list_init(&network->interfaces);
+	network->handler = handler;
 	network->manual_config = false;
 	network->dry_run = dry_run;
 

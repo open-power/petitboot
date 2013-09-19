@@ -173,18 +173,19 @@ int main(int argc, char *argv[])
 
 	config_init(NULL);
 
-	network = network_init(server, waitset, opts.dry_run == opt_yes);
-	if (!network)
-		return EXIT_FAILURE;
-
 	handler = device_handler_init(server, waitset, opts.dry_run == opt_yes);
 	if (!handler)
 		return EXIT_FAILURE;
 
 	discover_server_set_device_source(server, handler);
 
+	/* init our device sources: udev, network and user events */
 	udev = udev_init(waitset, handler);
 	if (!udev)
+		return EXIT_FAILURE;
+
+	network = network_init(handler, waitset, opts.dry_run == opt_yes);
+	if (!network)
 		return EXIT_FAILURE;
 
 	uev = user_event_init(waitset, handler);
