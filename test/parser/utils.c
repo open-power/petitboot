@@ -206,10 +206,19 @@ void __check_boot_option_count(struct discover_context *ctx, int count,
 		const char *file, int line)
 {
 	struct discover_boot_option *opt;
-	int i = 0;
+	int defaults = 0, i = 0;
 
-	list_for_each_entry(&ctx->boot_options, opt, list)
+	list_for_each_entry(&ctx->boot_options, opt, list) {
 		i++;
+		if (opt->option->is_default)
+			defaults++;
+	}
+
+	if (defaults > 1) {
+		fprintf(stderr, "%s:%d: parser returned multiple default "
+				"options\n", file, line);
+		exit(EXIT_FAILURE);
+	}
 
 	if (i == count)
 		return;
