@@ -285,11 +285,22 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	unsigned int clean_image = 0;
 	unsigned int clean_initrd = 0;
 	unsigned int clean_dtb = 0;
+	const char *boot_desc;
 	int result;
 
 	image = NULL;
 	initrd = NULL;
 	dtb = NULL;
+
+	if (opt && opt->option->name)
+		boot_desc = opt->option->name;
+	else if (cmd && cmd->boot_image_file)
+		boot_desc = cmd->boot_image_file;
+	else
+		boot_desc = "(unknown)";
+
+	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+			"Booting %s.", boot_desc);
 
 	if (cmd && cmd->boot_image_file) {
 		image = pb_url_parse(opt, cmd->boot_image_file);
@@ -297,6 +308,8 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		image = opt->boot_image->url;
 	} else {
 		pb_log("%s: no image specified\n", __func__);
+		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+				"Boot failed: no image specified");
 		return -1;
 	}
 
