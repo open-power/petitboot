@@ -327,6 +327,8 @@ static int default_timeout(void *arg)
 		return 0;
 	}
 
+	handler->timeout_waiter = NULL;
+
 	pb_log("Timeout expired, booting default option %s\n", opt->option->id);
 
 	boot(handler, handler->default_boot_option, NULL,
