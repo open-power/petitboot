@@ -121,17 +121,23 @@ static int kexec_reboot(struct boot_task *task)
 	return result;
 }
 
-static void update_status(boot_status_fn fn, void *arg, int type,
-		char *message)
+static void __attribute__((format(__printf__, 4, 5))) update_status(
+		boot_status_fn fn, void *arg, int type, char *fmt, ...)
 {
 	struct boot_status status;
+	va_list ap;
+
+	va_start(ap, fmt);
+	status.message = talloc_vasprintf(NULL, fmt, ap);
+	va_end(ap);
 
 	status.type = type;
-	status.message = message;
 	status.progress = -1;
 	status.detail = NULL;
 
 	fn(arg, &status);
+
+	talloc_free(status.message);
 }
 
 static void boot_hook_update_param(void *ctx, struct boot_task *task,
