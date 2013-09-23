@@ -372,8 +372,14 @@ static void set_default(struct device_handler *handler,
 		cur_prio = default_option_priority(
 					handler->default_boot_option);
 
-		if (new_prio >= cur_prio)
-			return;
+		if (new_prio < cur_prio) {
+			handler->default_boot_option = opt;
+			/* extend the timeout a little, so the user sees some
+			 * indication of the change */
+			handler->sec_to_boot += 2;
+		}
+
+		return;
 	}
 
 	handler->sec_to_boot = config_get()->autoboot_timeout_sec;
