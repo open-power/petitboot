@@ -290,7 +290,7 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	} else if (opt && opt->boot_image) {
 		image = opt->boot_image->url;
 	} else {
-		pb_log("%s: no image specified", __func__);
+		pb_log("%s: no image specified\n", __func__);
 		return -1;
 	}
 
