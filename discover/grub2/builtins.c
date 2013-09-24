@@ -231,6 +231,22 @@ static int builtin_test(struct grub2_script *script __attribute__((unused)),
 	return rc ? 0 : 1;
 }
 
+static int builtin_true(struct grub2_script *script __attribute__((unused)),
+		void *data __attribute__((unused)),
+		int argc __attribute__((unused)),
+		char *argv[] __attribute__((unused)))
+{
+	return 0;
+}
+
+static int builtin_false(struct grub2_script *script __attribute__((unused)),
+		void *data __attribute__((unused)),
+		int argc __attribute__((unused)),
+		char *argv[] __attribute__((unused)))
+{
+	return 1;
+}
+
 static int builtin_nop(struct grub2_script *script __attribute__((unused)),
 		void *data __attribute__((unused)),
 		int argc __attribute__((unused)),
@@ -270,6 +286,14 @@ static struct {
 	{
 		.name = "test",
 		.fn = builtin_test,
+	},
+	{
+		.name = "true",
+		.fn = builtin_true,
+	},
+	{
+		.name = "false",
+		.fn = builtin_false,
 	},
 };
 
