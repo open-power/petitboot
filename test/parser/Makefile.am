@@ -29,6 +29,7 @@ TESTS = \
 	test-null \
 	test-grub2-single \
 	test-grub2-multiple-resolve \
+	test-grub2-single-line-if \
 	test-grub2-f18-ppc64 \
 	test-grub2-ubuntu-13_04-x86 \
 	test-kboot-single \
