@@ -235,6 +235,7 @@ int statement_simple_execute(struct grub2_script *script,
 {
 	struct grub2_statement_simple *st = to_stmt_simple(statement);
 	struct grub2_symtab_entry *entry;
+	char *pos;
 	int rc;
 
 	if (!st->argv)
@@ -244,6 +245,17 @@ int statement_simple_execute(struct grub2_script *script,
 
 	if (!st->argv->argc)
 		return 0;
+
+	/* is this a var=value assignment? */
+	pos = strchr(st->argv->argv[0], '=');
+	if (pos) {
+		char *name, *value;
+		name = st->argv->argv[0];
+		name = talloc_strndup(st, name, pos - name);
+		value = pos + 1;
+		script_env_set(script, name, value);
+		return 0;
+	}
 
 	entry = script_lookup_function(script, st->argv->argv[0]);
 	if (!entry) {
