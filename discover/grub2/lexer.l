@@ -29,7 +29,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
  /* discard leading & trailing whitespace, but keep inter-word delimeters */
 ^[ \t]+	;
 [ \t]+$	;
-[ \t]*	return TOKEN_DELIM;
+[ \t]+	return TOKEN_DELIM;
 
  /* reserved words */
 "[["         return TOKEN_LDSQBRACKET;
