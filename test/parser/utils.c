@@ -239,6 +239,9 @@ void __check_args(struct discover_boot_option *opt, const char *args,
 {
 	int rc;
 
+	if (!opt->option->boot_args && !args)
+		return;
+
 	if (!opt->option->boot_args) {
 		fprintf(stderr, "%s:%d: arg check failed\n", file, line);
 		fprintf(stderr, "  no arguments parsed\n");

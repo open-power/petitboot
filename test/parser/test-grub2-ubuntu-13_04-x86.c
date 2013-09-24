@@ -34,7 +34,7 @@ void run_test(struct parser_test *test)
 	check_unresolved_resource(opt->boot_image);
 	check_not_present_resource(opt->initrd);
 	check_name(opt, "Memory test (memtest86+)");
-	check_args(opt, "");
+	check_args(opt, NULL);
 
 	opt = get_boot_option(ctx, 4);
 	check_unresolved_resource(opt->boot_image);
