@@ -17,7 +17,6 @@
 struct load_url_async_data {
 	load_url_callback url_cb;
 	void *ctx;
-	int status;
 };
 
 const char *mount_base(void)
@@ -62,8 +61,7 @@ static void load_url_exit_cb(struct process *process)
 	pb_log("The download client '%s' [pid %d] exited, rc %d\n",
 			process->path, process->pid, process->exit_status);
 
-	if (!url_data->status)
-		url_data->url_cb(url_data->ctx, &(url_data->status));
+	url_data->url_cb(url_data->ctx, process->exit_status);
 
 	process_release(process);
 }
@@ -362,7 +360,6 @@ char *load_url_async(void *ctx, struct pb_url *url, unsigned int *tempfile,
 		url_data = talloc_zero(ctx, struct load_url_async_data);
 		url_data->url_cb = url_cb;
 		url_data->ctx = ctx;
-		url_data->status = 0;
 	}
 
 	switch (url->scheme) {

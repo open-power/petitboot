@@ -287,7 +287,7 @@ static void run_boot_hooks(struct boot_task *task)
 	free(hooks);
 }
 
-static void boot_process(void *ctx, int *status)
+static void boot_process(void *ctx, int status __attribute__((unused)))
 {
 	struct boot_task *task = ctx;
 	unsigned int clean_image = 0;
@@ -307,7 +307,6 @@ static void boot_process(void *ctx, int *status)
 			goto no_load;
 		} else {
 			task->state = BOOT_STATE_IMAGE_LOADING;
-			*status = 0;
 			return;
 		}
 	}
@@ -325,7 +324,6 @@ static void boot_process(void *ctx, int *status)
 				goto no_load;
 			} else {
 				task->state = BOOT_STATE_INITRD_LOADING;
-				*status = 0;
 				return;
 			}
 		} else {
@@ -347,7 +345,6 @@ static void boot_process(void *ctx, int *status)
 				goto no_load;
 			} else {
 				task->state = BOOT_STATE_FINISH;
-				*status = 0;
 				return;
 			}
 		} else {
@@ -357,7 +354,6 @@ static void boot_process(void *ctx, int *status)
 
 	if (task->state != BOOT_STATE_FINISH) {
 		task->state = BOOT_STATE_UNKNOWN;
-		*status = -1;
 		return;
 	}
 
@@ -396,8 +392,6 @@ no_load:
 	}
 
 	talloc_free(task);
-
-	*status = result;
 }
 
 int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
@@ -406,7 +400,6 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	struct boot_task *boot_task;
 	struct pb_url *image = NULL;
 	const char *boot_desc;
-	int result;
 
 	if (opt && opt->option->name)
 		boot_desc = opt->option->name;
@@ -457,7 +450,7 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		boot_task->args = NULL;
 	}
 
-	boot_process(boot_task, &result);
+	boot_process(boot_task, 0);
 
-	return result;
+	return 0;
 }
