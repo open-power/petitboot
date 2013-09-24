@@ -252,6 +252,10 @@ static struct {
 		.fn = builtin_linux,
 	},
 	{
+		.name = "linux16",
+		.fn = builtin_linux,
+	},
+	{
 		.name = "initrd",
 		.fn = builtin_initrd,
 	},
