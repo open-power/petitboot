@@ -103,6 +103,12 @@ static int device_match_id(struct discover_device *dev, const char *id)
 	return !strcmp(dev->device->id, id);
 }
 
+static int device_match_serial(struct discover_device *dev, const char *serial)
+{
+	const char *val = discover_device_get_param(dev, "ID_SERIAL");
+	return val && !strcmp(val, serial);
+}
+
 static struct discover_device *device_lookup(
 		struct device_handler *device_handler,
 		int (match_fn)(struct discover_device *, const char *),
@@ -152,6 +158,13 @@ struct discover_device *device_lookup_by_id(
 		const char *id)
 {
 	return device_lookup(device_handler, device_match_id, id);
+}
+
+struct discover_device *device_lookup_by_serial(
+		struct device_handler *device_handler,
+		const char *serial)
+{
+	return device_lookup(device_handler, device_match_serial, serial);
 }
 
 void device_handler_destroy(struct device_handler *handler)

@@ -70,6 +70,7 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 {
 	struct discover_device *ddev;
 	const char *typestr;
+	const char *serial;
 	const char *path;
 	const char *name;
 
@@ -103,6 +104,12 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 		pb_debug("device %s is already present?\n", name);
 		return -1;
 	}
+
+	/* we may also see multipath devices; same dev nodes (hence id), but
+	 * different serial numbers */
+	serial = udev_device_get_property_value(dev, "ID_SERIAL");
+	if (serial && device_lookup_by_serial(udev->handler, serial))
+		return -1;
 
 	ddev = discover_device_create(udev->handler, name);
 

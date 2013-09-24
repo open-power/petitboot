@@ -108,6 +108,9 @@ struct discover_device *device_lookup_by_label(struct device_handler *handler,
 		const char *label);
 struct discover_device *device_lookup_by_id(struct device_handler *handler,
 		const char *id);
+struct discover_device *device_lookup_by_serial(
+		struct device_handler *device_handler,
+		const char *serial);
 
 void discover_device_set_param(struct discover_device *device,
 		const char *name, const char *value);
