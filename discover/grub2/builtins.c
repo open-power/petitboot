@@ -178,6 +178,7 @@ static bool builtin_test_op(int argc, char **argv, int *consumed)
 		}
 	}
 
+	op = argv[0];
 	*consumed = 1;
 	return strlen(op) > 0;
 }
