@@ -84,7 +84,9 @@ statements: /* empty */ {
 		$$ = $1;
 	}
 
-conditional: statement TOKEN_EOL "then" TOKEN_EOL statements {
+sep:	TOKEN_DELIM | TOKEN_EOL;
+
+conditional: statement TOKEN_EOL "then" sep statements {
 		$$ = create_statement_conditional(parser, $1, $5);
 	}
 
@@ -112,7 +114,7 @@ statement:
 	}
 	| "if" TOKEN_DELIM conditional
 		elifs
-		"else" TOKEN_EOL
+		"else" sep
 		statements
 		"fi" {
 		$$ = create_statement_if(parser, $3, $4, $7);
