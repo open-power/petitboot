@@ -29,23 +29,22 @@ static char *local_path(struct discover_context *ctx,
 
 static int download_config(struct discover_context *ctx, char **buf, int *len)
 {
-	unsigned tempfile;
-	const char *file;
+	struct load_url_result *result;
 	int rc;
 
-	file = load_url(ctx, ctx->conf_url, &tempfile);
-	if (!file)
+	result = load_url(ctx, ctx->conf_url);
+	if (!result)
 		return -1;
 
-	rc = read_file(ctx, file, buf, len);
+	rc = read_file(ctx, result->local, buf, len);
 	if (rc)
 		goto out_clean;
 
 	return 0;
 
 out_clean:
-	if (tempfile)
-		unlink(file);
+	if (result->cleanup_local)
+		unlink(result->local);
 	return -1;
 }
 

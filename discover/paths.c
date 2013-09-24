@@ -14,9 +14,13 @@
 
 #define DEVICE_MOUNT_BASE (LOCAL_STATE_DIR "/petitboot/mnt")
 
-struct load_url_async_data {
-	load_url_callback url_cb;
-	void *ctx;
+struct load_task {
+	struct pb_url		*url;
+	struct process		*process;
+	struct load_url_result	*result;
+	bool			async;
+	load_url_complete	async_cb;
+	void			*async_data;
 };
 
 const char *mount_base(void)
@@ -54,136 +58,147 @@ static char *local_name(void *ctx)
 	return ret;
 }
 
-static void load_url_exit_cb(struct process *process)
+static void load_url_result_cleanup_local(struct load_url_result *result)
 {
-	struct load_url_async_data *url_data = process->data;
+	if (result->cleanup_local)
+		unlink(result->local);
+}
 
-	pb_log("The download client '%s' [pid %d] exited, rc %d\n",
-			process->path, process->pid, process->exit_status);
+static void load_url_process_exit(struct process *process)
+{
+	struct load_task *task = process->data;
+	struct load_url_result *result;
+	load_url_complete cb;
+	void *data;
 
-	url_data->url_cb(url_data->ctx, process->exit_status);
+	pb_debug("The download client '%s' [pid %d, url %s] exited, rc %d\n",
+			process->path, process->pid, task->url->full,
+			process->exit_status);
 
+	result = task->result;
+	data = task->async_data;
+	cb = task->async_cb;
+
+	result->status = process->exit_status == 0 ? LOAD_OK : LOAD_ERROR;
+	if (result->status == LOAD_ERROR)
+		load_url_result_cleanup_local(result);
+
+	/* The load callback may well free the ctx, which was the
+	 * talloc parent of the task. Therefore, we want to do our cleanup
+	 * before invoking it
+	 */
 	process_release(process);
+	talloc_free(task);
+
+	cb(result, data);
+}
+
+static void load_process_to_local_file(struct load_task *task,
+		const char **argv, int argv_local_idx)
+{
+	int rc;
+
+	task->result->local = local_name(task->result);
+	if (!task->result->local) {
+		task->result->status = LOAD_ERROR;
+		return;
+	}
+	task->result->cleanup_local = true;
+
+	if (argv_local_idx)
+		argv[argv_local_idx] = task->result->local;
+
+	task->process->argv = argv;
+	task->process->path = argv[0];
+
+	if (task->async) {
+		rc = process_run_async(task->process);
+		if (rc) {
+			process_release(task->process);
+			task->process = NULL;
+		}
+		task->result->status = rc ? LOAD_ERROR : LOAD_ASYNC;
+	} else {
+		rc = process_run_sync(task->process);
+		task->result->status = rc ? LOAD_ERROR : LOAD_OK;
+		process_release(task->process);
+		task->process = NULL;
+	}
 }
 
 /**
- * pb_load_nfs - Mounts the NFS export and returns the local file path.
- *
- * Returns the local file path in a talloc'ed character string on success,
- * or NULL on error.
+ * pb_load_nfs - Create a mountpoint, set the local file within that
+ * mountpoint, and run the appropriate mount command
  */
-static char *load_nfs(void *ctx, struct pb_url *url,
-		struct load_url_async_data *url_data)
+
+static void load_nfs(struct load_task *task)
 {
-	char *local, *opts;
-	int result;
-	struct process *process;
+	char *mountpoint, *opts;
+	int rc;
 	const char *argv[] = {
 			pb_system_apps.mount,
 			"-t", "nfs",
-			NULL,
-			url->host,
-			url->dir,
-			NULL,
+			NULL,			/* 3: opts */
+			task->url->host,
+			task->url->dir,
+			NULL,			/* 6: mountpoint */
 			NULL,
 	};
 
-	local = local_name(ctx);
-	if (!local)
-		return NULL;
-	argv[6] = local;
+	task->result->status = LOAD_ERROR;
+	mountpoint = local_name(task->result);
+	if (!mountpoint)
+		return;
+	task->result->cleanup_local = true;
+	argv[6] = mountpoint;
 
-	result = pb_mkdir_recursive(local);
-	if (result)
-		goto fail;
+	rc = pb_mkdir_recursive(mountpoint);
+	if (rc)
+		return;
 
 	opts = talloc_strdup(NULL, "ro,nolock,nodiratime");
 	argv[3] = opts;
 
-	if (url->port)
-		opts = talloc_asprintf_append(opts, ",port=%s", url->port);
+	if (task->url->port)
+		opts = talloc_asprintf_append(opts, ",port=%s",
+						task->url->port);
 
-	if (url_data) {
-		process = process_create(ctx);
+	task->result->local = talloc_asprintf(task->result, "%s/%s",
+							mountpoint,
+							task->url->path);
 
-		process->path = pb_system_apps.mount;
-		process->argv = argv;
-		process->exit_cb = load_url_exit_cb;
-		process->data = url_data;
+	task->process->path = pb_system_apps.mount;
+	task->process->argv = argv;
 
-		result = process_run_async(process);
-		if (result)
-			process_release(process);
+	if (task->async) {
+		rc = process_run_async(task->process);
+		if (rc) {
+			process_release(task->process);
+			task->process = NULL;
+		}
+		task->result->status = rc ? LOAD_ERROR : LOAD_ASYNC;
 	} else {
-		result = process_run_simple_argv(ctx, argv);
+		rc = process_run_sync(task->process);
+		task->result->status = rc ? LOAD_ERROR : LOAD_OK;
+		process_release(task->process);
+		task->process = NULL;
 	}
 
 	talloc_free(opts);
-
-	if (result)
-		goto fail;
-
-	local = talloc_asprintf_append(local,  "/%s", url->path);
-	pb_log("%s: local '%s'\n", __func__, local);
-
-	return local;
-
-fail:
-	pb_rmdir_recursive("/", local);
-	talloc_free(local);
-	return NULL;
 }
 
-/**
- * pb_load_sftp - Loads a remote file via sftp and returns the local file path.
- *
- * Returns the local file path in a talloc'ed character string on success,
- * or NULL on error.
- */
-static char *load_sftp(void *ctx, struct pb_url *url,
-		struct load_url_async_data *url_data)
+static void load_sftp(struct load_task *task)
 {
-	char *host_path, *local;
-	int result;
-	struct process *process;
 	const char *argv[] = {
 			pb_system_apps.sftp,
-			NULL,
-			NULL,
+			NULL,		/* 1: host:path */
+			NULL,		/* 2: local file */
 			NULL,
 	};
 
-	local = local_name(ctx);
-	if (!local)
-		return NULL;
-	argv[2] = local;
-
-	host_path = talloc_asprintf(local, "%s:%s", url->host, url->path);
-	argv[1] = host_path;
-
-	if (url_data) {
-		process = process_create(ctx);
-
-		process->path = pb_system_apps.sftp;
-		process->argv = argv;
-		process->exit_cb = load_url_exit_cb;
-		process->data = url_data;
-
-		result = process_run_async(process);
-		if (result)
-			process_release(process);
-	} else {
-		result = process_run_simple_argv(ctx, argv);
-	}
-
-	if (result)
-		goto fail;
-
-	return local;
-
-fail:
-	talloc_free(local);
-	return NULL;
+	argv[1] = talloc_asprintf(task, "%s:%s",
+				task->url->host, task->url->path);
+	load_process_to_local_file(task, argv, 2);
 }
 
 static enum tftp_type check_tftp_type(void *ctx)
@@ -221,79 +236,45 @@ static enum tftp_type check_tftp_type(void *ctx)
 	return type;
 }
 
-/**
- * pb_load_tftp - Loads a remote file via tftp and returns the local file path.
- *
- * Returns the local file path in a talloc'ed character string on success,
- * or NULL on error.
- */
-
-static char *load_tftp(void *ctx, struct pb_url *url,
-		struct load_url_async_data *url_data)
+static void load_tftp(struct load_task *task)
 {
-	int result;
-	const char *argv[10];
-	const char **p;
-	char *local;
-	struct process *process;
+	const char *port = "69";
+	const char *argv[10] = {
+		pb_system_apps.tftp,
+	};
+
+	if (task->url->port)
+		port = task->url->port;
 
 	if (tftp_type == TFTP_TYPE_UNKNOWN)
-		tftp_type = check_tftp_type(ctx);
-
-	if (tftp_type == TFTP_TYPE_BROKEN)
-		return NULL;
-
-	local = local_name(ctx);
-	if (!local)
-		return NULL;
+		tftp_type = check_tftp_type(task);
 
 	if (tftp_type == TFTP_TYPE_BUSYBOX) {
-		/* first try busybox tftp args */
+		argv[1] = "-g";
+		argv[2] = "-l";
+		argv[3] = NULL;	/* 3: local file */
+		argv[4] = "-r";
+		argv[5] = task->url->path;
+		argv[6] = task->url->host;
+		argv[7] = port;
+		argv[8] = NULL;
 
-		p = argv;
-		*p++ = pb_system_apps.tftp;	/* 1 */
-		*p++ = "-g";			/* 2 */
-		*p++ = "-l";			/* 3 */
-		*p++ = local;			/* 4 */
-		*p++ = "-r";			/* 5 */
-		*p++ = url->path;		/* 6 */
-		*p++ = url->host;		/* 7 */
-		if (url->port)
-			*p++ = url->port;	/* 8 */
-		*p++ = NULL;			/* 9 */
-	} else {
-		p = argv;
-		*p++ = pb_system_apps.tftp;	/* 1 */
-		*p++ = "-m";			/* 2 */
-		*p++ = "binary";		/* 3 */
-		*p++ = url->host;		/* 4 */
-		if (url->port)
-			*p++ = url->port;	/* 5 */
-		*p++ = "-c";			/* 6 */
-		*p++ = "get";			/* 7 */
-		*p++ = url->path;		/* 8 */
-		*p++ = local;			/* 9 */
-		*p++ = NULL;			/* 10 */
-	}
+		load_process_to_local_file(task, argv, 3);
 
-	if (url_data) {
-		process = process_create(ctx);
+	} else if (tftp_type == TFTP_TYPE_HPA) {
+		argv[1] = "-m";
+		argv[2] = "binary";
+		argv[3] = task->url->host;
+		argv[4] = port;
+		argv[5] = "-c";
+		argv[6] = "get";
+		argv[7] = task->url->path;
+		argv[8] = NULL; /* 8: local file */
+		argv[9] = NULL;
+		load_process_to_local_file(task, argv, 8);
 
-		process->path = pb_system_apps.tftp;
-		process->argv = argv;
-		process->exit_cb = load_url_exit_cb;
-		process->data = url_data;
-
-		result = process_run_async(process);
-	} else {
-		result = process_run_simple_argv(ctx, argv);
-	}
-
-	if (!result)
-		return local;
-
-	talloc_free(local);
-	return NULL;
+	} else
+		task->result->status = LOAD_ERROR;
 }
 
 enum wget_flags {
@@ -308,55 +289,28 @@ enum wget_flags {
  * or NULL on error.
  */
 
-static char *load_wget(void *ctx, struct pb_url *url, enum wget_flags flags,
-		struct load_url_async_data *url_data)
+static void load_wget(struct load_task *task, int flags)
 {
-	int result;
-	const char *argv[7];
-	const char **p;
-	char *local;
-	struct process *process;
+	const char *argv[] = {
+		pb_system_apps.wget,
+		"-O",
+		NULL, /* 2: local file */
+		NULL,
+		NULL,
+		NULL,
+	};
+	int i;
 
-	local = local_name(ctx);
-
-	if (!local)
-		return NULL;
-
-	p = argv;
-	*p++ = pb_system_apps.wget;			/* 1 */
+	i = 3;
 #if !defined(DEBUG)
-	*p++ = "--quiet";				/* 2 */
+	argv[i++] = "--quiet";
 #endif
-	*p++ = "-O";					/* 3 */
-	*p++ = local;					/* 4 */
-	*p++ = url->full;				/* 5 */
 	if (flags & wget_no_check_certificate)
-		*p++ = "--no-check-certificate";	/* 6 */
-	*p++ = NULL;					/* 7 */
+		argv[i++] = "--no-check-certificate";
 
-	if (url_data) {
-		process = process_create(ctx);
+	argv[i] = task->url->full;
 
-		process->path = pb_system_apps.wget;
-		process->argv = argv;
-		process->exit_cb = load_url_exit_cb;
-		process->data = url_data;
-
-		result = process_run_async(process);
-		if (result)
-			process_release(process);
-	} else {
-		result = process_run_simple_argv(ctx, argv);
-	}
-
-	if (result)
-		goto fail;
-
-	return local;
-
-fail:
-	talloc_free(local);
-	return NULL;
+	load_process_to_local_file(task, argv, 2);
 }
 
 /**
@@ -373,60 +327,66 @@ fail:
  * or NULL on error.
  */
 
-char *load_url_async(void *ctx, struct pb_url *url, unsigned int *tempfile,
-		load_url_callback url_cb)
+struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
+		load_url_complete async_cb, void *async_data)
 {
-	char *local;
-	int tmp = 0;
-	struct load_url_async_data *url_data;
+	struct load_url_result *result;
+	struct load_task *task;
 
 	if (!url)
 		return NULL;
 
-	url_data = NULL;
-
-	if (url_cb) {
-		url_data = talloc_zero(ctx, struct load_url_async_data);
-		url_data->url_cb = url_cb;
-		url_data->ctx = ctx;
+	task = talloc_zero(ctx, struct load_task);
+	task->url = url;
+	task->async = async_cb != NULL;
+	task->result = talloc_zero(ctx, struct load_url_result);
+	task->process = process_create(task);
+	if (task->async) {
+		task->async_cb = async_cb;
+		task->async_data = async_data;
+		task->process->exit_cb = load_url_process_exit;
+		task->process->data = task;
 	}
 
 	switch (url->scheme) {
 	case pb_url_ftp:
 	case pb_url_http:
-		local = load_wget(ctx, url, 0, url_data);
-		tmp = !!local;
+		load_wget(task, 0);
 		break;
 	case pb_url_https:
-		local = load_wget(ctx, url, wget_no_check_certificate,
-				url_data);
-		tmp = !!local;
+		load_wget(task, wget_no_check_certificate);
 		break;
 	case pb_url_nfs:
-		local = load_nfs(ctx, url, url_data);
-		tmp = !!local;
+		load_nfs(task);
 		break;
 	case pb_url_sftp:
-		local = load_sftp(ctx, url, url_data);
-		tmp = !!local;
+		load_sftp(task);
 		break;
 	case pb_url_tftp:
-		local = load_tftp(ctx, url, url_data);
-		tmp = !!local;
+		load_tftp(task);
 		break;
 	default:
-		local = talloc_strdup(ctx, url->full);
-		tmp = 0;
+		task->result->local = talloc_strdup(task->result,
+							url->path);
+		task->result->status = LOAD_OK;
 		break;
 	}
 
-	if (tempfile)
-		*tempfile = tmp;
+	result = task->result;
+	if (result->status == LOAD_ERROR) {
+		load_url_result_cleanup_local(task->result);
+		talloc_free(result);
+		talloc_free(task);
+		return NULL;
+	}
 
-	return local;
+	if (!task->async)
+		talloc_free(task);
+
+	return result;
 }
 
-char *load_url(void *ctx, struct pb_url *url, unsigned int *tempfile)
+struct load_url_result *load_url(void *ctx, struct pb_url *url)
 {
-	return load_url_async(ctx, url, tempfile, NULL);
+	return load_url_async(ctx, url, NULL, NULL);
 }

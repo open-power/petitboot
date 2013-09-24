@@ -16,12 +16,30 @@ char *join_paths(void *alloc_ctx, const char *a, const char *b);
  */
 const char *mount_base(void);
 
-typedef void (*load_url_callback)(void *data, int status);
+
+struct load_url_result {
+	enum {
+		LOAD_OK,    /* load complete. other members should only be
+			       accessed if status == LOAD_OK */
+
+		LOAD_ERROR, /* only signalled to async loaders
+			     * (sync will see a NULL result) */
+
+		LOAD_ASYNC, /* async load still in progress */
+	} status;
+	const char	*local;
+	bool		cleanup_local;
+};
+
+/* callback type for asynchronous loads. The callback implementation is
+ * responsible for freeing result.
+ */
+typedef void (*load_url_complete)(struct load_url_result *result, void *data);
 
 /* Load a (potentially remote) file, and return a guaranteed-local name */
-char *load_url_async(void *ctx, struct pb_url *url, unsigned int *tempfile,
-		load_url_callback url_cb);
+struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
+		load_url_complete complete, void *data);
 
-char *load_url(void *ctx, struct pb_url *url, unsigned int *tempfile);
+struct load_url_result *load_url(void *ctx, struct pb_url *url);
 
 #endif /* PATHS_H */
