@@ -23,7 +23,7 @@ void run_test(struct parser_test *test)
 
 		check_args(opt, "root=/dev/mapper/fedora_ltcfbl8eb-root ro "
 				"rd.lvm.lv=fedora_ltcfbl8eb/swap rd.dm=0 "
-				"rd.lvm.lv=fedora_ltcfbl8eb/root  rd.md=0 "
+				"rd.lvm.lv=fedora_ltcfbl8eb/root rd.md=0 "
 				"rd.luks=0 vconsole.keymap=us rhgb quiet");
 
 		check_name(opt, i == 0 ?
