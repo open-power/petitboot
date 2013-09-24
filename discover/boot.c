@@ -31,6 +31,7 @@ enum boot_process_state {
 	BOOT_STATE_INITIAL,
 	BOOT_STATE_IMAGE_LOADING,
 	BOOT_STATE_INITRD_LOADING,
+	BOOT_STATE_DTB_LOADING,
 	BOOT_STATE_FINISH,
 	BOOT_STATE_UNKNOWN,
 };
@@ -287,7 +288,7 @@ static void run_boot_hooks(struct boot_task *task)
 	free(hooks);
 }
 
-static void boot_process(void *ctx, int status __attribute__((unused)))
+static void boot_process(void *ctx, int status)
 {
 	struct boot_task *task = ctx;
 	unsigned int clean_image = 0;
@@ -305,13 +306,20 @@ static void boot_process(void *ctx, int status __attribute__((unused)))
 					BOOT_STATUS_ERROR,
 					"Couldn't load kernel image");
 			goto no_load;
-		} else {
-			task->state = BOOT_STATE_IMAGE_LOADING;
-			return;
 		}
+		task->state = BOOT_STATE_IMAGE_LOADING;
+		return;
 	}
 
 	if (task->state == BOOT_STATE_IMAGE_LOADING) {
+		if (status) {
+			update_status(task->status_fn, task->status_arg,
+					BOOT_STATUS_ERROR,
+					"Error loading kernel image");
+			goto no_load;
+		}
+		task->state = BOOT_STATE_INITRD_LOADING;
+
 		if (task->initrd) {
 			update_status(task->status_fn, task->status_arg,
 					BOOT_STATUS_INFO, "loading initrd");
@@ -322,16 +330,20 @@ static void boot_process(void *ctx, int status __attribute__((unused)))
 						BOOT_STATUS_ERROR,
 						"Couldn't load initrd image");
 				goto no_load;
-			} else {
-				task->state = BOOT_STATE_INITRD_LOADING;
-				return;
 			}
-		} else {
-			task->state = BOOT_STATE_INITRD_LOADING;
+			return;
 		}
 	}
 
 	if (task->state == BOOT_STATE_INITRD_LOADING) {
+		if (status) {
+			update_status(task->status_fn, task->status_arg,
+					BOOT_STATUS_ERROR,
+					"Error loading initrd");
+			goto no_load;
+		}
+		task->state = BOOT_STATE_DTB_LOADING;
+
 		if (task->dtb) {
 			update_status(task->status_fn, task->status_arg,
 					BOOT_STATUS_INFO,
@@ -343,14 +355,21 @@ static void boot_process(void *ctx, int status __attribute__((unused)))
 						BOOT_STATUS_ERROR,
 						"Couldn't load device tree");
 				goto no_load;
-			} else {
-				task->state = BOOT_STATE_FINISH;
-				return;
 			}
-		} else {
-			task->state = BOOT_STATE_FINISH;
+			return;
 		}
 	}
+
+	if (task->state == BOOT_STATE_DTB_LOADING) {
+		if (status) {
+			update_status(task->status_fn, task->status_arg,
+					BOOT_STATUS_ERROR,
+					"Error loading dtb");
+			goto no_load;
+		}
+		task->state = BOOT_STATE_FINISH;
+	}
+
 
 	if (task->state != BOOT_STATE_FINISH) {
 		task->state = BOOT_STATE_UNKNOWN;
