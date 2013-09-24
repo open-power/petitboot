@@ -36,10 +36,10 @@ resolve_url() {
 do_pxe() {
 	basedir=$1
 
-	params="conf@/net/${interface} method=dhcp"
+	params="conf@${interface} method=dhcp"
 
 	# first, try by MAC
-	mac=$(tr ':' '-' < /sys/class/net/$interface/address)
+	mac=$(tr ':' '-' < /sys/class/$interface/address)
 	pb-event $params url=$basedir/01-$mac
 
 	# try decreasing fragments of IP lease
@@ -61,7 +61,7 @@ pb_add () {
 	if [ -n "${conffile}" ]
 	then
 		url=$(resolve_url ${conffile})
-		pb-event conf@/net/${interface} url=$url method=dhcp
+		pb-event conf@${interface} url=$url method=dhcp
 		return
 	fi
 
@@ -96,14 +96,14 @@ pb_add () {
 		args="root=/dev/nfs ip=any nfsroot=${k_server_ip}:${k_root_dir}"
 	fi
 
-	pb-event add@/net/${interface} \
+	pb-event add@${interface} \
 		name=netboot \
 		image=tftp://${siaddr}/${boot_file} \
 		args="$args"
 }
 
 pb_remove () {
-	pb-event remove@/net/${interface} name=netboot
+	pb-event remove@${interface} name=netboot
 }
 
 case "$1" in
