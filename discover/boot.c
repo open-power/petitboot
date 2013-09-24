@@ -42,6 +42,9 @@ struct boot_task {
 	char *local_initrd;
 	char *local_dtb;
 	char *args;
+	unsigned int clean_image;
+	unsigned int clean_initrd;
+	unsigned int clean_dtb;
 	struct pb_url *image, *initrd, *dtb;
 	boot_status_fn status_fn;
 	void *status_arg;
@@ -291,16 +294,13 @@ static void run_boot_hooks(struct boot_task *task)
 static void boot_process(void *ctx, int status)
 {
 	struct boot_task *task = ctx;
-	unsigned int clean_image = 0;
-	unsigned int clean_initrd = 0;
-	unsigned int clean_dtb = 0;
 	int result = -1;
 
 	if (task->state == BOOT_STATE_INITIAL) {
 		update_status(task->status_fn, task->status_arg,
 				BOOT_STATUS_INFO, "loading kernel");
 		task->local_image = load_url_async(task, task->image,
-					&clean_image, boot_process);
+					&task->clean_image, boot_process);
 		if (!task->local_image) {
 			update_status(task->status_fn, task->status_arg,
 					BOOT_STATUS_ERROR,
@@ -324,7 +324,7 @@ static void boot_process(void *ctx, int status)
 			update_status(task->status_fn, task->status_arg,
 					BOOT_STATUS_INFO, "loading initrd");
 			task->local_initrd = load_url_async(task, task->initrd,
-					&clean_initrd, boot_process);
+					&task->clean_initrd, boot_process);
 			if (!task->local_initrd) {
 				update_status(task->status_fn, task->status_arg,
 						BOOT_STATUS_ERROR,
@@ -349,7 +349,7 @@ static void boot_process(void *ctx, int status)
 					BOOT_STATUS_INFO,
 					"loading device tree");
 			task->local_dtb = load_url_async(task, task->dtb,
-						&clean_dtb, boot_process);
+						&task->clean_dtb, boot_process);
 			if (!task->local_dtb) {
 				update_status(task->status_fn, task->status_arg,
 						BOOT_STATUS_ERROR,
@@ -389,11 +389,11 @@ static void boot_process(void *ctx, int status)
 	}
 
 no_load:
-	if (clean_image)
+	if (task->clean_image)
 		unlink(task->local_image);
-	if (clean_initrd)
+	if (task->clean_initrd)
 		unlink(task->local_initrd);
-	if (clean_dtb)
+	if (task->clean_dtb)
 		unlink(task->local_dtb);
 
 	if (!result) {
