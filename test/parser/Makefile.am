@@ -28,6 +28,9 @@ LDADD = $(top_builddir)/lib/libpbcore.la libtest.ro
 TESTS = \
 	test-null \
 	test-grub2-single \
+	test-grub2-default \
+	test-grub2-default-index \
+	test-grub2-default-multiword \
 	test-grub2-multiple-resolve \
 	test-grub2-single-line-if \
 	test-grub2-f18-ppc64 \

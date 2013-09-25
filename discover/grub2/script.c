@@ -1,6 +1,7 @@
 
 #include <sys/types.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <types/types.h>
 #include <talloc/talloc.h>
@@ -94,6 +95,24 @@ static bool expand_var(struct grub2_script *script, struct grub2_word *word)
 static bool is_delim(char c)
 {
 	return c == ' ' || c == '\t';
+}
+
+static bool option_is_default(struct grub2_script *script,
+		struct discover_boot_option *opt)
+{
+	unsigned int default_idx;
+	const char *var;
+	char *end;
+
+	var = script_env_get(script, "default");
+	if (!var)
+		return false;
+
+	default_idx = strtoul(var, &end, 10);
+	if (end != var && *end == '\0')
+		return default_idx == script->n_options;
+
+	return !strcmp(opt->option->name, var);
 }
 
 /* For non-double-quoted variable expansions, we may need to split the
@@ -333,7 +352,10 @@ int statement_menuentry_execute(struct grub2_script *script,
 
 	statements_execute(script, st->statements);
 
+	opt->option->is_default = option_is_default(script, opt);
+
 	discover_context_add_boot_option(script->ctx, opt);
+	script->n_options++;
 	script->opt = NULL;
 
 	return 0;
@@ -407,11 +429,10 @@ struct grub2_script *create_script(struct grub2_parser *parser,
 {
 	struct grub2_script *script;
 
-	script = talloc(parser, struct grub2_script);
+	script = talloc_zero(parser, struct grub2_script);
 
 	init_env(script);
 	script->ctx = ctx;
-	script->opt = NULL;
 
 	list_init(&script->symtab);
 	register_builtins(script);
