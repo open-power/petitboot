@@ -17,6 +17,15 @@ struct pb_system_apps {
 
 extern const struct pb_system_apps pb_system_apps;
 
+enum tftp_type {
+	TFTP_TYPE_BUSYBOX,
+	TFTP_TYPE_HPA,
+	TFTP_TYPE_UNKNOWN,
+	TFTP_TYPE_BROKEN,
+};
+
+extern enum tftp_type tftp_type;
+
 int pb_run_cmd(const char *const *cmd_argv, int wait, int dry_run);
 int pb_mkdir_recursive(const char *dir);
 int pb_rmdir_recursive(const char *base, const char *dir);

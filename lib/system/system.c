@@ -30,6 +30,12 @@ const struct pb_system_apps pb_system_apps = {
 	.udhcpc		= HOST_PROG_UDHCPC,
 };
 
+#ifndef TFTP_TYPE
+#define TFTP_TYPE TFTP_TYPE_UNKNOWN
+#endif
+
+enum tftp_type tftp_type = TFTP_TYPE;
+
 int pb_mkdir_recursive(const char *dir)
 {
 	struct stat statbuf;

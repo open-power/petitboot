@@ -186,6 +186,41 @@ fail:
 	return NULL;
 }
 
+static enum tftp_type check_tftp_type(void *ctx)
+{
+	const char *argv[] = { pb_system_apps.tftp, "-V", NULL };
+	struct process *process;
+	enum tftp_type type;
+
+	process = process_create(ctx);
+	process->path = pb_system_apps.tftp;
+	process->argv = argv;
+	process->keep_stdout = true;
+	process_run_sync(process);
+
+	if (!process->stdout_buf || process->stdout_len == 0) {
+		pb_log("Can't check TFTP client type!\n");
+		type = TFTP_TYPE_BROKEN;
+
+	} else if (memmem(process->stdout_buf, process->stdout_len,
+				"tftp-hpa", strlen("tftp-hpa"))) {
+		pb_debug("Found TFTP client type: tftp-hpa\n");
+		type = TFTP_TYPE_HPA;
+
+	} else if (memmem(process->stdout_buf, process->stdout_len,
+				"BusyBox", strlen("BusyBox"))) {
+		pb_debug("Found TFTP client type: BusyBox tftp\n");
+		type = TFTP_TYPE_BUSYBOX;
+
+	} else {
+		pb_log("Unknown TFTP client type!\n");
+		type = TFTP_TYPE_BROKEN;
+	}
+
+	process_release(process);
+	return type;
+}
+
 /**
  * pb_load_tftp - Loads a remote file via tftp and returns the local file path.
  *
@@ -202,24 +237,44 @@ static char *load_tftp(void *ctx, struct pb_url *url,
 	char *local;
 	struct process *process;
 
-	local = local_name(ctx);
+	if (tftp_type == TFTP_TYPE_UNKNOWN)
+		tftp_type = check_tftp_type(ctx);
 
+	if (tftp_type == TFTP_TYPE_BROKEN)
+		return NULL;
+
+	local = local_name(ctx);
 	if (!local)
 		return NULL;
 
-	/* first try busybox tftp args */
+	if (tftp_type == TFTP_TYPE_BUSYBOX) {
+		/* first try busybox tftp args */
 
-	p = argv;
-	*p++ = pb_system_apps.tftp;	/* 1 */
-	*p++ = "-g";			/* 2 */
-	*p++ = "-l";			/* 3 */
-	*p++ = local;			/* 4 */
-	*p++ = "-r";			/* 5 */
-	*p++ = url->path;		/* 6 */
-	*p++ = url->host;		/* 7 */
-	if (url->port)
-		*p++ = url->port;	/* 8 */
-	*p++ = NULL;			/* 9 */
+		p = argv;
+		*p++ = pb_system_apps.tftp;	/* 1 */
+		*p++ = "-g";			/* 2 */
+		*p++ = "-l";			/* 3 */
+		*p++ = local;			/* 4 */
+		*p++ = "-r";			/* 5 */
+		*p++ = url->path;		/* 6 */
+		*p++ = url->host;		/* 7 */
+		if (url->port)
+			*p++ = url->port;	/* 8 */
+		*p++ = NULL;			/* 9 */
+	} else {
+		p = argv;
+		*p++ = pb_system_apps.tftp;	/* 1 */
+		*p++ = "-m";			/* 2 */
+		*p++ = "binary";		/* 3 */
+		*p++ = url->host;		/* 4 */
+		if (url->port)
+			*p++ = url->port;	/* 5 */
+		*p++ = "-c";			/* 6 */
+		*p++ = "get";			/* 7 */
+		*p++ = url->path;		/* 8 */
+		*p++ = local;			/* 9 */
+		*p++ = NULL;			/* 10 */
+	}
 
 	if (url_data) {
 		process = process_create(ctx);
@@ -230,32 +285,6 @@ static char *load_tftp(void *ctx, struct pb_url *url,
 		process->data = url_data;
 
 		result = process_run_async(process);
-	} else {
-		result = process_run_simple_argv(ctx, argv);
-	}
-
-	if (!result)
-		return local;
-
-	/* next try tftp-hpa args */
-	p = argv;
-	*p++ = pb_system_apps.tftp;	/* 1 */
-	*p++ = "-m";			/* 2 */
-	*p++ = "binary";		/* 3 */
-	*p++ = url->host;		/* 4 */
-	if (url->port)
-		*p++ = url->port;	/* 5 */
-	*p++ = "-c";			/* 6 */
-	*p++ = "get";			/* 7 */
-	*p++ = url->path;		/* 8 */
-	*p++ = local;			/* 9 */
-	*p++ = NULL;			/* 10 */
-
-	if (url_data) {
-		process->argv = argv;
-		result = process_run_async(process);
-		if (result)
-			process_release(process);
 	} else {
 		result = process_run_simple_argv(ctx, argv);
 	}

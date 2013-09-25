@@ -205,6 +205,29 @@ DEFINE_HOST_PROG(WGET, wget, [/usr/bin/wget])
 DEFINE_HOST_PROG(IP, ip, [/sbin/ip])
 DEFINE_HOST_PROG(UDHCPC, udhcpc, [/sbin/udhcpc])
 
+AC_ARG_WITH(
+    [tftp],
+    [AS_HELP_STRING([--with-tftp=TYPE],
+        [Use TYPE-type ftp client (either hpa or busybox) [default=runtime-check]]
+    )],
+    [],
+    [with_tftp=detect]
+)
+
+case x$with_tftp in
+'xhpa')
+    tftp_type='TFTP_TYPE_HPA'
+    ;;
+'xbusybox')
+    tftp_type='TFTP_TYPE_BUSYBOX'
+    ;;
+*)
+    tftp_type='TFTP_TYPE_UNKNOWN'
+    ;;
+esac
+
+AC_DEFINE_UNQUOTED(TFTP_TYPE, $tftp_type, [tftp client type])
+
 default_cflags="--std=gnu99 -g \
 	-Wall -W -Wunused -Wstrict-prototypes -Wmissing-prototypes \
 	-Wmissing-declarations -Wredundant-decls"
