@@ -35,6 +35,8 @@ TESTS = \
 	test-grub2-single-line-if \
 	test-grub2-f18-ppc64 \
 	test-grub2-ubuntu-13_04-x86 \
+	test-grub2-lexer-error \
+	test-grub2-parser-error \
 	test-kboot-single \
 	test-yaboot-single \
 	test-yaboot-partition \

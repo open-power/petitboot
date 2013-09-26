@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <log/log.h>
 #include <types/types.h>
 #include <talloc/talloc.h>
 
@@ -278,7 +279,7 @@ int statement_simple_execute(struct grub2_script *script,
 
 	entry = script_lookup_function(script, st->argv->argv[0]);
 	if (!entry) {
-		fprintf(stderr, "undefined function '%s'\n", st->argv->argv[0]);
+		pb_log("grub2: undefined function '%s'\n", st->argv->argv[0]);
 		return 1;
 	}
 

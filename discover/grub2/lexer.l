@@ -3,6 +3,8 @@
 #include "grub2.h"
 #include "parser.h"
 #include <talloc/talloc.h>
+
+void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 %}
 
 %option nounput noinput
@@ -118,7 +120,10 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
  /* strip comments */
 #.*	;
 
-.	printf("unknown token '%s'\n", yytext); exit(1);
+.	{
+		yyerror(yyget_extra(yyscanner), "unknown token '%s'\n", yytext);
+		yyterminate();
+	}
 
 %%
 

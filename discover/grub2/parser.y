@@ -6,17 +6,15 @@
 
 %{
 #include <talloc/talloc.h>
+#include <log/log.h>
 
 #include "grub2.h"
 #include "parser.h"
 #include "lexer.h"
 
-static void print_token(FILE *fp, int type, YYSTYPE value);
-
 #define YYLEX_PARAM parser->scanner
-#define YYPRINT(f, t, v) print_token(f, t, v)
 
-static void yyerror(struct grub2_parser *, char const *s);
+void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 %}
 
 %union {
@@ -148,18 +146,17 @@ word:	TOKEN_WORD
 	}
 
 %%
-void yyerror(struct grub2_parser *parser, char const *s)
+void yyerror(struct grub2_parser *parser, const char *fmt, ...)
 {
-	fprintf(stderr, "%d: error: %s '%s'\n",
-			yyget_lineno(parser->scanner),
-			s, yyget_text(parser->scanner));
-}
+	const char *str;
+	va_list ap;
 
-static void print_token(FILE *fp, int type, YYSTYPE value)
-{
-	if (type != TOKEN_WORD)
-		return;
-	fprintf(fp, "%s", value.word->text);
+	va_start(ap, fmt);
+	str = talloc_vasprintf(parser, fmt, ap);
+	va_end(ap);
+
+	pb_log("parse error: %d('%s'): %s\n", yyget_lineno(parser->scanner),
+					yyget_text(parser->scanner), str);
 }
 
 struct grub2_statements *create_statements(struct grub2_parser *parser)
