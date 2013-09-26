@@ -91,12 +91,12 @@ int pb_rmdir_recursive(const char *base, const char *dir)
 
 	cur = talloc_strdup(NULL, dir);
 
-	while (strcmp(base, dir)) {
+	while (strcmp(base, cur)) {
 
-		rmdir(dir);
+		rmdir(cur);
 
 		/* null-terminate at the last slash */
-		pos = strrchr(dir, '/');
+		pos = strrchr(cur, '/');
 		if (!pos)
 			break;
 
