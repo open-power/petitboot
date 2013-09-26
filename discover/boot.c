@@ -27,25 +27,13 @@ enum {
 	BOOT_HOOK_EXIT_UPDATE	= 2,
 };
 
-enum boot_process_state {
-	BOOT_STATE_INITIAL,
-	BOOT_STATE_IMAGE_LOADING,
-	BOOT_STATE_INITRD_LOADING,
-	BOOT_STATE_DTB_LOADING,
-	BOOT_STATE_FINISH,
-	BOOT_STATE_UNKNOWN,
-};
-
-
 struct boot_task {
 	struct load_url_result *image;
 	struct load_url_result *initrd;
 	struct load_url_result *dtb;
 	const char *args;
-	struct pb_url *image_url, *initrd_url, *dtb_url;
 	boot_status_fn status_fn;
 	void *status_arg;
-	enum boot_process_state state;
 	bool dry_run;
 };
 
@@ -288,6 +276,25 @@ static void run_boot_hooks(struct boot_task *task)
 	free(hooks);
 }
 
+static bool load_pending(struct load_url_result *result)
+{
+	return result && result->status == LOAD_ASYNC;
+}
+
+static int check_load(struct boot_task *task, const char *name,
+		struct load_url_result *result)
+{
+	if (!result)
+		return 0;
+	if (result->status != LOAD_ERROR)
+		return 0;
+
+	update_status(task->status_fn, task->status_arg,
+			BOOT_STATUS_ERROR,
+			"Couldn't load %s", name);
+	return -1;
+}
+
 static void cleanup_load(struct load_url_result *result)
 {
 	if (!result)
@@ -299,90 +306,21 @@ static void cleanup_load(struct load_url_result *result)
 	unlink(result->local);
 }
 
-static void boot_process(struct load_url_result *result, void *data)
+static void boot_process(struct load_url_result *result __attribute__((unused)),
+		void *data)
 {
 	struct boot_task *task = data;
 	int rc = -1;
 
-	if (task->state == BOOT_STATE_INITIAL) {
-		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_INFO, "loading kernel");
-		task->image = load_url_async(task, task->image_url,
-						boot_process, task);
-		if (!task->image) {
-			update_status(task->status_fn, task->status_arg,
-					BOOT_STATUS_ERROR,
-					"Couldn't load kernel image");
-			goto no_load;
-		}
-		task->state = BOOT_STATE_IMAGE_LOADING;
+	if (load_pending(task->image) ||
+			load_pending(task->initrd) ||
+			load_pending(task->dtb))
 		return;
-	}
 
-	if (task->state == BOOT_STATE_IMAGE_LOADING) {
-		if (result->status == LOAD_ERROR) {
-			update_status(task->status_fn, task->status_arg,
-					BOOT_STATUS_ERROR,
-					"Error loading kernel image");
-			goto no_load;
-		}
-		task->state = BOOT_STATE_INITRD_LOADING;
-
-		if (task->initrd_url) {
-			update_status(task->status_fn, task->status_arg,
-					BOOT_STATUS_INFO, "loading initrd");
-			task->initrd = load_url_async(task, task->initrd_url,
-							boot_process, task);
-			if (!task->initrd) {
-				update_status(task->status_fn, task->status_arg,
-						BOOT_STATUS_ERROR,
-						"Couldn't load initrd image");
-				goto no_load;
-			}
-			return;
-		}
-	}
-
-	if (task->state == BOOT_STATE_INITRD_LOADING) {
-		if (result->status) {
-			update_status(task->status_fn, task->status_arg,
-					BOOT_STATUS_ERROR,
-					"Error loading initrd");
-			goto no_load;
-		}
-		task->state = BOOT_STATE_DTB_LOADING;
-
-		if (task->dtb_url) {
-			update_status(task->status_fn, task->status_arg,
-					BOOT_STATUS_INFO,
-					"loading device tree");
-			task->dtb = load_url_async(task, task->dtb_url,
-							boot_process, task);
-			if (!task->dtb) {
-				update_status(task->status_fn, task->status_arg,
-						BOOT_STATUS_ERROR,
-						"Couldn't load device tree");
-				goto no_load;
-			}
-			return;
-		}
-	}
-
-	if (task->state == BOOT_STATE_DTB_LOADING) {
-		if (result->status) {
-			update_status(task->status_fn, task->status_arg,
-					BOOT_STATUS_ERROR,
-					"Error loading dtb");
-			goto no_load;
-		}
-		task->state = BOOT_STATE_FINISH;
-	}
-
-
-	if (task->state != BOOT_STATE_FINISH) {
-		task->state = BOOT_STATE_UNKNOWN;
-		return;
-	}
+	if (check_load(task, "kernel image", task->image) ||
+			check_load(task, "initrd", task->initrd) ||
+			check_load(task, "dtb", task->dtb))
+		goto no_load;
 
 	run_boot_hooks(task);
 
@@ -416,12 +354,29 @@ no_load:
 	talloc_free(task);
 }
 
+static int start_url_load(struct boot_task *task, const char *name,
+		struct pb_url *url, struct load_url_result **result)
+{
+	if (!url)
+		return 0;
+
+	*result = load_url_async(task, url, boot_process, task);
+	if (!*result) {
+		update_status(task->status_fn, task->status_arg,
+				BOOT_STATUS_ERROR,
+				"Error loading %s", name);
+		return -1;
+	}
+	return 0;
+}
+
 int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		int dry_run, boot_status_fn status_fn, void *status_arg)
 {
+	struct pb_url *image = NULL, *initrd = NULL, *dtb = NULL;
 	struct boot_task *boot_task;
-	struct pb_url *image = NULL;
 	const char *boot_desc;
+	int rc;
 
 	if (opt && opt->option->name)
 		boot_desc = opt->option->name;
@@ -444,24 +399,22 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		return -1;
 	}
 
-	boot_task = talloc_zero(ctx, struct boot_task);
-	boot_task->image_url = image;
-	boot_task->dry_run = dry_run;
-	boot_task->status_fn = status_fn;
-	boot_task->status_arg = status_arg;
-	boot_task->state = BOOT_STATE_INITIAL;
-
 	if (cmd && cmd->initrd_file) {
-		boot_task->initrd_url = pb_url_parse(opt, cmd->initrd_file);
+		initrd = pb_url_parse(opt, cmd->initrd_file);
 	} else if (opt && opt->initrd) {
-		boot_task->initrd_url = opt->initrd->url;
+		initrd = opt->initrd->url;
 	}
 
 	if (cmd && cmd->dtb_file) {
-		boot_task->dtb_url = pb_url_parse(opt, cmd->dtb_file);
+		dtb = pb_url_parse(opt, cmd->dtb_file);
 	} else if (opt && opt->dtb) {
-		boot_task->dtb_url = opt->dtb->url;
+		dtb = opt->dtb->url;
 	}
+
+	boot_task = talloc_zero(ctx, struct boot_task);
+	boot_task->dry_run = dry_run;
+	boot_task->status_fn = status_fn;
+	boot_task->status_arg = status_arg;
 
 	if (cmd && cmd->boot_args) {
 		boot_task->args = talloc_strdup(boot_task, cmd->boot_args);
@@ -472,7 +425,14 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		boot_task->args = NULL;
 	}
 
-	boot_process(NULL, boot_task);
+	/* start async loads for boot resources */
+	rc = start_url_load(boot_task, "kernel image", image, &boot_task->image)
+	  || start_url_load(boot_task, "initrd", initrd, &boot_task->initrd)
+	  || start_url_load(boot_task, "dtb", dtb, &boot_task->dtb);
 
-	return 0;
+	/* If all URLs are local, we may be done. */
+	if (!rc)
+		boot_process(NULL, boot_task);
+
+	return rc;
 }
