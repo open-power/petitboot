@@ -122,6 +122,7 @@ struct resource *create_url_resource(struct discover_boot_option *opt,
 	struct resource *res;
 
 	res = talloc(opt, struct resource);
+	talloc_steal(res, url);
 	res->url = url;
 	res->resolved = true;
 
