@@ -254,13 +254,13 @@ static struct pb_url *pb_url_copy(void *ctx, const struct pb_url *url)
 
 	new_url = talloc(ctx, struct pb_url);
 	new_url->scheme = url->scheme;
-	new_url->full = talloc_strdup(url, url->full);
+	new_url->full = talloc_strdup(new_url, url->full);
 
-	new_url->host = url->host ? talloc_strdup(url, url->host) : NULL;
-	new_url->port = url->port ? talloc_strdup(url, url->port) : NULL;
-	new_url->path = url->path ? talloc_strdup(url, url->path) : NULL;
-	new_url->dir  = url->dir  ? talloc_strdup(url, url->dir)  : NULL;
-	new_url->file = url->file ? talloc_strdup(url, url->file) : NULL;
+	new_url->host = url->host ? talloc_strdup(new_url, url->host) : NULL;
+	new_url->port = url->port ? talloc_strdup(new_url, url->port) : NULL;
+	new_url->path = url->path ? talloc_strdup(new_url, url->path) : NULL;
+	new_url->dir  = url->dir  ? talloc_strdup(new_url, url->dir)  : NULL;
+	new_url->file = url->file ? talloc_strdup(new_url, url->file) : NULL;
 
 	return new_url;
 }
