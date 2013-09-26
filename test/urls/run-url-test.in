@@ -1,5 +1,12 @@
 #!/bin/bash
 
+valgrind=''
+if [ "$1" = "--valgrind" ]
+then
+	shift
+	valgrind='valgrind --leak-check=full --error-exitcode=1'
+fi
+
 parser="@abs_builddir@/parse-url"
 testfile=$1
 
@@ -8,7 +15,7 @@ url=$(head -n1 $testfile)
 tmp=$(mktemp)
 trap "rm $tmp" EXIT
 
-$parser $url > $tmp
+$valgrind $parser $url > $tmp
 if test $? -ne 0
 then
 	echo "Error running $parser on $testfile"

@@ -38,6 +38,10 @@ TESTS = data/double-slash.test \
 TEST_EXTENSIONS = .test
 TEST_LOG_COMPILER = $(builddir)/run-url-test
 
+if ENABLE_TEST_VALGRIND
+TEST_LOG_FLAGS = --valgrind
+endif
+
 edit = sed \
 	-e 's|@PACKAGE_NAME\@|$(PACKAGE_NAME)|g' \
 	-e 's|@PACKAGE_VERSION\@|$(PACKAGE_VERSION)|g' \
