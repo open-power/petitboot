@@ -1,5 +1,6 @@
 
 #include <talloc/talloc.h>
+#include <log/log.h>
 
 #include "parser-test.h"
 
@@ -10,6 +11,7 @@ extern void run_test(struct parser_test *test);
 int main(void)
 {
 	struct parser_test *test;
+	pb_log_init(stdout);
 
 	test = test_init();
 
