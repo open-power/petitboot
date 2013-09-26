@@ -35,6 +35,8 @@ struct grub2_symtab_entry {
 	struct list_item	list;
 };
 
+static const char *default_prefix = "/boot/grub";
+
 static struct grub2_symtab_entry *script_lookup_function(
 		struct grub2_script *script, const char *name)
 {
@@ -401,7 +403,7 @@ static void init_env(struct grub2_script *script)
 
 	env = talloc(script, struct env_entry);
 	env->name = talloc_strdup(env, "prefix");
-	env->value = talloc_strdup(env, "/");
+	env->value = talloc_strdup(env, default_prefix);
 
 	list_add(&script->environment, &env->list);
 }
