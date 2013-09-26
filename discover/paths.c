@@ -313,6 +313,25 @@ static void load_wget(struct load_task *task, int flags)
 	load_process_to_local_file(task, argv, 2);
 }
 
+/* Although we don't need to load anything for a local path (we just return
+ * the path from the file:// URL), the other load helpers will error-out on
+ * non-existant files. So, do the same here with an access() check on the local
+ * filename.
+ */
+static void load_local(struct load_task *task)
+{
+	int rc;
+
+	rc = access(task->url->path, F_OK);
+	if (rc) {
+		task->result->status = LOAD_ERROR;
+	} else {
+		task->result->local = talloc_strdup(task->result,
+						    task->url->path);
+		task->result->status = LOAD_OK;
+	}
+}
+
 /**
  * load_url - Loads a (possibly) remote URL and returns the local file
  * path.
@@ -366,9 +385,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		load_tftp(task);
 		break;
 	default:
-		task->result->local = talloc_strdup(task->result,
-							url->path);
-		task->result->status = LOAD_OK;
+		load_local(task);
 		break;
 	}
 
