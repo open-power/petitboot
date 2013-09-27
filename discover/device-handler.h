@@ -64,6 +64,7 @@ struct discover_context {
 	struct list		boot_options;
 	struct pb_url		*conf_url;
 	enum conf_method	method;
+	void			*test_data;
 };
 
 struct device_handler *device_handler_init(struct discover_server *server,

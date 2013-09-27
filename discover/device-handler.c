@@ -520,6 +520,7 @@ struct discover_context *device_handler_discover_context_create(
 	ctx = talloc(handler, struct discover_context);
 	ctx->device = device;
 	ctx->conf_url = NULL;
+	ctx->test_data = NULL;
 	list_init(&ctx->boot_options);
 
 	return ctx;
