@@ -9,6 +9,7 @@
 struct parser_test {
 	struct device_handler *handler;
 	struct discover_context *ctx;
+	struct list files;
 	struct config *config;
 	struct {
 		void	*buf;
@@ -34,6 +35,12 @@ void test_set_conf_source(struct parser_test *test, const char *url);
 int test_run_parser(struct parser_test *test, const char *parser_name);
 
 void test_hotplug_device(struct parser_test *test, struct discover_device *dev);
+
+void test_add_file_data(struct parser_test *test, struct discover_device *dev,
+		const char *filename, void *data, int size);
+
+#define test_add_file_string(test, dev, filename, str) \
+	test_add_file_data(test, dev, filename, str, sizeof(str))
 
 struct discover_boot_option *get_boot_option(struct discover_context *ctx,
 		int idx);

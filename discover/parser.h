@@ -51,4 +51,8 @@ void parser_init(void);
 void iterate_parsers(struct discover_context *ctx, enum conf_method method);
 int parse_user_event(struct discover_context *ctx, struct event *event);
 
+int parser_request_file(struct discover_context *ctx,
+		struct discover_device *dev, const char *filename,
+		char **buf, int *len);
+
 #endif /* _PARSER_H */

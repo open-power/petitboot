@@ -22,6 +22,14 @@ struct p_item {
 	struct parser *parser;
 };
 
+struct test_file {
+	struct discover_device	*dev;
+	const char		*name;
+	void			*data;
+	int			size;
+	struct list_item	list;
+};
+
 STATIC_LIST(parsers);
 
 void __register_parser(struct parser *parser)
@@ -91,6 +99,7 @@ struct parser_test *test_init(void)
 	test->config = test_config_init(test);
 	test->handler = device_handler_init(NULL, NULL, 0);
 	test->ctx = test_create_context(test);
+	list_init(&test->files);
 
 	return test;
 }
@@ -140,6 +149,41 @@ void test_set_conf_source(struct parser_test *test, const char *url)
 {
 	test->ctx->conf_url = pb_url_parse(test, url);
 	assert(test->ctx->conf_url);
+}
+
+void test_add_file_data(struct parser_test *test, struct discover_device *dev,
+		const char *filename, void *data, int size)
+{
+	struct test_file *file;
+
+	file = talloc_zero(test, struct test_file);
+	file->dev = dev;
+	file->name = filename;
+	file->data = data;
+	file->size = size;
+	list_add(&test->files, &file->list);
+}
+
+
+int parser_request_file(struct discover_context *ctx,
+		struct discover_device *dev, const char *filename,
+		char **buf, int *len)
+{
+	struct parser_test *test = ctx->test_data;
+	struct test_file *file;
+
+	list_for_each_entry(&test->files, file, list) {
+		if (file->dev != dev)
+			continue;
+		if (strcmp(file->name, filename))
+			continue;
+
+		*buf = talloc_memdup(test, file->data, file->size);
+		*len = file->size;
+		return 0;
+	}
+
+	return -1;
 }
 
 int test_run_parser(struct parser_test *test, const char *parser_name)

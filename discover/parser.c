@@ -22,9 +22,31 @@ struct p_item {
 STATIC_LIST(parsers);
 
 static char *local_path(struct discover_context *ctx,
+		struct discover_device *dev,
 		const char *filename)
 {
-	return join_paths(ctx, ctx->device->mount_path, filename);
+	return join_paths(ctx, dev->mount_path, filename);
+}
+
+int parser_request_file(struct discover_context *ctx,
+		struct discover_device *dev, const char *filename,
+		char **buf, int *len)
+
+{
+	char *path;
+	int rc;
+
+	/* we only support local files at present */
+	if (!dev->mount_path)
+		return -1;
+
+	path = local_path(ctx, dev, filename);
+
+	rc = read_file(ctx, path, buf, len);
+
+	talloc_free(path);
+
+	return rc;
 }
 
 static int download_config(struct discover_context *ctx, char **buf, int *len)
@@ -61,7 +83,7 @@ static void iterate_parser_files(struct discover_context *ctx,
 		int rc, len;
 		char *buf;
 
-		path = local_path(ctx, *filename);
+		path = local_path(ctx, ctx->device, *filename);
 		if (!path)
 			continue;
 
