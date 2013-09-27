@@ -256,6 +256,10 @@ static int builtin_nop(struct grub2_script *script __attribute__((unused)),
 	return 0;
 }
 
+extern int builtin_load_env(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc, char *argv[]);
+
 static struct {
 	const char *name;
 	grub2_function fn;
@@ -295,6 +299,10 @@ static struct {
 	{
 		.name = "false",
 		.fn = builtin_false,
+	},
+	{
+		.name = "load_env",
+		.fn = builtin_load_env,
 	},
 };
 

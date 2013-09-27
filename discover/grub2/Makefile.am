@@ -30,6 +30,7 @@ grub2-parser.ro$(EXEEXT): $(grub2_parser_ro_OBJECTS)
 
 grub2_parser_ro_SOURCES = \
 	builtins.c \
+	env.c \
 	grub2.h \
 	grub2.c \
 	lexer.l \
