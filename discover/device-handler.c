@@ -721,12 +721,15 @@ static bool check_existing_mount(struct discover_device *dev)
 			continue;
 
 		if (mntstat.st_rdev == devstat.st_rdev) {
-			pb_debug("%s: %s is already mounted at %s\n"
-					__func__, dev->device_path,
-					mnt->mnt_dir);
 			dev->mount_path = talloc_strdup(dev, mnt->mnt_dir);
+			dev->mounted_rw = !!hasmntopt(mnt, "rw");
 			dev->mounted = true;
 			dev->unmount = false;
+
+			pb_debug("%s: %s is already mounted (r%c) at %s\n",
+					__func__, dev->device_path,
+					dev->mounted_rw ? 'w' : 'o',
+					mnt->mnt_dir);
 			break;
 		}
 	}
@@ -763,6 +766,7 @@ static int mount_device(struct discover_device *dev)
 			"-o", "ro", NULL);
 	if (!rc) {
 		dev->mounted = true;
+		dev->mounted_rw = false;
 		dev->unmount = true;
 		return 0;
 	}
@@ -773,6 +777,7 @@ static int mount_device(struct discover_device *dev)
 
 	if (!rc) {
 		dev->mounted = true;
+		dev->mounted_rw = true;
 		dev->unmount = true;
 		return 0;
 	}
@@ -805,6 +810,39 @@ static int umount_device(struct discover_device *dev)
 
 	return 0;
 }
+
+int device_request_write(struct discover_device *dev, bool *release)
+{
+	int rc;
+
+	*release = false;
+
+	if (!dev->mounted)
+		return -1;
+
+	if (dev->mounted_rw)
+		return 0;
+
+	rc = process_run_simple(dev, pb_system_apps.mount, dev->mount_path,
+			"-o", "remount,rw", NULL);
+	if (rc)
+		return -1;
+
+	dev->mounted_rw = true;
+	*release = true;
+	return 0;
+}
+
+void device_release_write(struct discover_device *dev, bool release)
+{
+	if (!release)
+		return;
+
+	process_run_simple(dev, pb_system_apps.mount, dev->mount_path,
+			"-o", "remount,ro", NULL);
+	dev->mounted_rw = false;
+}
+
 #else
 
 static int umount_device(struct discover_device *dev __attribute__((unused)))
@@ -816,6 +854,18 @@ static int __attribute__((unused)) mount_device(
 		struct discover_device *dev __attribute__((unused)))
 {
 	return 0;
+}
+
+int device_request_write(struct discover_device *dev __attribute__((unused)),
+		bool *release)
+{
+	*release = true;
+	return 0;
+}
+
+void device_release_write(struct discover_device *dev __attribute__((unused)),
+	bool release __attribute__((unused)))
+{
 }
 
 #endif

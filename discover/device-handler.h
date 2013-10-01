@@ -36,6 +36,7 @@ struct discover_device {
 	char			*mount_path;
 	const char		*device_path;
 	bool			mounted;
+	bool			mounted_rw;
 	bool			unmount;
 
 	bool			notified;
@@ -123,5 +124,8 @@ const char *discover_device_get_param(struct discover_device *device,
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd);
 void device_handler_cancel_default(struct device_handler *handler);
+
+int device_request_write(struct discover_device *dev, bool *release);
+void device_release_write(struct discover_device *dev, bool release);
 
 #endif /* _DEVICE_HANDLER_H */

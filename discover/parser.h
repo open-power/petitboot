@@ -51,8 +51,17 @@ void parser_init(void);
 void iterate_parsers(struct discover_context *ctx, enum conf_method method);
 int parse_user_event(struct discover_context *ctx, struct event *event);
 
+/* File IO functions for parsers; these should be the only interface that
+ * parsers use to access a device's filesystem.
+ *
+ * These are intended for small amounts of data, typically text configuration
+ * and state files.
+ */
 int parser_request_file(struct discover_context *ctx,
 		struct discover_device *dev, const char *filename,
 		char **buf, int *len);
+int parser_replace_file(struct discover_context *ctx,
+		struct discover_device *dev, const char *filename,
+		char *buf, int len);
 
 #endif /* _PARSER_H */

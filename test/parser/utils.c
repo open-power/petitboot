@@ -186,6 +186,36 @@ int parser_request_file(struct discover_context *ctx,
 	return -1;
 }
 
+int parser_replace_file(struct discover_context *ctx,
+		struct discover_device *dev, const char *filename,
+		char *buf, int len)
+{
+	struct parser_test *test = ctx->test_data;
+	struct test_file *f, *file;
+
+	list_for_each_entry(&test->files, f, list) {
+		if (f->dev != dev)
+			continue;
+		if (strcmp(f->name, filename))
+			continue;
+
+		file = f;
+		break;
+	}
+
+	if (!file) {
+		file = talloc_zero(test, struct test_file);
+		file->dev = dev;
+		file->name = filename;
+		list_add(&test->files, &file->list);
+	} else {
+		talloc_free(file->data);
+	}
+
+	file->data = talloc_memdup(test, buf, len);
+	file->size = len;
+	return 0;
+}
 int test_run_parser(struct parser_test *test, const char *parser_name)
 {
 	struct p_item* i;

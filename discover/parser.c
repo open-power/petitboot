@@ -49,6 +49,35 @@ int parser_request_file(struct discover_context *ctx,
 	return rc;
 }
 
+int parser_replace_file(struct discover_context *ctx,
+		struct discover_device *dev, const char *filename,
+		char *buf, int len)
+{
+	bool release;
+	char *path;
+	int rc;
+
+	if (!dev->mounted)
+		return -1;
+
+	rc = device_request_write(dev, &release);
+	if (rc) {
+		pb_log("Can't write file %s: device doesn't allow write\n",
+				dev->device_path);
+		return -1;
+	}
+
+	path = local_path(ctx, dev, filename);
+
+	rc = replace_file(path, buf, len);
+
+	talloc_free(path);
+
+	device_release_write(dev, release);
+
+	return rc;
+}
+
 static int download_config(struct discover_context *ctx, char **buf, int *len)
 {
 	struct load_url_result *result;
