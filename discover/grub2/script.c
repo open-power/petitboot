@@ -23,8 +23,8 @@
 	container_of(stmt, struct grub2_statement_conditional, st)
 
 struct env_entry {
-	const char		*name;
-	const char		*value;
+	char			*name;
+	char			*value;
 	struct list_item	list;
 };
 
@@ -75,11 +75,13 @@ void script_env_set(struct grub2_script *script,
 
 	if (!entry) {
 		entry = talloc(script, struct env_entry);
-		entry->name = name;
+		entry->name = talloc_strdup(entry, name);
 		list_add(&script->environment, &entry->list);
+	} else {
+		talloc_free(entry->value);
 	}
 
-	entry->value = value;
+	entry->value = talloc_strdup(entry, value);
 }
 
 static bool expand_var(struct grub2_script *script, struct grub2_word *word)
