@@ -586,13 +586,16 @@ int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev, enum conf_method method)
 {
 	struct discover_context *ctx;
+	int rc;
 
 	process_boot_option_queue(handler);
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
 
-	mount_device(dev);
+	rc = mount_device(dev);
+	if (rc)
+		goto out;
 
 	/* run the parsers. This will populate the ctx's boot_option list. */
 	iterate_parsers(ctx, method);
@@ -600,6 +603,7 @@ int device_handler_discover(struct device_handler *handler,
 	/* add discovered stuff to the handler */
 	device_handler_discover_context_commit(handler, ctx);
 
+out:
 	talloc_free(ctx);
 
 	return 0;
