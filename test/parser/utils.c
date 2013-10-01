@@ -61,6 +61,7 @@ struct discover_device *test_create_device(struct parser_test *test,
 	dev->device->id = talloc_strdup(dev, name);
 	dev->device_path = talloc_asprintf(dev, "/dev/%s", name);
 	dev->mount_path = talloc_asprintf(dev, "/test/mount/%s", name);
+	dev->mounted = true;
 
 	return dev;
 }

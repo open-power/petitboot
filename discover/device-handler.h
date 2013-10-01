@@ -33,8 +33,10 @@ struct discover_device {
 	const char		*uuid;
 	const char		*label;
 
-	const char		*mount_path;
+	char			*mount_path;
 	const char		*device_path;
+	bool			mounted;
+	bool			unmount;
 
 	bool			notified;
 

@@ -1,9 +1,11 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <mntent.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 
@@ -677,6 +679,58 @@ void device_handler_cancel_default(struct device_handler *handler)
 }
 
 #ifndef PETITBOOT_TEST
+static bool check_existing_mount(struct discover_device *dev)
+{
+	struct stat devstat, mntstat;
+	struct mntent *mnt;
+	FILE *fp;
+	int rc;
+
+	rc = stat(dev->device_path, &devstat);
+	if (rc) {
+		pb_debug("%s: stat failed: %s\n", __func__, strerror(errno));
+		return false;
+	}
+
+	if (!S_ISBLK(devstat.st_mode)) {
+		pb_debug("%s: %s isn't a block device?\n", __func__,
+				dev->device_path);
+		return false;
+	}
+
+	fp = fopen("/proc/self/mounts", "r");
+
+	for (;;) {
+		mnt = getmntent(fp);
+		if (!mnt)
+			break;
+
+		if (!mnt->mnt_fsname || mnt->mnt_fsname[0] != '/')
+			continue;
+
+		rc = stat(mnt->mnt_fsname, &mntstat);
+		if (rc)
+			continue;
+
+		if (!S_ISBLK(mntstat.st_mode))
+			continue;
+
+		if (mntstat.st_rdev == devstat.st_rdev) {
+			pb_debug("%s: %s is already mounted at %s\n"
+					__func__, dev->device_path,
+					mnt->mnt_dir);
+			dev->mount_path = talloc_strdup(dev, mnt->mnt_dir);
+			dev->mounted = true;
+			dev->unmount = false;
+			break;
+		}
+	}
+
+	fclose(fp);
+
+	return mnt != NULL;
+}
+
 static int mount_device(struct discover_device *dev)
 {
 	int rc;
@@ -684,29 +738,44 @@ static int mount_device(struct discover_device *dev)
 	if (!dev->device_path)
 		return -1;
 
-	if (!dev->mount_path)
-		dev->mount_path = join_paths(dev, mount_base(),
-						dev->device_path);
+	if (dev->mounted)
+		return 0;
 
-	if (pb_mkdir_recursive(dev->mount_path))
+	if (check_existing_mount(dev))
+		return 0;
+
+	dev->mount_path = join_paths(dev, mount_base(),
+					dev->device_path);
+
+	if (pb_mkdir_recursive(dev->mount_path)) {
 		pb_log("couldn't create mount directory %s: %s\n",
 				dev->mount_path, strerror(errno));
+		goto err_free;
+	}
 
 	rc = process_run_simple(dev, pb_system_apps.mount,
 			dev->device_path, dev->mount_path,
 			"-o", "ro", NULL);
-
-	if (!rc)
+	if (!rc) {
+		dev->mounted = true;
+		dev->unmount = true;
 		return 0;
+	}
 
 	/* Retry mount without ro option. */
 	rc = process_run_simple(dev, pb_system_apps.mount,
 			dev->device_path, dev->mount_path, NULL);
 
-	if (!rc)
+	if (!rc) {
+		dev->mounted = true;
+		dev->unmount = true;
 		return 0;
+	}
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
+err_free:
+	talloc_free(dev->mount_path);
+	dev->mount_path = NULL;
 	return -1;
 }
 
@@ -714,7 +783,7 @@ static int umount_device(struct discover_device *dev)
 {
 	int status;
 
-	if (!dev->mount_path)
+	if (!dev->mounted || !dev->unmount)
 		return 0;
 
 	status = process_run_simple(dev, pb_system_apps.umount,
@@ -722,6 +791,10 @@ static int umount_device(struct discover_device *dev)
 
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
 		return -1;
+
+	dev->mounted = false;
+	talloc_free(dev->mount_path);
+	dev->mount_path = NULL;
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 
