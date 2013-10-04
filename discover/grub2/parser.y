@@ -309,6 +309,7 @@ void grub2_parser_parse(struct grub2_parser *parser, char *buf, int len)
 	int rc;
 
 	bufstate = yy_scan_bytes(buf, len - 1, parser->scanner);
+	yyset_lineno(1, parser->scanner);
 
 	rc = yyparse(parser);
 
