@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -152,14 +153,14 @@ void test_set_conf_source(struct parser_test *test, const char *url)
 }
 
 void test_add_file_data(struct parser_test *test, struct discover_device *dev,
-		const char *filename, void *data, int size)
+		const char *filename, const void *data, int size)
 {
 	struct test_file *file;
 
 	file = talloc_zero(test, struct test_file);
 	file->dev = dev;
 	file->name = filename;
-	file->data = data;
+	file->data = talloc_memdup(test, data, size);
 	file->size = size;
 	list_add(&test->files, &file->list);
 }
@@ -171,6 +172,7 @@ int parser_request_file(struct discover_context *ctx,
 {
 	struct parser_test *test = ctx->test_data;
 	struct test_file *file;
+	char *tmp;
 
 	list_for_each_entry(&test->files, file, list) {
 		if (file->dev != dev)
@@ -178,7 +180,12 @@ int parser_request_file(struct discover_context *ctx,
 		if (strcmp(file->name, filename))
 			continue;
 
-		*buf = talloc_memdup(test, file->data, file->size);
+		/* the read_file() interface always adds a trailing null
+		 * for string-safety; do the same here */
+		tmp = talloc_array(test, char, file->size + 1);
+		memcpy(tmp, file->data, file->size);
+		tmp[file->size] = '\0';
+		*buf = tmp;
 		*len = file->size;
 		return 0;
 	}
@@ -208,8 +215,6 @@ int parser_replace_file(struct discover_context *ctx,
 		file->dev = dev;
 		file->name = filename;
 		list_add(&test->files, &file->list);
-	} else {
-		talloc_free(file->data);
 	}
 
 	file->data = talloc_memdup(test, buf, len);
@@ -418,4 +423,63 @@ void __check_not_present_resource(struct resource *res,
 {
 	if (res)
 		errx(EXIT_FAILURE, "%s:%d: Resource present", file, line);
+}
+
+static void dump_file_data(const void *buf, int len)
+{
+	int i, j, hex_len = strlen("00 ");
+	const int row_len = 16;
+
+	for (i = 0; i < len; i += row_len) {
+		char hbuf[row_len * hex_len + 1];
+		char cbuf[row_len + strlen("|") + 1];
+
+		for (j = 0; (j < row_len) && ((i+j) < len); j++) {
+			char c = ((const char *)buf)[i + j];
+
+			snprintf(hbuf + j * hex_len, hex_len + 1, "%02x ", c);
+
+			if (!isprint(c))
+				c = '.';
+
+			snprintf(cbuf + j, hex_len + 1, "%c", c);
+		}
+
+		strcat(cbuf, "|");
+
+		fprintf(stderr, "%08x  %*s |%s\n", i,
+				0 - (int)sizeof(hbuf) + 1, hbuf, cbuf);
+	}
+}
+
+void __check_file_contents(struct parser_test *test,
+		struct discover_device *dev, const char *filename,
+		const char *buf, int len,
+		const char *srcfile, int srcline)
+{
+	struct test_file *f, *file = NULL;
+
+	list_for_each_entry(&test->files, f, list) {
+		if (f->dev != dev)
+			continue;
+		if (strcmp(f->name, filename))
+			continue;
+
+		file = f;
+		break;
+	}
+
+	if (!file)
+		errx(EXIT_FAILURE, "%s:%d: File '%s' not found",
+				srcfile, srcline, filename);
+
+	if (file->size != len || memcmp(file->data, buf, len)) {
+		fprintf(stderr, "%s:%d: File '%s' data/size mismatch\n",
+				srcfile, srcline, filename);
+		fprintf(stderr, "Expected:\n");
+		dump_file_data(buf, len);
+		fprintf(stderr, "Got:\n");
+		dump_file_data(file->data, file->size);
+		exit(EXIT_FAILURE);
+	}
 }

@@ -37,10 +37,10 @@ int test_run_parser(struct parser_test *test, const char *parser_name);
 void test_hotplug_device(struct parser_test *test, struct discover_device *dev);
 
 void test_add_file_data(struct parser_test *test, struct discover_device *dev,
-		const char *filename, void *data, int size);
+		const char *filename, const void *data, int size);
 
 #define test_add_file_string(test, dev, filename, str) \
-	test_add_file_data(test, dev, filename, str, sizeof(str))
+	test_add_file_data(test, dev, filename, str, sizeof(str) - 1)
 
 struct discover_boot_option *get_boot_option(struct discover_context *ctx,
 		int idx);
@@ -124,5 +124,16 @@ void __check_not_present_resource(struct resource *res,
 		const char *file, int line);
 #define check_not_present_resource(res) \
 	__check_not_present_resource(res, __FILE__, __LINE__)
+
+/**
+ * Check the contents of a file - file @filename must be present on @dev,
+ * and match the @len bytes of @buf.
+ */
+void __check_file_contents(struct parser_test *test,
+		struct discover_device *dev, const char *filename,
+		const char *buf, int len,
+		const char *srcfile, int srcline);
+#define check_file_contents(test, dev, filename, buf, len) \
+	__check_file_contents(test, dev, filename, buf, len, __FILE__, __LINE__)
 
 #endif /* PARSER_TEST_H */
