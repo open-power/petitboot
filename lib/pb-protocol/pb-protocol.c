@@ -141,6 +141,18 @@ static int read_string(void *ctx, const char **pos, unsigned int *len,
 	return 0;
 }
 
+static int read_u32(const char **pos, unsigned int *len, unsigned int *p)
+{
+	if (*len < sizeof(uint32_t))
+		return -1;
+
+	*p = (unsigned int)__be32_to_cpu(*(uint32_t *)(*pos));
+	*pos += sizeof(uint32_t);
+	*len -= sizeof(uint32_t);
+
+	return 0;
+}
+
 char *pb_protocol_deserialise_string(void *ctx,
 		const struct pb_protocol_message *message)
 {
@@ -203,6 +215,23 @@ int pb_protocol_boot_status_len(const struct boot_status *status)
 		4 + optional_strlen(status->message) +
 		4 + optional_strlen(status->detail) +
 		4;
+}
+
+int pb_protocol_system_info_len(const struct system_info *sysinfo)
+{
+	unsigned int len, i;
+
+	len =	4 + optional_strlen(sysinfo->type) +
+		4 + optional_strlen(sysinfo->identifier) +
+		4;
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		struct interface_info *if_info = sysinfo->interfaces[i];
+		len +=	4 + if_info->hwaddr_size +
+			4 + optional_strlen(if_info->name);
+	}
+
+	return len;
 }
 
 int pb_protocol_serialise_device(const struct device *dev,
@@ -277,6 +306,36 @@ int pb_protocol_serialise_boot_status(const struct boot_status *status,
 
 	*(uint32_t *)pos = __cpu_to_be32(status->type);
 	pos += sizeof(uint32_t);
+
+	assert(pos <= buf + buf_len);
+	(void)buf_len;
+
+	return 0;
+}
+
+int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
+	unsigned int i;
+
+	pos += pb_protocol_serialise_string(pos, sysinfo->type);
+	pos += pb_protocol_serialise_string(pos, sysinfo->identifier);
+
+	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_interfaces);
+	pos += sizeof(uint32_t);
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		struct interface_info *if_info = sysinfo->interfaces[i];
+
+		*(uint32_t *)pos = __cpu_to_be32(if_info->hwaddr_size);
+		pos += sizeof(uint32_t);
+
+		memcpy(pos, if_info->hwaddr, if_info->hwaddr_size);
+		pos += if_info->hwaddr_size;
+
+		pos += pb_protocol_serialise_string(pos, if_info->name);
+	}
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -530,6 +589,57 @@ int pb_protocol_deserialise_boot_status(struct boot_status *status,
 	/* clamp to 100% */
 	if (status->progress > 100)
 		status->progress = 100;
+
+	rc = 0;
+
+out:
+	return rc;
+}
+
+int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
+		const struct pb_protocol_message *message)
+{
+	unsigned int len, i;
+	const char *pos;
+	int rc = -1;
+
+	len = message->payload_len;
+	pos = message->payload;
+
+	/* type and identifier strings */
+	if (read_string(sysinfo, &pos, &len, &sysinfo->type))
+		goto out;
+
+	if (read_string(sysinfo, &pos, &len, &sysinfo->identifier))
+		goto out;
+
+	/* number of interfaces */
+	if (read_u32(&pos, &len, &sysinfo->n_interfaces))
+		goto out;
+
+	sysinfo->interfaces = talloc_array(sysinfo, struct interface_info *,
+			sysinfo->n_interfaces);
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		struct interface_info *if_info = talloc(sysinfo,
+							struct interface_info);
+
+		if (read_u32(&pos, &len, &if_info->hwaddr_size))
+			goto out;
+
+		if (len < if_info->hwaddr_size)
+			goto out;
+
+		if_info->hwaddr = talloc_memdup(if_info, pos,
+						if_info->hwaddr_size);
+		pos += if_info->hwaddr_size;
+		len -= if_info->hwaddr_size;
+
+		if (read_string(if_info, &pos, &len, &if_info->name))
+			goto out;
+
+		sysinfo->interfaces[i] = if_info;
+	}
 
 	rc = 0;
 

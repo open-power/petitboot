@@ -2,6 +2,7 @@
 #define _TYPES_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <list/list.h>
 
 enum device_type {
@@ -58,5 +59,19 @@ struct boot_status {
 	char	*detail;
 	int	progress;
 };
+
+struct interface_info {
+	unsigned int	hwaddr_size;
+	uint8_t		*hwaddr;
+	char		*name;
+};
+
+struct system_info {
+	char			*type;
+	char			*identifier;
+	struct interface_info	**interfaces;
+	unsigned int		n_interfaces;
+};
+
 
 #endif /* _TYPES_H */

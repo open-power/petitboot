@@ -82,11 +82,41 @@ static void print_status(struct boot_status *status,
 
 }
 
+static void print_sysinfo(struct system_info *sysinfo,
+	void __attribute__((unused)) *arg)
+{
+	unsigned int i;
+
+	printf("sysinfo:\n");
+	printf("\ttype:     %s\n", sysinfo->type);
+	printf("\tid:       %s\n", sysinfo->identifier);
+
+	if (sysinfo->n_interfaces == 0)
+		printf("\tno interfaces.\n");
+	else
+		printf("\tinterfaces:\n");
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		struct interface_info *if_info = sysinfo->interfaces[i];
+		uint8_t *m = if_info->hwaddr;
+
+		printf("\t\tname:   %s\n", if_info->name);
+
+		if (if_info->hwaddr_size == 6)
+			printf("\t\tmac:    %02x:%02x:%02x:%02x:%02x:%02x\n",
+					m[0], m[1], m[2], m[3], m[4], m[5]);
+		else
+			printf("\t\tmac:    unknown hwaddr size %d\n",
+					if_info->hwaddr_size);
+	}
+}
+
 static struct discover_client_ops client_ops = {
 	.device_add = print_device_add,
 	.boot_option_add = print_boot_option_add,
 	.device_remove = print_device_remove,
 	.update_status = print_status,
+	.update_sysinfo = print_sysinfo,
 };
 
 int main(void)

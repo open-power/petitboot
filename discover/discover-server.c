@@ -19,6 +19,7 @@
 
 #include "device-handler.h"
 #include "discover-server.h"
+#include "sysinfo.h"
 
 struct discover_server {
 	int socket;
@@ -167,6 +168,24 @@ static int write_boot_status_message(struct discover_server *server,
 	return client_write_message(server, client, message);
 }
 
+static int write_system_info_message(struct discover_server *server,
+		struct client *client, const struct system_info *sysinfo)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_system_info_len(sysinfo);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_SYSTEM_INFO, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_system_info(sysinfo, message->payload, len);
+
+	return client_write_message(server, client, message);
+}
+
 static int discover_server_process_message(void *arg)
 {
 	struct pb_protocol_message *message;
@@ -232,6 +251,11 @@ static int discover_server_process_connection(void *arg)
 	client->fd = fd;
 	client->server = server;
 
+	/* send sysinfo to client */
+	rc = write_system_info_message(server, client, system_info_get());
+	if (rc)
+		return 0;
+
 	/* send existing devices to client */
 	n_devices = device_handler_get_device_count(server->device_handler);
 	for (i = 0; i < n_devices; i++) {
@@ -294,6 +318,15 @@ void discover_server_notify_boot_status(struct discover_server *server,
 
 	list_for_each_entry(&server->clients, client, list)
 		write_boot_status_message(server, client, status);
+}
+
+void discover_server_notify_system_info(struct discover_server *server,
+		const struct system_info *sysinfo)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_system_info_message(server, client, sysinfo);
 }
 
 void discover_server_set_device_source(struct discover_server *server,

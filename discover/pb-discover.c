@@ -19,6 +19,7 @@
 #include "discover-server.h"
 #include "device-handler.h"
 #include "network.h"
+#include "sysinfo.h"
 
 static void print_version(void)
 {
@@ -171,6 +172,8 @@ int main(int argc, char *argv[])
 	config_init(NULL);
 	if (opts.no_autoboot == opt_yes)
 		config_set_autoboot(false);
+
+	system_info_init(server);
 
 	handler = device_handler_init(server, waitset, opts.dry_run == opt_yes);
 	if (!handler)

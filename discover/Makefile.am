@@ -53,6 +53,8 @@ pb_discover_SOURCES = \
 	pb-discover.h \
 	resource.c \
 	resource.h \
+	sysinfo.c \
+	sysinfo.h \
 	network.c \
 	network.h \
 	udev.c \
