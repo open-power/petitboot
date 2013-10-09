@@ -803,10 +803,11 @@ static int umount_device(struct discover_device *dev)
 		return -1;
 
 	dev->mounted = false;
-	talloc_free(dev->mount_path);
-	dev->mount_path = NULL;
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
+
+	talloc_free(dev->mount_path);
+	dev->mount_path = NULL;
 
 	return 0;
 }
