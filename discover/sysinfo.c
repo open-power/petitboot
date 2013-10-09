@@ -2,12 +2,15 @@
 #include <string.h>
 
 #include <talloc/talloc.h>
+#include <process/process.h>
 
 #include "discover-server.h"
 #include "sysinfo.h"
 
 static struct system_info *sysinfo;
 static struct discover_server *server;
+
+static const char *sysinfo_helper = PKG_LIBEXEC_DIR "/pb-sysinfo";
 
 const struct system_info *system_info_get(void)
 {
@@ -50,10 +53,36 @@ void system_info_register_interface(unsigned int hwaddr_size, uint8_t *hwaddr,
 	discover_server_notify_system_info(server, sysinfo);
 }
 
-static void system_info_set_identifier(struct system_info *info
-		__attribute__((unused)))
+static void system_info_set_identifier(struct system_info *info)
 {
-	/* todo: call helpers to set type & id */
+	struct process *process;
+	int rc;
+	const char *argv[] = {
+		sysinfo_helper, NULL, NULL,
+	};
+
+	process = process_create(info);
+	process->path = sysinfo_helper;
+	process->argv = argv;
+	process->keep_stdout = true;
+
+	argv[1] = "--type";
+	rc = process_run_sync(process);
+
+	if (!rc) {
+		info->type = talloc_strndup(info, process->stdout_buf,
+				process->stdout_len);
+	}
+
+	argv[1] = "--id";
+	rc = process_run_sync(process);
+
+	if (!rc) {
+		info->identifier = talloc_strndup(info, process->stdout_buf,
+				process->stdout_len);
+	}
+
+	process_release(process);
 }
 
 void system_info_init(struct discover_server *s)

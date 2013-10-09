@@ -1,0 +1,10 @@
+#!/bin/sh
+
+case "$1" in
+'--type')
+	tr -d '\0' < /proc/device-tree/model
+	;;
+'--id')
+	tr -d '\0' < /proc/device-tree/system-id
+	;;
+esac

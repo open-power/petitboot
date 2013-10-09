@@ -22,6 +22,7 @@ AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPREFIX='"$(prefix)"' \
 	-DPKG_SHARE_DIR='"$(pkgdatadir)"' \
 	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"' \
+	-DPKG_LIBEXEC_DIR='"$(pkglibexecdir)"' \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"'
 
 EXTRA_DIST = native-parser.c
