@@ -158,9 +158,6 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, sigint_handler);
 
-	if (opts.no_autoboot == opt_yes)
-		config_set_autoboot(false);
-
 	waitset = waitset_create(NULL);
 
 	server = discover_server_init(waitset);
@@ -172,6 +169,8 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 
 	config_init(NULL);
+	if (opts.no_autoboot == opt_yes)
+		config_set_autoboot(false);
 
 	handler = device_handler_init(server, waitset, opts.dry_run == opt_yes);
 	if (!handler)
