@@ -145,8 +145,9 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 
 	m->on_open = cui_on_open;
 
-	m->scr.frame.title = talloc_asprintf(m,
+	m->scr.frame.ltitle = talloc_asprintf(m,
 		"Petitboot (" PACKAGE_VERSION ")");
+	m->scr.frame.rtitle = NULL;
 	m->scr.frame.help = talloc_strdup(m,
 		"ESC=exit, Enter=accept, e=edit, o=open");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");

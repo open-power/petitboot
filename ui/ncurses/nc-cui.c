@@ -473,11 +473,34 @@ static void cui_update_status(struct boot_status *status, void *arg)
 
 }
 
+static void cui_update_mm_title(struct cui *cui)
+{
+	struct nc_frame *frame = &cui->main->scr.frame;
+
+	talloc_free(frame->rtitle);
+
+	frame->rtitle = talloc_strdup(cui->main, cui->sysinfo->type);
+	if (cui->sysinfo->identifier)
+		frame->rtitle = talloc_asprintf_append(frame->rtitle,
+				" %s", cui->sysinfo->identifier);
+
+	if (cui->current == &cui->main->scr)
+		cui->current->post(cui->current);
+}
+
+static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
+{
+	struct cui *cui = cui_from_arg(arg);
+	cui->sysinfo = talloc_steal(cui, sysinfo);
+	cui_update_mm_title(cui);
+}
+
 static struct discover_client_ops cui_client_ops = {
 	.device_add = NULL,
 	.boot_option_add = cui_boot_option_add,
 	.device_remove = cui_device_remove,
 	.update_status = cui_update_status,
+	.update_sysinfo = cui_update_sysinfo,
 };
 
 /**

@@ -55,6 +55,7 @@ struct cui {
 	struct pmenu *main;
 	struct waitset *waitset;
 	struct discover_client *client;
+	struct system_info *sysinfo;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;

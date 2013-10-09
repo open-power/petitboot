@@ -336,8 +336,9 @@ struct boot_editor *boot_editor_init(void *ui_ctx,
 			ui_ctx, boot_editor_process_key,
 		boot_editor_post, boot_editor_unpost, boot_editor_resize);
 
-	boot_editor->scr.frame.title = talloc_strdup(boot_editor,
+	boot_editor->scr.frame.ltitle = talloc_strdup(boot_editor,
 			"Petitboot Option Editor");
+	boot_editor->scr.frame.rtitle = NULL;
 	boot_editor->scr.frame.help = talloc_strdup(boot_editor,
 			"ESC=cancel, Enter=accept");
 

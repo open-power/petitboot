@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -70,11 +71,23 @@ static void nc_scr_status_draw(struct nc_scr *scr)
 
 void nc_scr_frame_draw(struct nc_scr *scr)
 {
-	DBGS("title '%s'\n", scr->frame.title);
+	int ltitle_len, rtitle_len;
+
+	DBGS("ltitle '%s'\n", scr->frame.ltitle);
+	DBGS("rtitle '%s'\n", scr->frame.rtitle);
 	DBGS("help '%s'\n", scr->frame.help);
 	DBGS("status '%s'\n", scr->frame.status);
 
-	mvwaddstr(scr->main_ncw, nc_scr_pos_title, 1, scr->frame.title);
+	ltitle_len = strlen(scr->frame.ltitle);
+	rtitle_len = scr->frame.rtitle ? strlen(scr->frame.rtitle) : 0;
+
+	/* if both ltitle and rtitle don't fit, trim rtitle */
+	if (ltitle_len + rtitle_len + nc_scr_pos_lrtitle_space > COLS - 2)
+		rtitle_len = COLS - 2 - ltitle_len - nc_scr_pos_lrtitle_space;
+
+	mvwaddstr(scr->main_ncw, nc_scr_pos_title, 1, scr->frame.ltitle);
+	mvwaddnstr(scr->main_ncw, nc_scr_pos_title, COLS - rtitle_len - 1,
+			scr->frame.rtitle, rtitle_len);
 	mvwhline(scr->main_ncw, nc_scr_pos_title_sep, 1, ACS_HLINE, COLS - 2);
 
 	mvwhline(scr->main_ncw, LINES - nc_scr_pos_help_sep, 1, ACS_HLINE,

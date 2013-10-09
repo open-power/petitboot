@@ -64,6 +64,7 @@ static inline void nc_flush_keys(void)
 enum nc_scr_pos {
 	nc_scr_pos_title = 0,
 	nc_scr_pos_title_sep = 1,
+	nc_scr_pos_lrtitle_space = 2,
 	nc_scr_pos_sub = 2,
 
 	nc_scr_pos_help_sep = 3,
@@ -74,7 +75,8 @@ enum nc_scr_pos {
 };
 
 struct nc_frame {
-	char *title;
+	char *ltitle;
+	char *rtitle;
 	char *help;
 	char *status;
 };
