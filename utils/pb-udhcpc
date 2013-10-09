@@ -107,7 +107,7 @@ pb_remove () {
 }
 
 case "$1" in
-bound | renew)
+bound)
 	pb_add
 	;;
 deconfig)
