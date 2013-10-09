@@ -73,6 +73,7 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 	const char *serial;
 	const char *path;
 	const char *name;
+	const char *prop;
 
 	name = udev_device_get_sysname(dev);
 	if (!name) {
@@ -114,8 +115,12 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 	ddev = discover_device_create(udev->handler, name);
 
 	ddev->device_path = udev_device_get_devnode(dev);
-	ddev->uuid = udev_device_get_property_value(dev, "ID_FS_UUID");
-	ddev->label = udev_device_get_property_value(dev, "ID_FS_LABEL");
+	prop = udev_device_get_property_value(dev, "ID_FS_UUID");
+	if (prop)
+		ddev->uuid = talloc_strdup(ddev, prop);
+	prop = udev_device_get_property_value(dev, "ID_FS_LABEL");
+	if (prop)
+		ddev->label = talloc_strdup(ddev, prop);
 	ddev->device->type = DEVICE_TYPE_DISK;
 
 	udev_setup_device_params(dev, ddev);
