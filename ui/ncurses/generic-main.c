@@ -149,7 +149,7 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		"Petitboot (" PACKAGE_VERSION ")");
 	m->scr.frame.rtitle = NULL;
 	m->scr.frame.help = talloc_strdup(m,
-		"ESC=exit, Enter=accept, e=edit, o=open");
+		"ESC=exit, Enter=accept, e=edit, n=new");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
 	i = pmenu_item_init(m, 0, "Exit to Shell");
