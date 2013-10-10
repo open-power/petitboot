@@ -650,9 +650,10 @@ static struct discover_boot_option *find_boot_option_by_id(
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd)
 {
-	struct discover_boot_option *opt;
+	struct discover_boot_option *opt = NULL;
 
-	opt = find_boot_option_by_id(handler, cmd->option_id);
+	if (cmd->option_id && strlen(cmd->option_id))
+		opt = find_boot_option_by_id(handler, cmd->option_id);
 
 	boot(handler, opt, cmd, handler->dry_run, boot_status, handler);
 }
