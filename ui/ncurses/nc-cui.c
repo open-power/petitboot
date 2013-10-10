@@ -113,10 +113,6 @@ static int cui_boot(struct pmenu_item *item)
 	assert(cui->current == &cui->main->scr);
 
 	pb_log("%s: %s\n", __func__, cod->name);
-	if (!cod->opt) {
-		pb_log("%s: missing opt?\n", __func__);
-		return -1;
-	}
 
 	nc_scr_status_printf(cui->current, "Booting %s...", cod->name);
 

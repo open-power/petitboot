@@ -264,8 +264,7 @@ static void create_boot_command(struct boot_command *command,
 		const struct boot_option *boot_option,
 		const struct pb_boot_data *data)
 {
-
-	command->option_id = boot_option->id;
+	command->option_id = boot_option ? boot_option->id : NULL;
 	command->boot_image_file = data->image;
 	command->initrd_file = data->initrd;
 	command->dtb_file = data->dtb;
