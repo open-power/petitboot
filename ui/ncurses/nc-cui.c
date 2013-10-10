@@ -139,48 +139,76 @@ static int cui_boot(struct pmenu_item *item)
  * cui_boot_editor_on_exit - The boot_editor on_exit callback.
  */
 
-static void cui_boot_editor_on_exit(struct boot_editor *boot_editor, enum boot_editor_result boot_editor_result,
-	struct pb_boot_data *bd)
+static void cui_boot_editor_on_exit(struct boot_editor *boot_editor,
+		enum boot_editor_result boot_editor_result,
+		struct pb_boot_data *bd)
 {
-	struct cui *cui = cui_from_arg(boot_editor->scr.ui_ctx);
+	struct cui *cui = cui_from_pmenu(boot_editor->original_pmenu);
+	struct pmenu_item *item = boot_editor->data;
+	struct cui_opt_data *cod;
 
-	if (boot_editor_result == boot_editor_update) {
-		struct pmenu_item *i = pmenu_find_selected(cui->main);
-		struct cui_opt_data *cod = cod_from_item(i);
-
-		assert(bd);
-
-		talloc_steal(i, bd);
-		talloc_free(cod->bd);
-		cod->bd = bd;
-
-		pmenu_item_replace(i, cod->name);
-
-		/* FIXME: need to make item visible somehow */
-		set_current_item(cui->main->ncm, i->nci);
-
-		pb_log("%s: updating opt '%s'\n", __func__, cod->name);
-		pb_log(" image  '%s'\n", cod->bd->image);
-		pb_log(" initrd '%s'\n", cod->bd->initrd);
-		pb_log(" dtb    '%s'\n", cod->bd->dtb);
-		pb_log(" args   '%s'\n", cod->bd->args);
+	if (boot_editor_result != boot_editor_update) {
+		cui_set_current(cui, &cui->main->scr);
+		talloc_free(boot_editor);
+		return;
 	}
 
-	cui_set_current(cui, &cui->main->scr);
+	assert(bd);
 
+	/* Is this was a new item, we'll need to update the menu */
+	if (!item) {
+		struct pmenu *menu = boot_editor->original_pmenu;
+		int insert_pt;
+
+		/* Detach the items array. */
+		set_menu_items(menu->ncm, NULL);
+
+		/* Insert new item at insert_pt. */
+		insert_pt = pmenu_grow(menu, 1);
+		item = pmenu_item_alloc(menu);
+		item->on_edit = cui_item_edit;
+		item->on_execute = cui_boot;
+		item->data = cod = talloc_zero(item, struct cui_opt_data);
+
+		cod->name = talloc_asprintf(cod, "User item %u:", insert_pt);
+		pmenu_item_setup(menu, item, insert_pt,
+				talloc_strdup(item, cod->name));
+
+		/* Re-attach the items array. */
+		set_menu_items(menu->ncm, menu->items);
+		menu->scr.post(&menu->scr);
+	} else {
+		cod = item->data;
+	}
+
+	cod->bd = talloc_steal(cod, bd);
+
+	/* FIXME: need to make item visible somehow */
+	set_current_item(item->pmenu->ncm, item->nci);
+	cui_set_current(cui, &cui->main->scr);
 	talloc_free(boot_editor);
 }
 
-int cui_boot_editor_run(struct pmenu_item *item)
+void cui_item_edit(struct pmenu_item *item)
 {
 	struct cui *cui = cui_from_item(item);
 	struct cui_opt_data *cod = cod_from_item(item);
 	struct boot_editor *boot_editor;
 
-	boot_editor = boot_editor_init(cui, cod->bd, cui_boot_editor_on_exit);
+	boot_editor = boot_editor_init(item->pmenu, cod->bd,
+			cui_boot_editor_on_exit);
+	boot_editor->data = item;
 	cui_set_current(cui, &boot_editor->scr);
+}
 
-	return 0;
+void cui_item_new(struct pmenu *menu)
+{
+	struct cui *cui = cui_from_pmenu(menu);
+	struct boot_editor *boot_editor;
+
+	boot_editor = boot_editor_init(menu, NULL,
+			cui_boot_editor_on_exit);
+	cui_set_current(cui, &boot_editor->scr);
 }
 
 /**
@@ -291,46 +319,6 @@ static void cui_handle_resize(struct cui *cui)
 }
 
 /**
- * cui_on_open - Open new item callback.
- */
-
-void cui_on_open(struct pmenu *menu)
-{
-	unsigned int insert_pt;
-	struct pmenu_item *i;
-	struct cui_opt_data *cod;
-
-	menu->scr.unpost(&menu->scr);
-
-	/* This disconnects items array from menu. */
-
-	set_menu_items(menu->ncm, NULL);
-
-	/* Insert new items at insert_pt. */
-
-	insert_pt = pmenu_grow(menu, 1);
-	i = pmenu_item_alloc(menu);
-
-	i->on_edit = cui_boot_editor_run;
-	i->on_execute = cui_boot;
-	i->data = cod = talloc_zero(i, struct cui_opt_data);
-
-	cod->name = talloc_asprintf(i, "User item %u:", insert_pt);
-	cod->bd = talloc_zero(i, struct pb_boot_data);
-
-	pmenu_item_setup(menu, i, insert_pt, talloc_strdup(i, cod->name));
-
-	/* Re-attach the items array. */
-
-	set_menu_items(menu->ncm, menu->items);
-
-	menu->scr.post(&menu->scr);
-	set_current_item(menu->ncm, i->nci);
-
-	i->on_edit(i);
-}
-
-/**
  * cui_device_add - Client device_add callback.
  *
  * Creates menu_items for all the device boot_options and inserts those
@@ -368,7 +356,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 
 	opt->ui_info = i = pmenu_item_alloc(cui->main);
 
-	i->on_edit = cui_boot_editor_run;
+	i->on_edit = cui_item_edit;
 	i->on_execute = cui_boot;
 	i->data = cod = talloc(i, struct cui_opt_data);
 

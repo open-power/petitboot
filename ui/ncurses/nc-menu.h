@@ -47,7 +47,7 @@ struct pmenu_item {
 	ITEM *nci;
 	struct pmenu *pmenu;
 	void *data;
-	int (*on_edit)(struct pmenu_item *item);
+	void (*on_edit)(struct pmenu_item *item);
 	int (*on_execute)(struct pmenu_item *item);
 };
 
@@ -85,7 +85,7 @@ struct pmenu {
 	unsigned int insert_pt;
 	int (*hot_key)(struct pmenu *menu, struct pmenu_item *item, int c);
 	void (*on_exit)(struct pmenu *menu);
-	void (*on_open)(struct pmenu *menu);
+	void (*on_new)(struct pmenu *menu);
 };
 
 struct pmenu *pmenu_init(void *ui_ctx, unsigned int item_count,

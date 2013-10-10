@@ -233,8 +233,8 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 			item->on_edit(item);
 		break;
 	case 'n':
-		if (menu->on_open)
-			menu->on_open(menu);
+		if (menu->on_new)
+			menu->on_new(menu);
 		break;
 	case '\n':
 	case '\r':

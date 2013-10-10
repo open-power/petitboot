@@ -143,7 +143,7 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		return NULL;
 	}
 
-	m->on_open = cui_on_open;
+	m->on_new = cui_item_new;
 
 	m->scr.frame.ltitle = talloc_asprintf(m,
 		"Petitboot (" PACKAGE_VERSION ")");

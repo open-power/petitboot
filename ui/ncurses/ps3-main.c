@@ -412,7 +412,7 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 	}
 
 	m->hot_key = ps3_hot_key;
-	m->on_open = cui_on_open;
+	m->on_new = cui_item_new;
 
 #if defined(DEBUG)
 	m->scr.frame.title = talloc_strdup(m,
