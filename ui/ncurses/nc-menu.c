@@ -205,6 +205,7 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 
 	switch (key) {
 	case 27: /* ESC */
+	case 'x':
 		if (menu->on_exit)
 			menu->on_exit(menu);
 		nc_flush_keys();

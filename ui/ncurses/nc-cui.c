@@ -65,7 +65,7 @@ void cui_resize(struct cui *cui)
 }
 
 /**
- * cui_on_exit - A generic main menu ESC callback.
+ * cui_on_exit - A generic main menu exit callback.
  */
 
 void cui_on_exit(struct pmenu *menu)

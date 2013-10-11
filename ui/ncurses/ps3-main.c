@@ -343,7 +343,7 @@ static int ps3_svm_to_mm_cb(struct pmenu_item *item)
 }
 
 /**
- * ps3_svm_to_mm_helper - The svm ESC callback.
+ * ps3_svm_to_mm_helper - The svm exit callback.
  */
 
 static void ps3_svm_to_mm_helper(struct pmenu *menu)
@@ -421,7 +421,7 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 	m->scr.frame.title = talloc_strdup(m, "Petitboot PS3");
 #endif
 	m->scr.frame.help = talloc_strdup(m,
-		"ESC=exit, Enter=accept, e=edit, o=open");
+		"Enter=accept, e=edit, o=open, x=exit");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
 	i = pmenu_item_init(m, 0, "Boot GameOS");
@@ -472,7 +472,7 @@ static struct pmenu *ps3_svm_init(struct ps3_cui *ps3_cui)
 
 	m->hot_key = ps3_hot_key;
 	m->scr.frame.title = talloc_strdup(m, "Select PS3 Video Mode");
-	m->scr.frame.help = talloc_strdup(m, "ESC=exit, Enter=accept");
+	m->scr.frame.help = talloc_strdup(m, "Enter=accept, x=exit");
 
 	i = pmenu_item_init(m, 0, "auto detect");
 	i->on_execute = ps3_svm_cb;
