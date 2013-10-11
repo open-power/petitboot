@@ -63,6 +63,7 @@ struct boot_editor {
 	struct nc_scr	scr;
 	FORM		*ncf;
 	FIELD		**fields;
+	FIELD		*button_ok, *button_cancel;
 	void		*data;
 	struct pmenu	*original_pmenu;
 	void		(*on_exit)(struct boot_editor *boot_editor,

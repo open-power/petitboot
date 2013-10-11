@@ -204,7 +204,11 @@ static struct pb_boot_data *boot_editor_prepare_data(
 static void boot_editor_process_key(struct nc_scr *scr, int key)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
+	enum boot_editor_result result;
 	struct pb_boot_data *bd;
+	FIELD *field;
+
+	field = current_field(boot_editor->ncf);
 
 	switch (key) {
 	default:
@@ -212,15 +216,32 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 		break;
 
 	/* hot keys */
+	case 'x':
+		if (field != boot_editor->button_cancel &&
+				field != boot_editor->button_ok) {
+			boot_editor_move_cursor(boot_editor, key);
+			break;
+		}
+		/* fall through */
+
 	case 27: /* ESC */
 		boot_editor->on_exit(boot_editor, boot_editor_cancel, NULL);
 		nc_flush_keys();
 		return;
 	case '\n':
 	case '\r':
-		form_driver(boot_editor->ncf, REQ_VALIDATION);
-		bd = boot_editor_prepare_data(boot_editor);
-		boot_editor->on_exit(boot_editor, boot_editor_update, bd);
+		if (field == boot_editor->button_cancel) {
+			result = boot_editor_cancel;
+			bd = NULL;
+		} else if (field == boot_editor->button_ok) {
+			result = boot_editor_update;
+			form_driver(boot_editor->ncf, REQ_VALIDATION);
+			bd = boot_editor_prepare_data(boot_editor);
+		} else {
+			boot_editor_move_field(boot_editor, REQ_NEXT_FIELD);
+			break;
+		}
+		boot_editor->on_exit(boot_editor, result, bd);
 		nc_flush_keys();
 		return;
 
@@ -308,6 +329,19 @@ static FIELD *boot_editor_setup_label(unsigned int y, unsigned int x, char *str)
 	return f;
 }
 
+static FIELD *boot_editor_setup_button(unsigned int y, unsigned int x,
+		char *str)
+{
+	FIELD *f;
+
+	f = new_field(1, strlen(str), y, x, 0, 0);
+	field_opts_off(f, O_EDIT);
+	set_field_buffer(f, 0, str);
+	set_field_back(f, A_NORMAL);
+	set_field_fore(f, A_NORMAL);
+	return f;
+}
+
 struct boot_editor *boot_editor_init(struct pmenu *menu,
 		const struct pb_boot_data *bd,
 		void (*on_exit)(struct boot_editor *,
@@ -335,11 +369,11 @@ struct boot_editor *boot_editor_init(struct pmenu *menu,
 			"Petitboot Option Editor");
 	boot_editor->scr.frame.rtitle = NULL;
 	boot_editor->scr.frame.help = talloc_strdup(boot_editor,
-			"ESC=cancel, Enter=accept");
+			"Enter=accept");
 
 	boot_editor->on_exit = on_exit;
 
-	boot_editor->fields = talloc_array(boot_editor, FIELD *, 9);
+	boot_editor->fields = talloc_array(boot_editor, FIELD *, 11);
 
 	if (bd) {
 		image = bd->image;
@@ -358,7 +392,13 @@ struct boot_editor *boot_editor_init(struct pmenu *menu,
 	boot_editor->fields[5] = boot_editor_setup_label(1, 1, "initrd:");
 	boot_editor->fields[6] = boot_editor_setup_label(2, 1, "dtb:");
 	boot_editor->fields[7] = boot_editor_setup_label(3, 1, "args:");
-	boot_editor->fields[8] = NULL;
+	boot_editor->fields[8] = boot_editor_setup_button(5, 9, "[  OK  ] ");
+	boot_editor->fields[9] = boot_editor_setup_button(5, 9 + 10,
+							"[Cancel] ");
+	boot_editor->fields[10] = NULL;
+
+	boot_editor->button_ok = boot_editor->fields[8];
+	boot_editor->button_cancel = boot_editor->fields[9];
 
 	boot_editor->ncf = new_form(boot_editor->fields);
 
