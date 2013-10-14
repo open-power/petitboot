@@ -16,6 +16,7 @@ char *join_paths(void *alloc_ctx, const char *a, const char *b);
  */
 const char *mount_base(void);
 
+struct load_task;
 
 struct load_url_result {
 	enum {
@@ -26,9 +27,12 @@ struct load_url_result {
 			     * (sync will see a NULL result) */
 
 		LOAD_ASYNC, /* async load still in progress */
+
+		LOAD_CANCELLED,
 	} status;
-	const char	*local;
-	bool		cleanup_local;
+	const char		*local;
+	bool			cleanup_local;
+	struct load_task	*task;
 };
 
 /* callback type for asynchronous loads. The callback implementation is
@@ -39,6 +43,9 @@ typedef void (*load_url_complete)(struct load_url_result *result, void *data);
 /* Load a (potentially remote) file, and return a guaranteed-local name */
 struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		load_url_complete complete, void *data);
+
+/* Cancel a pending load */
+void load_url_async_cancel(struct load_url_result *res);
 
 struct load_url_result *load_url(void *ctx, struct pb_url *url);
 

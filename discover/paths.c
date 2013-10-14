@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,9 +80,14 @@ static void load_url_process_exit(struct process *process)
 	data = task->async_data;
 	cb = task->async_cb;
 
-	result->status = process->exit_status == 0 ? LOAD_OK : LOAD_ERROR;
-	if (result->status == LOAD_ERROR)
+	if (result->status == LOAD_CANCELLED) {
 		load_url_result_cleanup_local(result);
+	} else if (process->exit_status == 0) {
+		result->status = LOAD_OK;
+	} else {
+		result->status = LOAD_ERROR;
+		load_url_result_cleanup_local(result);
+	}
 
 	/* The load callback may well free the ctx, which was the
 	 * talloc parent of the task. Therefore, we want to do our cleanup
@@ -89,6 +95,7 @@ static void load_url_process_exit(struct process *process)
 	 */
 	process_release(process);
 	talloc_free(task);
+	result->task = NULL;
 
 	cb(result, data);
 }
@@ -359,6 +366,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 	task->url = url;
 	task->async = async_cb != NULL;
 	task->result = talloc_zero(ctx, struct load_url_result);
+	task->result->task = task;
 	task->process = process_create(task);
 	if (task->async) {
 		task->async_cb = async_cb;
@@ -406,4 +414,23 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 struct load_url_result *load_url(void *ctx, struct pb_url *url)
 {
 	return load_url_async(ctx, url, NULL, NULL);
+}
+
+void load_url_async_cancel(struct load_url_result *res)
+{
+	struct load_task *task = res->task;
+
+	/* the completion callback may have already been called; this clears
+	 * res->task */
+	if (!task)
+		return;
+
+	if (res->status == LOAD_CANCELLED)
+		return;
+
+	assert(task->async);
+	assert(task->process);
+
+	res->status = LOAD_CANCELLED;
+	process_stop_async(task->process);
 }
