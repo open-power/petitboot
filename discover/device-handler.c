@@ -40,6 +40,9 @@ struct device_handler {
 
 	struct discover_boot_option *default_boot_option;
 	struct list		unresolved_boot_options;
+
+	struct boot_task	*pending_boot;
+	bool			pending_boot_is_default;
 };
 
 static int mount_device(struct discover_device *dev);
@@ -331,6 +334,9 @@ static int default_timeout(void *arg)
 	if (!handler->default_boot_option)
 		return 0;
 
+	if (handler->pending_boot)
+		return 0;
+
 	opt = handler->default_boot_option;
 
 	if (handler->sec_to_boot) {
@@ -346,8 +352,9 @@ static int default_timeout(void *arg)
 
 	pb_log("Timeout expired, booting default option %s\n", opt->option->id);
 
-	boot(handler, handler->default_boot_option, NULL,
-			handler->dry_run, boot_status, handler);
+	handler->pending_boot = boot(handler, handler->default_boot_option,
+			NULL, handler->dry_run, boot_status, handler);
+	handler->pending_boot_is_default = true;
 	return 0;
 }
 
@@ -655,7 +662,11 @@ void device_handler_boot(struct device_handler *handler,
 	if (cmd->option_id && strlen(cmd->option_id))
 		opt = find_boot_option_by_id(handler, cmd->option_id);
 
-	boot(handler, opt, cmd, handler->dry_run, boot_status, handler);
+	if (handler->pending_boot)
+		boot_cancel(handler->pending_boot);
+	handler->pending_boot = boot(handler, opt, cmd, handler->dry_run,
+			boot_status, handler);
+	handler->pending_boot_is_default = false;
 }
 
 void device_handler_cancel_default(struct device_handler *handler)
@@ -673,6 +684,12 @@ void device_handler_cancel_default(struct device_handler *handler)
 		return;
 
 	pb_log("Cancelling default boot option\n");
+
+	if (handler->pending_boot && handler->pending_boot_is_default) {
+		boot_cancel(handler->pending_boot);
+		handler->pending_boot = NULL;
+		handler->pending_boot_is_default = false;
+	}
 
 	handler->default_boot_option = NULL;
 

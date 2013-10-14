@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 
+#include <array-size/array-size.h>
 #include <log/log.h>
 #include <pb-protocol/pb-protocol.h>
 #include <process/process.h>
@@ -35,6 +36,7 @@ struct boot_task {
 	boot_status_fn status_fn;
 	void *status_arg;
 	bool dry_run;
+	bool cancelled;
 };
 
 /**
@@ -308,11 +310,49 @@ static void cleanup_load(struct load_url_result *result)
 	unlink(result->local);
 }
 
-static void boot_process(struct load_url_result *result __attribute__((unused)),
-		void *data)
+static void cleanup_cancellations(struct boot_task *task,
+		struct load_url_result *cur_result)
+{
+	struct load_url_result *result, **results[] = {
+		&task->image, &task->initrd, &task->dtb,
+	};
+	bool pending = false;
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(results); i++) {
+		result = *results[i];
+
+		if (!result)
+			continue;
+
+		/* We need to cleanup and free any completed loads */
+		if (result == cur_result || result->status == LOAD_OK
+				|| result->status == LOAD_ERROR) {
+			cleanup_load(result);
+			talloc_free(result);
+			*results[i] = NULL;
+
+		/* ... and cancel any pending loads, which we'll free in
+		 * the completion callback */
+		} else if (result->status == LOAD_ASYNC) {
+			load_url_async_cancel(result);
+			pending = true;
+		}
+	}
+
+	if (!pending)
+		talloc_free(task);
+}
+
+static void boot_process(struct load_url_result *result, void *data)
 {
 	struct boot_task *task = data;
 	int rc = -1;
+
+	if (task->cancelled) {
+		cleanup_cancellations(task, result);
+		return;
+	}
 
 	if (load_pending(task->image) ||
 			load_pending(task->initrd) ||
@@ -352,8 +392,6 @@ no_load:
 					"kexec reboot failed");
 		}
 	}
-
-	talloc_free(task);
 }
 
 static int start_url_load(struct boot_task *task, const char *name,
@@ -372,8 +410,9 @@ static int start_url_load(struct boot_task *task, const char *name,
 	return 0;
 }
 
-int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
-		int dry_run, boot_status_fn status_fn, void *status_arg)
+struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
+		struct boot_command *cmd, int dry_run,
+		boot_status_fn status_fn, void *status_arg)
 {
 	struct pb_url *image = NULL, *initrd = NULL, *dtb = NULL;
 	struct boot_task *boot_task;
@@ -398,7 +437,7 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 		pb_log("%s: no image specified\n", __func__);
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
 				"Boot failed: no image specified");
-		return -1;
+		return NULL;
 	}
 
 	if (cmd && cmd->initrd_file) {
@@ -433,8 +472,22 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	  || start_url_load(boot_task, "dtb", dtb, &boot_task->dtb);
 
 	/* If all URLs are local, we may be done. */
-	if (!rc)
-		boot_process(NULL, boot_task);
+	if (rc) {
+		talloc_free(boot_task);
+		return NULL;
+	}
 
-	return rc;
+	boot_process(NULL, boot_task);
+
+	return boot_task;
+}
+
+void boot_cancel(struct boot_task *task)
+{
+	task->cancelled = true;
+
+	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
+			"Boot cancelled");
+
+	cleanup_cancellations(task, NULL);
 }

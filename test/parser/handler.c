@@ -47,8 +47,9 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 	assert(false);
 }
 
-int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
-		int dry_run, boot_status_fn status_fn, void *status_arg)
+struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
+		struct boot_command *cmd, int dry_run,
+		boot_status_fn status_fn, void *status_arg)
 {
 	(void)ctx;
 	(void)opt;
@@ -57,4 +58,9 @@ int boot(void *ctx, struct discover_boot_option *opt, struct boot_command *cmd,
 	(void)status_fn;
 	(void)status_arg;
 	assert(false);
+}
+
+void boot_cancel(struct boot_task *task)
+{
+	(void)task;
 }
