@@ -167,7 +167,7 @@ void script_register_function(struct grub2_script *script,
 void register_builtins(struct grub2_script *script);
 
 /* resources */
-struct resource *create_grub2_resource(void *ctx,
+struct resource *create_grub2_resource(struct discover_boot_option *opt,
 		struct discover_device *orig_device,
 		const char *root, const char *path);
 

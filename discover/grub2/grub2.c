@@ -2,6 +2,7 @@
 #include <assert.h>
 
 #include <talloc/talloc.h>
+#include <url/url.h>
 
 #include <discover/resource.h>
 #include <discover/parser.h>
@@ -36,14 +37,20 @@ struct grub2_resource_info {
 };
 
 /* we use slightly different resources for grub2 */
-struct resource *create_grub2_resource(void *ctx,
+struct resource *create_grub2_resource(struct discover_boot_option *opt,
 		struct discover_device *orig_device,
 		const char *root, const char *path)
 {
 	struct grub2_resource_info *info;
 	struct resource *res;
 
-	res = talloc(ctx, struct resource);
+	if (strstr(path, "://")) {
+		struct pb_url *url = pb_url_parse(opt, path);
+		if (url)
+			return create_url_resource(opt, url);
+	}
+
+	res = talloc(opt, struct resource);
 
 	if (root) {
 		info = talloc(res, struct grub2_resource_info);
