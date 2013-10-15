@@ -34,6 +34,7 @@ struct client {
 	struct list_item list;
 	struct waiter *waiter;
 	int fd;
+	bool remote_closed;
 };
 
 
@@ -89,9 +90,12 @@ static int client_write_message(
 {
 	int rc;
 
+	if (client->remote_closed)
+		return -1;
+
 	rc = pb_protocol_write_message(client->fd, message);
 	if (rc)
-		talloc_free(client);
+		client->remote_closed = true;
 
 	return rc;
 }
@@ -250,6 +254,9 @@ static int discover_server_process_connection(void *arg)
 
 	client->fd = fd;
 	client->server = server;
+	client->waiter = waiter_register_io(server->waitset, client->fd,
+				WAIT_IN, discover_server_process_message,
+				client);
 
 	/* send sysinfo to client */
 	rc = write_system_info_message(server, client, system_info_get());
@@ -274,10 +281,6 @@ static int discover_server_process_connection(void *arg)
 				return 0;
 		}
 	}
-
-	client->waiter = waiter_register_io(server->waitset, client->fd,
-				WAIT_IN, discover_server_process_message,
-				client);
 
 	return 0;
 }
