@@ -47,9 +47,6 @@ enum pb_nc_sig {
 	pb_removed_sig     = -555,
 };
 
-void nc_start(void);
-void nc_atexit(void);
-
 static inline void nc_flush_keys(void)
 {
 	while (getch() != ERR)

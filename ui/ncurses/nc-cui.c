@@ -40,6 +40,35 @@ static struct cui_opt_data *cod_from_item(struct pmenu_item *item)
 	return item->data;
 }
 
+static void cui_start(void)
+{
+	initscr();			/* Initialize ncurses. */
+	cbreak();			/* Disable line buffering. */
+	noecho();			/* Disable getch() echo. */
+	keypad(stdscr, TRUE);		/* Enable num keypad keys. */
+	nonl();				/* Disable new-line translation. */
+	intrflush(stdscr, FALSE);	/* Disable interrupt flush. */
+	curs_set(0);			/* Make cursor invisible */
+	nodelay(stdscr, TRUE);		/* Enable non-blocking getch() */
+
+	/* We may be operating with an incorrect $TERM type; in this case
+	 * the keymappings will be slightly broken. We want at least
+	 * backspace to work though, so we'll define both DEL and ^H to
+	 * map to backspace */
+	define_key("\x7f", KEY_BACKSPACE);
+	define_key("\x08", KEY_BACKSPACE);
+
+	while (getch() != ERR)		/* flush stdin */
+		(void)0;
+}
+
+static void cui_atexit(void)
+{
+	clear();
+	refresh();
+	endwin();
+}
+
 /**
  * cui_abort - Signal the main cui program loop to exit.
  *
@@ -558,8 +587,8 @@ retry_start:
 		goto fail_client_init;
 	}
 
-	atexit(nc_atexit);
-	nc_start();
+	atexit(cui_atexit);
+	cui_start();
 
 	waiter_register_io(cui->waitset, STDIN_FILENO, WAIT_IN,
 			cui_process_key, cui);
@@ -618,7 +647,7 @@ int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item)
 		}
 	}
 
-	nc_atexit();
+	cui_atexit();
 
 	return cui->abort ? 0 : -1;
 }

@@ -29,35 +29,6 @@
 
 #include "nc-scr.h"
 
-void nc_start(void)
-{
-	initscr();			/* Initialize ncurses. */
-	cbreak();			/* Disable line buffering. */
-	noecho();			/* Disable getch() echo. */
-	keypad(stdscr, TRUE);		/* Enable num keypad keys. */
-	nonl();				/* Disable new-line translation. */
-	intrflush(stdscr, FALSE);	/* Disable interrupt flush. */
-	curs_set(0);			/* Make cursor invisible */
-	nodelay(stdscr, TRUE);		/* Enable non-blocking getch() */
-
-	/* We may be operating with an incorrect $TERM type; in this case
-	 * the keymappings will be slightly broken. We want at least
-	 * backspace to work though, so we'll define both DEL and ^H to
-	 * map to backspace */
-	define_key("\x7f", KEY_BACKSPACE);
-	define_key("\x08", KEY_BACKSPACE);
-
-	while (getch() != ERR)		/* flush stdin */
-		(void)0;
-}
-
-void nc_atexit(void)
-{
-	clear();
-	refresh();
-	endwin();
-}
-
 static void nc_scr_status_clear(struct nc_scr *scr)
 {
 	mvwhline(scr->main_ncw, LINES - nc_scr_pos_status, 0, ' ', COLS);
