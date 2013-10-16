@@ -40,6 +40,20 @@ static void nc_scr_status_draw(struct nc_scr *scr)
 		scr->frame.status);
 }
 
+int nc_scr_post(struct nc_scr *scr)
+{
+	if (scr->post)
+		return scr->post(scr);
+	return 0;
+}
+
+int nc_scr_unpost(struct nc_scr *scr)
+{
+	if (scr->unpost)
+		return scr->unpost(scr);
+	return 0;
+}
+
 void nc_scr_frame_draw(struct nc_scr *scr)
 {
 	int ltitle_len, rtitle_len;

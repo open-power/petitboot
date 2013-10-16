@@ -201,7 +201,7 @@ static void cui_boot_editor_on_exit(struct boot_editor *boot_editor,
 
 		/* Re-attach the items array. */
 		set_menu_items(menu->ncm, menu->items);
-		menu->scr.post(&menu->scr);
+		nc_scr_post(&menu->scr);
 	} else {
 		cod = item->data;
 	}
@@ -249,10 +249,11 @@ struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr)
 	assert(cui->current != scr);
 
 	old = cui->current;
-	old->unpost(old);
+	nc_scr_unpost(old);
 
 	cui->current = scr;
-	cui->current->post(cui->current);
+
+	nc_scr_post(cui->current);
 
 	return old;
 }
@@ -365,7 +366,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	selected = current_item(cui->main->ncm);
 
 	if (cui->current == &cui->main->scr)
-		cui->current->unpost(cui->current);
+		nc_scr_unpost(cui->current);
 
 	/* This disconnects items array from menu. */
 
@@ -421,7 +422,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	set_current_item(cui->main->ncm, selected);
 
 	if (cui->current == &cui->main->scr)
-		cui->current->post(cui->current);
+		nc_scr_post(cui->current);
 
 	return 0;
 }
@@ -442,7 +443,7 @@ static void cui_device_remove(struct device *dev, void *arg)
 	pb_log("%s: %p %s\n", __func__, dev, dev->id);
 
 	if (cui->current == &cui->main->scr)
-		cui->current->unpost(cui->current);
+		nc_scr_unpost(cui->current);
 
 	/* This disconnects items array from menu. */
 
@@ -472,7 +473,7 @@ static void cui_device_remove(struct device *dev, void *arg)
 	}
 
 	if (cui->current == &cui->main->scr)
-		cui->current->post(cui->current);
+		nc_scr_post(cui->current);
 }
 
 static void cui_update_status(struct boot_status *status, void *arg)
@@ -498,7 +499,7 @@ static void cui_update_mm_title(struct cui *cui)
 				" %s", cui->sysinfo->identifier);
 
 	if (cui->current == &cui->main->scr)
-		cui->current->post(cui->current);
+		nc_scr_post(cui->current);
 }
 
 static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
@@ -628,7 +629,7 @@ int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item)
 	cui->current = &cui->main->scr;
 	cui->default_item = default_item;
 
-	cui->current->post(cui->current);
+	nc_scr_post(cui->current);
 
 	while (1) {
 		int result = waiter_poll(cui->waitset);

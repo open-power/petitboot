@@ -162,7 +162,7 @@ int pmenu_item_replace(struct pmenu_item *i, const char *name)
 
 	set_item_userptr(nci, i);
 
-	menu->scr.unpost(&menu->scr);
+	nc_scr_unpost(&menu->scr);
 	set_menu_items(menu->ncm, NULL);
 
 	// FIXME: need to assure item name is a talloc string.
@@ -173,7 +173,7 @@ int pmenu_item_replace(struct pmenu_item *i, const char *name)
 	i->nci = nci;
 
 	set_menu_items(menu->ncm, menu->items);
-	menu->scr.post(&menu->scr);
+	nc_scr_post(&menu->scr);
 
 	return 0;
 }

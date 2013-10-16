@@ -95,4 +95,7 @@ void nc_scr_status_free(struct nc_scr *scr);
 void nc_scr_status_printf(struct nc_scr *scr, const char *format, ...);
 void nc_scr_frame_draw(struct nc_scr *scr);
 
+int nc_scr_post(struct nc_scr *src);
+int nc_scr_unpost(struct nc_scr *src);
+
 #endif
