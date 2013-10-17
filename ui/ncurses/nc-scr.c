@@ -128,7 +128,7 @@ int nc_scr_init(struct nc_scr *scr, enum pb_nc_sig sig, int begin_x,
 
 	scr->sub_ncw = derwin(scr->main_ncw,
 		LINES - nc_scr_frame_lines,
-		COLS - 1 - begin_x,
+		COLS - nc_scr_frame_cols - begin_x,
 		nc_scr_pos_sub,
 		begin_x);
 

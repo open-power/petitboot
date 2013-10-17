@@ -64,6 +64,7 @@ enum nc_scr_pos {
 	nc_scr_pos_status = 1,
 
 	nc_scr_frame_lines = 5,
+	nc_scr_frame_cols = 1,
 };
 
 struct nc_frame {
