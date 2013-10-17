@@ -18,6 +18,15 @@ struct pb_boot_data {
  * @device_add: PB_PROTOCOL_ACTION_ADD event callback.
  * @device_remove: PB_PROTOCOL_ACTION_REMOVE event callback.
  * @cb_arg: Client managed convenience variable passed to callbacks.
+ *
+ * The discover client holds talloc references to the devices (and the
+ * devices' boot options), so callbacks may store boot options and devices
+ * as long as the client remains allocated.
+ *
+ * The boot_status and system_info structs are allocated by the client,
+ * and will be free()ed after the callback is invoked. If the callback
+ * stores these structures for usage beyond the duration of the callback,
+ * it must talloc_steal() them.
  */
 
 struct discover_client_ops {

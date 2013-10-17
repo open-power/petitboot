@@ -115,7 +115,6 @@ static void update_status(struct discover_client *client,
 {
 	if (client->ops.update_status)
 		client->ops.update_status(status, client->ops.cb_arg);
-	talloc_free(status);
 }
 
 static void update_sysinfo(struct discover_client *client,
@@ -123,7 +122,6 @@ static void update_sysinfo(struct discover_client *client,
 {
 	if (client->ops.update_sysinfo)
 		client->ops.update_sysinfo(sysinfo, client->ops.cb_arg);
-	talloc_free(sysinfo);
 }
 
 static void update_config(struct discover_client *client,
@@ -143,16 +141,21 @@ static int discover_client_process(void *arg)
 	struct config *config;
 	struct device *dev;
 	char *dev_id;
+	void *ctx;
 	int rc;
 
-	message = pb_protocol_read_message(client, client->fd);
+	/* We use a temporary context for processing one message; persistent
+	 * data is re-parented to the client in the callbacks. */
+	ctx = talloc_new(client);
+
+	message = pb_protocol_read_message(ctx, client->fd);
 
 	if (!message)
 		return -1;
 
 	switch (message->action) {
 	case PB_PROTOCOL_ACTION_DEVICE_ADD:
-		dev = talloc_zero(client, struct device);
+		dev = talloc_zero(ctx, struct device);
 		list_init(&dev->boot_options);
 
 		rc = pb_protocol_deserialise_device(dev, message);
@@ -164,7 +167,7 @@ static int discover_client_process(void *arg)
 		device_add(client, dev);
 		break;
 	case PB_PROTOCOL_ACTION_BOOT_OPTION_ADD:
-		opt = talloc_zero(client, struct boot_option);
+		opt = talloc_zero(ctx, struct boot_option);
 
 		rc = pb_protocol_deserialise_boot_option(opt, message);
 		if (rc) {
@@ -175,7 +178,7 @@ static int discover_client_process(void *arg)
 		boot_option_add(client, opt);
 		break;
 	case PB_PROTOCOL_ACTION_DEVICE_REMOVE:
-		dev_id = pb_protocol_deserialise_string(client, message);
+		dev_id = pb_protocol_deserialise_string(ctx, message);
 		if (!dev_id) {
 			pb_log("%s: no device id?\n", __func__);
 			return 0;
@@ -183,7 +186,7 @@ static int discover_client_process(void *arg)
 		device_remove(client, dev_id);
 		break;
 	case PB_PROTOCOL_ACTION_STATUS:
-		status = talloc_zero(client, struct boot_status);
+		status = talloc_zero(ctx, struct boot_status);
 
 		rc = pb_protocol_deserialise_boot_status(status, message);
 		if (rc) {
@@ -193,7 +196,7 @@ static int discover_client_process(void *arg)
 		update_status(client, status);
 		break;
 	case PB_PROTOCOL_ACTION_SYSTEM_INFO:
-		sysinfo = talloc_zero(client, struct system_info);
+		sysinfo = talloc_zero(ctx, struct system_info);
 
 		rc = pb_protocol_deserialise_system_info(sysinfo, message);
 		if (rc) {
@@ -216,6 +219,7 @@ static int discover_client_process(void *arg)
 		pb_log("%s: unknown action %d\n", __func__, message->action);
 	}
 
+	talloc_free(ctx);
 
 	return 0;
 }
