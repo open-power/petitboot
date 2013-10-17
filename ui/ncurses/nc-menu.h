@@ -19,6 +19,8 @@
 #if !defined(_PB_NC_MENU_H)
 #define _PB_NC_MENU_H
 
+#include <assert.h>
+
 #include <linux/input.h> /* This must be included before ncurses.h */
 #if defined HAVE_NCURSESW_MENU_H
 #  include <ncursesw/menu.h>
