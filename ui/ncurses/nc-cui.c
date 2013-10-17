@@ -34,6 +34,7 @@
 #include "process/process.h"
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
+#include "nc-sysinfo.h"
 
 static struct cui_opt_data *cod_from_item(struct pmenu_item *item)
 {
@@ -234,6 +235,20 @@ void cui_item_new(struct pmenu *menu)
 	boot_editor = boot_editor_init(menu, NULL,
 			cui_boot_editor_on_exit);
 	cui_set_current(cui, &boot_editor->scr);
+}
+
+static void cui_sysinfo_exit(struct cui *cui)
+{
+	cui_set_current(cui, &cui->main->scr);
+	talloc_free(cui->sysinfo_screen);
+	cui->sysinfo_screen = NULL;
+}
+
+void cui_show_sysinfo(struct cui *cui)
+{
+	cui->sysinfo_screen = sysinfo_screen_init(cui, cui->sysinfo,
+			cui_sysinfo_exit);
+	cui_set_current(cui, sysinfo_screen_scr(cui->sysinfo_screen));
 }
 
 /**
@@ -506,6 +521,12 @@ static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
 	cui->sysinfo = talloc_steal(cui, sysinfo);
+
+	/* if we're currently displaying the system info screen, inform it
+	 * of the updated information. */
+	if (cui->sysinfo_screen)
+		sysinfo_screen_update(cui->sysinfo_screen, sysinfo);
+
 	cui_update_mm_title(cui);
 }
 

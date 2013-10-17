@@ -27,6 +27,7 @@
 #include "log/log.h"
 #include "talloc/talloc.h"
 #include "ui/common/ui-system.h"
+#include "nc-cui.h"
 #include "nc-menu.h"
 
 /**
@@ -242,6 +243,8 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 		if (item->on_execute)
 			item->on_execute(item);
 		break;
+	case 'i':
+		cui_show_sysinfo(cui_from_arg(scr->ui_ctx));
 	default:
 		menu_driver(menu->ncm, key);
 		break;
@@ -377,6 +380,8 @@ int pmenu_setup(struct pmenu *menu)
 
 	/* Makes menu scrollable. */
 	set_menu_format(menu->ncm, LINES - nc_scr_frame_lines, 1);
+
+	set_menu_grey(menu->ncm, A_NORMAL);
 
 	return 0;
 }

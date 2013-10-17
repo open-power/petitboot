@@ -56,6 +56,7 @@ struct cui {
 	struct waitset *waitset;
 	struct discover_client *client;
 	struct system_info *sysinfo;
+	struct sysinfo_screen *sysinfo_screen;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
@@ -69,6 +70,7 @@ struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr);
 int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item);
 void cui_item_edit(struct pmenu_item *item);
 void cui_item_new(struct pmenu *menu);
+void cui_show_sysinfo(struct cui *cui);
 
 /* convenience routines */
 

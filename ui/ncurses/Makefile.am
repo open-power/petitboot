@@ -36,7 +36,9 @@ libpbnc_la_SOURCES = \
 	nc-menu.c \
 	nc-menu.h \
 	nc-scr.c \
-	nc-scr.h
+	nc-scr.h \
+	nc-sysinfo.c \
+	nc-sysinfo.h
 
 sbin_PROGRAMS = petitboot-nc
 
