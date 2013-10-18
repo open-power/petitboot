@@ -368,7 +368,7 @@ static int default_option_priority(struct discover_boot_option *opt)
 {
 	const struct config *config;
 	struct boot_priority *prio;
-	int i;
+	unsigned int i;
 
 	config = config_get();
 

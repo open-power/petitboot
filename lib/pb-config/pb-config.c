@@ -32,7 +32,7 @@ void config_set_defaults(struct config *config)
 void dump_config(struct config *config);
 void dump_config(struct config *config)
 {
-	int i;
+	unsigned int i;
 
 	pb_log("configuration:\n");
 

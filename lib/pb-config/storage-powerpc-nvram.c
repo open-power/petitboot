@@ -439,8 +439,8 @@ static char *dns_config_str(void *ctx, const char **dns_servers, int n)
 static void update_network_config(struct powerpc_nvram_storage *nv,
 	struct config *config)
 {
+	unsigned int i;
 	char *val;
-	int i;
 
 	val = talloc_strdup(nv, "");
 

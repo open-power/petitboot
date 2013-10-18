@@ -69,7 +69,7 @@ static const struct interface_config *find_config_by_hwaddr(
 		uint8_t *hwaddr)
 {
 	const struct config *config;
-	int i;
+	unsigned int i;
 
 	config = config_get();
 	if (!config)
@@ -484,7 +484,8 @@ retry:
 static void network_init_dns(struct network *network)
 {
 	const struct config *config;
-	int i, rc, len;
+	unsigned int i;
+	int rc, len;
 	bool modified;
 	char *buf;
 

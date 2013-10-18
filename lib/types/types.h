@@ -94,9 +94,9 @@ struct interface_config {
 
 struct network_config {
 	struct interface_config	**interfaces;
-	int			n_interfaces;
+	unsigned int		n_interfaces;
 	const char		**dns_servers;
-	int			n_dns_servers;
+	unsigned int		n_dns_servers;
 };
 
 struct boot_priority {
@@ -105,10 +105,10 @@ struct boot_priority {
 
 struct config {
 	bool			autoboot_enabled;
-	int			autoboot_timeout_sec;
+	unsigned int		autoboot_timeout_sec;
 	struct network_config	network;
 	struct boot_priority	*boot_priorities;
-	int			n_boot_priorities;
+	unsigned int		n_boot_priorities;
 };
 
 #endif /* _TYPES_H */
