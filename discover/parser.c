@@ -171,12 +171,23 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 	}
 }
 
+static void *parsers_ctx;
+
 void __register_parser(struct parser *parser)
 {
-	struct p_item* i = talloc(NULL, struct p_item);
+	struct p_item *i;
 
+	if (!parsers_ctx)
+		parsers_ctx = talloc_new(NULL);
+
+	i = talloc(parsers_ctx, struct p_item);
 	i->parser = parser;
 	list_add(&parsers, &i->list);
+}
+
+static __attribute__((destructor)) void cleanup_parsers(void)
+{
+	talloc_free(parsers_ctx);
 }
 
 void parser_init(void)
