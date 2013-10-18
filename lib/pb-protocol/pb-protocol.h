@@ -20,6 +20,7 @@ enum pb_protocol_action {
 	PB_PROTOCOL_ACTION_STATUS		= 0x6,
 	PB_PROTOCOL_ACTION_CANCEL_DEFAULT	= 0x7,
 	PB_PROTOCOL_ACTION_SYSTEM_INFO		= 0x8,
+	PB_PROTOCOL_ACTION_CONFIG		= 0x9,
 };
 
 struct pb_protocol_message {
@@ -35,6 +36,7 @@ int pb_protocol_boot_option_len(const struct boot_option *opt);
 int pb_protocol_boot_len(const struct boot_command *boot);
 int pb_protocol_boot_status_len(const struct boot_status *status);
 int pb_protocol_system_info_len(const struct system_info *sysinfo);
+int pb_protocol_config_len(const struct config *config);
 int pb_protocol_device_cmp(const struct device *a, const struct device *b);
 
 int pb_protocol_boot_option_cmp(const struct boot_option *a,
@@ -53,6 +55,8 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 int pb_protocol_serialise_boot_status(const struct boot_status *status,
 		char *buf, int buf_len);
 int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
+		char *buf, int buf_len);
+int pb_protocol_serialise_config(const struct config *config,
 		char *buf, int buf_len);
 
 int pb_protocol_write_message(int fd, struct pb_protocol_message *message);
@@ -77,4 +81,6 @@ int pb_protocol_deserialise_boot_status(struct boot_status *status,
 int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 		const struct pb_protocol_message *message);
 
+int pb_protocol_deserialise_config(struct config *config,
+		const struct pb_protocol_message *message);
 #endif /* _PB_PROTOCOL_H */

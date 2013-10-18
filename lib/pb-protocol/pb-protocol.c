@@ -234,6 +234,48 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 	return len;
 }
 
+static int pb_protocol_interface_config_len(struct interface_config *conf)
+{
+	unsigned int len;
+
+	len =	sizeof(conf->hwaddr) +
+		4 /* conf->ignore */;
+
+	if (conf->ignore)
+		return len;
+
+	len += 4 /* conf->method */;
+
+	if (conf->method == CONFIG_METHOD_STATIC) {
+		len += 4 + optional_strlen(conf->static_config.address);
+		len += 4 + optional_strlen(conf->static_config.gateway);
+	}
+
+	return len;
+}
+
+int pb_protocol_config_len(const struct config *config)
+{
+	unsigned int i, len;
+
+	len =	4 /* config->autoboot_enabled */ +
+		4 /* config->autoboot_timeout_sec */;
+
+	len += 4;
+	for (i = 0; i < config->network.n_interfaces; i++)
+		len += pb_protocol_interface_config_len(
+				config->network.interfaces[i]);
+
+	len += 4;
+	for (i = 0; i < config->network.n_dns_servers; i++)
+		len += 4 + optional_strlen(config->network.dns_servers[i]);
+
+	len += 4;
+	len += config->n_boot_priorities * 4;
+
+	return len;
+}
+
 int pb_protocol_serialise_device(const struct device *dev,
 		char *buf, int buf_len)
 {
@@ -335,6 +377,73 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 		pos += if_info->hwaddr_size;
 
 		pos += pb_protocol_serialise_string(pos, if_info->name);
+	}
+
+	assert(pos <= buf + buf_len);
+	(void)buf_len;
+
+	return 0;
+}
+
+static int pb_protocol_serialise_config_interface(char *buf,
+		struct interface_config *conf)
+{
+	char *pos = buf;
+
+	memcpy(pos, conf->hwaddr, sizeof(conf->hwaddr));
+	pos += sizeof(conf->hwaddr);
+
+	*(uint32_t *)pos = conf->ignore;
+	pos += 4;
+
+	if (conf->ignore)
+		return pos - buf;
+
+	*(uint32_t *)pos = __cpu_to_be32(conf->method);
+	pos += 4;
+
+	if (conf->method == CONFIG_METHOD_STATIC) {
+		pos += pb_protocol_serialise_string(pos,
+				conf->static_config.address);
+		pos += pb_protocol_serialise_string(pos,
+				conf->static_config.gateway);
+	}
+
+	return pos - buf;
+}
+
+int pb_protocol_serialise_config(const struct config *config,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
+	unsigned int i;
+
+	*(uint32_t *)pos = config->autoboot_enabled;
+	pos += 4;
+
+	*(uint32_t *)pos = __cpu_to_be32(config->autoboot_timeout_sec);
+	pos += 4;
+
+	*(uint32_t *)pos = __cpu_to_be32(config->network.n_interfaces);
+	pos += 4;
+	for (i = 0; i < config->network.n_interfaces; i++) {
+		struct interface_config *iface =
+			config->network.interfaces[i];
+		pos += pb_protocol_serialise_config_interface(pos, iface);
+	}
+
+	*(uint32_t *)pos = __cpu_to_be32(config->network.n_dns_servers);
+	pos += 4;
+	for (i = 0; i < config->network.n_dns_servers; i++) {
+		pos += pb_protocol_serialise_string(pos,
+				config->network.dns_servers[i]);
+	}
+
+	*(uint32_t *)pos = __cpu_to_be32(config->n_boot_priorities);
+	pos += 4;
+	for (i = 0; i < config->n_boot_priorities; i++) {
+		*(uint32_t *)pos = __cpu_to_be32(config->boot_priorities[i].type);
+		pos += 4;
 	}
 
 	assert(pos <= buf + buf_len);
@@ -639,6 +748,100 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 			goto out;
 
 		sysinfo->interfaces[i] = if_info;
+	}
+
+	rc = 0;
+
+out:
+	return rc;
+}
+
+static int pb_protocol_deserialise_config_interface(const char **buf,
+		unsigned int *len, struct interface_config *iface)
+{
+	unsigned int tmp;
+
+	if (*len < sizeof(iface->hwaddr))
+		return -1;
+
+	memcpy(iface->hwaddr, *buf, sizeof(iface->hwaddr));
+	*buf += sizeof(iface->hwaddr);
+	*len -= sizeof(iface->hwaddr);
+
+	if (read_u32(buf, len, &tmp))
+		return -1;
+	iface->ignore = !!tmp;
+
+	if (iface->ignore)
+		return 0;
+
+	if (read_u32(buf, len, &iface->method))
+		return -1;
+
+	if (iface->method == CONFIG_METHOD_STATIC) {
+		if (read_string(iface, buf, len, &iface->static_config.address))
+			return -1;
+
+		if (read_string(iface, buf, len, &iface->static_config.gateway))
+			return -1;
+	}
+
+	return 0;
+}
+
+int pb_protocol_deserialise_config(struct config *config,
+		const struct pb_protocol_message *message)
+{
+	unsigned int len, i, tmp;
+	const char *pos;
+	int rc = -1;
+
+	len = message->payload_len;
+	pos = message->payload;
+
+	if (read_u32(&pos, &len, &tmp))
+		goto out;
+	config->autoboot_enabled = !!tmp;
+
+	if (read_u32(&pos, &len, &config->autoboot_timeout_sec))
+		goto out;
+
+	if (read_u32(&pos, &len, &config->network.n_interfaces))
+		goto out;
+
+	config->network.interfaces = talloc_array(config,
+			struct interface_config *, config->network.n_interfaces);
+
+	for (i = 0; i < config->network.n_interfaces; i++) {
+		struct interface_config *iface = talloc_zero(
+				config->network.interfaces,
+				struct interface_config);
+		if (pb_protocol_deserialise_config_interface(&pos, &len, iface))
+			goto out;
+		config->network.interfaces[i] = iface;
+	}
+
+	if (read_u32(&pos, &len, &config->network.n_dns_servers))
+		goto out;
+	config->network.dns_servers = talloc_array(config, const char *,
+			config->network.n_dns_servers);
+
+	for (i = 0; i < config->network.n_dns_servers; i++) {
+		char *tmp;
+		if (read_string(config->network.dns_servers, &pos, &len, &tmp))
+			goto out;
+		config->network.dns_servers[i] = tmp;
+	}
+
+	if (read_u32(&pos, &len, &config->n_boot_priorities))
+		goto out;
+	config->boot_priorities = talloc_array(config, struct boot_priority,
+			config->n_boot_priorities);
+
+	for (i = 0; i < config->n_boot_priorities; i++) {
+		if (read_u32(&pos, &len, &tmp))
+			goto out;
+		config->boot_priorities[i].type = tmp;
 	}
 
 	rc = 0;
