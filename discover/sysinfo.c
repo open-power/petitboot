@@ -87,7 +87,7 @@ static void system_info_set_identifier(struct system_info *info)
 
 void system_info_init(struct discover_server *s)
 {
-	sysinfo = talloc_zero(server, struct system_info);
 	server = s;
+	sysinfo = talloc_zero(server, struct system_info);
 	system_info_set_identifier(sysinfo);
 }
