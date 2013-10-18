@@ -530,12 +530,19 @@ static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
 	cui_update_mm_title(cui);
 }
 
+static void cui_update_config(struct config *config, void *arg)
+{
+	struct cui *cui = cui_from_arg(arg);
+	cui->config = talloc_steal(cui, config);
+}
+
 static struct discover_client_ops cui_client_ops = {
 	.device_add = NULL,
 	.boot_option_add = cui_boot_option_add,
 	.device_remove = cui_device_remove,
 	.update_status = cui_update_status,
 	.update_sysinfo = cui_update_sysinfo,
+	.update_config = cui_update_config,
 };
 
 /**

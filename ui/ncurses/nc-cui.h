@@ -57,6 +57,7 @@ struct cui {
 	struct discover_client *client;
 	struct system_info *sysinfo;
 	struct sysinfo_screen *sysinfo_screen;
+	struct config *config;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
