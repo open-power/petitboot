@@ -13,6 +13,7 @@
 #include <log/log.h>
 #include <pb-config/pb-config.h>
 #include <process/process.h>
+#include <talloc/talloc.h>
 
 #include "udev.h"
 #include "user-event.h"
@@ -200,10 +201,16 @@ int main(int argc, char *argv[])
 	}
 
 	device_handler_destroy(handler);
+	user_event_destroy(uev);
 	udev_destroy(udev);
+	discover_server_destroy(server);
 	config_fini();
+	talloc_free(waitset);
 
 	pb_log("--- end ---\n");
+
+	if (log != stderr)
+		fclose(log);
 
 	return EXIT_SUCCESS;
 }
