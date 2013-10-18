@@ -7,6 +7,7 @@ struct config;
 
 struct config_storage {
 	int	(*load)(struct config_storage *st, struct config *config);
+	int	(*save)(struct config_storage *st, struct config *config);
 };
 
 struct config_storage *create_powerpc_nvram_storage(void *ctx);

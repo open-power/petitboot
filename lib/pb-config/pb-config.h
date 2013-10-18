@@ -47,8 +47,12 @@ struct config {
 
 int config_init(void *ctx);
 const struct config *config_get(void);
+int config_set(struct config *config);
 void config_set_autoboot(bool autoboot_enabled);
 int config_fini(void);
+
+/* for use by the storage backends */
+void config_set_defaults(struct config *config);
 
 #endif /* CONFIGURATION_H */
 

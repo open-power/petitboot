@@ -7,11 +7,12 @@
 
 #include "storage.h"
 
+void				*config_ctx;
 static struct config		*config;
 static struct config_storage	*storage;
 
 
-static void config_set_defaults(struct config *config)
+void config_set_defaults(struct config *config)
 {
 	config->autoboot_enabled = true;
 	config->autoboot_timeout_sec = 10;
@@ -28,7 +29,8 @@ static void config_set_defaults(struct config *config)
 
 }
 
-static void dump_config(struct config *config)
+void dump_config(struct config *config);
+void dump_config(struct config *config)
 {
 	int i;
 
@@ -73,7 +75,9 @@ static void dump_config(struct config *config)
 
 int config_init(void *ctx)
 {
-	config = talloc(ctx, struct config);
+	config_ctx = talloc_new(ctx);
+
+	config = talloc(config_ctx, struct config);
 	config_set_defaults(config);
 
 	storage = create_powerpc_nvram_storage(config);
@@ -83,6 +87,29 @@ int config_init(void *ctx)
 	dump_config(config);
 
 	return 0;
+}
+
+int config_set(struct config *newconfig)
+{
+	int rc;
+
+	if (!storage || !storage->save)
+		return -1;
+
+	if (newconfig == config)
+		return 0;
+
+	pb_log("new configuration data received\n");
+	dump_config(config);
+
+	rc = storage->save(storage, config);
+
+	if (!rc)
+		config = talloc_steal(config_ctx, newconfig);
+	else
+		pb_log("error saving new configuration; changes lost\n");
+
+	return rc;
 }
 
 /* A non-exported function to allow the test infrastructure to initialise
@@ -112,6 +139,6 @@ void config_set_autoboot(bool autoboot_enabled)
 
 int config_fini(void)
 {
-	talloc_free(config);
+	talloc_free(config_ctx);
 	return 0;
 }
