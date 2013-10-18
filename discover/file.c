@@ -103,7 +103,7 @@ int replace_file(const char *filename, char *buf, int len)
 	fd = mkstemp(tempfile);
 	umask(oldmask);
 	if (fd < 0) {
-		free(tempfile);
+		talloc_free(tempfile);
 		return fd;
 	}
 
