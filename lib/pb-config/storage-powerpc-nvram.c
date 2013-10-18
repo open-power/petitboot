@@ -151,6 +151,51 @@ static int parse_nvram(struct powerpc_nvram_storage *nv)
 	return rc;
 }
 
+static int write_nvram(struct powerpc_nvram_storage *nv)
+{
+	struct process *process;
+	struct param *param;
+	const char *argv[6];
+	int rc;
+
+	argv[0] = "nvram";
+	argv[1] = "--update-config";
+	argv[2] = NULL;
+	argv[3] = "--partition";
+	argv[4] = partition;
+	argv[5] = NULL;
+
+	process = process_create(nv);
+	process->path = "nvram";
+	process->argv = argv;
+
+	list_for_each_entry(&nv->params, param, list) {
+		char *paramstr;
+
+		if (!param->modified)
+			continue;
+
+		paramstr = talloc_asprintf(nv, "%s=%s",
+				param->name, param->value);
+		argv[2] = paramstr;
+
+		rc = process_run_sync(process);
+
+		talloc_free(paramstr);
+
+		if (rc || !WIFEXITED(process->exit_status)
+				|| WEXITSTATUS(process->exit_status)) {
+			rc = -1;
+			pb_log("nvram update process returned "
+					"non-zero exit status\n");
+			break;
+		}
+	}
+
+	process_release(process);
+	return rc;
+}
+
 static const char *get_param(struct powerpc_nvram_storage *nv,
 		const char *name)
 {
@@ -160,6 +205,32 @@ static const char *get_param(struct powerpc_nvram_storage *nv,
 		if (!strcmp(param->name, name))
 			return param->value;
 	return NULL;
+}
+
+static void set_param(struct powerpc_nvram_storage *nv, const char *name,
+		const char *value)
+{
+	struct param *param;
+
+	list_for_each_entry(&nv->params, param, list) {
+		if (strcmp(param->name, name))
+			continue;
+
+		if (!strcmp(param->value, value))
+			return;
+
+		talloc_free(param->value);
+		param->value = talloc_strdup(param, value);
+		param->modified = true;
+		return;
+	}
+
+
+	param = talloc(nv, struct param);
+	param->modified = true;
+	param->name = talloc_strdup(nv, name);
+	param->value = talloc_strdup(nv, value);
+	list_add(&nv->params, &param->list);
 }
 
 static int parse_hwaddr(struct interface_config *ifconf, char *str)
@@ -324,6 +395,98 @@ static void populate_config(struct powerpc_nvram_storage *nv,
 	populate_network_config(nv, config);
 }
 
+static char *iface_config_str(void *ctx, struct interface_config *config)
+{
+	char *str;
+
+	/* todo: HWADDR size is hardcoded as 6, but we may need to handle
+	 * different hardware address formats */
+	str = talloc_asprintf(ctx, "%02x:%02x:%02x:%02x:%02x:%02x,",
+			config->hwaddr[0], config->hwaddr[1],
+			config->hwaddr[2], config->hwaddr[3],
+			config->hwaddr[4], config->hwaddr[5]);
+
+	if (config->ignore) {
+		str = talloc_asprintf_append(str, "ignore");
+
+	} else if (config->method == CONFIG_METHOD_DHCP) {
+		str = talloc_asprintf_append(str, "dhcp");
+
+	} else if (config->method == CONFIG_METHOD_STATIC) {
+		str = talloc_asprintf_append(str, "static,%s%s%s",
+				config->static_config.address,
+				config->static_config.gateway ? "," : "",
+				config->static_config.gateway ?: "");
+	}
+	return str;
+}
+
+static char *dns_config_str(void *ctx, const char **dns_servers, int n)
+{
+	char *str;
+	int i;
+
+	str = talloc_strdup(ctx, "dns=");
+	for (i = 0; i < n; i++) {
+		str = talloc_asprintf_append(str, "%s%s",
+				i == 0 ? "" : ",",
+				dns_servers[i]);
+	}
+
+	return str;
+}
+
+static void update_network_config(struct powerpc_nvram_storage *nv,
+	struct config *config)
+{
+	char *val;
+	int i;
+
+	val = talloc_strdup(nv, "");
+
+	for (i = 0; i < config->network.n_interfaces; i++) {
+		char *iface_str = iface_config_str(nv,
+					config->network.interfaces[i]);
+		val = talloc_asprintf_append(val, "%s%s",
+				*val == '\0' ? "" : " ", iface_str);
+		talloc_free(iface_str);
+	}
+
+	if (config->network.n_dns_servers) {
+		char *dns_str = dns_config_str(nv, config->network.dns_servers,
+						config->network.n_dns_servers);
+		val = talloc_asprintf_append(val, "%s%s",
+				*val == '\0' ? "" : " ", dns_str);
+		talloc_free(dns_str);
+	}
+
+	set_param(nv, "petitboot,network", val);
+
+	talloc_free(val);
+}
+
+static int update_config(struct powerpc_nvram_storage *nv,
+		struct config *config, struct config *defaults)
+{
+	char *val;
+
+	if (config->autoboot_enabled != defaults->autoboot_enabled) {
+		val = config->autoboot_enabled ? "true" : "false";
+		set_param(nv, "auto-boot?", val);
+	}
+
+	if (config->autoboot_timeout_sec != defaults->autoboot_timeout_sec) {
+		val = talloc_asprintf(nv, "%d", config->autoboot_timeout_sec);
+		set_param(nv, "petitboot,timeout", val);
+		talloc_free(val);
+	}
+
+	if (config->network.n_interfaces)
+		update_network_config(nv, config);
+
+	return write_nvram(nv);
+}
+
 static int load(struct config_storage *st, struct config *config)
 {
 	struct powerpc_nvram_storage *nv = to_powerpc_nvram_storage(st);
@@ -338,12 +501,28 @@ static int load(struct config_storage *st, struct config *config)
 	return 0;
 }
 
+static int save(struct config_storage *st, struct config *config)
+{
+	struct powerpc_nvram_storage *nv = to_powerpc_nvram_storage(st);
+	struct config *defaults;
+	int rc;
+
+	defaults = talloc_zero(nv, struct config);
+	config_set_defaults(defaults);
+
+	rc = update_config(nv, config, defaults);
+
+	talloc_free(defaults);
+	return rc;
+}
+
 struct config_storage *create_powerpc_nvram_storage(void *ctx)
 {
 	struct powerpc_nvram_storage *nv;
 
 	nv = talloc(ctx, struct powerpc_nvram_storage);
 	nv->storage.load = load;
+	nv->storage.save = save;
 	list_init(&nv->params);
 
 	return &nv->storage;
