@@ -10,6 +10,7 @@
 #include <sys/un.h>
 #include <asm/byteorder.h>
 
+#include <pb-config/pb-config.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
 #include <log/log.h>
@@ -190,6 +191,24 @@ static int write_system_info_message(struct discover_server *server,
 	return client_write_message(server, client, message);
 }
 
+static int write_config_message(struct discover_server *server,
+		struct client *client, const struct config *config)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_config_len(config);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_CONFIG, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_config(config, message->payload, len);
+
+	return client_write_message(server, client, message);
+}
+
 static int discover_server_process_message(void *arg)
 {
 	struct pb_protocol_message *message;
@@ -263,6 +282,11 @@ static int discover_server_process_connection(void *arg)
 	if (rc)
 		return 0;
 
+	/* send config to client */
+	rc = write_config_message(server, client, config_get());
+	if (rc)
+		return 0;
+
 	/* send existing devices to client */
 	n_devices = device_handler_get_device_count(server->device_handler);
 	for (i = 0; i < n_devices; i++) {
@@ -330,6 +354,15 @@ void discover_server_notify_system_info(struct discover_server *server,
 
 	list_for_each_entry(&server->clients, client, list)
 		write_system_info_message(server, client, sysinfo);
+}
+
+void discover_server_notify_config(struct discover_server *server,
+		const struct config *config)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_config_message(server, client, config);
 }
 
 void discover_server_set_device_source(struct discover_server *server,

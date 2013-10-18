@@ -27,6 +27,7 @@ struct discover_client_ops {
 	void (*device_remove)(struct device *device, void *arg);
 	void (*update_status)(struct boot_status *status, void *arg);
 	void (*update_sysinfo)(struct system_info *sysinfo, void *arg);
+	void (*update_config)(struct config *sysinfo, void *arg);
 	void *cb_arg;
 };
 

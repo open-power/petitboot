@@ -36,6 +36,13 @@ void discover_server_notify_boot_status(struct discover_server *server,
 	(void)status;
 }
 
+void discover_server_notify_config(struct discover_server *server,
+		struct config *config)
+{
+	(void)server;
+	(void)config;
+}
+
 void parser_init(void)
 {
 }

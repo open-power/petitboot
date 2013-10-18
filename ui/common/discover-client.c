@@ -126,6 +126,13 @@ static void update_sysinfo(struct discover_client *client,
 	talloc_free(sysinfo);
 }
 
+static void update_config(struct discover_client *client,
+		struct config *config)
+{
+	if (client->ops.update_config)
+		client->ops.update_config(config, client->ops.cb_arg);
+}
+
 static int discover_client_process(void *arg)
 {
 	struct discover_client *client = arg;
@@ -133,6 +140,7 @@ static int discover_client_process(void *arg)
 	struct system_info *sysinfo;
 	struct boot_status *status;
 	struct boot_option *opt;
+	struct config *config;
 	struct device *dev;
 	char *dev_id;
 	int rc;
@@ -193,6 +201,16 @@ static int discover_client_process(void *arg)
 			return 0;
 		}
 		update_sysinfo(client, sysinfo);
+		break;
+	case PB_PROTOCOL_ACTION_CONFIG:
+		config = talloc_zero(ctx, struct config);
+
+		rc = pb_protocol_deserialise_config(config, message);
+		if (rc) {
+			pb_log("%s: invalid config message?\n", __func__);
+			return 0;
+		}
+		update_config(client, config);
 		break;
 	default:
 		pb_log("%s: unknown action %d\n", __func__, message->action);
