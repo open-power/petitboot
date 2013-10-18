@@ -40,22 +40,34 @@ struct test_storage {
 	struct config_storage	storage;
 	struct param		*params;
 	int			n_params;
+	struct config		*config;
 };
 
-static int load(struct config_storage *st __attribute__((unused)),
-		struct config *config)
+#define to_test_storage(st) container_of(st, struct test_storage, storage)
+
+static int load(struct config_storage *st, struct config *config)
 {
-	memcpy(config, &test_config, sizeof(test_config));
+	struct test_storage *ts = to_test_storage(st);
+	memcpy(config, ts->config, sizeof(test_config));
+	return 0;
+}
+
+static int save(struct config_storage *st, struct config *newconfig)
+{
+	struct test_storage *ts = to_test_storage(st);
+	ts->config = newconfig;
 	return 0;
 }
 
 static struct test_storage st = {
 	.storage = {
 		.load  = load,
+		.save = save,
 	},
 };
 
 struct config_storage *create_test_storage(void *ctx __attribute__((unused)))
 {
+	st.config = &test_config;
 	return &st.storage;
 }
