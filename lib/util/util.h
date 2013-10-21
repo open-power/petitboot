@@ -30,5 +30,19 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+#define min(a,b) ({					\
+		typeof(a) _min_a = (a);			\
+		typeof(b) _min_b = (b);			\
+		(void)(&_min_a == &_min_b);		\
+		_min_a < _min_b ? _min_a : _min_b;	\
+		})
+
+#define max(a,b) ({					\
+		typeof(a) _max_a = (a);			\
+		typeof(b) _max_b = (b);			\
+		(void)(&_max_a == &_max_b);		\
+		_max_a > _max_b ? _max_a : _max_b;	\
+		})
+
 #endif /* UTIL_H */
 
