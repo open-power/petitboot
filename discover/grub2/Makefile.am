@@ -38,7 +38,8 @@ grub2_parser_ro_SOURCES = \
 	script.c \
 	parser.c
 
-BUILT_SOURCES = parser.h lexer.h
+BUILT_SOURCES = parser.h lexer.h lexer.c lexer.h
+CLEANFILES = lexer.c lexer.h
 
 # ylwrap doesn't handle flex header files well; use our own rule here.
 lexer.h lexer.c: lexer.l
