@@ -26,6 +26,7 @@
 #include "log/log.h"
 #include "talloc/talloc.h"
 #include "nc-boot-editor.h"
+#include "nc-widgets.h"
 
 static struct boot_editor *boot_editor_from_scr(struct nc_scr *scr)
 {
@@ -46,88 +47,12 @@ static struct boot_editor *boot_editor_from_arg(void *arg)
 	return boot_editor;
 }
 
-/**
- * boot_editor_move_cursor - Move the cursor, setting correct attributes.
- * @req: An ncurses request or char to send to form_driver().
- */
-
-static int boot_editor_move_cursor(struct boot_editor *boot_editor, int req)
-{
-	int result;
-
-	wchgat(boot_editor->scr.sub_ncw, 1,
-			boot_editor_attr_field_selected, 0, 0);
-	result = form_driver(boot_editor->ncf, req);
-	wchgat(boot_editor->scr.sub_ncw, 1, boot_editor->attr_cursor, 0, 0);
-	wrefresh(boot_editor->scr.main_ncw);
-	return result;
-}
-
-/**
- * boot_editor_insert_mode_set - Set the insert mode.
- */
-
-static void boot_editor_insert_mode_set(struct boot_editor *boot_editor,
-		int req)
-{
-	switch (req) {
-	case REQ_INS_MODE:
-		boot_editor->attr_cursor = boot_editor_attr_cursor_ins;
-		break;
-	case REQ_OVL_MODE:
-		boot_editor->attr_cursor = boot_editor_attr_cursor_ovl;
-		break;
-	default:
-		assert(0 && "bad req");
-		break;
-	}
-	boot_editor_move_cursor(boot_editor, req);
-}
-
-/**
- * boot_editor_insert_mode_tog - Toggle the insert mode.
- */
-
-static void boot_editor_insert_mode_tog(struct boot_editor *boot_editor)
-{
-	if (boot_editor->attr_cursor == boot_editor_attr_cursor_ins)
-		boot_editor_insert_mode_set(boot_editor, REQ_OVL_MODE);
-	else
-		boot_editor_insert_mode_set(boot_editor, REQ_INS_MODE);
-}
-
-/**
- * boot_editor_move_field - Move selected field, setting correct attributes.
- * @req: An ncurses request to send to form_driver().
- */
-
-static int boot_editor_move_field(struct boot_editor *boot_editor, int req)
-{
-	int result;
-
-	set_field_back(current_field(boot_editor->ncf),
-			boot_editor_attr_field_normal);
-
-	result = form_driver(boot_editor->ncf, req);
-
-	set_field_back(current_field(boot_editor->ncf),
-			boot_editor_attr_field_selected);
-
-	boot_editor_move_cursor(boot_editor, REQ_END_FIELD);
-	return result;
-}
-
 static int boot_editor_post(struct nc_scr *scr)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
 
-	post_form(boot_editor->ncf);
-
+	widgetset_post(boot_editor->widgetset);
 	nc_scr_frame_draw(scr);
-	boot_editor_move_field(boot_editor, REQ_FIRST_FIELD);
-	boot_editor_move_field(boot_editor, REQ_END_FIELD);
-	boot_editor_insert_mode_set(boot_editor, REQ_INS_MODE);
-
 	redrawwin(boot_editor->scr.main_ncw);
 	wrefresh(boot_editor->scr.main_ncw);
 
@@ -136,7 +61,8 @@ static int boot_editor_post(struct nc_scr *scr)
 
 static int boot_editor_unpost(struct nc_scr *scr)
 {
-	return unpost_form(boot_editor_from_scr(scr)->ncf);
+	widgetset_unpost(boot_editor_from_scr(scr)->widgetset);
+	return 0;
 }
 
 static void boot_editor_resize(struct nc_scr *scr)
@@ -144,29 +70,6 @@ static void boot_editor_resize(struct nc_scr *scr)
 	/* FIXME: forms can't be resized, need to recreate here */
 	boot_editor_unpost(scr);
 	boot_editor_post(scr);
-}
-
-/**
- * boot_editor_chomp - Eat leading and trailing WS.
- */
-
-static char *boot_editor_chomp(char *s)
-{
-	char *start;
-	char *end;
-	char *const s_end = s + strlen(s);
-
-	for (; s < s_end; s++)
-		if (*s != ' ' && *s != '\t')
-			break;
-
-	start = end = s;
-
-	for (; s < s_end; s++)
-		if (*s != ' ' && *s != '\t')
-			end = s;
-	*(end + 1) = 0;
-	return start;
 }
 
 static struct pb_boot_data *boot_editor_prepare_data(
@@ -180,16 +83,16 @@ static struct pb_boot_data *boot_editor_prepare_data(
 	if (!bd)
 		return NULL;
 
-	s = boot_editor_chomp(field_buffer(boot_editor->fields[0], 0));
+	s = widget_textbox_get_value(boot_editor->widgets.image_f);
 	bd->image = *s ? talloc_strdup(bd, s) : NULL;
 
-	s = boot_editor_chomp(field_buffer(boot_editor->fields[1], 0));
+	s = widget_textbox_get_value(boot_editor->widgets.initrd_f);
 	bd->initrd = *s ? talloc_strdup(bd, s) : NULL;
 
-	s = boot_editor_chomp(field_buffer(boot_editor->fields[2], 0));
+	s = widget_textbox_get_value(boot_editor->widgets.dtb_f);
 	bd->dtb = *s ? talloc_strdup(bd, s) : NULL;
 
-	s = boot_editor_chomp(field_buffer(boot_editor->fields[3], 0));
+	s = widget_textbox_get_value(boot_editor->widgets.args_f);
 	bd->args = *s ? talloc_strdup(bd, s) : NULL;
 
 	return bd;
@@ -204,88 +107,19 @@ static struct pb_boot_data *boot_editor_prepare_data(
 static void boot_editor_process_key(struct nc_scr *scr, int key)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
-	enum boot_editor_result result;
-	struct pb_boot_data *bd;
-	FIELD *field;
+	bool handled;
 
-	field = current_field(boot_editor->ncf);
+	handled = widgetset_process_key(boot_editor->widgetset, key);
+	if (handled) {
+		wrefresh(boot_editor->scr.main_ncw);
+		return;
+	}
 
 	switch (key) {
-	default:
-		boot_editor_move_cursor(boot_editor, key);
-		break;
-
-	/* hot keys */
 	case 'x':
-		if (field != boot_editor->button_cancel &&
-				field != boot_editor->button_ok) {
-			boot_editor_move_cursor(boot_editor, key);
-			break;
-		}
-		/* fall through */
-
 	case 27: /* ESC */
 		boot_editor->on_exit(boot_editor, boot_editor_cancel, NULL);
 		nc_flush_keys();
-		return;
-	case '\n':
-	case '\r':
-		if (field == boot_editor->button_cancel) {
-			result = boot_editor_cancel;
-			bd = NULL;
-		} else if (field == boot_editor->button_ok) {
-			result = boot_editor_update;
-			form_driver(boot_editor->ncf, REQ_VALIDATION);
-			bd = boot_editor_prepare_data(boot_editor);
-		} else {
-			boot_editor_move_field(boot_editor, REQ_NEXT_FIELD);
-			break;
-		}
-		boot_editor->on_exit(boot_editor, result, bd);
-		nc_flush_keys();
-		return;
-
-	/* insert mode */
-	case KEY_IC:
-		boot_editor_insert_mode_tog(boot_editor);
-		break;
-
-	/* form nav */
-	case KEY_PPAGE:
-		boot_editor_move_field(boot_editor, REQ_FIRST_FIELD);
-		break;
-	case KEY_NPAGE:
-		boot_editor_move_field(boot_editor, REQ_LAST_FIELD);
-		break;
-	case KEY_DOWN:
-		boot_editor_move_field(boot_editor, REQ_NEXT_FIELD);
-		break;
-	case KEY_UP:
-		boot_editor_move_field(boot_editor, REQ_PREV_FIELD);
-		break;
-
-	/* field nav */
-	case KEY_HOME:
-		boot_editor_move_cursor(boot_editor, REQ_BEG_FIELD);
-		break;
-	case KEY_END:
-		boot_editor_move_cursor(boot_editor, REQ_END_FIELD);
-		break;
-	case KEY_LEFT:
-		boot_editor_move_cursor(boot_editor, REQ_LEFT_CHAR);
-		break;
-	case KEY_RIGHT:
-		boot_editor_move_cursor(boot_editor, REQ_RIGHT_CHAR);
-		break;
-	case KEY_BACKSPACE:
-		if (boot_editor_move_cursor(boot_editor, REQ_LEFT_CHAR)
-				== E_OK)
-			boot_editor_move_cursor(boot_editor,
-					REQ_DEL_CHAR);
-		break;
-	case KEY_DC:
-		boot_editor_move_cursor(boot_editor, REQ_DEL_CHAR);
-		break;
 	}
 }
 
@@ -296,50 +130,23 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 static int boot_editor_destructor(void *arg)
 {
 	struct boot_editor *boot_editor = boot_editor_from_arg(arg);
-	FIELD **f;
-
-	for (f = boot_editor->fields; *f; f++)
-		free_field(*f);
-
-	free_form(boot_editor->ncf);
 	boot_editor->scr.sig = pb_removed_sig;
-
 	return 0;
 }
 
-static FIELD *boot_editor_setup_field(unsigned int y, unsigned int x, char *str)
+static void ok_click(void *arg)
 {
-	FIELD *f;
+	struct boot_editor *boot_editor = arg;
+	struct pb_boot_data *bd;
 
-	f = new_field(1, COLS - 1 - x, y, x, 0, 0);
-	field_opts_off(f, O_STATIC | O_WRAP);
-	set_max_field(f, 256);
-	set_field_buffer(f, 0, str);
-	set_field_status(f, 0);
-	return f;
+	bd = boot_editor_prepare_data(boot_editor);
+	boot_editor->on_exit(boot_editor, boot_editor_update, bd);
 }
 
-static FIELD *boot_editor_setup_label(unsigned int y, unsigned int x, char *str)
+static void cancel_click(void *arg)
 {
-	FIELD *f;
-
-	f = new_field(1, strlen(str), y, x, 0, 0);
-	field_opts_off(f, O_ACTIVE);
-	set_field_buffer(f, 0, str);
-	return f;
-}
-
-static FIELD *boot_editor_setup_button(unsigned int y, unsigned int x,
-		char *str)
-{
-	FIELD *f;
-
-	f = new_field(1, strlen(str), y, x, 0, 0);
-	field_opts_off(f, O_EDIT);
-	set_field_buffer(f, 0, str);
-	set_field_back(f, A_NORMAL);
-	set_field_fore(f, A_NORMAL);
-	return f;
+	struct boot_editor *boot_editor = arg;
+	boot_editor->on_exit(boot_editor, boot_editor_cancel, NULL);
 }
 
 struct boot_editor *boot_editor_init(struct pmenu *menu,
@@ -348,8 +155,10 @@ struct boot_editor *boot_editor_init(struct pmenu *menu,
 				enum boot_editor_result,
 				struct pb_boot_data *))
 {
+	int y, field_size, label_x = 1, field_x = 9;
 	char *image, *initrd, *dtb, *args;
 	struct boot_editor *boot_editor;
+	struct nc_widgetset *set;
 
 	assert(on_exit);
 
@@ -373,8 +182,6 @@ struct boot_editor *boot_editor_init(struct pmenu *menu,
 
 	boot_editor->on_exit = on_exit;
 
-	boot_editor->fields = talloc_array(boot_editor, FIELD *, 11);
-
 	if (bd) {
 		image = bd->image;
 		initrd = bd->initrd;
@@ -384,26 +191,43 @@ struct boot_editor *boot_editor_init(struct pmenu *menu,
 		image = initrd = dtb = args = "";
 	}
 
-	boot_editor->fields[0] = boot_editor_setup_field(0, 9, image);
-	boot_editor->fields[1] = boot_editor_setup_field(1, 9, initrd);
-	boot_editor->fields[2] = boot_editor_setup_field(2, 9, dtb);
-	boot_editor->fields[3] = boot_editor_setup_field(3, 9, args);
-	boot_editor->fields[4] = boot_editor_setup_label(0, 1, "image:");
-	boot_editor->fields[5] = boot_editor_setup_label(1, 1, "initrd:");
-	boot_editor->fields[6] = boot_editor_setup_label(2, 1, "dtb:");
-	boot_editor->fields[7] = boot_editor_setup_label(3, 1, "args:");
-	boot_editor->fields[8] = boot_editor_setup_button(5, 9, "[  OK  ] ");
-	boot_editor->fields[9] = boot_editor_setup_button(5, 9 + 10,
-							"[Cancel] ");
-	boot_editor->fields[10] = NULL;
+	y = 0;
+	field_size = COLS - 1 - field_x;
 
-	boot_editor->button_ok = boot_editor->fields[8];
-	boot_editor->button_cancel = boot_editor->fields[9];
+	boot_editor->widgetset = set = widgetset_create(boot_editor,
+			boot_editor->scr.main_ncw,
+			boot_editor->scr.sub_ncw);
 
-	boot_editor->ncf = new_form(boot_editor->fields);
+	boot_editor->widgets.image_l = widget_new_label(set, y,
+					label_x, "image:");
+	boot_editor->widgets.image_f = widget_new_textbox(set, y,
+					field_x, field_size, image);
 
-	set_form_win(boot_editor->ncf, boot_editor->scr.main_ncw);
-	set_form_sub(boot_editor->ncf, boot_editor->scr.sub_ncw);
+	y++;
+	boot_editor->widgets.initrd_l = widget_new_label(set, y,
+					label_x, "initrd:");
+	boot_editor->widgets.initrd_f = widget_new_textbox(set, y,
+					field_x, field_size, initrd);
+
+	y++;
+	boot_editor->widgets.dtb_l = widget_new_label(set, y,
+					label_x, "dtb:");
+	boot_editor->widgets.dtb_f = widget_new_textbox(set, y,
+					field_x, field_size, dtb);
+
+	y++;
+	boot_editor->widgets.args_l = widget_new_label(set, y,
+					label_x, "args:");
+	boot_editor->widgets.args_f = widget_new_textbox(set, y,
+					field_x, field_size, args);
+
+	y++;
+	y++;
+	boot_editor->widgets.ok_b = widget_new_button(set, y,
+					9, 6, "OK", ok_click, boot_editor);
+	boot_editor->widgets.cancel_b = widget_new_button(set, y,
+					19, 6, "Cancel", cancel_click,
+					boot_editor);
 
 	return boot_editor;
 }

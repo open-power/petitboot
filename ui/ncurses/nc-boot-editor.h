@@ -61,15 +61,26 @@ enum boot_editor_result {
 
 struct boot_editor {
 	struct nc_scr	scr;
-	FORM		*ncf;
-	FIELD		**fields;
-	FIELD		*button_ok, *button_cancel;
 	void		*data;
 	struct pmenu	*original_pmenu;
 	void		(*on_exit)(struct boot_editor *boot_editor,
 					enum boot_editor_result result,
 					struct pb_boot_data *bd);
 	enum boot_editor_attr_cursor attr_cursor;
+
+	struct nc_widgetset	*widgetset;
+	struct {
+		struct nc_widget_label		*image_l;
+		struct nc_widget_textbox	*image_f;
+		struct nc_widget_label		*initrd_l;
+		struct nc_widget_textbox	*initrd_f;
+		struct nc_widget_label		*dtb_l;
+		struct nc_widget_textbox	*dtb_f;
+		struct nc_widget_label		*args_l;
+		struct nc_widget_textbox	*args_f;
+		struct nc_widget_button		*ok_b;
+		struct nc_widget_button		*cancel_b;
+	} widgets;
 };
 
 struct boot_editor *boot_editor_init(struct pmenu *menu,
