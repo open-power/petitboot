@@ -1,7 +1,7 @@
 
 #include <string.h>
 
-#include <array-size/array-size.h>
+#include <util/util.h>
 #include <talloc/talloc.h>
 
 #include "parser-test.h"

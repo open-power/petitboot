@@ -42,6 +42,7 @@ libpbcore_la_SOURCES = \
 	system/system.c \
 	system/system.h \
 	url/url.c \
-	url/url.h
+	url/url.h \
+	util/util.h
 
 MAINTAINERCLEANFILES = Makefile.in

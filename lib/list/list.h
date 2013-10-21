@@ -1,6 +1,8 @@
 #ifndef _LIST_H
 #define _LIST_H
 
+#include <util/util.h>
+
 struct list_item {
 	struct list_item *prev, *next;
 };
@@ -8,16 +10,6 @@ struct list_item {
 struct list {
 	struct list_item head;
 };
-
-#ifndef container_of
-#define container_of(_ptr, _type, _member) ({ \
-	const typeof( ((_type *)0)->_member ) *__mptr = (_ptr); \
-	(_type *)( (char *)__mptr - offsetof(_type,_member) );})
-#endif
-
-#ifndef offsetof
-#define offsetof(_type, _member) ((size_t) &((_type *)0)->_member)
-#endif
 
 #define list_for_each(_list, _pos) \
 	for (_pos = (_list)->head.next; _pos != ((_list)->head); _pos = _pos->next)

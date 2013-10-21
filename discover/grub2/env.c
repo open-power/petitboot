@@ -5,7 +5,7 @@
 #include <log/log.h>
 #include <types/types.h>
 #include <talloc/talloc.h>
-#include <array-size/array-size.h>
+#include <util/util.h>
 
 #include <discover/parser.h>
 #include <discover/file.h>

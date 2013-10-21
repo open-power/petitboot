@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <array-size/array-size.h>
+#include <util/util.h>
 
 #include "pb-config.h"
 #include "storage.h"

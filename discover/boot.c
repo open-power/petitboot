@@ -9,13 +9,13 @@
 #include <fcntl.h>
 #include <sys/types.h>
 
-#include <array-size/array-size.h>
 #include <log/log.h>
 #include <pb-protocol/pb-protocol.h>
 #include <process/process.h>
 #include <system/system.h>
 #include <talloc/talloc.h>
 #include <url/url.h>
+#include <util/util.h>
 
 #include "device-handler.h"
 #include "boot.h"

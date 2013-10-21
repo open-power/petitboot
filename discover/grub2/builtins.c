@@ -5,7 +5,7 @@
 #include <log/log.h>
 #include <types/types.h>
 #include <talloc/talloc.h>
-#include <array-size/array-size.h>
+#include <util/util.h>
 
 #include "grub2.h"
 
