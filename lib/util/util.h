@@ -44,5 +44,8 @@
 		_max_a > _max_b ? _max_a : _max_b;	\
 		})
 
+#define build_assert(x) \
+	do { (void)sizeof(char[(x)?1:-1]); } while (0)
+
 #endif /* UTIL_H */
 
