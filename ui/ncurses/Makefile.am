@@ -29,6 +29,8 @@ common_libs = \
 noinst_LTLIBRARIES = libpbnc.la
 
 libpbnc_la_SOURCES = \
+	nc-config.c \
+	nc-config.h \
 	nc-cui.c \
 	nc-cui.h \
 	nc-boot-editor.c \

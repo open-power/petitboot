@@ -34,6 +34,7 @@
 #include "process/process.h"
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
+#include "nc-config.h"
 #include "nc-sysinfo.h"
 
 static struct cui_opt_data *cod_from_item(struct pmenu_item *item)
@@ -249,6 +250,20 @@ void cui_show_sysinfo(struct cui *cui)
 	cui->sysinfo_screen = sysinfo_screen_init(cui, cui->sysinfo,
 			cui_sysinfo_exit);
 	cui_set_current(cui, sysinfo_screen_scr(cui->sysinfo_screen));
+}
+
+static void cui_config_exit(struct cui *cui)
+{
+	cui_set_current(cui, &cui->main->scr);
+	talloc_free(cui->config_screen);
+	cui->config_screen = NULL;
+}
+
+void cui_show_config(struct cui *cui)
+{
+	cui->config_screen = config_screen_init(cui, cui->config,
+			cui->sysinfo, cui_config_exit);
+	cui_set_current(cui, config_screen_scr(cui->config_screen));
 }
 
 /**

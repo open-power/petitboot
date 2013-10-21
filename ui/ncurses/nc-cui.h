@@ -58,6 +58,7 @@ struct cui {
 	struct system_info *sysinfo;
 	struct sysinfo_screen *sysinfo_screen;
 	struct config *config;
+	struct config_screen *config_screen;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
@@ -72,6 +73,7 @@ int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item);
 void cui_item_edit(struct pmenu_item *item);
 void cui_item_new(struct pmenu *menu);
 void cui_show_sysinfo(struct cui *cui);
+void cui_show_config(struct cui *cui);
 
 /* convenience routines */
 

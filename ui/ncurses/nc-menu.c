@@ -245,6 +245,10 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 		break;
 	case 'i':
 		cui_show_sysinfo(cui_from_arg(scr->ui_ctx));
+		break;
+	case 'c':
+		cui_show_config(cui_from_arg(scr->ui_ctx));
+		break;
 	default:
 		menu_driver(menu->ncm, key);
 		break;
