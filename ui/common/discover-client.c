@@ -332,3 +332,21 @@ int discover_client_cancel_default(struct discover_client *client)
 
 	return pb_protocol_write_message(client->fd, message);
 }
+
+int discover_client_send_config(struct discover_client *client,
+		struct config *config)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_config_len(config);
+
+	message = pb_protocol_create_message(client,
+				PB_PROTOCOL_ACTION_CONFIG, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_config(config, message->payload, len);
+
+	return pb_protocol_write_message(client->fd, message);
+}

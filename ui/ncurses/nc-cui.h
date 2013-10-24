@@ -74,6 +74,7 @@ void cui_item_edit(struct pmenu_item *item);
 void cui_item_new(struct pmenu *menu);
 void cui_show_sysinfo(struct cui *cui);
 void cui_show_config(struct cui *cui);
+int cui_send_config(struct cui *cui, struct config *config);
 
 /* convenience routines */
 

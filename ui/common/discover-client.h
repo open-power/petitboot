@@ -75,4 +75,8 @@ int discover_client_boot(struct discover_client *client,
 /* Tell the discover server to cancel the default boot option, if any
  */
 int discover_client_cancel_default(struct discover_client *client);
+
+/* Send new configuration data to the discover server */
+int discover_client_send_config(struct discover_client *client,
+		struct config *config);
 #endif

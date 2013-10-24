@@ -551,6 +551,11 @@ static void cui_update_config(struct config *config, void *arg)
 	cui->config = talloc_steal(cui, config);
 }
 
+int cui_send_config(struct cui *cui, struct config *config)
+{
+	return discover_client_send_config(cui->client, config);
+}
+
 static struct discover_client_ops cui_client_ops = {
 	.device_add = NULL,
 	.boot_option_add = cui_boot_option_add,

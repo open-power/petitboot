@@ -17,9 +17,11 @@
 
 #define _GNU_SOURCE
 
-
+#include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include <pb-config/pb-config.h>
 #include <talloc/talloc.h>
 #include <types/types.h>
 #include <log/log.h>
@@ -123,11 +125,111 @@ struct nc_scr *config_screen_scr(struct config_screen *screen)
 	return &screen->scr;
 }
 
+static int screen_process_form(struct config_screen *screen)
+{
+	const struct system_info *sysinfo = screen->cui->sysinfo;
+	struct config *config = talloc_zero(screen, struct config);
+	enum net_conf_type net_conf_type;
+	struct interface_config *iface;
+	char *str, *end;
+	int rc;
+
+	config_set_defaults(config);
+
+	config->autoboot_enabled =
+		widget_checkbox_get_value(screen->widgets.autoboot_f);
+
+
+	str = widget_textbox_get_value(screen->widgets.timeout_f);
+	if (str) {
+		unsigned long x;
+		errno = 0;
+		x = strtoul(str, &end, 10);
+		if (!errno && end != str)
+			config->autoboot_timeout_sec = x;
+	}
+
+	net_conf_type = widget_select_get_value(screen->widgets.network_f);
+
+	/* if we don't have any network interfaces, prevent per-interface
+	 * configuration */
+	if (sysinfo->n_interfaces == 0)
+		net_conf_type = NET_CONF_TYPE_DHCP_ALL;
+
+	if (net_conf_type == NET_CONF_TYPE_DHCP_ALL) {
+		config->network.n_interfaces = 0;
+
+	} else {
+		int idx;
+
+		iface = talloc_zero(config, struct interface_config);
+		config->network.n_interfaces = 1;
+		config->network.interfaces = talloc_array(config,
+				struct interface_config *, 1);
+		config->network.interfaces[0] = iface;
+
+		/* copy hwaddr (from the sysinfo interface data) to
+		 * the configuration */
+		idx = widget_select_get_value(screen->widgets.iface_f);
+		memcpy(iface->hwaddr, sysinfo->interfaces[idx]->hwaddr,
+				sizeof(iface->hwaddr));
+	}
+
+	if (net_conf_type == NET_CONF_TYPE_DHCP_ONE) {
+		iface->method = CONFIG_METHOD_DHCP;
+	}
+
+	if (net_conf_type == NET_CONF_TYPE_STATIC) {
+		iface->method = CONFIG_METHOD_STATIC;
+		iface->static_config.address = talloc_asprintf(iface, "%s/%s",
+				widget_textbox_get_value(
+					screen->widgets.ip_addr_f),
+				widget_textbox_get_value(
+					screen->widgets.ip_mask_f));
+		iface->static_config.gateway = talloc_strdup(iface,
+				widget_textbox_get_value(
+					screen->widgets.gateway_f));
+	}
+
+	str = widget_textbox_get_value(screen->widgets.dns_f);
+	if (str && strlen(str)) {
+		char *dns, *tmp;
+		int i;
+
+		for (;;) {
+			dns = strtok_r(str, " \t", &tmp);
+
+			if (!dns)
+				break;
+
+			i = config->network.n_dns_servers++;
+			config->network.dns_servers = talloc_realloc(config,
+					config->network.dns_servers,
+					const char *,
+					config->network.n_dns_servers);
+			config->network.dns_servers[i] =
+				talloc_strdup(config, dns);
+
+			str = NULL;
+		}
+	}
+
+	rc = cui_send_config(screen->cui, config);
+	talloc_free(config);
+
+	if (rc)
+		pb_log("cui_send_config failed!\n");
+	else
+		pb_debug("config sent!\n");
+
+	return 0;
+}
+
 static void ok_click(void *arg)
 {
 	struct config_screen *screen = arg;
-	/* todo: save config */
-	screen->on_exit(screen->cui);
+	screen_process_form(screen);
+	screen->exit = true;
 }
 
 static void cancel_click(void *arg)
@@ -212,13 +314,8 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 	if (show)
 		y += layout_pair(screen, y, screen->widgets.gateway_l, wf);
 
-	wl = widget_label_base(screen->widgets.dns_l);
-	wf = widget_textbox_base(screen->widgets.dns_f);
-	widget_set_visible(wl, show);
-	widget_set_visible(wf, show);
-
-	if (show)
-		y += 1 + layout_pair(screen, y, screen->widgets.dns_l, wf);
+	y += 1 + layout_pair(screen, y, screen->widgets.dns_l,
+			widget_textbox_base(screen->widgets.dns_f));
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
