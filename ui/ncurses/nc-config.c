@@ -50,6 +50,8 @@ struct config_screen {
 	int			field_x;
 	int			network_config_y;
 
+	enum net_conf_type	net_conf_type;
+
 	struct {
 		struct nc_widget_checkbox	*autoboot_f;
 		struct nc_widget_label		*autoboot_l;
@@ -312,10 +314,12 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 	widget_set_visible(wf, show);
 
 	if (show)
-		y += layout_pair(screen, y, screen->widgets.gateway_l, wf);
+		y += layout_pair(screen, y, screen->widgets.gateway_l, wf) + 1;
 
-	y += 1 + layout_pair(screen, y, screen->widgets.dns_l,
+	y += layout_pair(screen, y, screen->widgets.dns_l,
 			widget_textbox_base(screen->widgets.dns_f));
+
+	y += 1;
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
@@ -326,9 +330,42 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 static void config_screen_network_change(void *arg, int value)
 {
 	struct config_screen *screen = arg;
+	screen->net_conf_type = value;
 	widgetset_unpost(screen->widgetset);
 	config_screen_layout_widgets(screen, value);
 	widgetset_post(screen->widgetset);
+}
+
+static struct interface_config *first_active_interface(
+		const struct config *config)
+{
+	unsigned int i;
+
+	for (i = 0; i < config->network.n_interfaces; i++) {
+		if (config->network.interfaces[i]->ignore)
+			continue;
+		return config->network.interfaces[i];
+	}
+	return NULL;
+}
+
+static enum net_conf_type find_net_conf_type(const struct config *config)
+{
+	struct interface_config *ifcfg;
+
+	ifcfg = first_active_interface(config);
+
+	if (!ifcfg)
+		return NET_CONF_TYPE_DHCP_ALL;
+
+	else if (ifcfg->method == CONFIG_METHOD_DHCP)
+		return NET_CONF_TYPE_DHCP_ONE;
+
+	else if (ifcfg->method == CONFIG_METHOD_STATIC)
+		return NET_CONF_TYPE_STATIC;
+
+	assert(0);
+	return NET_CONF_TYPE_DHCP_ALL;
 }
 
 static void config_screen_setup_widgets(struct config_screen *screen,
@@ -336,11 +373,16 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		const struct system_info *sysinfo)
 {
 	struct nc_widgetset *set = screen->widgetset;
+	struct interface_config *ifcfg;
+	char *str, *ip, *mask, *gw;
+	enum net_conf_type type;
 	unsigned int i;
-	char *str;
 
 	build_assert(sizeof(screen->widgets) / sizeof(struct widget *)
 			== N_FIELDS);
+
+	type = screen->net_conf_type;
+	ifcfg = first_active_interface(config);
 
 	screen->widgets.autoboot_l = widget_new_label(set, 0, 0, "Autoboot:");
 	screen->widgets.autoboot_f = widget_new_checkbox(set, 0, 0,
@@ -356,15 +398,15 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	widget_select_add_option(screen->widgets.network_f,
 					NET_CONF_TYPE_DHCP_ALL,
 					"DHCP on all active interfaces",
-					true);
+					type == NET_CONF_TYPE_DHCP_ALL);
 	widget_select_add_option(screen->widgets.network_f,
 					NET_CONF_TYPE_DHCP_ONE,
 					"DHCP on a specific interface",
-					false);
+					type == NET_CONF_TYPE_DHCP_ONE);
 	widget_select_add_option(screen->widgets.network_f,
 					NET_CONF_TYPE_STATIC,
 					"Static IP configuration",
-					false);
+					type == NET_CONF_TYPE_STATIC);
 
 	widget_select_on_change(screen->widgets.network_f,
 			config_screen_network_change, screen);
@@ -374,20 +416,47 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *info = sysinfo->interfaces[i];
+		bool is_default;
+
+		is_default = ifcfg && !memcmp(ifcfg->hwaddr, info->hwaddr,
+					sizeof(ifcfg->hwaddr));
+
 		widget_select_add_option(screen->widgets.iface_f,
-						i, info->name, false);
+						i, info->name, is_default);
+	}
+
+	gw = ip = mask = NULL;
+	if (ifcfg && ifcfg->method == CONFIG_METHOD_STATIC) {
+		char *sep;
+
+		str = talloc_strdup(screen, ifcfg->static_config.address);
+		sep = strchr(str, '/');
+		ip = str;
+
+		if (sep) {
+			*sep = '\0';
+			mask = sep + 1;
+		}
+		gw = ifcfg->static_config.gateway;
 	}
 
 	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, "IP/mask:");
-	screen->widgets.ip_addr_f = widget_new_textbox(set, 0, 0, 16, "");
+	screen->widgets.ip_addr_f = widget_new_textbox(set, 0, 0, 16, ip);
 	screen->widgets.ip_mask_l = widget_new_label(set, 0, 0, "/");
-	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 3, "");
+	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 3, mask);
 
 	screen->widgets.gateway_l = widget_new_label(set, 0, 0, "Gateway:");
-	screen->widgets.gateway_f = widget_new_textbox(set, 0, 0, 16, "");
+	screen->widgets.gateway_f = widget_new_textbox(set, 0, 0, 16, gw);
 
-	screen->widgets.dns_l = widget_new_label(set, 0, 0, "DNS Server:");
-	screen->widgets.dns_f = widget_new_textbox(set, 0, 0, 16, "");
+	str = talloc_strdup(screen, "");
+	for (i = 0; i < config->network.n_dns_servers; i++) {
+		str = talloc_asprintf_append(str, "%s%s",
+				(i == 0) ? "" : " ",
+				config->network.dns_servers[i]);
+	}
+
+	screen->widgets.dns_l = widget_new_label(set, 0, 0, "DNS Server(s):");
+	screen->widgets.dns_f = widget_new_textbox(set, 0, 0, 32, str);
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, "OK",
 			ok_click, screen);
@@ -411,7 +480,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 	screen->cui = cui;
 	screen->on_exit = on_exit;
 	screen->label_x = 2;
-	screen->field_x = 16;
+	screen->field_x = 17;
 
 	screen->scr.frame.ltitle = talloc_strdup(screen,
 			"Petitboot System Configuration");
@@ -422,8 +491,10 @@ struct config_screen *config_screen_init(struct cui *cui,
 
 	screen->widgetset = widgetset_create(screen, screen->scr.main_ncw,
 			screen->scr.sub_ncw);
+	screen->net_conf_type = find_net_conf_type(config);
+
 	config_screen_setup_widgets(screen, config, sysinfo);
-	config_screen_layout_widgets(screen, NET_CONF_TYPE_DHCP_ALL);
+	config_screen_layout_widgets(screen, screen->net_conf_type);
 
 	wrefresh(screen->scr.main_ncw);
 	scrollok(screen->scr.sub_ncw, true);
