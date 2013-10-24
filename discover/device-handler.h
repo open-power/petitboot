@@ -13,6 +13,7 @@ struct boot_command;
 struct event;
 struct device;
 struct waitset;
+struct config;
 
 struct discover_device {
 	struct device		*device;
@@ -114,6 +115,8 @@ const char *discover_device_get_param(struct discover_device *device,
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd);
 void device_handler_cancel_default(struct device_handler *handler);
+void device_handler_update_config(struct device_handler *handler,
+		struct config *config);
 
 int device_request_write(struct discover_device *dev, bool *release);
 void device_release_write(struct discover_device *dev, bool release);

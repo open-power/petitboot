@@ -214,6 +214,7 @@ static int discover_server_process_message(void *arg)
 	struct pb_protocol_message *message;
 	struct boot_command *boot_command;
 	struct client *client = arg;
+	struct config *config;
 	int rc;
 
 	message = pb_protocol_read_message(client, client->fd);
@@ -241,6 +242,19 @@ static int discover_server_process_message(void *arg)
 
 	case PB_PROTOCOL_ACTION_CANCEL_DEFAULT:
 		device_handler_cancel_default(client->server->device_handler);
+		break;
+
+	case PB_PROTOCOL_ACTION_CONFIG:
+		config = talloc_zero(client, struct config);
+
+		rc = pb_protocol_deserialise_config(config, message);
+		if (rc) {
+			pb_log("%s: no config?", __func__);
+			return 0;
+		}
+
+		device_handler_update_config(client->server->device_handler,
+				config);
 		break;
 
 	default:

@@ -100,9 +100,9 @@ int config_set(struct config *newconfig)
 		return 0;
 
 	pb_log("new configuration data received\n");
-	dump_config(config);
+	dump_config(newconfig);
 
-	rc = storage->save(storage, config);
+	rc = storage->save(storage, newconfig);
 
 	if (!rc)
 		config = talloc_steal(config_ctx, newconfig);

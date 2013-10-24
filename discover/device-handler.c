@@ -1,4 +1,3 @@
-
 #include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -715,6 +714,13 @@ void device_handler_cancel_default(struct device_handler *handler)
 	status.message = "Default boot cancelled";
 
 	discover_server_notify_boot_status(handler->server, &status);
+}
+
+void device_handler_update_config(struct device_handler *handler,
+		struct config *config)
+{
+	config_set(config);
+	discover_server_notify_config(handler->server, config);
 }
 
 #ifndef PETITBOOT_TEST
