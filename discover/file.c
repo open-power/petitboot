@@ -114,7 +114,7 @@ int replace_file(const char *filename, char *buf, int len)
 		rc = rename(tempfile, filename);
 	}
 
-	free(tempfile);
+	talloc_free(tempfile);
 
 	fchmod(fd, 0644);
 
