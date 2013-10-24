@@ -31,7 +31,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	18
+#define N_FIELDS	19
 
 enum net_conf_type {
 	NET_CONF_TYPE_DHCP_ALL,
@@ -71,6 +71,7 @@ struct config_screen {
 		struct nc_widget_textbox	*gateway_f;
 		struct nc_widget_label		*dns_l;
 		struct nc_widget_textbox	*dns_f;
+		struct nc_widget_label		*dns_help_l;
 
 		struct nc_widget_button		*ok_b;
 		struct nc_widget_button		*cancel_b;
@@ -319,6 +320,15 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 	y += layout_pair(screen, y, screen->widgets.dns_l,
 			widget_textbox_base(screen->widgets.dns_f));
 
+	/* we show the DNS/DHCP help if we're configuring DHCP */
+	show = net_conf != NET_CONF_TYPE_STATIC;
+	wl = widget_label_base(screen->widgets.dns_help_l);
+	widget_set_visible(wl, show);
+	if (show) {
+		widget_move(wl, y, screen->field_x);
+		y += 1;
+	}
+
 	y += 1;
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
@@ -457,6 +467,9 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	screen->widgets.dns_l = widget_new_label(set, 0, 0, "DNS Server(s):");
 	screen->widgets.dns_f = widget_new_textbox(set, 0, 0, 32, str);
+
+	screen->widgets.dns_help_l = widget_new_label(set, 0, 0,
+			"(if not provided by DHCP server)");
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, "OK",
 			ok_click, screen);
