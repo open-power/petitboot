@@ -29,7 +29,13 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	9
+#define N_FIELDS	18
+
+enum net_conf_type {
+	NET_CONF_TYPE_DHCP_ALL,
+	NET_CONF_TYPE_DHCP_ONE,
+	NET_CONF_TYPE_STATIC,
+};
 
 struct config_screen {
 	struct nc_scr		scr;
@@ -40,6 +46,7 @@ struct config_screen {
 
 	int			label_x;
 	int			field_x;
+	int			network_config_y;
 
 	struct {
 		struct nc_widget_checkbox	*autoboot_f;
@@ -48,8 +55,18 @@ struct config_screen {
 		struct nc_widget_label		*timeout_l;
 
 		struct nc_widget_label		*network_l;
+		struct nc_widget_select		*network_f;
+
 		struct nc_widget_label		*iface_l;
 		struct nc_widget_select		*iface_f;
+		struct nc_widget_label		*ip_addr_l;
+		struct nc_widget_textbox	*ip_addr_f;
+		struct nc_widget_label		*ip_mask_l;
+		struct nc_widget_textbox	*ip_mask_f;
+		struct nc_widget_label		*gateway_l;
+		struct nc_widget_textbox	*gateway_f;
+		struct nc_widget_label		*dns_l;
+		struct nc_widget_textbox	*dns_f;
 
 		struct nc_widget_button		*ok_b;
 		struct nc_widget_button		*cancel_b;
@@ -129,9 +146,12 @@ static int layout_pair(struct config_screen *screen, int y,
 	return max(widget_height(label_w), widget_height(field));
 }
 
-static void config_screen_layout_widgets(struct config_screen *screen)
+static void config_screen_layout_widgets(struct config_screen *screen,
+		enum net_conf_type net_conf)
 {
-	int y;
+	struct nc_widget *wl, *wf;
+	bool show;
+	int y, x;
 
 	y = 1;
 
@@ -141,7 +161,64 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	y += layout_pair(screen, y, screen->widgets.timeout_l,
 			widget_textbox_base(screen->widgets.timeout_f));
 
-	y++;
+	y += 1;
+
+	y += layout_pair(screen, y, screen->widgets.network_l,
+			widget_select_base(screen->widgets.network_f));
+
+	y += 1;
+
+	/* conditionally show iface select */
+	wl = widget_label_base(screen->widgets.iface_l);
+	wf = widget_select_base(screen->widgets.iface_f);
+
+	show = net_conf == NET_CONF_TYPE_DHCP_ONE ||
+		net_conf == NET_CONF_TYPE_STATIC;
+
+	widget_set_visible(wl, show);
+	widget_set_visible(wf, show);
+
+	if (show)
+		y += layout_pair(screen, y, screen->widgets.iface_l, wf) + 1;
+
+	/* conditionally show static IP params */
+	show = net_conf == NET_CONF_TYPE_STATIC;
+
+	wl = widget_label_base(screen->widgets.ip_addr_l);
+	wf = widget_textbox_base(screen->widgets.ip_addr_f);
+	widget_set_visible(wl, show);
+	widget_set_visible(wf, show);
+	x = screen->field_x + widget_width(wf) + 1;
+
+	if (show)
+		layout_pair(screen, y, screen->widgets.ip_addr_l, wf);
+
+	wl = widget_label_base(screen->widgets.ip_mask_l);
+	wf = widget_textbox_base(screen->widgets.ip_mask_f);
+	widget_set_visible(wl, show);
+	widget_set_visible(wf, show);
+
+	if (show) {
+		widget_move(wl, y, x);
+		widget_move(wf, y, x + 2);
+		y += 1;
+	}
+
+	wl = widget_label_base(screen->widgets.gateway_l);
+	wf = widget_textbox_base(screen->widgets.gateway_f);
+	widget_set_visible(wl, show);
+	widget_set_visible(wf, show);
+
+	if (show)
+		y += layout_pair(screen, y, screen->widgets.gateway_l, wf);
+
+	wl = widget_label_base(screen->widgets.dns_l);
+	wf = widget_textbox_base(screen->widgets.dns_f);
+	widget_set_visible(wl, show);
+	widget_set_visible(wf, show);
+
+	if (show)
+		y += 1 + layout_pair(screen, y, screen->widgets.dns_l, wf);
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
@@ -149,14 +226,21 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 			y, screen->field_x + 10);
 }
 
+static void config_screen_network_change(void *arg, int value)
+{
+	struct config_screen *screen = arg;
+	widgetset_unpost(screen->widgetset);
+	config_screen_layout_widgets(screen, value);
+	widgetset_post(screen->widgetset);
+}
+
 static void config_screen_setup_widgets(struct config_screen *screen,
 		const struct config *config,
 		const struct system_info *sysinfo)
 {
 	struct nc_widgetset *set = screen->widgetset;
+	unsigned int i;
 	char *str;
-
-	(void)sysinfo;
 
 	build_assert(sizeof(screen->widgets) / sizeof(struct widget *)
 			== N_FIELDS);
@@ -169,11 +253,49 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.timeout_l = widget_new_label(set, 0, 0, "Timeout:");
 	screen->widgets.timeout_f = widget_new_textbox(set, 0, 0, 5, str);
 
+	screen->widgets.network_l = widget_new_label(set, 0, 0, "Network");
+	screen->widgets.network_f = widget_new_select(set, 0, 0, 50);
+
+	widget_select_add_option(screen->widgets.network_f,
+					NET_CONF_TYPE_DHCP_ALL,
+					"DHCP on all active interfaces",
+					true);
+	widget_select_add_option(screen->widgets.network_f,
+					NET_CONF_TYPE_DHCP_ONE,
+					"DHCP on a specific interface",
+					false);
+	widget_select_add_option(screen->widgets.network_f,
+					NET_CONF_TYPE_STATIC,
+					"Static IP configuration",
+					false);
+
+	widget_select_on_change(screen->widgets.network_f,
+			config_screen_network_change, screen);
+
+	screen->widgets.iface_l = widget_new_label(set, 0, 0, "Device:");
+	screen->widgets.iface_f = widget_new_select(set, 0, 0, 20);
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		struct interface_info *info = sysinfo->interfaces[i];
+		widget_select_add_option(screen->widgets.iface_f,
+						i, info->name, false);
+	}
+
+	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, "IP/mask:");
+	screen->widgets.ip_addr_f = widget_new_textbox(set, 0, 0, 16, "");
+	screen->widgets.ip_mask_l = widget_new_label(set, 0, 0, "/");
+	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 3, "");
+
+	screen->widgets.gateway_l = widget_new_label(set, 0, 0, "Gateway:");
+	screen->widgets.gateway_f = widget_new_textbox(set, 0, 0, 16, "");
+
+	screen->widgets.dns_l = widget_new_label(set, 0, 0, "DNS Server:");
+	screen->widgets.dns_f = widget_new_textbox(set, 0, 0, 16, "");
+
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, "OK",
 			ok_click, screen);
 	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 6, "Cancel",
 			cancel_click, screen);
-
 }
 
 struct config_screen *config_screen_init(struct cui *cui,
@@ -204,7 +326,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 	screen->widgetset = widgetset_create(screen, screen->scr.main_ncw,
 			screen->scr.sub_ncw);
 	config_screen_setup_widgets(screen, config, sysinfo);
-	config_screen_layout_widgets(screen);
+	config_screen_layout_widgets(screen, NET_CONF_TYPE_DHCP_ALL);
 
 	wrefresh(screen->scr.main_ncw);
 	scrollok(screen->scr.sub_ncw, true);
