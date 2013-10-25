@@ -25,6 +25,7 @@
 
 #define HWADDR_SIZE	6
 #define PIDFILE_BASE	(LOCAL_STATE_DIR "/petitboot/")
+#define INITIAL_BUFSIZE	4096
 
 #define for_each_nlmsg(buf, nlmsg, len) \
 	for (nlmsg = (struct nlmsghdr *)buf; \
@@ -58,6 +59,8 @@ struct network {
 	struct device_handler	*handler;
 	struct waiter		*waiter;
 	int			netlink_sd;
+	void			*netlink_buf;
+	unsigned int		netlink_buf_size;
 	bool			manual_config;
 	bool			dry_run;
 };
@@ -115,6 +118,10 @@ static int network_init_netlink(struct network *network)
 		close(network->netlink_sd);
 		return -1;
 	}
+
+	network->netlink_buf_size = INITIAL_BUFSIZE;
+	network->netlink_buf = talloc_array(network, char,
+				network->netlink_buf_size);
 
 	return 0;
 }
@@ -426,19 +433,48 @@ static int network_netlink_process(void *arg)
 {
 	struct network *network = arg;
 	struct nlmsghdr *nlmsg;
+	struct msghdr msg;
+	struct iovec iov;
 	unsigned int len;
-	char buf[4096];
-	int rc;
+	int rc, flags;
 
-	rc = recv(network->netlink_sd, buf, sizeof(buf), 0);
+	memset(&msg, 0, sizeof(msg));
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+
+	flags = MSG_PEEK;
+
+retry:
+	iov.iov_len = network->netlink_buf_size;
+	iov.iov_base = network->netlink_buf;
+
+	rc = recvmsg(network->netlink_sd, &msg, flags);
+
 	if (rc < 0) {
-		perror("netlink recv");
+		perror("netlink recv header");
 		return -1;
 	}
 
 	len = rc;
 
-	for_each_nlmsg(buf, nlmsg, len)
+	/* if the netlink message was larger than our buffer, realloc
+	 * before reading again */
+	if (len > network->netlink_buf_size || msg.msg_flags & MSG_TRUNC) {
+		network->netlink_buf_size *= 2;
+		network->netlink_buf = talloc_realloc(network,
+					network->netlink_buf,
+					char *,
+					network->netlink_buf_size);
+		goto retry;
+	}
+
+	/* otherwise, we're good to read the entire message without PEEK */
+	if (flags == MSG_PEEK) {
+		flags = 0;
+		goto retry;
+	}
+
+	for_each_nlmsg(network->netlink_buf, nlmsg, len)
 		network_handle_nlmsg(network, nlmsg);
 
 	return 0;
