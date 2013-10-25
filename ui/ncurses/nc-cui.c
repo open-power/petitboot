@@ -542,6 +542,10 @@ static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
 	if (cui->sysinfo_screen)
 		sysinfo_screen_update(cui->sysinfo_screen, sysinfo);
 
+	/* ... and do the same with the config screen */
+	if (cui->config_screen)
+		config_screen_update(cui->config_screen, cui->config, sysinfo);
+
 	cui_update_mm_title(cui);
 }
 
@@ -549,6 +553,9 @@ static void cui_update_config(struct config *config, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
 	cui->config = talloc_steal(cui, config);
+
+	if (cui->config_screen)
+		config_screen_update(cui->config_screen, config, cui->sysinfo);
 }
 
 int cui_send_config(struct cui *cui, struct config *config)

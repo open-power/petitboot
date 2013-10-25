@@ -378,6 +378,15 @@ static enum net_conf_type find_net_conf_type(const struct config *config)
 	return NET_CONF_TYPE_DHCP_ALL;
 }
 
+static void config_screen_setup_empty(struct config_screen *screen)
+{
+	widget_new_label(screen->widgetset, 2, screen->field_x,
+			"Waiting for configuration data...");
+	screen->widgets.cancel_b = widget_new_button(screen->widgetset,
+			4, screen->field_x, 6, "Cancel", cancel_click, screen);
+}
+
+
 static void config_screen_setup_widgets(struct config_screen *screen,
 		const struct config *config,
 		const struct system_info *sysinfo)
@@ -477,6 +486,36 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 			cancel_click, screen);
 }
 
+void config_screen_update(struct config_screen *screen,
+		const struct config *config,
+		const struct system_info *sysinfo)
+{
+	bool repost = false;
+
+	if (screen->widgetset) {
+		widgetset_unpost(screen->widgetset);
+		talloc_free(screen->widgetset);
+		repost = true;
+	}
+
+	screen->widgetset = widgetset_create(screen, screen->scr.main_ncw,
+			screen->scr.sub_ncw);
+
+	if (!config || !sysinfo) {
+		config_screen_setup_empty(screen);
+	} else {
+		screen->net_conf_type = find_net_conf_type(config);
+
+		config_screen_setup_widgets(screen, config, sysinfo);
+		config_screen_layout_widgets(screen, screen->net_conf_type);
+	}
+
+	if (repost)
+		widgetset_post(screen->widgetset);
+
+	wrefresh(screen->scr.main_ncw);
+}
+
 struct config_screen *config_screen_init(struct cui *cui,
 		const struct config *config,
 		const struct system_info *sysinfo,
@@ -502,15 +541,9 @@ struct config_screen *config_screen_init(struct cui *cui,
 			"tab=next, shift+tab=previous");
 	nc_scr_frame_draw(&screen->scr);
 
-	screen->widgetset = widgetset_create(screen, screen->scr.main_ncw,
-			screen->scr.sub_ncw);
-	screen->net_conf_type = find_net_conf_type(config);
-
-	config_screen_setup_widgets(screen, config, sysinfo);
-	config_screen_layout_widgets(screen, screen->net_conf_type);
-
-	wrefresh(screen->scr.main_ncw);
 	scrollok(screen->scr.sub_ncw, true);
+
+	config_screen_update(screen, config, sysinfo);
 
 	return screen;
 }

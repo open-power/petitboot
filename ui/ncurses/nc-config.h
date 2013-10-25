@@ -30,6 +30,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 
 struct nc_scr *config_screen_scr(struct config_screen *screen);
 void config_screen_update(struct config_screen *screen,
-		const struct config *config);
+		const struct config *config,
+		const struct system_info *sysinfo);
 
 #endif /* defined _NC_CONFIG_H */
