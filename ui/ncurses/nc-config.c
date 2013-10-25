@@ -43,8 +43,12 @@ struct config_screen {
 	struct nc_scr		scr;
 	struct cui		*cui;
 	struct nc_widgetset	*widgetset;
+	WINDOW			*pad;
+
 	bool			exit;
 	void			(*on_exit)(struct cui *);
+
+	int			scroll_y;
 
 	int			label_x;
 	int			field_x;
@@ -89,6 +93,16 @@ static struct config_screen *config_screen_from_scr(struct nc_scr *scr)
 	return config_screen;
 }
 
+static void pad_refresh(struct config_screen *screen)
+{
+	int y, x, rows, cols;
+
+	getmaxyx(screen->scr.sub_ncw, rows, cols);
+	getbegyx(screen->scr.sub_ncw, y, x);
+
+	prefresh(screen->pad, screen->scroll_y, 0, y, x, rows, cols);
+}
+
 static void config_screen_process_key(struct nc_scr *scr, int key)
 {
 	struct config_screen *screen = config_screen_from_scr(scr);
@@ -98,7 +112,7 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 	if (screen->exit)
 		screen->on_exit(screen->cui);
 	else if (handled)
-		wrefresh(screen->scr.main_ncw);
+		pad_refresh(screen);
 }
 
 static void config_screen_resize(struct nc_scr *scr)
@@ -112,7 +126,7 @@ static int config_screen_post(struct nc_scr *scr)
 	struct config_screen *screen = config_screen_from_scr(scr);
 	widgetset_post(screen->widgetset);
 	nc_scr_frame_draw(scr);
-	wrefresh(scr->main_ncw);
+	pad_refresh(screen);
 	return 0;
 }
 
@@ -486,11 +500,50 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 			cancel_click, screen);
 }
 
+static void config_screen_widget_focus(struct nc_widget *widget, void *arg)
+{
+	struct config_screen *screen = arg;
+	int w_y, w_height, s_max;
+
+	w_y = widget_y(widget);
+	w_height = widget_height(widget);
+	s_max = getmaxy(screen->scr.sub_ncw);
+
+	if (w_y < screen->scroll_y)
+		screen->scroll_y = w_y;
+
+	else if (w_y + w_height + screen->scroll_y > s_max - 1)
+		screen->scroll_y = 1 + w_y + w_height - s_max;
+
+	else
+		return;
+
+	pad_refresh(screen);
+}
+
+
 void config_screen_update(struct config_screen *screen,
 		const struct config *config,
 		const struct system_info *sysinfo)
 {
 	bool repost = false;
+	int height;
+
+	/* The size of the pad we'll need depends on the number of interfaces.
+	 *
+	 * We use N_FIELDS (which is quite conservative, as some fields share
+	 * a line) as a base, then add 3 (as the network select field is
+	 * takes 3 lines), and n_interfaces (as the network interface field
+	 * has n_interfaces lines).
+	 */
+	height = N_FIELDS + 3;
+	if (sysinfo)
+		height += sysinfo->n_interfaces;
+	if (!screen->pad || getmaxx(screen->pad) < height) {
+		if (screen->pad)
+			delwin(screen->pad);
+		screen->pad = newpad(height, COLS);
+	}
 
 	if (screen->widgetset) {
 		widgetset_unpost(screen->widgetset);
@@ -499,7 +552,9 @@ void config_screen_update(struct config_screen *screen,
 	}
 
 	screen->widgetset = widgetset_create(screen, screen->scr.main_ncw,
-			screen->scr.sub_ncw);
+			screen->pad);
+	widgetset_set_widget_focus(screen->widgetset,
+			config_screen_widget_focus, screen);
 
 	if (!config || !sysinfo) {
 		config_screen_setup_empty(screen);
@@ -513,7 +568,15 @@ void config_screen_update(struct config_screen *screen,
 	if (repost)
 		widgetset_post(screen->widgetset);
 
-	wrefresh(screen->scr.main_ncw);
+	pad_refresh(screen);
+}
+
+static int config_screen_destroy(void *arg)
+{
+	struct config_screen *screen = arg;
+	if (screen->pad)
+		delwin(screen->pad);
+	return 0;
 }
 
 struct config_screen *config_screen_init(struct cui *cui,
@@ -524,6 +587,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 	struct config_screen *screen;
 
 	screen = talloc_zero(cui, struct config_screen);
+	talloc_set_destructor(screen, config_screen_destroy);
 	nc_scr_init(&screen->scr, pb_config_screen_sig, 0,
 			cui, config_screen_process_key,
 			config_screen_post, config_screen_unpost,
@@ -544,6 +608,8 @@ struct config_screen *config_screen_init(struct cui *cui,
 	scrollok(screen->scr.sub_ncw, true);
 
 	config_screen_update(screen, config, sysinfo);
+
+	wrefresh(screen->scr.main_ncw);
 
 	return screen;
 }
