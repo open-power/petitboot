@@ -19,6 +19,8 @@
 #if !defined(_PB_URL_PARSER_H)
 #define _PB_URL_PARSER_H
 
+#include <stdbool.h>
+
 /**
  * enum pb_url_scheme - Enumeration of the URL schemes we can handle.
  */
@@ -58,6 +60,7 @@ struct pb_url {
 	char *file;
 };
 
+bool is_url(const char *str);
 struct pb_url *pb_url_parse(void *ctx, const char *url_str);
 struct pb_url *pb_url_join(void *ctx, const struct pb_url *url, const char *s);
 char *pb_url_to_string(struct pb_url *url);

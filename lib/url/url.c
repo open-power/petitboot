@@ -22,7 +22,6 @@
 
 #define _GNU_SOURCE
 #include <assert.h>
-#include <stdbool.h>
 #include <string.h>
 
 #include "log/log.h"
@@ -228,7 +227,7 @@ fail:
 	return NULL;
 }
 
-static bool is_url(const char *str)
+bool is_url(const char *str)
 {
 	return strstr(str, "://") != NULL;
 }
