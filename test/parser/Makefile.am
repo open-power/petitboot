@@ -51,7 +51,10 @@ TESTS = \
 	test-yaboot-rh8-ppc64 \
 	test-pxe-empty \
 	test-pxe-single \
-	test-pxe-initrd-in-append
+	test-pxe-initrd-in-append \
+	test-pxe-mac-without-conf \
+	test-pxe-ip-without-conf \
+	test-pxe-non-url-conf
 
 $(TESTS): %: %.embedded-config.o
 $(TESTS): LDADD += $@.embedded-config.o
