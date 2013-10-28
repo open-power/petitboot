@@ -9,7 +9,8 @@ void run_test(struct parser_test *test)
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
 
-	test_read_conf_data(test, config);
+	test_read_conf_data(test, "/kboot.conf", config);
+
 	test_run_parser(test, "kboot");
 
 	ctx = test->ctx;

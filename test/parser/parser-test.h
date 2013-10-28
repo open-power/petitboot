@@ -11,10 +11,6 @@ struct parser_test {
 	struct discover_context *ctx;
 	struct list files;
 	struct config *config;
-	struct {
-		void	*buf;
-		size_t	size;
-	} conf;
 };
 
 /* interface required for parsers */
@@ -24,13 +20,13 @@ void __register_parser(struct parser *parser);
 struct discover_device *test_create_device(struct parser_test *test,
 		const char *name);
 
-#define test_read_conf_data(t, d) \
-	__test_read_conf_data(t, d, sizeof(d))
+#define test_read_conf_data(t, f, d) \
+	__test_read_conf_data(t, f, d, sizeof(d))
 
-void __test_read_conf_data(struct parser_test *test,
+void __test_read_conf_data(struct parser_test *test, const char *conf_file,
 		const char *buf, size_t len);
-void test_read_conf_file(struct parser_test *test, const char *filename);
-void test_set_conf_source(struct parser_test *test, const char *url);
+void test_read_conf_file(struct parser_test *test, const char *filename,
+		const char *conf_file);
 
 int test_run_parser(struct parser_test *test, const char *parser_name);
 
@@ -38,6 +34,9 @@ void test_hotplug_device(struct parser_test *test, struct discover_device *dev);
 
 void test_add_file_data(struct parser_test *test, struct discover_device *dev,
 		const char *filename, const void *data, int size);
+void test_set_event_source(struct parser_test *test);
+void test_set_event_param(struct event *event, const char *name,
+		const char *value);
 
 #define test_add_file_string(test, dev, filename, str) \
 	test_add_file_data(test, dev, filename, str, sizeof(str) - 1)
@@ -48,8 +47,8 @@ struct discover_boot_option *get_boot_option(struct discover_context *ctx,
 /* embedded config */
 extern const char __embedded_config[];
 extern const size_t __embedded_config_size;
-#define test_read_conf_embedded(t) \
-	__test_read_conf_data(t, __embedded_config, __embedded_config_size)
+#define test_read_conf_embedded(t, f) \
+	__test_read_conf_data(t, f, __embedded_config, __embedded_config_size)
 
 /**
  * Checks for parser results.

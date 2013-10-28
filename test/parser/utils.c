@@ -15,6 +15,7 @@
 #include "device-handler.h"
 #include "parser.h"
 #include "resource.h"
+#include "event.h"
 
 #include "parser-test.h"
 
@@ -111,18 +112,20 @@ void test_fini(struct parser_test *test)
 	talloc_free(test);
 }
 
-void __test_read_conf_data(struct parser_test *test,
+void __test_read_conf_data(struct parser_test *test, const char *conf_file,
 		const char *buf, size_t len)
 {
-	test->conf.size = len;
-	test->conf.buf = talloc_memdup(test, buf, len);
+	test_add_file_data(test, test->ctx->device, conf_file, buf, len);
 }
 
-void test_read_conf_file(struct parser_test *test, const char *filename)
+void test_read_conf_file(struct parser_test *test, const char *filename,
+		const char *conf_file)
 {
 	struct stat stat;
+	size_t size;
 	char *path;
 	int fd, rc;
+	char *buf;
 
 	path = talloc_asprintf(test, "%s/%s", TEST_CONF_BASE, filename);
 
@@ -134,22 +137,18 @@ void test_read_conf_file(struct parser_test *test, const char *filename)
 	assert(!rc);
 	(void)rc;
 
-	test->conf.size = stat.st_size;
-	test->conf.buf = talloc_array(test, char, test->conf.size + 1);
+	size = stat.st_size;
+	buf = talloc_array(test, char, size + 1);
 
-	rc = read(fd, test->conf.buf, test->conf.size);
-	assert(rc == (ssize_t)test->conf.size);
+	rc = read(fd, buf, size);
+	assert(rc == (ssize_t)size);
 
-	*(char *)(test->conf.buf + test->conf.size) = '\0';
+	*(buf + size) = '\0';
 
 	close(fd);
 	talloc_free(path);
-}
 
-void test_set_conf_source(struct parser_test *test, const char *url)
-{
-	test->ctx->conf_url = pb_url_parse(test, url);
-	assert(test->ctx->conf_url);
+	test_add_file_data(test, test->ctx->device, conf_file, buf, size);
 }
 
 void test_add_file_data(struct parser_test *test, struct discover_device *dev,
@@ -165,6 +164,16 @@ void test_add_file_data(struct parser_test *test, struct discover_device *dev,
 	list_add(&test->files, &file->list);
 }
 
+void test_set_event_source(struct parser_test *test)
+{
+        test->ctx->event = talloc_zero(test->ctx, struct event);
+}
+
+void test_set_event_param(struct event *event, const char *name,
+                const char *value)
+{
+        event_set_param(event, name, value);
+}
 
 int parser_request_file(struct discover_context *ctx,
 		struct discover_device *dev, const char *filename,
@@ -221,6 +230,31 @@ int parser_replace_file(struct discover_context *ctx,
 	file->size = len;
 	return 0;
 }
+
+int parser_request_url(struct discover_context *ctx, struct pb_url *url,
+		char **buf, int *len)
+{
+	struct parser_test *test = ctx->test_data;
+	struct test_file *file;
+	char *tmp;
+
+	list_for_each_entry(&test->files, file, list) {
+		if (strcmp(file->name, url->file))
+			continue;
+
+		/* the read_file() interface always adds a trailing null
+		 * for string-safety; do the same here */
+		tmp = talloc_array(test, char, file->size + 1);
+		memcpy(tmp, file->data, file->size);
+		tmp[file->size] = '\0';
+		*buf = tmp;
+		*len = file->size;
+		return 0;
+	}
+
+	return -1;
+}
+
 int test_run_parser(struct parser_test *test, const char *parser_name)
 {
 	struct p_item* i;
@@ -229,7 +263,7 @@ int test_run_parser(struct parser_test *test, const char *parser_name)
 		if (strcmp(i->parser->name, parser_name))
 			continue;
 		test->ctx->parser = i->parser;
-		return i->parser->parse(test->ctx, test->conf.buf, test->conf.size);
+		return i->parser->parse(test->ctx);
 	}
 
 	errx(EXIT_FAILURE, "%s: parser '%s' not found", __func__, parser_name);

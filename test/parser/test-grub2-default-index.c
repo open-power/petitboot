@@ -19,7 +19,7 @@ void run_test(struct parser_test *test)
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
 
-	test_read_conf_embedded(test);
+	test_read_conf_embedded(test, "/boot/grub2/grub.cfg");
 	test_run_parser(test, "grub2");
 
 	ctx = test->ctx;

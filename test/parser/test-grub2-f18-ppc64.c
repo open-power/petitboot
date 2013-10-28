@@ -8,7 +8,9 @@ void run_test(struct parser_test *test)
 	struct discover_device *dev;
 	int i;
 
-	test_read_conf_file(test, "grub2-f18-ppc64.conf");
+	test_read_conf_file(test, "grub2-f18-ppc64.conf",
+			"/boot/grub2/grub.cfg");
+
 	test_run_parser(test, "grub2");
 
 	ctx = test->ctx;

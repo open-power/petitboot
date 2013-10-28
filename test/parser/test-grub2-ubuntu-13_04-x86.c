@@ -7,7 +7,8 @@ void run_test(struct parser_test *test)
 	struct discover_context *ctx;
 	struct discover_device *dev;
 
-	test_read_conf_file(test, "grub2-ubuntu-13_04-x86.conf");
+	test_read_conf_file(test, "grub2-ubuntu-13_04-x86.conf", "/grub.cfg");
+
 	test_run_parser(test, "grub2");
 
 	ctx = test->ctx;

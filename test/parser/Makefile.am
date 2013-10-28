@@ -51,8 +51,7 @@ TESTS = \
 	test-yaboot-rh8-ppc64 \
 	test-pxe-empty \
 	test-pxe-single \
-	test-pxe-initrd-in-append \
-	test-pxe-default
+	test-pxe-initrd-in-append
 
 $(TESTS): %: %.embedded-config.o
 $(TESTS): LDADD += $@.embedded-config.o
@@ -70,7 +69,9 @@ parser_objs = \
 	$(top_srcdir)/discover/resource.c \
 	$(top_srcdir)/discover/paths.c \
 	$(top_srcdir)/discover/device-handler.c \
-	$(top_srcdir)/discover/parser-conf.c
+	$(top_srcdir)/discover/parser-conf.c \
+	$(top_srcdir)/discover/user-event.c \
+	$(top_srcdir)/discover/event.c
 
 libtest_ro_SOURCES = \
 	main.c \

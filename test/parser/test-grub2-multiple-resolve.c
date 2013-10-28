@@ -19,7 +19,8 @@ void run_test(struct parser_test *test)
 	struct discover_context *ctx;
 	struct discover_device *dev;
 
-	test_read_conf_embedded(test);
+	test_read_conf_embedded(test, "/grub.cfg");
+
 	test_run_parser(test, "grub2");
 
 	ctx = test->ctx;
