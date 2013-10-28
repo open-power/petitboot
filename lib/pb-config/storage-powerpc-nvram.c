@@ -193,7 +193,7 @@ static int parse_one_interface_config(struct config *config,
 	struct interface_config *ifconf;
 	char *tok, *saveptr;
 
-	ifconf = talloc(config, struct interface_config);
+	ifconf = talloc_zero(config, struct interface_config);
 
 	if (!confstr || !strlen(confstr))
 		goto out_err;
