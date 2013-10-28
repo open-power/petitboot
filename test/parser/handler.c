@@ -40,10 +40,9 @@ void parser_init(void)
 {
 }
 
-void iterate_parsers(struct discover_context *ctx, enum conf_method method)
+void iterate_parsers(struct discover_context *ctx)
 {
 	(void)ctx;
-	(void)method;
 	assert(false);
 }
 

@@ -116,7 +116,7 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 
 	udev_setup_device_params(dev, ddev);
 
-	device_handler_discover(udev->handler, ddev, CONF_METHOD_LOCAL_FILE);
+	device_handler_discover(udev->handler, ddev);
 
 	return 0;
 }

@@ -9,97 +9,44 @@
 PBOOT_USER_EVENT_SOCKET="/tmp/petitboot.ev"
 log="/var/log/petitboot/pb-udhcpc.log"
 
-resolve_url() {
-	file="$1"
-
-	# URL? use as-is.
-	tmp=${file%://*}
-	if [ "$tmp" != "$file" ]
-	then
-		echo "$file"
-		return
-	fi
-
-	# Otherwise, TFTP using an appropriate host. Start with the
-	# DHCP 'tftp' option:
-	host=${tftp}
-
-	# next, try the DHCP next-server-address
-	[ -z "$host" ] && host=${siaddr}
-
-	# finally, use the DHCP server we got this lease from:
-	[ -z "$host" ] && host=${serverid}
-
-	echo "tftp://$host/$file"
-}
-
-do_pxe() {
-	basedir=$1
-
-	params="conf@${interface} method=dhcp"
-
-	# first, try by MAC
-	mac=$(tr ':' '-' < /sys/class/$interface/address)
-	pb-event $params url=$basedir/01-$mac
-
-	# try decreasing fragments of IP lease
-	ip_hex=$(printf '%02X%02X%02X%02X' $(echo $ip | tr '.' ' '))
-	for i in $(seq 8 -1 1)
-	do
-		frag=${ip_hex:0:$i}
-		pb-event $params url=$basedir/$frag
-	done
-
-	# last, use default
-	pb-event $params url=$basedir/default
-}
-
 pb_add () {
-
-	# Look for an explicit config file location in the DHCP config-file
-	# parameter
-	if [ -n "${conffile}" ]
-	then
-		url=$(resolve_url ${conffile})
-		pb-event conf@${interface} url=$url method=dhcp
-		return
-	fi
-
-	# Otherwise, we'll need the boot-file parameter. Looks like udhcpc
-	# will give us different names, depending if the parameter was in
-	# the header, or specified by options
+	# Looks like udhcpc will give us different names, depending if the
+	# parameter was in the header, or specified by options
 	[ -z "$bootfile" ] && bootfile=${boot_file}
 
-	if [ -z "$bootfile" ]
+	mac=$(< /sys/class/net/$interface/address)
+	paramstr=''
+
+	# Collect relevant DHCP response parameters into $paramstr
+	for name in conffile bootfile mac ip siaddr serverid tftp
+	do
+		value=$(eval "echo \${$name}")
+		[ -n "$value" ] || continue;
+
+		paramstr="$paramstr $name=$value"
+	done
+
+	pb-event dhcp@{interface} $paramstr
+
+	# Check if an explicit config file present
+	if [ -n "${conffile}" ]
 	then
-		return
+		return;
 	fi
 
-	# PXE behaviour is to download the config file based on a file
-	# structure relative to the pxelinux binary
-	file=${bootfile}
-	[ -z "$file" ] && file=${boot_file}
-	if [ -n "$file" ]
-	then
-		basedir=${file%%/*}
-		do_pxe $basedir
-	fi
+        # Finally, add an option for the boot_file parameter
+	paramstr='name=netboot'
 
-	# Finally, add an option for the boot_file parameter
-	k_server_ip=${rootpath%%:*}
-	k_root_dir=${rootpath#*:}
+	# Collect relevant parameters to add an option to the boot_file parameter
+	for name in rootpath siaddr boot_file
+        do
+                value=$(eval "echo \${$name}")
+                [ -n "$value" ] || continue;
 
-	args=
-	if [ -n "$rootpath" ]
-	then
-		[ ${k_server_ip} != ${rootpath} ] || k_server_ip=${serverid}
-		args="root=/dev/nfs ip=any nfsroot=${k_server_ip}:${k_root_dir}"
-	fi
+                paramstr="$paramstr $name=$value"
+        done
 
-	pb-event add@${interface} \
-		name=netboot \
-		image=tftp://${siaddr}/${boot_file} \
-		args="$args"
+	pb-event add@{interface} $paramstr
 }
 
 pb_remove () {

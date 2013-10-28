@@ -78,97 +78,44 @@ int parser_replace_file(struct discover_context *ctx,
 	return rc;
 }
 
-static int download_config(struct discover_context *ctx, char **buf, int *len)
+int parser_request_url(struct discover_context *ctx, struct pb_url *url,
+		char **buf, int *len)
 {
 	struct load_url_result *result;
 	int rc;
 
-	result = load_url(ctx, ctx->conf_url);
+	result = load_url(ctx, url);
 	if (!result)
-		return -1;
+		goto out;
 
 	rc = read_file(ctx, result->local, buf, len);
-	if (rc)
+	if (rc) {
+		pb_log("Read failed for the parser %s on file %s\n",
+				ctx->parser->name, result->local);
 		goto out_clean;
+	}
 
 	return 0;
 
 out_clean:
 	if (result->cleanup_local)
 		unlink(result->local);
+out:
 	return -1;
 }
 
-static void iterate_parser_files(struct discover_context *ctx,
-		const struct parser *parser)
-{
-	const char * const *filename;
-	const char *path;
-
-	if (!parser->filenames)
-		return;
-
-	for (filename = parser->filenames; *filename; filename++) {
-		int rc, len;
-		char *buf;
-
-		path = local_path(ctx, ctx->device, *filename);
-		if (!path)
-			continue;
-
-		rc = read_file(ctx, path, &buf, &len);
-		if (!rc) {
-			pb_log("Running parser %s on file %s\n",
-					parser->name, *filename);
-			parser->parse(ctx, buf, len);
-			talloc_free(buf);
-		}
-	}
-}
-
-void iterate_parsers(struct discover_context *ctx, enum conf_method method)
+void iterate_parsers(struct discover_context *ctx)
 {
 	struct p_item* i;
-	int rc, len;
-	char *buf;
 
 	pb_log("trying parsers for %s\n", ctx->device->device->id);
 
-	switch (method) {
-	case CONF_METHOD_LOCAL_FILE:
-		list_for_each_entry(&parsers, i, list) {
-			if (i->parser->method != CONF_METHOD_LOCAL_FILE)
-				continue;
-
-			pb_debug("\ttrying parser '%s'\n", i->parser->name);
-			ctx->parser = i->parser;
-			iterate_parser_files(ctx, ctx->parser);
-		}
-		ctx->parser = NULL;
-		break;
-
-	case CONF_METHOD_DHCP:
-		rc = download_config(ctx, &buf, &len);
-		if (rc) {
-			pb_log("\tdownload failed, aborting\n");
-			return;
-		}
-
-		list_for_each_entry(&parsers, i, list) {
-			if (i->parser->method != method)
-				continue;
-
-			pb_debug("\ttrying parser '%s'\n", i->parser->name);
-			ctx->parser = i->parser;
-			i->parser->parse(ctx, buf, len);
-		}
-
-		break;
-
-	case CONF_METHOD_UNKNOWN:
-		break;
-
+	list_for_each_entry(&parsers, i, list) {
+		pb_debug("\ttrying parser '%s'\n", i->parser->name);
+		ctx->parser = i->parser;
+		i->parser->parse(ctx);
 	}
+	ctx->parser = NULL;
 }
 
 static void *parsers_ctx;

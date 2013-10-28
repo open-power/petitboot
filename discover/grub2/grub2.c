@@ -86,24 +86,36 @@ bool resolve_grub2_resource(struct device_handler *handler,
 	return true;
 }
 
-static int grub2_parse(struct discover_context *dc, char *buf, int len)
-{
+static int grub2_parse(struct discover_context *dc)
+	{
+	const char * const *filename;
 	struct grub2_parser *parser;
+	int len, rc;
+	char *buf;
+
+	/* Support block device boot only at present */
+	if (dc->event)
+		return -1;
 
 	parser = grub2_parser_create(dc);
 
-	grub2_parser_parse(parser, buf, len);
+	for (filename = grub2_conf_files; *filename; filename++) {
+		rc = parser_request_file(dc, dc->device, *filename, &buf, &len);
+		if (rc)
+			continue;
+
+		grub2_parser_parse(parser, buf, len);
+		talloc_free(buf);
+	}
 
 	talloc_free(parser);
 
-	return 1;
+	return 0;
 }
 
 static struct parser grub2_parser = {
 	.name			= "grub2",
-	.method			= CONF_METHOD_LOCAL_FILE,
 	.parse			= grub2_parse,
-	.filenames		= grub2_conf_files,
 	.resolve_resource	= resolve_grub2_resource,
 };
 

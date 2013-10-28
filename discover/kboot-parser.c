@@ -151,33 +151,45 @@ static const char *const kboot_ignored_names[] = {
 	NULL
 };
 
-static int kboot_parse(struct discover_context *dc, char *buf, int len)
+static int kboot_parse(struct discover_context *dc)
 {
 	struct conf_context *conf;
+	const char * const *filename;
+	char *buf;
+	int len, rc;
+
+	/* Support block device boot only at present */
+	if (dc->event)
+		return -1;
 
 	conf = talloc_zero(dc, struct conf_context);
 
 	if (!conf)
-		return 0;
+		return -1;
 
 	conf->dc = dc;
 	conf->global_options = kboot_global_options,
 	conf_init_global_options(conf);
 	conf->get_pair = conf_get_pair_equal;
 	conf->process_pair = kboot_process_pair;
-	conf->parser_info = (void *)kboot_ignored_names,
+	conf->parser_info = (void *)kboot_ignored_names;
 
-	conf_parse_buf(conf, buf, len);
+	for (filename = kboot_conf_files; *filename; filename++) {
+		rc = parser_request_file(dc, dc->device, *filename, &buf, &len);
+		if (rc)
+			continue;
+
+		conf_parse_buf(conf, buf, len);
+		talloc_free(buf);
+	}
 
 	talloc_free(conf);
-	return 1;
+	return 0;
 }
 
 static struct parser kboot_parser = {
 	.name			= "kboot",
-	.method			= CONF_METHOD_LOCAL_FILE,
 	.parse			= kboot_parse,
-	.filenames		= kboot_conf_files,
 	.resolve_resource	= resolve_devpath_resource,
 };
 

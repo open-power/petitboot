@@ -50,6 +50,8 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 		*action = EVENT_ACTION_REMOVE;
 	else if (streq(buf, "conf"))
 		*action = EVENT_ACTION_CONF;
+	else if (streq(buf, "dhcp"))
+		*action = EVENT_ACTION_DHCP;
 	else {
 		pb_log("%s: unknown action: %s\n", __func__, buf);
 		return -1;

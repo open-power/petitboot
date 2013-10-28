@@ -589,7 +589,7 @@ void device_handler_add_device(struct device_handler *handler,
  * array, but has only just been initialised by the hotplug source.
  */
 int device_handler_discover(struct device_handler *handler,
-		struct discover_device *dev, enum conf_method method)
+		struct discover_device *dev)
 {
 	struct discover_context *ctx;
 	int rc;
@@ -604,7 +604,7 @@ int device_handler_discover(struct device_handler *handler,
 		goto out;
 
 	/* run the parsers. This will populate the ctx's boot_option list. */
-	iterate_parsers(ctx, method);
+	iterate_parsers(ctx);
 
 	/* add discovered stuff to the handler */
 	device_handler_discover_context_commit(handler, ctx);
@@ -615,24 +615,42 @@ out:
 	return 0;
 }
 
-/* incoming conf event */
-int device_handler_conf(struct device_handler *handler,
-		struct discover_device *dev, struct pb_url *url,
-		enum conf_method method)
+/* Incoming dhcp event */
+int device_handler_dhcp(struct device_handler *handler,
+		struct discover_device *dev, struct event *event)
 {
 	struct discover_context *ctx;
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
-	ctx->conf_url = url;
+	ctx->event = event;
 
-	iterate_parsers(ctx, method);
+	iterate_parsers(ctx);
 
 	device_handler_discover_context_commit(handler, ctx);
 
 	talloc_free(ctx);
 
 	return 0;
+}
+
+/* incoming conf event */
+int device_handler_conf(struct device_handler *handler,
+		struct discover_device *dev, struct pb_url *url)
+{
+        struct discover_context *ctx;
+
+        /* create our context */
+        ctx = device_handler_discover_context_create(handler, dev);
+        ctx->conf_url = url;
+
+        iterate_parsers(ctx);
+
+        device_handler_discover_context_commit(handler, ctx);
+
+        talloc_free(ctx);
+
+        return 0;
 }
 
 static struct discover_boot_option *find_boot_option_by_id(

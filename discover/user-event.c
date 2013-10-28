@@ -40,6 +40,9 @@
 #include "user-event.h"
 
 
+#define MAC_ADDR_SIZE	6
+#define IP_ADDR_SIZE	4
+
 struct user_event {
 	struct device_handler *handler;
 	int socket;
@@ -52,8 +55,8 @@ static const char *event_action_name(enum event_action action)
 		return "add";
 	case EVENT_ACTION_REMOVE:
 		return "remove";
-	case EVENT_ACTION_CONF:
-		return "conf";
+	case EVENT_ACTION_DHCP:
+		return "dhcp";
 	default:
 		break;
 	}
@@ -73,27 +76,30 @@ static void user_event_print_event(struct event __attribute__((unused)) *event)
 			event->params[i].name, event->params[i].value);
 }
 
-static enum conf_method parse_conf_method(const char *str)
-{
-
-	if (!strcasecmp(str, "dhcp")) {
-		return CONF_METHOD_DHCP;
-	}
-	return CONF_METHOD_UNKNOWN;
-}
-
 static struct resource *user_event_resource(struct discover_boot_option *opt,
-		struct event *event, const char *param_name)
+		struct event *event)
 {
+	const char *siaddr, *boot_file;
 	struct resource *res;
 	struct pb_url *url;
-	const char *val;
+	char *url_str;
 
-	val = event_get_param(event, param_name);
-	if (!val)
+	siaddr = event_get_param(event, "siaddr");
+	if (!siaddr) {
+		pb_log("%s: next server option not found\n", __func__);
 		return NULL;
+	}
 
-	url = pb_url_parse(opt, val);
+	boot_file = event_get_param(event, "boot_file");
+	if (!boot_file) {
+		pb_log("%s: boot_file not found\n", __func__);
+		return NULL;
+	}
+
+	url_str = talloc_asprintf(opt, "%s%s/%s", "tftp://", siaddr, boot_file);
+	url = pb_url_parse(opt, url_str);
+	talloc_free(url_str);
+
 	if (!url)
 		return NULL;
 
@@ -109,41 +115,55 @@ static struct resource *user_event_resource(struct discover_boot_option *opt,
 static int parse_user_event(struct discover_context *ctx, struct event *event)
 {
 	struct discover_boot_option *d_opt;
+	char *server_ip, *root_dir, *p;
 	struct boot_option *opt;
 	struct device *dev;
-	const char *p;
+	const char *val;
 
 	dev = ctx->device->device;
 
 	d_opt = discover_boot_option_create(ctx, ctx->device);
-	opt = d_opt->option;
-
 	if (!d_opt)
 		goto fail;
 
-	p = event_get_param(event, "name");
+	opt = d_opt->option;
 
-	if (!p) {
+	val = event_get_param(event, "name");
+
+	if (!val) {
 		pb_log("%s: no name found\n", __func__);
-		goto fail;
+		goto fail_opt;
 	}
 
-	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, p);
-	opt->name = talloc_strdup(opt, p);
+	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, val);
+	opt->name = talloc_strdup(opt, val);
 
-	d_opt->boot_image = user_event_resource(d_opt, event, "image");
+	d_opt->boot_image = user_event_resource(d_opt, event);
 	if (!d_opt->boot_image) {
 		pb_log("%s: no boot image found for %s!\n", __func__,
 				opt->name);
-		goto fail;
+		goto fail_opt;
 	}
 
-	d_opt->initrd = user_event_resource(d_opt, event, "initrd");
+	val = event_get_param(event, "rootpath");
+	if (val) {
+		server_ip = talloc_strdup(opt, val);
+		p = strchr(server_ip, ':');
+		if (p) {
+			root_dir = talloc_strdup(opt, p + 1);
+			*p = '\0';
+			opt->boot_args = talloc_asprintf(opt, "%s%s:%s",
+					"root=/dev/nfs ip=any nfsroot=",
+					server_ip, root_dir);
 
-	p = event_get_param(event, "args");
+			talloc_free(root_dir);
+		} else {
+			opt->boot_args = talloc_asprintf(opt, "%s",
+					"root=/dev/nfs ip=any nfsroot=");
+		}
 
-	if (p)
-		opt->boot_args = talloc_strdup(opt, p);
+		talloc_free(server_ip);
+	}
 
 	opt->description = talloc_asprintf(opt, "%s %s", opt->boot_image_file,
 		opt->boot_args ? : "");
@@ -155,16 +175,189 @@ static int parse_user_event(struct discover_context *ctx, struct event *event)
 
 	return 0;
 
-fail:
+fail_opt:
 	talloc_free(d_opt);
+fail:
 	return -1;
+}
+
+static const char *parse_host_addr(struct event *event)
+{
+	const char *val;
+
+	val = event_get_param(event, "tftp");
+	if (val)
+		return val;
+
+	val = event_get_param(event, "siaddr");
+	if (val)
+		return val;
+
+	val = event_get_param(event, "serverid");
+	if (val)
+		return val;
+
+	return NULL;
+}
+
+static char *parse_mac_addr(struct discover_context *ctx, const char *mac)
+{
+	unsigned int mac_addr_arr[MAC_ADDR_SIZE];
+	char *mac_addr;
+
+	sscanf(mac, "%X:%X:%X:%X:%X:%X", mac_addr_arr, mac_addr_arr + 1,
+			mac_addr_arr + 2, mac_addr_arr + 3, mac_addr_arr + 4,
+			mac_addr_arr + 5);
+
+	mac_addr = talloc_asprintf(ctx, "01-%02X-%02X-%02X-%02X-%02X-%02X",
+			mac_addr_arr[0], mac_addr_arr[1], mac_addr_arr[2],
+			mac_addr_arr[3], mac_addr_arr[4], mac_addr_arr[5]);
+
+	return mac_addr;
+}
+
+static char *parse_ip_addr(struct discover_context *ctx, const char *ip)
+{
+	unsigned int ip_addr_arr[IP_ADDR_SIZE];
+	char *ip_hex;
+
+	sscanf(ip, "%u.%u.%u.%u", ip_addr_arr, ip_addr_arr + 1,
+			ip_addr_arr + 2, ip_addr_arr + 3);
+
+	ip_hex = talloc_asprintf(ctx, "%02X%02X%02X%02X", ip_addr_arr[0],
+			ip_addr_arr[1], ip_addr_arr[2], ip_addr_arr[3]);
+
+	return ip_hex;
+}
+
+struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
+		struct event *event)
+{
+	const char *conffile, *host, *bootfile;
+	char *p, *basedir, *url_str;
+	struct pb_url *url;
+
+	conffile = event_get_param(event, "conffile");
+	if (conffile) {
+		if (is_url(conffile)) {
+			url = pb_url_parse(ctx, conffile);
+		} else {
+			host = parse_host_addr(event);
+			if (!host) {
+				pb_log("%s: host address not found\n",
+						__func__);
+				return NULL;
+			}
+
+			url_str = talloc_asprintf(ctx, "%s%s/%s", "tftp://",
+					host, conffile);
+			url = pb_url_parse(ctx, url_str);
+
+			talloc_free(url_str);
+		}
+
+		ctx->conf_url = url;
+	} else {
+		host = parse_host_addr(event);
+		if (!host) {
+			pb_log("%s: host address not found\n", __func__);
+			return NULL;
+		}
+
+		bootfile = event_get_param(event, "bootfile");
+		if (!bootfile) {
+			pb_log("%s: bootfile param not found\n", __func__);
+			return NULL;
+		}
+
+		basedir = talloc_strdup(ctx, bootfile);
+		p = strchr(basedir, '/');
+		if (p)
+			*p = '\0';
+
+		if (!strcmp(basedir,"") || !strcmp(basedir, "."))
+			url_str = talloc_asprintf(ctx, "%s%s/", "tftp://",host);
+		else
+			url_str = talloc_asprintf(ctx, "%s%s/%s/", "tftp://",host,
+					basedir);
+
+		url = pb_url_parse(ctx, url_str);
+
+		talloc_free(url_str);
+		talloc_free(basedir);
+	}
+
+	return url;
+}
+
+char **user_event_parse_conf_filenames(
+		struct discover_context *ctx, struct event *event)
+{
+	char *mac_addr, *ip_hex;
+	const char *mac, *ip;
+	char **filenames;
+	int index, len;
+
+	mac = event_get_param(event, "mac");
+	if (mac)
+		mac_addr = parse_mac_addr(ctx, mac);
+	else
+		mac_addr = NULL;
+
+	ip = event_get_param(event, "ip");
+	if (ip) {
+		ip_hex = parse_ip_addr(ctx, ip);
+		len = strlen(ip_hex);
+	} else {
+		ip_hex = NULL;
+		len = 0;
+	}
+
+	if (!mac_addr && !ip_hex) {
+		pb_log("%s: neither mac nor ip parameter found\n", __func__);
+		return NULL;
+	}
+
+	/* Filenames as fallback IP's + mac + default */
+	filenames = talloc_array(ctx, char *, len + 3);
+
+	index = 0;
+	if (mac_addr)
+		filenames[index++] = talloc_strdup(filenames, mac_addr);
+
+	while (len) {
+		filenames[index++] = talloc_strdup(filenames, ip_hex);
+		ip_hex[--len] = '\0';
+	}
+
+	filenames[index++] = talloc_strdup(filenames, "default");
+	filenames[index++] = NULL;
+
+	if (mac_addr)
+		talloc_free(mac_addr);
+
+	if (ip_hex)
+		talloc_free(ip_hex);
+
+	return filenames;
+}
+
+static int user_event_dhcp(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	struct discover_device *dev;
+
+	dev = discover_device_create(handler, event->device);
+
+	device_handler_dhcp(handler, dev, event);
+
+	return 0;
 }
 
 static int user_event_conf(struct user_event *uev, struct event *event)
 {
 	struct device_handler *handler = uev->handler;
 	struct discover_device *dev;
-	enum conf_method method;
 	struct pb_url *url;
 	const char *val;
 
@@ -176,17 +369,9 @@ static int user_event_conf(struct user_event *uev, struct event *event)
 	if (!url)
 		return 0;
 
-	val = event_get_param(event, "method");
-	if (!val)
-		return 0;
-
-	method = parse_conf_method(val);
-	if (method == CONF_METHOD_UNKNOWN)
-		return 0;
-
 	dev = discover_device_create(handler, event->device);
 
-	device_handler_conf(handler, dev, url, method);
+	device_handler_conf(handler, dev, url);
 
 	return 0;
 }
@@ -248,6 +433,9 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	case EVENT_ACTION_CONF:
 		result = user_event_conf(uev, event);
+		break;
+	case EVENT_ACTION_DHCP:
+		result = user_event_dhcp(uev, event);
 		break;
 	default:
 		break;

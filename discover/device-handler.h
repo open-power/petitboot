@@ -14,16 +14,6 @@ struct event;
 struct device;
 struct waitset;
 
-enum conf_method {
-	CONF_METHOD_LOCAL_FILE,	/* discover by looking at local files on this
-				   block device */
-
-	CONF_METHOD_DHCP,	/* configuration from a DHCP response */
-
-	CONF_METHOD_UNKNOWN = -1,
-};
-
-
 struct discover_device {
 	struct device		*device;
 
@@ -64,7 +54,6 @@ struct discover_context {
 	struct discover_device	*device;
 	struct list		boot_options;
 	struct pb_url		*conf_url;
-	enum conf_method	method;
 	void			*test_data;
 };
 
@@ -82,10 +71,11 @@ struct discover_device *discover_device_create(struct device_handler *handler,
 void device_handler_add_device(struct device_handler *handler,
 		struct discover_device *device);
 int device_handler_discover(struct device_handler *handler,
-		struct discover_device *dev, enum conf_method method);
+		struct discover_device *dev);
+int device_handler_dhcp(struct device_handler *handler,
+		struct discover_device *dev, struct event *event);
 int device_handler_conf(struct device_handler *handler,
-		struct discover_device *dev, struct pb_url *url,
-		enum conf_method method);
+		struct discover_device *dev, struct pb_url *url);
 void device_handler_remove(struct device_handler *handler,
 		struct discover_device *device);
 

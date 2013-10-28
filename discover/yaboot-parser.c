@@ -356,15 +356,22 @@ static const char *yaboot_known_names[] = {
 	NULL
 };
 
-static int yaboot_parse(struct discover_context *dc, char *buf, int len)
+static int yaboot_parse(struct discover_context *dc)
 {
-	struct conf_context *conf;
+	const char * const *filename;
 	struct yaboot_state *state;
+	struct conf_context *conf;
+	int len, rc;
+	char *buf;
+
+	/* Support block device boot only at present */
+	if (dc->event)
+		return -1;
 
 	conf = talloc_zero(dc, struct conf_context);
 
 	if (!conf)
-		return 0;
+		return -1;
 
 	conf->dc = dc;
 	conf->global_options = yaboot_global_options,
@@ -378,17 +385,22 @@ static int yaboot_parse(struct discover_context *dc, char *buf, int len)
 
 	state->opt = NULL;
 
-	conf_parse_buf(conf, buf, len);
+	for (filename = yaboot_conf_files; *filename; filename++) {
+		rc = parser_request_file(dc, dc->device, *filename, &buf, &len);
+		if (rc)
+			continue;
+
+		conf_parse_buf(conf, buf, len);
+		talloc_free(buf);
+	}
 
 	talloc_free(conf);
-	return 1;
+	return 0;
 }
 
 static struct parser yaboot_parser = {
 	.name			= "yaboot",
-	.method			= CONF_METHOD_LOCAL_FILE,
 	.parse			= yaboot_parse,
-	.filenames		= yaboot_conf_files,
 	.resolve_resource	= resolve_devpath_resource,
 };
 

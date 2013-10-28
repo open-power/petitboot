@@ -27,10 +27,7 @@ struct resource;
  */
 struct parser {
 	char			*name;
-	enum conf_method	method;
-	const char * const	*filenames;
-	int			(*parse)(struct discover_context *ctx,
-						char *buf, int len);
+	int			(*parse)(struct discover_context *ctx);
 	bool			(*resolve_resource)(
 						struct device_handler *handler,
 						struct resource *res);
@@ -48,7 +45,7 @@ enum generic_icon_type {
 
 void parser_init(void);
 
-void iterate_parsers(struct discover_context *ctx, enum conf_method method);
+void iterate_parsers(struct discover_context *ctx);
 int parse_user_event(struct discover_context *ctx, struct event *event);
 
 /* File IO functions for parsers; these should be the only interface that
@@ -63,5 +60,7 @@ int parser_request_file(struct discover_context *ctx,
 int parser_replace_file(struct discover_context *ctx,
 		struct discover_device *dev, const char *filename,
 		char *buf, int len);
+int parser_request_url(struct discover_context *ctx, struct pb_url *url,
+		char **buf, int *len);
 
 #endif /* _PARSER_H */

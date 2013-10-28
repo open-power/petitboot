@@ -9,6 +9,8 @@
 #include "parser-conf.h"
 #include "parser-utils.h"
 #include "resource.h"
+#include "paths.h"
+#include "user-event.h"
 
 struct pxe_parser_info {
 	struct discover_boot_option *opt;
@@ -91,15 +93,23 @@ static void pxe_process_pair(struct conf_context *ctx,
 
 }
 
-static int pxe_parse(struct discover_context *dc, char *buf, int len)
+static int pxe_parse(struct discover_context *dc)
 {
 	struct pxe_parser_info *parser_info;
+	char **pxe_conf_files, **filename;
+	struct pb_url *conf_url, *url;
 	struct conf_context *conf;
+	int len, rc;
+	char *buf;
+
+	/* Expects dhcp event parameters to support network boot */
+	if (!dc->event)
+		return -1;
 
 	conf = talloc_zero(dc, struct conf_context);
 
 	if (!conf)
-		return 0;
+		goto out;
 
 	conf->dc = dc;
 	conf->get_pair = conf_get_pair_space;
@@ -109,16 +119,60 @@ static int pxe_parse(struct discover_context *dc, char *buf, int len)
 	parser_info = talloc_zero(conf, struct pxe_parser_info);
 	conf->parser_info = parser_info;
 
+	conf_url = user_event_parse_conf_url(dc, dc->event);
+	if (!conf_url)
+		goto out_conf;
+
+	if (dc->conf_url) {
+		rc = parser_request_url(dc, dc->conf_url, &buf, &len);
+		if (rc)
+			goto out_conf;
+	} else {
+		pxe_conf_files = user_event_parse_conf_filenames(dc, dc->event);
+		if (!pxe_conf_files)
+			goto out_conf;
+
+		for (filename = pxe_conf_files; *filename; filename++) {
+			url = pb_url_join(dc, conf_url, *filename);
+			if (!url)
+				goto out_pxe_conf;
+
+			rc = parser_request_url(dc, url, &buf, &len);
+			if (!rc) /* found one, just break */
+				break;
+
+			talloc_free(url);
+		}
+
+		/* No configuration file found on the boot server */
+		if (rc)
+			goto out_pxe_conf;
+
+		dc->conf_url = url;
+
+		talloc_free(conf_url);
+		talloc_free(pxe_conf_files);
+	}
+
+	/* Call the config file parser with the data read from the file */
 	conf_parse_buf(conf, buf, len);
 
+	talloc_free(buf);
 	talloc_free(conf);
-	return 1;
+
+	return 0;
+
+out_pxe_conf:
+	talloc_free(pxe_conf_files);
+out_conf:
+	talloc_free(conf);
+out:
+	return -1;
 }
 
 static struct parser pxe_parser = {
 	.name			= "pxe",
 	.parse			= pxe_parse,
-	.method			= CONF_METHOD_DHCP,
 };
 
 register_parser(pxe_parser);
