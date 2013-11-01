@@ -12,8 +12,7 @@ static void __log(const char *fmt, va_list ap)
 	if (!logf)
 		return;
 	vfprintf(logf, fmt, ap);
-	if (debug)
-		fflush(logf);
+	fflush(logf);
 }
 
 void pb_log(const char *fmt, ...)
