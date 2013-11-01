@@ -60,7 +60,7 @@ void cui_abort(struct cui *cui)
 
 void cui_resize(struct cui *cui)
 {
-	pb_log("%s: resizing\n", __func__);
+	pb_debug("%s: resizing\n", __func__);
 	cui->resize = 1;
 }
 
@@ -112,7 +112,7 @@ static int cui_boot(struct pmenu_item *item)
 
 	assert(cui->current == &cui->main->scr);
 
-	pb_log("%s: %s\n", __func__, cod->name);
+	pb_debug("%s: %s\n", __func__, cod->name);
 
 	nc_scr_status_printf(cui->current, "Booting %s...", cod->name);
 
@@ -302,7 +302,7 @@ static void cui_handle_resize(struct cui *cui)
 		return;
 	}
 
-	pb_log("%s: {%u,%u}\n", __func__, ws.ws_row, ws.ws_col);
+	pb_debug("%s: {%u,%u}\n", __func__, ws.ws_row, ws.ws_col);
 
 	wclear(cui->current->main_ncw);
 	resize_term(ws.ws_row, ws.ws_col);
@@ -331,7 +331,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	ITEM *selected;
 	int result;
 
-	pb_log("%s: %p %s\n", __func__, opt, opt->id);
+	pb_debug("%s: %p %s\n", __func__, opt, opt->id);
 
 	selected = current_item(cui->main->ncm);
 

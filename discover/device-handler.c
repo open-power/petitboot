@@ -440,7 +440,7 @@ static bool resource_resolve(struct resource *res, const char *name,
 	if (resource_is_resolved(res))
 		return true;
 
-	pb_log("Attempting to resolve resource %s->%s with parser %s\n",
+	pb_debug("Attempting to resolve resource %s->%s with parser %s\n",
 			opt->option->id, name, parser->name);
 	parser->resolve_resource(handler, res);
 
@@ -502,13 +502,13 @@ static void process_boot_option_queue(struct device_handler *handler)
 	list_for_each_entry_safe(&handler->unresolved_boot_options,
 			opt, tmp, list) {
 
-		pb_log("queue: attempting resolution for %s\n",
+		pb_debug("queue: attempting resolution for %s\n",
 				opt->option->id);
 
 		if (!boot_option_resolve(opt, handler))
 			continue;
 
-		pb_log("\tresolved!\n");
+		pb_debug("\tresolved!\n");
 
 		list_remove(&opt->list);
 		list_add_tail(&opt->device->boot_options, &opt->list);

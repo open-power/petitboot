@@ -361,7 +361,7 @@ static int pbt_twin_waiter_cb(struct pbt_twin_ctx *twin_ctx)
 
 static void pbt_scr_destructor(struct pbt_scr *scr)
 {
-	pb_log("%s\n", __func__);
+	pb_debug("%s\n", __func__);
 
 	twin_x11_destroy(scr->twin_ctx.x11);
 	// FIXME: need cursor cleanup???
@@ -409,7 +409,7 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx,
 			goto fail_ctx_create;
 		}
 
-		pb_log("%s: x11: %p\n", __func__, scr->twin_ctx.x11);
+		pb_debug("%s: x11: %p\n", __func__, scr->twin_ctx.x11);
 
 		assert(scr->twin_ctx.x11->screen);
 		scr->tscreen = scr->twin_ctx.x11->screen;

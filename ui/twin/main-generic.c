@@ -58,7 +58,7 @@ static int edit_preferences_cb(struct pbt_item *item)
 
 	(void)client;
 
-	pb_log("%s: TODO\n", __func__);
+	pb_debug("%s: TODO\n", __func__);
 
 	return 0;
 }

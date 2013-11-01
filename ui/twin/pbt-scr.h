@@ -33,9 +33,9 @@
 # include <libtwin/twin_fbdev.h>
 #endif
 
-#define DBG(fmt, args...) pb_log("DBG: " fmt, ## args)
+#define DBG(fmt, args...) pb_debug("DBG: " fmt, ## args)
 #define DBGS(fmt, args...) \
-	pb_log("DBG:%s:%d: " fmt, __func__, __LINE__, ## args)
+	pb_debug("DBG:%s:%d: " fmt, __func__, __LINE__, ## args)
 
 struct pbt_quad {
 	twin_coord_t x;

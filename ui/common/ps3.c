@@ -141,11 +141,11 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	if (!result)
 		values->video_mode = (uint16_t)tmp;
 
-	pb_log("%s: default_item: %x\n", __func__,
+	pb_debug("%s: default_item: %x\n", __func__,
 		(unsigned int)values->default_item);
-	pb_log("%s: timeout: %u\n", __func__,
+	pb_debug("%s: timeout: %u\n", __func__,
 		(unsigned int)values->timeout);
-	pb_log("%s: video_mode:   %u\n", __func__,
+	pb_debug("%s: video_mode:   %u\n", __func__,
 		(unsigned int)values->video_mode);
 fail:
 	return (result || sum) ? -1 : 0;
@@ -163,8 +163,8 @@ int ps3_flash_set_values(const struct ps3_flash_values *values)
 	int result;
 	struct ps3_flash_ctx fc;
 
-	pb_log("%s: default_item: %u\n", __func__, values->default_item);
-	pb_log("%s: video_mode:   %u\n", __func__, values->video_mode);
+	pb_debug("%s: default_item: %u\n", __func__, values->default_item);
+	pb_debug("%s: video_mode:   %u\n", __func__, values->video_mode);
 
 	result = ps3_flash_open(&fc, "r+");
 
@@ -245,7 +245,7 @@ static int ps3_video_ioctl(int request, unsigned int *mode_id)
 
 int ps3_set_video_mode(unsigned int mode_id)
 {
-	pb_log("%s: %u\n", __func__, mode_id);
+	pb_debug("%s: %u\n", __func__, mode_id);
 	return ps3_video_ioctl(PS3FB_IOCTL_SETMODE, &mode_id);
 }
 

@@ -204,7 +204,7 @@ static int interface_down(struct interface *interface)
 static void udhcpc_process_exit(struct process *process)
 {
 	struct interface *interface = process->data;
-	pb_log("udhcp client [pid %d] for interface %s exited, rc %d\n",
+	pb_debug("udhcp client [pid %d] for interface %s exited, rc %d\n",
 			process->pid, interface->name, process->exit_status);
 	interface->udhcpc_process = NULL;
 	process_release(process);

@@ -34,14 +34,9 @@
 #  error "Curses header file not found."
 #endif
 
-#ifdef DEBUG
-#define DBG(fmt, args...) pb_log("DBG: " fmt, ## args)
+#define DBG(fmt, args...) pb_debug("DBG: " fmt, ## args)
 #define DBGS(fmt, args...) \
-	pb_log("DBG:%s:%d: " fmt, __func__, __LINE__, ## args)
-#else
-#define DBG(fmt, args...)
-#define DBGS(fmt, args...)
-#endif
+	pb_debug("DBG:%s:%d: " fmt, __func__, __LINE__, ## args)
 
 
 enum pb_nc_sig {

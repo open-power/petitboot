@@ -275,7 +275,7 @@ static int ps3_boot_cb(struct cui *cui, struct cui_opt_data *cod)
 	int altered_args;
 	char *orig_args;
 
-	pb_log("%s: %s\n", __func__, cod->name);
+	pb_debug("%s: %s\n", __func__, cod->name);
 
 	assert(ps3->cui->current == &ps3->cui->main->scr);
 

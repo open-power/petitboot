@@ -65,11 +65,11 @@ static void user_event_print_event(struct event __attribute__((unused)) *event)
 {
 	int i;
 
-	pb_log("user_event %s event:\n", event_action_name(event->action));
-	pb_log("\tdevice: %s\n", event->device);
+	pb_debug("user_event %s event:\n", event_action_name(event->action));
+	pb_debug("\tdevice: %s\n", event->device);
 
 	for (i = 0; i < event->n_params; i++)
-		pb_log("\t%-12s => %s\n",
+		pb_debug("\t%-12s => %s\n",
 			event->params[i].name, event->params[i].value);
 }
 
@@ -276,7 +276,7 @@ static int user_event_process(void *arg)
 		return 0;
 	}
 
-	pb_log("%s: %u bytes\n", __func__, len);
+	pb_debug("%s: %u bytes\n", __func__, len);
 
 	user_event_handle_message(uev, buf, len);
 
@@ -287,7 +287,7 @@ static int user_event_destructor(void *arg)
 {
 	struct user_event *uev = arg;
 
-	pb_log("%s\n", __func__);
+	pb_debug("%s\n", __func__);
 
 	if (uev->socket >= 0)
 		close(uev->socket);
@@ -328,7 +328,7 @@ struct user_event *user_event_init(struct waitset *waitset,
 	waiter_register_io(waitset, uev->socket, WAIT_IN,
 			user_event_process, uev);
 
-	pb_log("%s: waiting on %s\n", __func__, PBOOT_USER_EVENT_SOCKET);
+	pb_debug("%s: waiting on %s\n", __func__, PBOOT_USER_EVENT_SOCKET);
 
 	return uev;
 

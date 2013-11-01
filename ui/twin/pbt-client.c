@@ -58,7 +58,7 @@ static int pbt_client_boot(struct pbt_item *item)
 	int result;
 	struct pb_opt_data *opt_data = pbt_opt_data_from_item(item);
 
-	pb_log("%s: %s\n", __func__, pbt_item_name(item));
+	pb_debug("%s: %s\n", __func__, pbt_item_name(item));
 
 	pbt_frame_status_printf(&item->pbt_client->frame, "Booting %s...",
 		pbt_item_name(item));
@@ -88,7 +88,7 @@ static int pbt_device_add(struct device *dev, struct pbt_client *client)
 	struct pbt_quad q;
 	const char *icon_file;
 
-	pb_log("%s: %p %s: n_options %d\n", __func__, dev, dev->id,
+	pb_debug("%s: %p %s: n_options %d\n", __func__, dev, dev->id,
 		dev->n_options);
 
 	pb_protocol_dump_device(dev, "", pb_log_get_stream());
@@ -181,7 +181,7 @@ static void pbt_device_remove(struct device *dev, struct pbt_client *client)
 	struct pbt_item *next_item;
 	struct pbt_item *i;
 
-	pb_log("%s: %p %s: n_options %d\n", __func__, dev, dev->id,
+	pb_debug("%s: %p %s: n_options %d\n", __func__, dev, dev->id,
 		dev->n_options);
 
 	pb_protocol_dump_device(dev, "", pb_log_get_stream());
@@ -245,7 +245,7 @@ static struct discover_client_ops pbt_client_ops = {
 
 static void pbt_client_destructor(struct pbt_client *client)
 {
-	pb_log("%s\n", __func__);
+	pb_debug("%s\n", __func__);
 
 	// move to screen twin_x11_destroy(twin_ctx);
 	talloc_free(client->discover_client);

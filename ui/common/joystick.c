@@ -94,7 +94,7 @@ struct pjs *pjs_init(void *ctx, int (*map)(const struct js_event *))
 
 	talloc_set_destructor(pjs, pjs_destructor);
 
-	pb_log("%s: using %s\n", __func__, dev_name);
+	pb_debug("%s: using %s\n", __func__, dev_name);
 
 	return pjs;
 

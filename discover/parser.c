@@ -140,7 +140,7 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 			if (i->parser->method != CONF_METHOD_LOCAL_FILE)
 				continue;
 
-			pb_log("\ttrying parser '%s'\n", i->parser->name);
+			pb_debug("\ttrying parser '%s'\n", i->parser->name);
 			ctx->parser = i->parser;
 			iterate_parser_files(ctx, ctx->parser);
 		}
@@ -158,7 +158,7 @@ void iterate_parsers(struct discover_context *ctx, enum conf_method method)
 			if (i->parser->method != method)
 				continue;
 
-			pb_log("\ttrying parser '%s'\n", i->parser->name);
+			pb_debug("\ttrying parser '%s'\n", i->parser->name);
 			ctx->parser = i->parser;
 			i->parser->parse(ctx, buf, len);
 		}

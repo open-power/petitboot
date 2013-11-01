@@ -23,15 +23,6 @@
 #include "pb-discover.h"
 #include "device-handler.h"
 
-#if defined(DEBUG)
-#define DBG(fmt, args...) pb_log("DBG: " fmt, ## args)
-#define DBGS(fmt, args...) \
-	pb_log("DBG:%s:%d: " fmt, __func__, __LINE__, ## args)
-#else
-#define DBG(fmt, args...)
-#define DBGS(fmt, args...)
-#endif
-
 struct pb_udev {
 	struct udev *udev;
 	struct udev_monitor *monitor;
@@ -323,7 +314,7 @@ struct pb_udev *udev_init(struct waitset *waitset,
 	waiter_register_io(waitset, udev_monitor_get_fd(udev->monitor), WAIT_IN,
 		udev_process, udev->monitor);
 
-	pb_log("%s: waiting on udev\n", __func__);
+	pb_debug("%s: waiting on udev\n", __func__);
 
 	return udev;
 

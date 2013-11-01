@@ -181,7 +181,7 @@ int conf_set_global_option(struct conf_context *conf, const char *name,
 		if (streq(name, conf->global_options[i].name)) {
 			conf->global_options[i].value
 				= talloc_strdup(conf, value);
-			pb_log("%s: %s = '%s'\n", __func__, name, value);
+			pb_debug("%s: %s = '%s'\n", __func__, name, value);
 			return 1;
 		}
 	}
