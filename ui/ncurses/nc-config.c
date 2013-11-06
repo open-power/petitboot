@@ -31,7 +31,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	19
+#define N_FIELDS	23
 
 enum net_conf_type {
 	NET_CONF_TYPE_DHCP_ALL,
@@ -61,6 +61,7 @@ struct config_screen {
 		struct nc_widget_label		*autoboot_l;
 		struct nc_widget_textbox	*timeout_f;
 		struct nc_widget_label		*timeout_l;
+		struct nc_widget_label		*timeout_help_l;
 
 		struct nc_widget_label		*network_l;
 		struct nc_widget_select		*network_f;
@@ -71,10 +72,13 @@ struct config_screen {
 		struct nc_widget_textbox	*ip_addr_f;
 		struct nc_widget_label		*ip_mask_l;
 		struct nc_widget_textbox	*ip_mask_f;
+		struct nc_widget_label		*ip_addr_mask_help_l;
 		struct nc_widget_label		*gateway_l;
 		struct nc_widget_textbox	*gateway_f;
+		struct nc_widget_label		*gateway_help_l;
 		struct nc_widget_label		*dns_l;
 		struct nc_widget_textbox	*dns_f;
+		struct nc_widget_label		*dns_dhcp_help_l;
 		struct nc_widget_label		*dns_help_l;
 
 		struct nc_widget_button		*ok_b;
@@ -268,19 +272,25 @@ static int layout_pair(struct config_screen *screen, int y,
 static void config_screen_layout_widgets(struct config_screen *screen,
 		enum net_conf_type net_conf)
 {
-	struct nc_widget *wl, *wf;
+	struct nc_widget *wl, *wf, *wh;
+	int y, x, help_x;
 	bool show;
-	int y, x;
 
 	y = 1;
+	help_x = screen->field_x + 2 +
+		widget_width(widget_textbox_base(screen->widgets.dns_f));
 
 	y += layout_pair(screen, y, screen->widgets.autoboot_l,
 			widget_checkbox_base(screen->widgets.autoboot_f));
 
-	y += layout_pair(screen, y, screen->widgets.timeout_l,
-			widget_textbox_base(screen->widgets.timeout_f));
+	wf = widget_textbox_base(screen->widgets.timeout_f);
+	widget_move(widget_label_base(screen->widgets.timeout_l),
+			y, screen->label_x);
+	widget_move(wf, y, screen->field_x);
+	widget_move(widget_label_base(screen->widgets.timeout_help_l),
+			y, screen->field_x + widget_width(wf) + 1);
 
-	y += 1;
+	y += 2;
 
 	y += layout_pair(screen, y, screen->widgets.network_l,
 			widget_select_base(screen->widgets.network_f));
@@ -320,23 +330,38 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 	if (show) {
 		widget_move(wl, y, x);
 		widget_move(wf, y, x + 2);
-		y += 1;
+	}
+
+	/* help for IP/mask */
+	wh = widget_label_base(screen->widgets.ip_addr_mask_help_l);
+	widget_set_visible(wh, show);
+	if (show) {
+		widget_move(wh, y, help_x);
+		y++;
 	}
 
 	wl = widget_label_base(screen->widgets.gateway_l);
 	wf = widget_textbox_base(screen->widgets.gateway_f);
+	wh = widget_label_base(screen->widgets.gateway_help_l);
 	widget_set_visible(wl, show);
 	widget_set_visible(wf, show);
+	widget_set_visible(wh, show);
 
-	if (show)
-		y += layout_pair(screen, y, screen->widgets.gateway_l, wf) + 1;
+	if (show) {
+		layout_pair(screen, y, screen->widgets.gateway_l, wf);
+		widget_move(wh, y, help_x);
+		y++;
+	}
 
-	y += layout_pair(screen, y, screen->widgets.dns_l,
+	wh = widget_label_base(screen->widgets.dns_help_l);
+	layout_pair(screen, y, screen->widgets.dns_l,
 			widget_textbox_base(screen->widgets.dns_f));
+	widget_move(wh, y, help_x);
+	y++;
 
 	/* we show the DNS/DHCP help if we're configuring DHCP */
 	show = net_conf != NET_CONF_TYPE_STATIC;
-	wl = widget_label_base(screen->widgets.dns_help_l);
+	wl = widget_label_base(screen->widgets.dns_dhcp_help_l);
 	widget_set_visible(wl, show);
 	if (show) {
 		widget_move(wl, y, screen->field_x);
@@ -424,6 +449,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	str = talloc_asprintf(screen, "%d", config->autoboot_timeout_sec);
 	screen->widgets.timeout_l = widget_new_label(set, 0, 0, "Timeout:");
 	screen->widgets.timeout_f = widget_new_textbox(set, 0, 0, 5, str);
+	screen->widgets.timeout_help_l = widget_new_label(set, 0, 0, "seconds");
 
 	screen->widgets.network_l = widget_new_label(set, 0, 0, "Network");
 	screen->widgets.network_f = widget_new_select(set, 0, 0, 50);
@@ -477,9 +503,13 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.ip_addr_f = widget_new_textbox(set, 0, 0, 16, ip);
 	screen->widgets.ip_mask_l = widget_new_label(set, 0, 0, "/");
 	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 3, mask);
+	screen->widgets.ip_addr_mask_help_l =
+		widget_new_label(set, 0, 0, "(eg. 192.168.0.10 / 24)");
 
 	screen->widgets.gateway_l = widget_new_label(set, 0, 0, "Gateway:");
 	screen->widgets.gateway_f = widget_new_textbox(set, 0, 0, 16, gw);
+	screen->widgets.gateway_help_l =
+		widget_new_label(set, 0, 0, "(eg. 192.168.0.1)");
 
 	str = talloc_strdup(screen, "");
 	for (i = 0; i < config->network.n_dns_servers; i++) {
@@ -490,8 +520,10 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	screen->widgets.dns_l = widget_new_label(set, 0, 0, "DNS Server(s):");
 	screen->widgets.dns_f = widget_new_textbox(set, 0, 0, 32, str);
+	screen->widgets.dns_help_l =
+		widget_new_label(set, 0, 0, "(eg. 192.168.0.2)");
 
-	screen->widgets.dns_help_l = widget_new_label(set, 0, 0,
+	screen->widgets.dns_dhcp_help_l = widget_new_label(set, 0, 0,
 			"(if not provided by DHCP server)");
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, "OK",
