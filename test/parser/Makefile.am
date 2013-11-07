@@ -54,7 +54,8 @@ TESTS = \
 	test-pxe-initrd-in-append \
 	test-pxe-mac-without-conf \
 	test-pxe-ip-without-conf \
-	test-pxe-non-url-conf
+	test-pxe-non-url-conf \
+	test-pxe-local
 
 $(TESTS): %: %.embedded-config.o
 $(TESTS): LDADD += $@.embedded-config.o
