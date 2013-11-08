@@ -320,7 +320,7 @@ int statement_if_execute(struct grub2_script *script,
 	struct grub2_statement_if *st = to_stmt_if(statement);
 	struct grub2_statement *conditional;
 	bool executed;
-	int rc;
+	int rc = 0;
 
 	list_for_each_entry(&st->conditionals->list, conditional, list) {
 		rc = statement_conditional_execute(script,

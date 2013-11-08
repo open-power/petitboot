@@ -132,6 +132,8 @@ static int pxe_parse(struct discover_context *dc)
 		if (!pxe_conf_files)
 			goto out_conf;
 
+		rc = -1;
+
 		for (filename = pxe_conf_files; *filename; filename++) {
 			url = pb_url_join(dc, conf_url, *filename);
 			if (!url)

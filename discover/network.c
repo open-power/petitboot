@@ -369,6 +369,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 	info = NLMSG_DATA(nlmsg);
 
 	have_ifaddr = have_ifname = false;
+	mtu = 1;
 
 	attrlen = nlmsg->nlmsg_len - sizeof(*info);
 
