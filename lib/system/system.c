@@ -39,8 +39,8 @@ enum tftp_type tftp_type = TFTP_TYPE;
 int pb_mkdir_recursive(const char *dir)
 {
 	struct stat statbuf;
+	int rc, mode = 0755;
 	char *str, *sep;
-	int mode = 0755;
 
 	if (!*dir)
 		return 0;
@@ -57,6 +57,8 @@ int pb_mkdir_recursive(const char *dir)
 	str = talloc_strdup(NULL, dir);
 	sep = strchr(*str == '/' ? str + 1 : str, '/');
 
+	rc = 0;
+
 	while (1) {
 
 		/* terminate the path at sep */
@@ -65,7 +67,8 @@ int pb_mkdir_recursive(const char *dir)
 
 		if (mkdir(str, mode) && errno != EEXIST) {
 			pb_log("mkdir(%s): %s\n", str, strerror(errno));
-			return -1;
+			rc = -1;
+			break;
 		}
 
 		if (!sep)
@@ -78,7 +81,7 @@ int pb_mkdir_recursive(const char *dir)
 
 	talloc_free(str);
 
-	return 0;
+	return rc;
 }
 
 int pb_rmdir_recursive(const char *base, const char *dir)
