@@ -46,15 +46,17 @@ char *join_paths(void *alloc_ctx, const char *a, const char *b)
 
 static char *local_name(void *ctx)
 {
-	char *tmp, *ret;
+	char *ret, tmp[] = "/tmp/pb-XXXXXX";
+	int fd;
 
-	tmp = tempnam(NULL, "pb-");
+	fd = mkstemp(tmp);
 
-	if (!tmp)
+	if (fd < 0)
 		return NULL;
 
+	close(fd);
+
 	ret = talloc_strdup(ctx, tmp);
-	free(tmp);
 
 	return ret;
 }
