@@ -147,12 +147,7 @@ static int cui_boot(struct pmenu_item *item)
 
 	nc_scr_status_printf(cui->current, "Booting %s...", cod->name);
 
-	def_prog_mode();
-
 	result = discover_client_boot(cui->client, NULL, cod->opt, cod->bd);
-
-	reset_prog_mode();
-	redrawwin(cui->current->main_ncw);
 
 	if (result) {
 		nc_scr_status_printf(cui->current,
