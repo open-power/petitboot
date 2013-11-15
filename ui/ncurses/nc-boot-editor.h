@@ -34,11 +34,6 @@
 #include "ui/common/ui-system.h"
 #include "nc-scr.h"
 
-enum boot_editor_attr_field {
-	boot_editor_attr_field_normal = A_NORMAL,
-	boot_editor_attr_field_selected = A_REVERSE,
-};
-
 enum boot_editor_attr_cursor {
 	boot_editor_attr_cursor_ins = A_NORMAL,
 	boot_editor_attr_cursor_ovl = A_NORMAL | A_UNDERLINE,
