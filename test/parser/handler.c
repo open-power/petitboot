@@ -43,6 +43,14 @@ void discover_server_notify_config(struct discover_server *server,
 	(void)config;
 }
 
+void system_info_register_blockdev(const char *name, const char *uuid,
+		const char *mountpoint)
+{
+	(void)name;
+	(void)uuid;
+	(void)mountpoint;
+}
+
 void parser_init(void)
 {
 }

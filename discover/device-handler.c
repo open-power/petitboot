@@ -23,6 +23,7 @@
 #include "parser.h"
 #include "resource.h"
 #include "paths.h"
+#include "sysinfo.h"
 #include "boot.h"
 
 struct device_handler {
@@ -601,6 +602,10 @@ int device_handler_discover(struct device_handler *handler,
 	rc = mount_device(dev);
 	if (rc)
 		goto out;
+
+	/* add this device to our system info */
+	system_info_register_blockdev(dev->device->id, dev->uuid,
+			dev->mount_path);
 
 	/* run the parsers. This will populate the ctx's boot_option list. */
 	iterate_parsers(ctx);
