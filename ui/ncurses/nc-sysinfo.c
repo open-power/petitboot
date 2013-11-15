@@ -167,9 +167,24 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 	line("%-12s %s", "System type:", sysinfo->type ?: "");
 	line("%-12s %s", "System id:",   sysinfo->identifier ?: "");
 
-	line(NULL);
-	if (sysinfo->n_interfaces)
+	if (sysinfo->n_blockdevs) {
+		line(NULL);
+		line("Storage devices");
+	}
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+		struct blockdev_info *info = sysinfo->blockdevs[i];
+
+		line("%s:", info->name);
+		line(" UUID:       %s", info->uuid);
+		line(" mounted at: %s", info->mountpoint);
+		line(NULL);
+	}
+
+	if (sysinfo->n_interfaces) {
+		line(NULL);
 		line("Network interfaces");
+	}
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *info = sysinfo->interfaces[i];
