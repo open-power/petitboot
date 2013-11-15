@@ -66,11 +66,19 @@ struct interface_info {
 	char		*name;
 };
 
+struct blockdev_info {
+	char		*name;
+	char		*uuid;
+	char		*mountpoint;
+};
+
 struct system_info {
 	char			*type;
 	char			*identifier;
 	struct interface_info	**interfaces;
 	unsigned int		n_interfaces;
+	struct blockdev_info	**blockdevs;
+	unsigned int		n_blockdevs;
 };
 
 #define HWADDR_SIZE	6

@@ -223,12 +223,19 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 
 	len =	4 + optional_strlen(sysinfo->type) +
 		4 + optional_strlen(sysinfo->identifier) +
-		4;
+		4 + 4;
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *if_info = sysinfo->interfaces[i];
 		len +=	4 + if_info->hwaddr_size +
 			4 + optional_strlen(if_info->name);
+	}
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+		struct blockdev_info *bd_info = sysinfo->blockdevs[i];
+		len +=	4 + optional_strlen(bd_info->name) +
+			4 + optional_strlen(bd_info->uuid) +
+			4 + optional_strlen(bd_info->mountpoint);
 	}
 
 	return len;
@@ -377,6 +384,17 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 		pos += if_info->hwaddr_size;
 
 		pos += pb_protocol_serialise_string(pos, if_info->name);
+	}
+
+	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_blockdevs);
+	pos += sizeof(uint32_t);
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+		struct blockdev_info *bd_info = sysinfo->blockdevs[i];
+
+		pos += pb_protocol_serialise_string(pos, bd_info->name);
+		pos += pb_protocol_serialise_string(pos, bd_info->uuid);
+		pos += pb_protocol_serialise_string(pos, bd_info->mountpoint);
 	}
 
 	assert(pos <= buf + buf_len);
@@ -750,6 +768,28 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 		sysinfo->interfaces[i] = if_info;
 	}
 
+	/* number of interfaces */
+	if (read_u32(&pos, &len, &sysinfo->n_blockdevs))
+		goto out;
+
+	sysinfo->blockdevs = talloc_array(sysinfo, struct blockdev_info *,
+			sysinfo->n_blockdevs);
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+		struct blockdev_info *bd_info = talloc(sysinfo,
+							struct blockdev_info);
+
+		if (read_string(bd_info, &pos, &len, &bd_info->name))
+			goto out;
+
+		if (read_string(bd_info, &pos, &len, &bd_info->uuid))
+			goto out;
+
+		if (read_string(bd_info, &pos, &len, &bd_info->mountpoint))
+			goto out;
+
+		sysinfo->blockdevs[i] = bd_info;
+	}
 	rc = 0;
 
 out:
