@@ -289,10 +289,72 @@ static void boot_editor_populate_device_select(struct boot_editor *boot_editor,
 	 * resolved. In this case, we want the manual device pre-selected.
 	 * However, we only do this if the widget hasn't been manually
 	 * changed. */
-	selected = boot_editor->item && !boot_editor->selected_device;
+	selected = !boot_editor->selected_device;
 
 	widget_select_add_option(boot_editor->widgets.device_f,
 			-1, "Specify paths/URLs manually", selected);
+}
+
+static bool path_on_device(struct blockdev_info *bd_info,
+		const char *path)
+{
+	int len;
+
+	if (!bd_info->mountpoint)
+		return false;
+
+	len = strlen(bd_info->mountpoint);
+	if (strncmp(bd_info->mountpoint, path, len))
+		return false;
+
+	/* if the mountpoint doesn't have a trailing slash, ensure that
+	 * the path starts with one (so we don't match a "/mnt/sda1/foo" path
+	 * on a "/mnt/sda" mountpoint) */
+	return bd_info->mountpoint[len-1] == '/' || path[len] == '/';
+}
+
+
+static void boot_editor_find_device(struct boot_editor *boot_editor,
+		struct pb_boot_data *bd, const struct system_info *sysinfo,
+		char **image, char **initrd, char **dtb)
+{
+	struct blockdev_info *bd_info, *tmp;
+	unsigned int i, len;
+
+	if (!sysinfo || !sysinfo->n_blockdevs)
+		return;
+
+	/* find the device for our boot image, by finding the longest
+	 * matching blockdev's mountpoint */
+	for (len = 0, i = 0, bd_info = NULL; i < sysinfo->n_blockdevs; i++) {
+		tmp = sysinfo->blockdevs[i];
+		if (!path_on_device(tmp, bd->image))
+			continue;
+		if (strlen(tmp->mountpoint) <= len)
+			continue;
+		bd_info = tmp;
+		len = strlen(tmp->mountpoint);
+	}
+
+	if (!bd_info)
+		return;
+
+	/* ensure that other paths are on this device */
+	if (bd->initrd && !path_on_device(bd_info, bd->initrd))
+		return;
+
+	if (bd->dtb && !path_on_device(bd_info, bd->dtb))
+		return;
+
+	/* ok, we match; preselect the device option, and remove the common
+	 * prefix */
+	boot_editor->selected_device = bd_info->name;
+	*image += len;
+
+	if (*initrd)
+		*initrd += len;
+	if (*dtb)
+		*dtb += len;
 }
 
 struct boot_editor *boot_editor_init(struct cui *cui,
@@ -338,6 +400,8 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 		initrd = bd->initrd;
 		dtb = bd->dtb;
 		args = bd->args;
+		boot_editor_find_device(boot_editor, bd, sysinfo,
+				&image, &initrd, &dtb);
 	} else {
 		image = initrd = dtb = args = "";
 	}
