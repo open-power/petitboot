@@ -37,6 +37,9 @@ struct boot_editor {
 					struct pmenu_item *item,
 					struct pb_boot_data *bd);
 
+	int			label_x;
+	int			field_x;
+
 	struct nc_widgetset	*widgetset;
 	struct {
 		struct nc_widget_label		*image_l;
@@ -178,6 +181,39 @@ static void cancel_click(void *arg)
 	boot_editor->on_exit(boot_editor->cui, NULL, NULL);
 }
 
+static int layout_pair(struct boot_editor *boot_editor, int y,
+		struct nc_widget_label *label,
+		struct nc_widget_textbox *field)
+{
+	struct nc_widget *label_w = widget_label_base(label);
+	struct nc_widget *field_w = widget_textbox_base(field);
+	widget_move(label_w, y, boot_editor->label_x);
+	widget_move(field_w, y, boot_editor->field_x);
+	return max(widget_height(label_w), widget_height(field_w));
+}
+
+static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
+{
+	int y = 1;
+
+	y += layout_pair(boot_editor, y, boot_editor->widgets.image_l,
+					 boot_editor->widgets.image_f);
+
+	y += layout_pair(boot_editor, y, boot_editor->widgets.initrd_l,
+					 boot_editor->widgets.initrd_f);
+
+	y += layout_pair(boot_editor, y, boot_editor->widgets.dtb_l,
+					 boot_editor->widgets.dtb_f);
+
+	y += layout_pair(boot_editor, y, boot_editor->widgets.args_l,
+					 boot_editor->widgets.args_f);
+
+
+	y++;
+	widget_move(widget_button_base(boot_editor->widgets.ok_b), y, 9);
+	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 19);
+}
+
 struct boot_editor *boot_editor_init(struct cui *cui,
 		struct pmenu_item *item,
 		const struct system_info *sysinfo,
@@ -185,10 +221,10 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 				struct pmenu_item *item,
 				struct pb_boot_data *bd))
 {
-	int y, field_size, label_x = 1, field_x = 9;
 	char *image, *initrd, *dtb, *args;
 	struct boot_editor *boot_editor;
 	struct nc_widgetset *set;
+	int field_size;
 
 	(void)sysinfo;
 
@@ -201,6 +237,9 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->cui = cui;
 	boot_editor->item = item;
 	boot_editor->on_exit = on_exit;
+
+	boot_editor->label_x = 1;
+	boot_editor->field_x = 9;
 
 	nc_scr_init(&boot_editor->scr, pb_boot_editor_sig, 0,
 			cui, boot_editor_process_key,
@@ -222,43 +261,34 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 		image = initrd = dtb = args = "";
 	}
 
-	y = 0;
-	field_size = COLS - 1 - field_x;
+	field_size = COLS - 1 - boot_editor->field_x;
 
 	boot_editor->widgetset = set = widgetset_create(boot_editor,
 			boot_editor->scr.main_ncw,
 			boot_editor->scr.sub_ncw);
 
-	boot_editor->widgets.image_l = widget_new_label(set, y,
-					label_x, "image:");
-	boot_editor->widgets.image_f = widget_new_textbox(set, y,
-					field_x, field_size, image);
+	boot_editor->widgets.image_l = widget_new_label(set, 0, 0, "image:");
+	boot_editor->widgets.image_f = widget_new_textbox(set, 0, 0,
+						field_size, image);
 
-	y++;
-	boot_editor->widgets.initrd_l = widget_new_label(set, y,
-					label_x, "initrd:");
-	boot_editor->widgets.initrd_f = widget_new_textbox(set, y,
-					field_x, field_size, initrd);
+	boot_editor->widgets.initrd_l = widget_new_label(set, 0, 0, "initrd:");
+	boot_editor->widgets.initrd_f = widget_new_textbox(set, 0, 0,
+						field_size, initrd);
 
-	y++;
-	boot_editor->widgets.dtb_l = widget_new_label(set, y,
-					label_x, "dtb:");
-	boot_editor->widgets.dtb_f = widget_new_textbox(set, y,
-					field_x, field_size, dtb);
+	boot_editor->widgets.dtb_l = widget_new_label(set, 0, 0, "dtb:");
+	boot_editor->widgets.dtb_f = widget_new_textbox(set, 0, 0,
+						field_size, dtb);
 
-	y++;
-	boot_editor->widgets.args_l = widget_new_label(set, y,
-					label_x, "args:");
-	boot_editor->widgets.args_f = widget_new_textbox(set, y,
-					field_x, field_size, args);
+	boot_editor->widgets.args_l = widget_new_label(set, 0, 0, "args:");
+	boot_editor->widgets.args_f = widget_new_textbox(set, 0, 0,
+					field_size, args);
 
-	y++;
-	y++;
-	boot_editor->widgets.ok_b = widget_new_button(set, y,
-					9, 6, "OK", ok_click, boot_editor);
-	boot_editor->widgets.cancel_b = widget_new_button(set, y,
-					19, 6, "Cancel", cancel_click,
-					boot_editor);
+	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 6,
+					"OK", ok_click, boot_editor);
+	boot_editor->widgets.cancel_b = widget_new_button(set, 0, 0, 6,
+					"Cancel", cancel_click, boot_editor);
+
+	boot_editor_layout_widgets(boot_editor);
 
 	return boot_editor;
 }
