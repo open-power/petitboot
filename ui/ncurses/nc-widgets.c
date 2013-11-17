@@ -493,6 +493,8 @@ void widget_select_add_option(struct nc_widget_select *select, int value,
 
 int widget_select_get_value(struct nc_widget_select *select)
 {
+	if (!select->n_options)
+		return -1;
 	return select->options[select->selected_option].val;
 }
 
