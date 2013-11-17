@@ -42,6 +42,8 @@ struct boot_editor {
 
 	struct nc_widgetset	*widgetset;
 	struct {
+		struct nc_widget_label		*device_l;
+		struct nc_widget_select		*device_f;
 		struct nc_widget_label		*image_l;
 		struct nc_widget_textbox	*image_f;
 		struct nc_widget_label		*initrd_l;
@@ -53,6 +55,8 @@ struct boot_editor {
 		struct nc_widget_button		*ok_b;
 		struct nc_widget_button		*cancel_b;
 	} widgets;
+
+	const char		*selected_device;
 };
 
 static struct boot_editor *boot_editor_from_scr(struct nc_scr *scr)
@@ -104,25 +108,50 @@ static void boot_editor_resize(struct nc_scr *scr)
 	boot_editor_post(scr);
 }
 
+static char *conditional_prefix(struct pb_boot_data *ctx,
+		const char *prefix, const char *value)
+{
+	const char *sep;
+
+	if (!value || !*value)
+		return NULL;
+
+	sep = NULL;
+	if (!prefix)
+		prefix = "";
+	else if (prefix[strlen(prefix)] != '/')
+		sep = "/";
+
+	return talloc_asprintf(ctx, "%s%s%s", prefix, sep, value);
+}
+
 static struct pb_boot_data *boot_editor_prepare_data(
 		struct boot_editor *boot_editor)
 {
 	struct pb_boot_data *bd;
-	char *s;
+	char *s, *prefix;
+	int idx;
 
 	bd = talloc(boot_editor, struct pb_boot_data);
 
 	if (!bd)
 		return NULL;
 
+	idx = widget_select_get_value(boot_editor->widgets.device_f);
+	if (idx == -1 || (unsigned int)idx >
+			boot_editor->cui->sysinfo->n_blockdevs)
+		prefix = NULL;
+	else
+		prefix = boot_editor->cui->sysinfo->blockdevs[idx]->mountpoint;
+
 	s = widget_textbox_get_value(boot_editor->widgets.image_f);
-	bd->image = *s ? talloc_strdup(bd, s) : NULL;
+	bd->image = conditional_prefix(bd, prefix, s);
 
 	s = widget_textbox_get_value(boot_editor->widgets.initrd_f);
-	bd->initrd = *s ? talloc_strdup(bd, s) : NULL;
+	bd->initrd = conditional_prefix(bd, prefix, s);
 
 	s = widget_textbox_get_value(boot_editor->widgets.dtb_f);
-	bd->dtb = *s ? talloc_strdup(bd, s) : NULL;
+	bd->dtb = conditional_prefix(bd, prefix, s);
 
 	s = widget_textbox_get_value(boot_editor->widgets.args_f);
 	bd->args = *s ? talloc_strdup(bd, s) : NULL;
@@ -194,7 +223,16 @@ static int layout_pair(struct boot_editor *boot_editor, int y,
 
 static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 {
+	struct nc_widget *wf, *wl;
 	int y = 1;
+
+	wl = widget_label_base(boot_editor->widgets.device_l);
+	wf = widget_select_base(boot_editor->widgets.device_f);
+	widget_move(wl, y, boot_editor->label_x);
+	widget_move(wf, y, boot_editor->field_x);
+
+	y += widget_height(wf) + 1;
+
 
 	y += layout_pair(boot_editor, y, boot_editor->widgets.image_l,
 					 boot_editor->widgets.image_f);
@@ -212,6 +250,49 @@ static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 	y++;
 	widget_move(widget_button_base(boot_editor->widgets.ok_b), y, 9);
 	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 19);
+}
+
+static void boot_editor_device_select_change(void *arg, int idx)
+{
+	struct boot_editor *boot_editor = arg;
+	if (idx == -1)
+		boot_editor->selected_device = NULL;
+	else
+		boot_editor->selected_device =
+			boot_editor->cui->sysinfo->blockdevs[idx]->name;
+}
+
+static void boot_editor_populate_device_select(struct boot_editor *boot_editor,
+		const struct system_info *sysinfo)
+{
+	struct nc_widget_select *select = boot_editor->widgets.device_f;
+	unsigned int i;
+	bool selected;
+
+	widget_select_drop_options(select);
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+		struct blockdev_info *bd_info = sysinfo->blockdevs[i];
+		const char *name;
+
+		name = talloc_asprintf(boot_editor, "%s [%s]",
+				bd_info->name, bd_info->uuid);
+		selected = boot_editor->selected_device &&
+				!strcmp(bd_info->name,
+						boot_editor->selected_device);
+
+		widget_select_add_option(boot_editor->widgets.device_f,
+				i, name, selected);
+	}
+
+	/* If we're editing an existing option, the paths will be fully-
+	 * resolved. In this case, we want the manual device pre-selected.
+	 * However, we only do this if the widget hasn't been manually
+	 * changed. */
+	selected = boot_editor->item && !boot_editor->selected_device;
+
+	widget_select_add_option(boot_editor->widgets.device_f,
+			-1, "Specify paths/URLs manually", selected);
 }
 
 struct boot_editor *boot_editor_init(struct cui *cui,
@@ -266,6 +347,14 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->widgetset = set = widgetset_create(boot_editor,
 			boot_editor->scr.main_ncw,
 			boot_editor->scr.sub_ncw);
+
+	boot_editor->widgets.device_l = widget_new_label(set, 0, 0, "device:");
+	boot_editor->widgets.device_f = widget_new_select(set, 0, 0,
+						field_size);
+	widget_select_on_change(boot_editor->widgets.device_f,
+			boot_editor_device_select_change, boot_editor);
+
+	boot_editor_populate_device_select(boot_editor, sysinfo);
 
 	boot_editor->widgets.image_l = widget_new_label(set, 0, 0, "image:");
 	boot_editor->widgets.image_f = widget_new_textbox(set, 0, 0,
