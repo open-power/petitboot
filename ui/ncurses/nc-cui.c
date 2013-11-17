@@ -33,14 +33,11 @@
 #include "waiter/waiter.h"
 #include "process/process.h"
 #include "ui/common/discover-client.h"
+#include "ui/common/ui-system.h"
 #include "nc-cui.h"
+#include "nc-boot-editor.h"
 #include "nc-config.h"
 #include "nc-sysinfo.h"
-
-static struct cui_opt_data *cod_from_item(struct pmenu_item *item)
-{
-	return item->data;
-}
 
 static void cui_start(void)
 {
@@ -157,29 +154,23 @@ static int cui_boot(struct pmenu_item *item)
 	return 0;
 }
 
-/**
- * cui_boot_editor_on_exit - The boot_editor on_exit callback.
- */
-
-static void cui_boot_editor_on_exit(struct boot_editor *boot_editor,
-		enum boot_editor_result boot_editor_result,
+static void cui_boot_editor_on_exit(struct cui *cui,
+		struct pmenu_item *item,
 		struct pb_boot_data *bd)
 {
-	struct cui *cui = cui_from_pmenu(boot_editor->original_pmenu);
-	struct pmenu_item *item = boot_editor->data;
+	struct pmenu *menu = cui->main;
 	struct cui_opt_data *cod;
 
-	if (boot_editor_result != boot_editor_update) {
+	/* Was the edit cancelled? */
+	if (!bd) {
 		cui_set_current(cui, &cui->main->scr);
-		talloc_free(boot_editor);
+		talloc_free(cui->boot_editor);
+		cui->boot_editor = NULL;
 		return;
 	}
 
-	assert(bd);
-
 	/* Is this was a new item, we'll need to update the menu */
 	if (!item) {
-		struct pmenu *menu = boot_editor->original_pmenu;
 		int insert_pt;
 
 		/* Detach the items array. */
@@ -205,32 +196,26 @@ static void cui_boot_editor_on_exit(struct boot_editor *boot_editor,
 
 	cod->bd = talloc_steal(cod, bd);
 
-	/* FIXME: need to make item visible somehow */
 	set_current_item(item->pmenu->ncm, item->nci);
 	cui_set_current(cui, &cui->main->scr);
-	talloc_free(boot_editor);
+	talloc_free(cui->boot_editor);
+	cui->boot_editor = NULL;
 }
 
 void cui_item_edit(struct pmenu_item *item)
 {
 	struct cui *cui = cui_from_item(item);
-	struct cui_opt_data *cod = cod_from_item(item);
-	struct boot_editor *boot_editor;
-
-	boot_editor = boot_editor_init(item->pmenu, cod->bd,
-			cui_boot_editor_on_exit);
-	boot_editor->data = item;
-	cui_set_current(cui, &boot_editor->scr);
+	cui->boot_editor = boot_editor_init(cui, item, cui->sysinfo,
+					cui_boot_editor_on_exit);
+	cui_set_current(cui, boot_editor_scr(cui->boot_editor));
 }
 
 void cui_item_new(struct pmenu *menu)
 {
 	struct cui *cui = cui_from_pmenu(menu);
-	struct boot_editor *boot_editor;
-
-	boot_editor = boot_editor_init(menu, NULL,
-			cui_boot_editor_on_exit);
-	cui_set_current(cui, &boot_editor->scr);
+	cui->boot_editor = boot_editor_init(cui, NULL, cui->sysinfo,
+					cui_boot_editor_on_exit);
+	cui_set_current(cui, boot_editor_scr(cui->boot_editor));
 }
 
 static void cui_sysinfo_exit(struct cui *cui)

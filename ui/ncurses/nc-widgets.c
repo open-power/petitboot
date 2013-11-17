@@ -17,6 +17,33 @@
 
 #define _GNU_SOURCE
 
+#include "config.h"
+
+#include <linux/input.h> /* This must be included before ncurses.h */
+#if defined HAVE_NCURSESW_CURSES_H
+#  include <ncursesw/curses.h>
+#elif defined HAVE_NCURSESW_H
+#  include <ncursesw.h>
+#elif defined HAVE_NCURSES_CURSES_H
+#  include <ncurses/curses.h>
+#elif defined HAVE_NCURSES_H
+#  include <ncurses.h>
+#elif defined HAVE_CURSES_H
+#  include <curses.h>
+#else
+#  error "Curses header file not found."
+#endif
+
+#if defined HAVE_NCURSESW_FORM_H
+#  include <ncursesw/form.h>
+#elif defined HAVE_NCURSES_FORM_H
+#  include <ncurses/form.h>
+#elif defined HAVE_FORM_H
+#  include <form.h>
+#else
+#  error "Curses form.h not found."
+#endif
+
 #include <string.h>
 #include <ctype.h>
 

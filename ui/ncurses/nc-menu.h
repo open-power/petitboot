@@ -67,6 +67,11 @@ static inline struct pmenu_item *pmenu_item_from_arg(void *arg)
 	return item;
 }
 
+static inline struct cui_opt_data *cod_from_item(struct pmenu_item *item)
+{
+	return item->data;
+}
+
 static inline struct pmenu_item *pmenu_item_init(struct pmenu *menu,
 	unsigned int index, const char *name)
 {

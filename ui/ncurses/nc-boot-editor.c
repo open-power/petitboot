@@ -28,6 +28,30 @@
 #include "nc-boot-editor.h"
 #include "nc-widgets.h"
 
+struct boot_editor {
+	struct nc_scr		scr;
+	struct cui		*cui;
+	void			*data;
+	struct pmenu_item	*item;
+	void			(*on_exit)(struct cui *cui,
+					struct pmenu_item *item,
+					struct pb_boot_data *bd);
+
+	struct nc_widgetset	*widgetset;
+	struct {
+		struct nc_widget_label		*image_l;
+		struct nc_widget_textbox	*image_f;
+		struct nc_widget_label		*initrd_l;
+		struct nc_widget_textbox	*initrd_f;
+		struct nc_widget_label		*dtb_l;
+		struct nc_widget_textbox	*dtb_f;
+		struct nc_widget_label		*args_l;
+		struct nc_widget_textbox	*args_f;
+		struct nc_widget_button		*ok_b;
+		struct nc_widget_button		*cancel_b;
+	} widgets;
+};
+
 static struct boot_editor *boot_editor_from_scr(struct nc_scr *scr)
 {
 	struct boot_editor *boot_editor;
@@ -63,6 +87,11 @@ static int boot_editor_unpost(struct nc_scr *scr)
 {
 	widgetset_unpost(boot_editor_from_scr(scr)->widgetset);
 	return 0;
+}
+
+struct nc_scr *boot_editor_scr(struct boot_editor *boot_editor)
+{
+	return &boot_editor->scr;
 }
 
 static void boot_editor_resize(struct nc_scr *scr)
@@ -118,7 +147,7 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 	switch (key) {
 	case 'x':
 	case 27: /* ESC */
-		boot_editor->on_exit(boot_editor, boot_editor_cancel, NULL);
+		boot_editor->on_exit(boot_editor->cui, NULL, NULL);
 		nc_flush_keys();
 	}
 }
@@ -140,38 +169,41 @@ static void ok_click(void *arg)
 	struct pb_boot_data *bd;
 
 	bd = boot_editor_prepare_data(boot_editor);
-	boot_editor->on_exit(boot_editor, boot_editor_update, bd);
+	boot_editor->on_exit(boot_editor->cui, boot_editor->item, bd);
 }
 
 static void cancel_click(void *arg)
 {
 	struct boot_editor *boot_editor = arg;
-	boot_editor->on_exit(boot_editor, boot_editor_cancel, NULL);
+	boot_editor->on_exit(boot_editor->cui, NULL, NULL);
 }
 
-struct boot_editor *boot_editor_init(struct pmenu *menu,
-		const struct pb_boot_data *bd,
-		void (*on_exit)(struct boot_editor *,
-				enum boot_editor_result,
-				struct pb_boot_data *))
+struct boot_editor *boot_editor_init(struct cui *cui,
+		struct pmenu_item *item,
+		const struct system_info *sysinfo,
+		void (*on_exit)(struct cui *cui,
+				struct pmenu_item *item,
+				struct pb_boot_data *bd))
 {
 	int y, field_size, label_x = 1, field_x = 9;
 	char *image, *initrd, *dtb, *args;
 	struct boot_editor *boot_editor;
 	struct nc_widgetset *set;
 
-	assert(on_exit);
+	(void)sysinfo;
 
-	boot_editor = talloc_zero(menu, struct boot_editor);
+	boot_editor = talloc_zero(cui, struct boot_editor);
 
 	if (!boot_editor)
 		return NULL;
 
 	talloc_set_destructor(boot_editor, boot_editor_destructor);
-	boot_editor->original_pmenu = menu;
+	boot_editor->cui = cui;
+	boot_editor->item = item;
+	boot_editor->on_exit = on_exit;
 
 	nc_scr_init(&boot_editor->scr, pb_boot_editor_sig, 0,
-			menu, boot_editor_process_key,
+			cui, boot_editor_process_key,
 		boot_editor_post, boot_editor_unpost, boot_editor_resize);
 
 	boot_editor->scr.frame.ltitle = talloc_strdup(boot_editor,
@@ -180,9 +212,8 @@ struct boot_editor *boot_editor_init(struct pmenu *menu,
 	boot_editor->scr.frame.help = talloc_strdup(boot_editor,
 			"Enter=accept");
 
-	boot_editor->on_exit = on_exit;
-
-	if (bd) {
+	if (item) {
+		struct pb_boot_data *bd = cod_from_item(item)->bd;
 		image = bd->image;
 		initrd = bd->initrd;
 		dtb = bd->dtb;

@@ -23,7 +23,6 @@
 
 #include "ui/common/joystick.h"
 #include "nc-menu.h"
-#include "nc-boot-editor.h"
 
 struct cui_opt_data {
 	const char *name;
@@ -59,6 +58,7 @@ struct cui {
 	struct sysinfo_screen *sysinfo_screen;
 	struct config *config;
 	struct config_screen *config_screen;
+	struct boot_editor *boot_editor;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
