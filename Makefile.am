@@ -27,7 +27,7 @@ libtool: $(LIBTOOL_DEPS)
 EXTRA_DIST = bootstrap configure.ac.in $(srcdir)/m4
 
 MAINTAINERCLEANFILES = aclocal.m4 config.* configure configure.ac depcomp \
-	install-sh ltmain.sh Makefile.in missing $(PACKAGE)-*.gz
+	install-sh ltmain.sh Makefile.in missing ylwrap $(PACKAGE)-*.gz
 
 maintainer-clean-local:
 	rm -rf m4

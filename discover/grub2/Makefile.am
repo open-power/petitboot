@@ -40,6 +40,7 @@ grub2_parser_ro_SOURCES = \
 
 BUILT_SOURCES = parser.h lexer.h lexer.c lexer.h
 CLEANFILES = lexer.c lexer.h
+MAINTAINERCLEANFILES = Makefile.in
 
 # ylwrap doesn't handle flex header files well; use our own rule here.
 lexer.h lexer.c: lexer.l
@@ -47,4 +48,3 @@ lexer.h lexer.c: lexer.l
 
 lexer.o: CFLAGS+=-Wno-unused-parameter -Wno-missing-prototypes \
 		       -Wno-missing-declarations
-
