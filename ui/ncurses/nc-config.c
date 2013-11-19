@@ -571,7 +571,7 @@ void config_screen_update(struct config_screen *screen,
 	height = N_FIELDS + 3;
 	if (sysinfo)
 		height += sysinfo->n_interfaces;
-	if (!screen->pad || getmaxx(screen->pad) < height) {
+	if (!screen->pad || getmaxy(screen->pad) < height) {
 		if (screen->pad)
 			delwin(screen->pad);
 		screen->pad = newpad(height, COLS);
