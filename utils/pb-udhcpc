@@ -18,7 +18,7 @@ pb_add () {
 	paramstr=''
 
 	# Collect relevant DHCP response parameters into $paramstr
-	for name in conffile bootfile mac ip siaddr serverid tftp
+	for name in pxeconffile bootfile mac ip siaddr serverid tftp
 	do
 		value=$(eval "echo \${$name}")
 		[ -n "$value" ] || continue;

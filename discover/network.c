@@ -219,6 +219,7 @@ static void configure_interface_dhcp(struct interface *interface)
 		pb_system_apps.udhcpc,
 		"-R",
 		"-n",
+		"-O", "pxeconffile",
 		"-p", pidfile,
 		"-i", interface->name,
 		NULL,

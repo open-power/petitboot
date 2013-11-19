@@ -18,7 +18,7 @@ void run_test(struct parser_test *test)
 	test_read_conf_embedded(test, "conf.txt");
 
 	test_set_event_source(test);
-	test_set_event_param(test->ctx->event, "conffile",
+	test_set_event_param(test->ctx->event, "pxeconffile",
 			"tftp://host/dir/conf.txt");
 
 	test_run_parser(test, "pxe");

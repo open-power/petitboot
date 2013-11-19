@@ -19,7 +19,7 @@ void run_test(struct parser_test *test)
 
 	test_set_event_source(test);
 	test_set_event_param(test->ctx->event, "siaddr", "host");
-	test_set_event_param(test->ctx->event, "conffile", "conf.txt");
+	test_set_event_param(test->ctx->event, "pxeconffile", "conf.txt");
 
 	test_run_parser(test, "pxe");
 

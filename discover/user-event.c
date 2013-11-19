@@ -237,7 +237,7 @@ struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 	char *p, *basedir, *url_str;
 	struct pb_url *url;
 
-	conffile = event_get_param(event, "conffile");
+	conffile = event_get_param(event, "pxeconffile");
 	if (conffile) {
 		if (is_url(conffile)) {
 			url = pb_url_parse(ctx, conffile);
