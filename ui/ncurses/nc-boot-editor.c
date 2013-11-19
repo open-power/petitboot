@@ -33,6 +33,11 @@ struct boot_editor {
 	struct cui		*cui;
 	void			*data;
 	struct pmenu_item	*item;
+	enum {
+		STATE_EDIT,
+		STATE_CANCEL,
+		STATE_SAVE,
+	}			state;
 	void			(*on_exit)(struct cui *cui,
 					struct pmenu_item *item,
 					struct pb_boot_data *bd);
@@ -183,19 +188,30 @@ static struct pb_boot_data *boot_editor_prepare_data(
 static void boot_editor_process_key(struct nc_scr *scr, int key)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
+	struct pmenu_item *item;
+	struct pb_boot_data *bd;
 	bool handled;
 
 	handled = widgetset_process_key(boot_editor->widgetset, key);
-	if (handled) {
+	if (handled)
 		pad_refresh(boot_editor);
-		return;
-	}
 
-	switch (key) {
-	case 'x':
-	case 27: /* ESC */
-		boot_editor->on_exit(boot_editor->cui, NULL, NULL);
-		nc_flush_keys();
+	else if (key == 'x' || key == 27)
+		boot_editor->state = STATE_CANCEL;
+
+	item = NULL;
+	bd = NULL;
+
+	switch (boot_editor->state) {
+	case STATE_SAVE:
+		item = boot_editor->item;
+		bd = boot_editor_prepare_data(boot_editor);
+		/* fall through */
+	case STATE_CANCEL:
+		boot_editor->on_exit(boot_editor->cui, item, bd);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -215,16 +231,13 @@ static int boot_editor_destructor(void *arg)
 static void ok_click(void *arg)
 {
 	struct boot_editor *boot_editor = arg;
-	struct pb_boot_data *bd;
-
-	bd = boot_editor_prepare_data(boot_editor);
-	boot_editor->on_exit(boot_editor->cui, boot_editor->item, bd);
+	boot_editor->state = STATE_SAVE;
 }
 
 static void cancel_click(void *arg)
 {
 	struct boot_editor *boot_editor = arg;
-	boot_editor->on_exit(boot_editor->cui, NULL, NULL);
+	boot_editor->state = STATE_CANCEL;
 }
 
 static int layout_pair(struct boot_editor *boot_editor, int y,
@@ -461,6 +474,8 @@ void boot_editor_update(struct boot_editor *boot_editor,
 
 	boot_editor_populate_device_select(boot_editor, sysinfo);
 
+	boot_editor_layout_widgets(boot_editor);
+
 	widgetset_post(boot_editor->widgetset);
 
 	pad_refresh(boot_editor);
@@ -484,6 +499,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->cui = cui;
 	boot_editor->item = item;
 	boot_editor->on_exit = on_exit;
+	boot_editor->state = STATE_EDIT;
 
 	boot_editor->label_x = 1;
 	boot_editor->field_x = 9;
