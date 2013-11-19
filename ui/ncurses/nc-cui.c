@@ -272,10 +272,8 @@ static bool process_global_keys(struct cui *cui, int key)
 {
 	switch (key) {
 	case 0xc:
-		if (cui->current && cui->current->main_ncw) {
-			redrawwin(cui->current->main_ncw);
-			wrefresh(cui->current->main_ncw);
-		}
+		if (cui->current && cui->current->main_ncw)
+			wrefresh(curscr);
 		return true;
 	}
 	return false;
