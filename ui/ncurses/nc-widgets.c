@@ -85,10 +85,12 @@ struct nc_widget {
 	bool	(*process_key)(struct nc_widget *, FORM *, int);
 	void	(*set_visible)(struct nc_widget *, bool);
 	void	(*move)(struct nc_widget *, int, int);
+	void	(*field_focus)(struct nc_widget *, FIELD *);
 	int	focussed_attr;
 	int	unfocussed_attr;
 	int	height;
 	int	width;
+	int	focus_y;
 	int	x;
 	int	y;
 };
@@ -414,6 +416,19 @@ static void select_move(struct nc_widget *widget, int y, int x)
 		field_move(select->options[i].field, y + i, x);
 }
 
+static void select_field_focus(struct nc_widget *widget, FIELD *field)
+{
+	struct nc_widget_select *select = to_select(widget);
+	int i;
+
+	for (i = 0; i < select->n_options; i++) {
+		if (field != select->options[i].field)
+			continue;
+		widget->focus_y = i;
+		return;
+	}
+}
+
 static int select_destructor(void *ptr)
 {
 	struct nc_widget_select *select = ptr;
@@ -438,6 +453,7 @@ struct nc_widget_select *widget_new_select(struct nc_widgetset *set,
 	select->widget.process_key = select_process_key;
 	select->widget.set_visible = select_set_visible;
 	select->widget.move = select_move;
+	select->widget.field_focus = select_field_focus;
 	select->widget.focussed_attr = A_REVERSE;
 	select->widget.unfocussed_attr = A_NORMAL;
 	select->top = y;
@@ -622,6 +638,8 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 		field = current_field(set->form);
 		widget = field_userptr(field);
 		widget_focus_change(widget, field, true);
+		if (widget->field_focus)
+			widget->field_focus(widget, field);
 		if (set->widget_focus)
 			set->widget_focus(widget, set->widget_focus_arg);
 		return true;
@@ -753,5 +771,10 @@ int widget_x(struct nc_widget *widget)
 int widget_y(struct nc_widget *widget)
 {
 	return widget->y;
+}
+
+int widget_focus_y(struct nc_widget *widget)
+{
+	return widget->focus_y;
 }
 
