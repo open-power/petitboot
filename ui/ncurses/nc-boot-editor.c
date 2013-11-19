@@ -513,6 +513,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->scr.frame.rtitle = NULL;
 	boot_editor->scr.frame.help = talloc_strdup(boot_editor,
 			"Enter=accept");
+	nc_scr_frame_draw(&boot_editor->scr);
 
 	if (item) {
 		struct pb_boot_data *bd = cod_from_item(item)->bd;
@@ -533,6 +534,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor_setup_widgets(boot_editor, sysinfo);
 
 	boot_editor_layout_widgets(boot_editor);
+	wrefresh(boot_editor->scr.main_ncw);
 
 	return boot_editor;
 }
