@@ -59,6 +59,10 @@ struct boot_editor {
 	} widgets;
 
 	const char		*selected_device;
+	char			*image;
+	char			*initrd;
+	char			*dtb;
+	char			*args;
 };
 
 static struct boot_editor *boot_editor_from_scr(struct nc_scr *scr)
@@ -268,8 +272,6 @@ static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 	y++;
 	widget_move(widget_button_base(boot_editor->widgets.ok_b), y, 9);
 	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 19);
-
-	pad_refresh(boot_editor);
 }
 
 static void boot_editor_widget_focus(struct nc_widget *widget, void *arg)
@@ -311,7 +313,7 @@ static void boot_editor_populate_device_select(struct boot_editor *boot_editor,
 
 	widget_select_drop_options(select);
 
-	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+	for (i = 0; sysinfo && i < sysinfo->n_blockdevs; i++) {
 		struct blockdev_info *bd_info = sysinfo->blockdevs[i];
 		const char *name;
 
@@ -321,8 +323,7 @@ static void boot_editor_populate_device_select(struct boot_editor *boot_editor,
 				!strcmp(bd_info->name,
 						boot_editor->selected_device);
 
-		widget_select_add_option(boot_editor->widgets.device_f,
-				i, name, selected);
+		widget_select_add_option(select, i, name, selected);
 	}
 
 	/* If we're editing an existing option, the paths will be fully-
@@ -331,8 +332,8 @@ static void boot_editor_populate_device_select(struct boot_editor *boot_editor,
 	 * changed. */
 	selected = !boot_editor->selected_device;
 
-	widget_select_add_option(boot_editor->widgets.device_f,
-			-1, "Specify paths/URLs manually", selected);
+	widget_select_add_option(select, -1, "Specify paths/URLs manually",
+			selected);
 }
 
 static bool path_on_device(struct blockdev_info *bd_info,
@@ -355,8 +356,7 @@ static bool path_on_device(struct blockdev_info *bd_info,
 
 
 static void boot_editor_find_device(struct boot_editor *boot_editor,
-		struct pb_boot_data *bd, const struct system_info *sysinfo,
-		char **image, char **initrd, char **dtb)
+		struct pb_boot_data *bd, const struct system_info *sysinfo)
 {
 	struct blockdev_info *bd_info, *tmp;
 	unsigned int i, len;
@@ -389,12 +389,81 @@ static void boot_editor_find_device(struct boot_editor *boot_editor,
 	/* ok, we match; preselect the device option, and remove the common
 	 * prefix */
 	boot_editor->selected_device = bd_info->name;
-	*image += len;
+	boot_editor->image += len;
 
-	if (*initrd)
-		*initrd += len;
-	if (*dtb)
-		*dtb += len;
+	if (boot_editor->initrd)
+		boot_editor->initrd += len;
+	if (boot_editor->dtb)
+		boot_editor->dtb += len;
+}
+
+static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
+		const struct system_info *sysinfo)
+{
+	struct nc_widgetset *set;
+	int field_size;
+
+	field_size = COLS - 1 - boot_editor->field_x;
+
+	boot_editor->widgetset = set = widgetset_create(boot_editor,
+			boot_editor->scr.main_ncw,
+			boot_editor->pad);
+
+	widgetset_set_widget_focus(boot_editor->widgetset,
+			boot_editor_widget_focus, boot_editor);
+
+	boot_editor->widgets.device_l = widget_new_label(set, 0, 0, "device:");
+	boot_editor->widgets.device_f = widget_new_select(set, 0, 0,
+						field_size);
+	widget_select_on_change(boot_editor->widgets.device_f,
+			boot_editor_device_select_change, boot_editor);
+
+	boot_editor_populate_device_select(boot_editor, sysinfo);
+
+	boot_editor->widgets.image_l = widget_new_label(set, 0, 0, "image:");
+	boot_editor->widgets.image_f = widget_new_textbox(set, 0, 0,
+						field_size, boot_editor->image);
+
+	boot_editor->widgets.initrd_l = widget_new_label(set, 0, 0, "initrd:");
+	boot_editor->widgets.initrd_f = widget_new_textbox(set, 0, 0,
+						field_size,
+						boot_editor->initrd);
+
+	boot_editor->widgets.dtb_l = widget_new_label(set, 0, 0, "dtb:");
+	boot_editor->widgets.dtb_f = widget_new_textbox(set, 0, 0,
+						field_size, boot_editor->dtb);
+
+	boot_editor->widgets.args_l = widget_new_label(set, 0, 0, "args:");
+	boot_editor->widgets.args_f = widget_new_textbox(set, 0, 0,
+					field_size, boot_editor->args);
+
+	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 6,
+					"OK", ok_click, boot_editor);
+	boot_editor->widgets.cancel_b = widget_new_button(set, 0, 0, 6,
+					"Cancel", cancel_click, boot_editor);
+}
+
+void boot_editor_update(struct boot_editor *boot_editor,
+		const struct system_info *sysinfo)
+{
+	int height;
+
+	widgetset_unpost(boot_editor->widgetset);
+
+	height = pad_height(sysinfo ? sysinfo->n_blockdevs : 0);
+	if (getmaxy(boot_editor->pad) < height) {
+		delwin(boot_editor->pad);
+		boot_editor->pad = newpad(height, COLS);
+		widgetset_set_windows(boot_editor->widgetset,
+				boot_editor->scr.main_ncw,
+				boot_editor->pad);
+	}
+
+	boot_editor_populate_device_select(boot_editor, sysinfo);
+
+	widgetset_post(boot_editor->widgetset);
+
+	pad_refresh(boot_editor);
 }
 
 struct boot_editor *boot_editor_init(struct cui *cui,
@@ -404,12 +473,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 				struct pmenu_item *item,
 				struct pb_boot_data *bd))
 {
-	char *image, *initrd, *dtb, *args;
 	struct boot_editor *boot_editor;
-	struct nc_widgetset *set;
-	int field_size;
-
-	(void)sysinfo;
 
 	boot_editor = talloc_zero(cui, struct boot_editor);
 
@@ -436,55 +500,21 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 
 	if (item) {
 		struct pb_boot_data *bd = cod_from_item(item)->bd;
-		image = bd->image;
-		initrd = bd->initrd;
-		dtb = bd->dtb;
-		args = bd->args;
-		boot_editor_find_device(boot_editor, bd, sysinfo,
-				&image, &initrd, &dtb);
+		boot_editor->image = bd->image;
+		boot_editor->initrd = bd->initrd;
+		boot_editor->dtb = bd->dtb;
+		boot_editor->args = bd->args;
+		boot_editor_find_device(boot_editor, bd, sysinfo);
 	} else {
-		image = initrd = dtb = args = "";
+		boot_editor->image = boot_editor->initrd =
+			boot_editor->dtb = boot_editor->args = "";
 	}
 
-	field_size = COLS - 1 - boot_editor->field_x;
+	boot_editor->pad = newpad(
+				pad_height(sysinfo ? sysinfo->n_blockdevs : 0),
+				COLS);
 
-	boot_editor->pad = newpad(pad_height(sysinfo->n_blockdevs), COLS);
-
-	boot_editor->widgetset = set = widgetset_create(boot_editor,
-			boot_editor->scr.main_ncw,
-			boot_editor->pad);
-
-	widgetset_set_widget_focus(boot_editor->widgetset,
-			boot_editor_widget_focus, boot_editor);
-
-	boot_editor->widgets.device_l = widget_new_label(set, 0, 0, "device:");
-	boot_editor->widgets.device_f = widget_new_select(set, 0, 0,
-						field_size);
-	widget_select_on_change(boot_editor->widgets.device_f,
-			boot_editor_device_select_change, boot_editor);
-
-	boot_editor_populate_device_select(boot_editor, sysinfo);
-
-	boot_editor->widgets.image_l = widget_new_label(set, 0, 0, "image:");
-	boot_editor->widgets.image_f = widget_new_textbox(set, 0, 0,
-						field_size, image);
-
-	boot_editor->widgets.initrd_l = widget_new_label(set, 0, 0, "initrd:");
-	boot_editor->widgets.initrd_f = widget_new_textbox(set, 0, 0,
-						field_size, initrd);
-
-	boot_editor->widgets.dtb_l = widget_new_label(set, 0, 0, "dtb:");
-	boot_editor->widgets.dtb_f = widget_new_textbox(set, 0, 0,
-						field_size, dtb);
-
-	boot_editor->widgets.args_l = widget_new_label(set, 0, 0, "args:");
-	boot_editor->widgets.args_f = widget_new_textbox(set, 0, 0,
-					field_size, args);
-
-	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 6,
-					"OK", ok_click, boot_editor);
-	boot_editor->widgets.cancel_b = widget_new_button(set, 0, 0, 6,
-					"Cancel", cancel_click, boot_editor);
+	boot_editor_setup_widgets(boot_editor, sysinfo);
 
 	boot_editor_layout_widgets(boot_editor);
 

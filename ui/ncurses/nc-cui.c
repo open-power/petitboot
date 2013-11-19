@@ -522,9 +522,13 @@ static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
 	if (cui->sysinfo_screen)
 		sysinfo_screen_update(cui->sysinfo_screen, sysinfo);
 
-	/* ... and do the same with the config screen */
+	/* ... and do the same with the config screen... */
 	if (cui->config_screen)
 		config_screen_update(cui->config_screen, cui->config, sysinfo);
+
+	/* ... and the boot editor. */
+	if (cui->boot_editor)
+		boot_editor_update(cui->boot_editor, sysinfo);
 
 	cui_update_mm_title(cui);
 }
