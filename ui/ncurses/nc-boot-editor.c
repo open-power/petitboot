@@ -39,7 +39,9 @@ struct boot_editor {
 
 	int			label_x;
 	int			field_x;
+	int			scroll_y;
 
+	WINDOW			*pad;
 	struct nc_widgetset	*widgetset;
 	struct {
 		struct nc_widget_label		*device_l;
@@ -70,6 +72,17 @@ static struct boot_editor *boot_editor_from_scr(struct nc_scr *scr)
 	return boot_editor;
 }
 
+static void pad_refresh(struct boot_editor *boot_editor)
+{
+	int y, x, rows, cols;
+
+	getmaxyx(boot_editor->scr.sub_ncw, rows, cols);
+	getbegyx(boot_editor->scr.sub_ncw, y, x);
+
+	prefresh(boot_editor->pad, boot_editor->scroll_y, 0,
+			y, x, rows, cols);
+}
+
 static struct boot_editor *boot_editor_from_arg(void *arg)
 {
 	struct boot_editor *boot_editor = arg;
@@ -84,9 +97,7 @@ static int boot_editor_post(struct nc_scr *scr)
 
 	widgetset_post(boot_editor->widgetset);
 	nc_scr_frame_draw(scr);
-	redrawwin(boot_editor->scr.main_ncw);
-	wrefresh(boot_editor->scr.main_ncw);
-
+	pad_refresh(boot_editor);
 	return 0;
 }
 
@@ -172,7 +183,7 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 
 	handled = widgetset_process_key(boot_editor->widgetset, key);
 	if (handled) {
-		wrefresh(boot_editor->scr.main_ncw);
+		pad_refresh(boot_editor);
 		return;
 	}
 
@@ -192,6 +203,8 @@ static int boot_editor_destructor(void *arg)
 {
 	struct boot_editor *boot_editor = boot_editor_from_arg(arg);
 	boot_editor->scr.sig = pb_removed_sig;
+	if (boot_editor->pad)
+		delwin(boot_editor->pad);
 	return 0;
 }
 
@@ -219,6 +232,11 @@ static int layout_pair(struct boot_editor *boot_editor, int y,
 	widget_move(label_w, y, boot_editor->label_x);
 	widget_move(field_w, y, boot_editor->field_x);
 	return max(widget_height(label_w), widget_height(field_w));
+}
+
+static int pad_height(int blockdevs_height)
+{
+	return 10 + blockdevs_height;
 }
 
 static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
@@ -250,6 +268,29 @@ static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 	y++;
 	widget_move(widget_button_base(boot_editor->widgets.ok_b), y, 9);
 	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 19);
+
+	pad_refresh(boot_editor);
+}
+
+static void boot_editor_widget_focus(struct nc_widget *widget, void *arg)
+{
+	struct boot_editor *boot_editor = arg;
+	int w_y, w_height, s_max;
+
+	w_y = widget_y(widget);
+	w_height = widget_height(widget);
+	s_max = getmaxy(boot_editor->scr.sub_ncw);
+
+	if (w_y < boot_editor->scroll_y)
+		boot_editor->scroll_y = w_y;
+
+	else if (w_y + w_height + boot_editor->scroll_y > s_max - 1)
+		boot_editor->scroll_y = 1 + w_y + w_height - s_max;
+
+	else
+		return;
+
+	pad_refresh(boot_editor);
 }
 
 static void boot_editor_device_select_change(void *arg, int idx)
@@ -408,9 +449,14 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 
 	field_size = COLS - 1 - boot_editor->field_x;
 
+	boot_editor->pad = newpad(pad_height(sysinfo->n_blockdevs), COLS);
+
 	boot_editor->widgetset = set = widgetset_create(boot_editor,
 			boot_editor->scr.main_ncw,
-			boot_editor->scr.sub_ncw);
+			boot_editor->pad);
+
+	widgetset_set_widget_focus(boot_editor->widgetset,
+			boot_editor_widget_focus, boot_editor);
 
 	boot_editor->widgets.device_l = widget_new_label(set, 0, 0, "device:");
 	boot_editor->widgets.device_f = widget_new_select(set, 0, 0,
