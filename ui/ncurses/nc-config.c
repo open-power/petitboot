@@ -535,17 +535,16 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 static void config_screen_widget_focus(struct nc_widget *widget, void *arg)
 {
 	struct config_screen *screen = arg;
-	int w_y, w_height, s_max;
+	int w_y, s_max;
 
-	w_y = widget_y(widget);
-	w_height = widget_height(widget);
-	s_max = getmaxy(screen->scr.sub_ncw);
+	w_y = widget_y(widget) + widget_focus_y(widget);
+	s_max = getmaxy(screen->scr.sub_ncw) - 1;
 
 	if (w_y < screen->scroll_y)
 		screen->scroll_y = w_y;
 
-	else if (w_y + w_height + screen->scroll_y > s_max - 1)
-		screen->scroll_y = 1 + w_y + w_height - s_max;
+	else if (w_y + screen->scroll_y + 1 > s_max)
+		screen->scroll_y = 1 + w_y - s_max;
 
 	else
 		return;

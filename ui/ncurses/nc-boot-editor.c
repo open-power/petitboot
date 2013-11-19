@@ -275,17 +275,16 @@ static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 static void boot_editor_widget_focus(struct nc_widget *widget, void *arg)
 {
 	struct boot_editor *boot_editor = arg;
-	int w_y, w_height, s_max;
+	int w_y, s_max;
 
-	w_y = widget_y(widget);
-	w_height = widget_height(widget);
-	s_max = getmaxy(boot_editor->scr.sub_ncw);
+	w_y = widget_y(widget) + widget_focus_y(widget);
+	s_max = getmaxy(boot_editor->scr.sub_ncw) - 1;
 
 	if (w_y < boot_editor->scroll_y)
 		boot_editor->scroll_y = w_y;
 
-	else if (w_y + w_height + boot_editor->scroll_y > s_max - 1)
-		boot_editor->scroll_y = 1 + w_y + w_height - s_max;
+	else if (w_y + boot_editor->scroll_y + 1 > s_max)
+		boot_editor->scroll_y = 1 + w_y - s_max;
 
 	else
 		return;
