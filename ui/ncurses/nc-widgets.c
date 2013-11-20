@@ -694,6 +694,13 @@ struct nc_widgetset *widgetset_create(void *ctx, WINDOW *main, WINDOW *sub)
 	return set;
 }
 
+void widgetset_set_windows(struct nc_widgetset *set,
+		WINDOW *main, WINDOW *sub)
+{
+	set->mainwin = main;
+	set->subwin = sub;
+}
+
 void widgetset_set_widget_focus(struct nc_widgetset *set,
 		widget_focus_cb cb, void *arg)
 {

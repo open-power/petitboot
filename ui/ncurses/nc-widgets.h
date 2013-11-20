@@ -67,6 +67,8 @@ typedef void (*widget_focus_cb)(struct nc_widget *widget, void *arg);
 struct nc_widgetset *widgetset_create(void *ctx, WINDOW *main, WINDOW *sub);
 void widgetset_set_widget_focus(struct nc_widgetset *set,
 		widget_focus_cb cb, void *arg);
+void widgetset_set_windows(struct nc_widgetset *widgetset,
+		WINDOW *main, WINDOW *sub);
 void widgetset_post(struct nc_widgetset *set);
 void widgetset_unpost(struct nc_widgetset *set);
 bool widgetset_process_key(struct nc_widgetset *set, int key);
