@@ -130,6 +130,7 @@ struct nc_widget_button {
 };
 
 static void widgetset_add_field(struct nc_widgetset *set, FIELD *field);
+static void widgetset_remove_field(struct nc_widgetset *set, FIELD *field);
 
 static bool process_key_nop(struct nc_widget *widget __attribute__((unused)),
 		FORM *form __attribute((unused)),
@@ -526,6 +527,27 @@ void widget_select_on_change(struct nc_widget_select *select,
 	select->on_change_arg = arg;
 }
 
+void widget_select_drop_options(struct nc_widget_select *select)
+{
+	struct nc_widgetset *set = select->set;
+	int i;
+
+	for (i = 0; i < select->n_options; i++) {
+		FIELD *field = select->options[i].field;
+		widgetset_remove_field(set, field);
+		if (field == set->cur_field)
+			set->cur_field = NULL;
+		free_field(select->options[i].field);
+	}
+
+	talloc_free(select->options);
+	select->options = NULL;
+	select->n_options = 0;
+	select->widget.height = 0;
+	select->widget.focus_y = 0;
+
+}
+
 static bool button_process_key(struct nc_widget *widget,
 		FORM *form __attribute__((unused)), int key)
 {
@@ -721,6 +743,23 @@ static void widgetset_add_field(struct nc_widgetset *set, FIELD *field)
 	set->n_fields++;
 	set->fields[set->n_fields - 1] = field;
 	set->fields[set->n_fields] = NULL;
+}
+
+static void widgetset_remove_field(struct nc_widgetset *set, FIELD *field)
+{
+	int i;
+
+	for (i = 0; i < set->n_fields; i++) {
+		if (set->fields[i] == field)
+			break;
+	}
+
+	if (i == set->n_fields)
+		return;
+
+	memmove(&set->fields[i], &set->fields[i+i],
+			(set->n_fields - i) * sizeof(set->fields[i]));
+	set->n_fields--;
 }
 
 #define DECLARE_BASEFN(type) \

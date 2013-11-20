@@ -45,6 +45,7 @@ char *widget_textbox_get_value(struct nc_widget_textbox *textbox);
 bool widget_checkbox_get_value(struct nc_widget_checkbox *checkbox);
 int widget_select_get_value(struct nc_widget_select *select);
 int widget_select_height(struct nc_widget_select *select);
+void widget_select_drop_options(struct nc_widget_select *select);
 
 /* generic widget API */
 struct nc_widget *widget_textbox_base(struct nc_widget_textbox *textbox);
