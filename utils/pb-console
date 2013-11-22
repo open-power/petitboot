@@ -82,6 +82,7 @@ then
 	if [ "$detach" = 1 ]
 	then
 		$getty -l $0 "$@" &
+		exit
 	else
 		exec $getty -l $0 "$@"
 	fi
