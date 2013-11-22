@@ -132,6 +132,11 @@ struct nc_widget_button {
 static void widgetset_add_field(struct nc_widgetset *set, FIELD *field);
 static void widgetset_remove_field(struct nc_widgetset *set, FIELD *field);
 
+static bool key_is_select(int key)
+{
+	return key == ' ' || key == '\r' || key == '\n' || key == KEY_ENTER;
+}
+
 static bool process_key_nop(struct nc_widget *widget __attribute__((unused)),
 		FORM *form __attribute((unused)),
 		int key __attribute__((unused)))
@@ -206,7 +211,7 @@ static bool checkbox_process_key(struct nc_widget *widget,
 {
 	struct nc_widget_checkbox *checkbox = to_checkbox(widget);
 
-	if (key != ' ')
+	if (!key_is_select(key))
 		return false;
 
 	checkbox->checked = !checkbox->checked;
@@ -361,13 +366,8 @@ static bool select_process_key(struct nc_widget *w, FORM *form, int key)
 	int i, new_idx;
 	FIELD *field;
 
-	switch (key) {
-	case ' ':
-	case KEY_ENTER:
-		break;
-	default:
+	if (!key_is_select(key))
 		return false;
-	}
 
 	field = current_field(form);
 	new_opt = NULL;
@@ -556,15 +556,11 @@ static bool button_process_key(struct nc_widget *widget,
 	if (!button->click)
 		return false;
 
-	switch (key) {
-	case ' ':
-	case '\r':
-	case '\n':
-		button->click(button->arg);
-		return true;
-	}
+	if (!key_is_select(key))
+		return false;
 
-	return false;
+	button->click(button->arg);
+	return true;
 }
 
 static int button_destructor(void *ptr)
