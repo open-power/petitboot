@@ -426,7 +426,7 @@ static char *dns_config_str(void *ctx, const char **dns_servers, int n)
 	char *str;
 	int i;
 
-	str = talloc_strdup(ctx, "dns=");
+	str = talloc_strdup(ctx, "dns,");
 	for (i = 0; i < n; i++) {
 		str = talloc_asprintf_append(str, "%s%s",
 				i == 0 ? "" : ",",
