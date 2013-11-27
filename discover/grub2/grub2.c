@@ -103,7 +103,7 @@ static int grub2_parse(struct discover_context *dc)
 			continue;
 
 		parser = grub2_parser_create(dc);
-		grub2_parser_parse(parser, buf, len);
+		grub2_parser_parse(parser, *filename, buf, len);
 		talloc_free(buf);
 		talloc_free(parser);
 		break;

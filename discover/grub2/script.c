@@ -400,12 +400,26 @@ int statement_function_execute(struct grub2_script *script,
 static void init_env(struct grub2_script *script)
 {
 	struct env_entry *env;
+	char *prefix, *sep;
 
 	list_init(&script->environment);
 
+	/* use location of the parsed config file to determine the prefix */
 	env = talloc(script, struct env_entry);
+
+	prefix = NULL;
+	if (script->filename) {
+		sep = strrchr(script->filename, '/');
+		if (sep)
+			prefix = talloc_strndup(env, script->filename,
+					sep - script->filename);
+	}
+
 	env->name = talloc_strdup(env, "prefix");
-	env->value = talloc_strdup(env, default_prefix);
+	if (prefix)
+		env->value = prefix;
+	else
+		env->value = talloc_strdup(env, default_prefix);
 
 	list_add(&script->environment, &env->list);
 }
@@ -426,6 +440,7 @@ void script_register_function(struct grub2_script *script,
 
 void script_execute(struct grub2_script *script)
 {
+	init_env(script);
 	statements_execute(script, script->statements);
 }
 
@@ -436,7 +451,6 @@ struct grub2_script *create_script(struct grub2_parser *parser,
 
 	script = talloc_zero(parser, struct grub2_script);
 
-	init_env(script);
 	script->ctx = ctx;
 
 	list_init(&script->symtab);

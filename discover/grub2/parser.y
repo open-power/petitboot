@@ -303,10 +303,13 @@ struct grub2_parser *grub2_parser_create(struct discover_context *ctx)
 	return parser;
 }
 
-void grub2_parser_parse(struct grub2_parser *parser, char *buf, int len)
+void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
+		char *buf, int len)
 {
 	YY_BUFFER_STATE bufstate;
 	int rc;
+
+	parser->script->filename = filename;
 
 	bufstate = yy_scan_bytes(buf, len - 1, parser->scanner);
 	yyset_lineno(1, parser->scanner);

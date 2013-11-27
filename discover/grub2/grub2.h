@@ -89,6 +89,7 @@ struct grub2_script {
 	struct list			symtab;
 	struct discover_context		*ctx;
 	struct discover_boot_option	*opt;
+	const char			*filename;
 	unsigned int			n_options;
 };
 
@@ -176,6 +177,7 @@ bool resolve_grub2_resource(struct device_handler *handler,
 
 /* external parser api */
 struct grub2_parser *grub2_parser_create(struct discover_context *ctx);
-void grub2_parser_parse(struct grub2_parser *parser, char *buf, int len);
+void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
+		char *buf, int len);
 #endif /* GRUB2_H */
 
