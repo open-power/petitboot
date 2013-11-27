@@ -547,8 +547,8 @@ struct network *network_init(struct device_handler *handler,
 	network = talloc(handler, struct network);
 	list_init(&network->interfaces);
 	network->handler = handler;
-	network->manual_config = false;
 	network->dry_run = dry_run;
+	network->manual_config = config_get()->network.n_interfaces != 0;
 
 	network_init_dns(network);
 
