@@ -97,18 +97,18 @@ static int grub2_parse(struct discover_context *dc)
 	if (dc->event)
 		return -1;
 
-	parser = grub2_parser_create(dc);
-
 	for (filename = grub2_conf_files; *filename; filename++) {
 		rc = parser_request_file(dc, dc->device, *filename, &buf, &len);
 		if (rc)
 			continue;
 
+		parser = grub2_parser_create(dc);
 		grub2_parser_parse(parser, buf, len);
 		talloc_free(buf);
+		talloc_free(parser);
+		break;
 	}
 
-	talloc_free(parser);
 
 	return 0;
 }
