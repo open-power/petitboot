@@ -87,7 +87,7 @@ bool resolve_grub2_resource(struct device_handler *handler,
 }
 
 static int grub2_parse(struct discover_context *dc)
-	{
+{
 	const char * const *filename;
 	struct grub2_parser *parser;
 	int len, rc;
