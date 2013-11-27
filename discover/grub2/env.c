@@ -84,10 +84,10 @@ int builtin_load_env(struct grub2_script *script,
 
 	rc = parser_request_file(script->ctx, dev, envpath, &buf, &len);
 
-	if (!rc)
+	if (!rc) {
 		rc = parse_buf_to_env(script, buf, len);
-
-	talloc_free(buf);
+		talloc_free(buf);
+	}
 
 	return 0;
 }
