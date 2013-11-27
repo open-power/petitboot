@@ -86,7 +86,7 @@ static void run_env_test(struct parser_test *test, struct env_test *envtest)
 	test_add_file_data(test, test->ctx->device, "/boot/grub/grubenv",
 			env_before, strlen(env_before));
 
-	__test_read_conf_data(test, "/boot/grub2/grub.cfg", envtest->script,
+	__test_read_conf_data(test, "/boot/grub/grub.cfg", envtest->script,
 			strlen(envtest->script));
 
 	test_run_parser(test, "grub2");
