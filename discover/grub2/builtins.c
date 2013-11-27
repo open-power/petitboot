@@ -7,6 +7,7 @@
 #include <talloc/talloc.h>
 #include <util/util.h>
 
+#include "discover/parser.h"
 #include "grub2.h"
 
 
@@ -123,7 +124,38 @@ static int builtin_search(struct grub2_script *script,
 	return 0;
 }
 
-static bool builtin_test_op(int argc, char **argv, int *consumed)
+static bool builtin_test_op_file(struct grub2_script *script, char op,
+		const char *file)
+{
+	bool result;
+	int len, rc;
+	char *buf;
+
+	rc = parser_request_file(script->ctx, script->ctx->device,
+			file, &buf, &len);
+	if (rc)
+		return false;
+
+	switch (op) {
+	case 's':
+		/* -s: return true if file exists and has non-zero size */
+		result = len > 0;
+		break;
+	case 'f':
+		/* -f: return true if file exists */
+		result = true;
+		break;
+	default:
+		result = false;
+
+	}
+
+	talloc_free(buf);
+	return result;
+}
+
+static bool builtin_test_op(struct grub2_script *script,
+		int argc, char **argv, int *consumed)
 {
 	char *op;
 
@@ -171,10 +203,9 @@ static bool builtin_test_op(int argc, char **argv, int *consumed)
 			return strlen(a1) != 0;
 		}
 
-		/* todo: implement file checks */
 		if (!strcmp(op, "-s") || !strcmp(op, "-f")) {
 			*consumed = 2;
-			return false;
+			return builtin_test_op_file(script, op[1], a1);
 		}
 	}
 
@@ -183,7 +214,7 @@ static bool builtin_test_op(int argc, char **argv, int *consumed)
 	return strlen(op) > 0;
 }
 
-static int builtin_test(struct grub2_script *script __attribute__((unused)),
+static int builtin_test(struct grub2_script *script,
 		void *data __attribute__((unused)),
 		int argc, char *argv[])
 {
@@ -222,7 +253,7 @@ static int builtin_test(struct grub2_script *script __attribute__((unused)),
 			continue;
 		}
 
-		rc = builtin_test_op(argc, argv, &consumed);
+		rc = builtin_test_op(script, argc, argv, &consumed);
 		if (not) {
 			rc = !rc;
 			not = false;
