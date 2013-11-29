@@ -105,7 +105,8 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 
 	ddev = discover_device_create(udev->handler, name);
 
-	ddev->device_path = udev_device_get_devnode(dev);
+	ddev->device_path = talloc_strdup(ddev, udev_device_get_devnode(dev));
+
 	prop = udev_device_get_property_value(dev, "ID_FS_UUID");
 	if (prop)
 		ddev->uuid = talloc_strdup(ddev, prop);
