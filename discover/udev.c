@@ -22,6 +22,7 @@
 #include "udev.h"
 #include "pb-discover.h"
 #include "device-handler.h"
+#include "cdrom.h"
 
 struct pb_udev {
 	struct udev *udev;
@@ -64,7 +65,9 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 	const char *serial;
 	const char *path;
 	const char *name;
+	const char *node;
 	const char *prop;
+	bool cdrom;
 
 	name = udev_device_get_sysname(dev);
 	if (!name) {
@@ -83,11 +86,23 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 		return 0;
 	}
 
+	node = udev_device_get_devnode(dev);
 	path = udev_device_get_devpath(dev);
 	if (path && (strstr(path, "virtual/block/loop")
 			|| strstr(path, "virtual/block/ram"))) {
 		pb_debug("SKIP: %s: ignored (path=%s)\n", name, path);
 		return 0;
+	}
+
+	cdrom = node && !!udev_device_get_property_value(dev, "ID_CDROM");
+	if (cdrom) {
+		/* CDROMs require a little initialisation, to get
+		 * petitboot-compatible tray behaviour */
+		cdrom_init(node);
+		if (!cdrom_media_present(node)) {
+			pb_debug("SKIP: %s: no media present\n", name);
+			return 0;
+		}
 	}
 
 	/* We have enough info to create the device and start discovery */
@@ -105,7 +120,7 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 
 	ddev = discover_device_create(udev->handler, name);
 
-	ddev->device_path = talloc_strdup(ddev, udev_device_get_devnode(dev));
+	ddev->device_path = talloc_strdup(ddev, node);
 
 	prop = udev_device_get_property_value(dev, "ID_FS_UUID");
 	if (prop)
@@ -141,15 +156,79 @@ static int udev_handle_dev_remove(struct pb_udev *udev, struct udev_device *dev)
 
 	return 0;
 }
+
+static int udev_handle_dev_change(struct pb_udev *udev, struct udev_device *dev)
+{
+	struct discover_device *ddev;
+	const char *name, *node;
+
+	name = udev_device_get_sysname(dev);
+	node = udev_device_get_devnode(dev);
+
+	/* we're only interested in CDROM change events at present */
+	if (!udev_device_get_property_value(dev, "ID_CDROM"))
+		return 0;
+
+	/* handle CDROM eject requests */
+	if (udev_device_get_property_value(dev, "DISK_EJECT_REQUEST")) {
+		bool eject = false;
+
+		pb_debug("udev: eject request\n");
+
+		/* If the device is mounted, cdrom_id's own eject request may
+		 * have failed. So, we'll need to do our own here.
+		 */
+		ddev = device_lookup_by_id(udev->handler, name);
+		if (ddev) {
+			eject = ddev->mounted;
+			udev_handle_dev_remove(udev, dev);
+		}
+
+		if (eject)
+			cdrom_eject(node);
+
+		return 0;
+	}
+
+	if (udev_device_get_property_value(dev, "DISK_MEDIA_CHANGE")) {
+		if (cdrom_media_present(node))
+			return udev_handle_dev_add(udev, dev);
+		else
+			return udev_handle_dev_remove(udev, dev);
+	}
+
+	return 0;
+}
+
 static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 {
 	struct pb_udev *udev = udev_get_userdata(udev_device_get_udev(dev));
+
+#ifdef DEBUG
+	{
+		struct udev_list_entry *list;
+		const char *name;
+
+		list = udev_device_get_properties_list_entry(dev);
+		name = udev_device_get_sysname(dev);
+
+		pb_debug("%s: action %s, device %s\n", __func__, action, name);
+		pb_debug("%s properties:\n", __func__);
+
+		for (; list; list = udev_list_entry_get_next(list))
+			pb_log("\t%-20s: %s\n", udev_list_entry_get_name(list),
+					udev_list_entry_get_value(list));
+	} while (0);
+#endif
 
 	if (!strcmp(action, "add"))
 		return udev_handle_dev_add(udev, dev);
 
 	else if (!strcmp(action, "remove"))
 		return udev_handle_dev_remove(udev, dev);
+
+	else if (!strcmp(action, "change"))
+		return udev_handle_dev_change(udev, dev);
 
 	return 0;
 }

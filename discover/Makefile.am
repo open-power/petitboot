@@ -32,6 +32,8 @@ sbin_PROGRAMS = pb-discover
 pb_discover_SOURCES = \
 	boot.c \
 	boot.h \
+	cdrom.c \
+	cdrom.h \
 	device-handler.c \
 	device-handler.h \
 	discover-server.c \
