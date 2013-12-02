@@ -279,6 +279,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 void device_handler_remove(struct device_handler *handler,
 		struct discover_device *device)
 {
+	struct discover_boot_option *opt, *tmp;
 	unsigned int i;
 
 	for (i = 0; i < handler->n_devices; i++)
@@ -288,6 +289,16 @@ void device_handler_remove(struct device_handler *handler,
 	if (i == handler->n_devices) {
 		talloc_free(device);
 		return;
+	}
+
+	/* Free any unresolved options, as they're currently allocated
+	 * against the handler */
+	list_for_each_entry_safe(&handler->unresolved_boot_options,
+			opt, tmp, list) {
+		if (opt->device != device)
+			continue;
+		list_remove(&opt->list);
+		talloc_free(opt);
 	}
 
 	handler->n_devices--;

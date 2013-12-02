@@ -31,6 +31,7 @@ void test_read_conf_file(struct parser_test *test, const char *filename,
 int test_run_parser(struct parser_test *test, const char *parser_name);
 
 void test_hotplug_device(struct parser_test *test, struct discover_device *dev);
+void test_remove_device(struct parser_test *test, struct discover_device *dev);
 
 void test_add_file_data(struct parser_test *test, struct discover_device *dev,
 		const char *filename, const void *data, int size);

@@ -301,6 +301,21 @@ void test_hotplug_device(struct parser_test *test, struct discover_device *dev)
 		boot_option_resolve(test->handler, opt);
 }
 
+void test_remove_device(struct parser_test *test, struct discover_device *dev)
+{
+	struct discover_boot_option *opt, *tmp;
+
+	if (dev == test->ctx->device) {
+		list_for_each_entry_safe(&test->ctx->boot_options,
+				opt, tmp, list) {
+			list_remove(&opt->list);
+			talloc_free(opt);
+		}
+	}
+
+	device_handler_remove(test->handler, dev);
+}
+
 struct discover_boot_option *get_boot_option(struct discover_context *ctx,
 		int idx)
 {
