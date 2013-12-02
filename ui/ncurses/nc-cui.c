@@ -296,6 +296,8 @@ static int cui_process_key(void *arg)
 	for (;;) {
 		int c = getch();
 
+		pb_debug("%s: got key %d\n", __func__, c);
+
 		if (c == ERR)
 			break;
 
