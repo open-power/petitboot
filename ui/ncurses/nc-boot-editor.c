@@ -136,7 +136,7 @@ static char *conditional_prefix(struct pb_boot_data *ctx,
 	if (!value || !*value)
 		return NULL;
 
-	sep = NULL;
+	sep = "";
 	if (!prefix)
 		prefix = "";
 	else if (prefix[strlen(prefix)] != '/')
