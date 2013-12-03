@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <string.h>
 
 #include <talloc/talloc.h>
 #include <url/url.h>
@@ -9,8 +10,6 @@
 #include <discover/parser-utils.h>
 
 #include "grub2.h"
-#include "parser.h"
-#include "lexer.h"
 
 static const char *const grub2_conf_files[] = {
 	"/grub.cfg",

@@ -2,6 +2,7 @@
 %pure-parser
 %lex-param { yyscan_t scanner }
 %parse-param { struct grub2_parser *parser }
+%parse-param { void *scanner }
 %error-verbose
 
 %{
@@ -9,10 +10,6 @@
 #include <log/log.h>
 
 #include "grub2.h"
-#include "parser.h"
-#include "lexer.h"
-
-#define YYLEX_PARAM parser->scanner
 
 void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 %}
@@ -62,6 +59,10 @@ void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 
 %start	script
 %debug
+
+%{
+#include "lexer.h"
+%}
 
 %%
 
@@ -314,7 +315,7 @@ void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
 	bufstate = yy_scan_bytes(buf, len - 1, parser->scanner);
 	yyset_lineno(1, parser->scanner);
 
-	rc = yyparse(parser);
+	rc = yyparse(parser, parser->scanner);
 
 	yy_delete_buffer(bufstate, parser->scanner);
 
