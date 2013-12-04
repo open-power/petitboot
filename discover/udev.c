@@ -62,7 +62,7 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 {
 	struct discover_device *ddev;
 	const char *typestr;
-	const char *serial;
+	const char *uuid;
 	const char *path;
 	const char *name;
 	const char *node;
@@ -112,19 +112,24 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 		return -1;
 	}
 
-	/* we may also see multipath devices; same dev nodes (hence id), but
-	 * different serial numbers */
-	serial = udev_device_get_property_value(dev, "ID_SERIAL");
-	if (serial && device_lookup_by_serial(udev->handler, serial))
-		return -1;
+	/* We may see multipath devices; they'll have the same uuid as an
+	 * existing device, so only parse the first. */
+	uuid = udev_device_get_property_value(dev, "ID_FS_UUID");
+	if (uuid) {
+		ddev = device_lookup_by_uuid(udev->handler, uuid);
+		if (ddev) {
+			pb_log("SKIP: %s UUID [%s] already present (as %s)\n",
+					name, uuid, ddev->device->id);
+			return -1;
+		}
+	}
 
 	ddev = discover_device_create(udev->handler, name);
 
 	ddev->device_path = talloc_strdup(ddev, node);
 
-	prop = udev_device_get_property_value(dev, "ID_FS_UUID");
-	if (prop)
-		ddev->uuid = talloc_strdup(ddev, prop);
+	if (uuid)
+		ddev->uuid = talloc_strdup(ddev, uuid);
 	prop = udev_device_get_property_value(dev, "ID_FS_LABEL");
 	if (prop)
 		ddev->label = talloc_strdup(ddev, prop);
