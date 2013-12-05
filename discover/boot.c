@@ -266,11 +266,9 @@ static void run_boot_hooks(struct boot_task *task)
 			/* if the hook returned with BOOT_HOOK_EXIT_UPDATE,
 			 * then we process stdout to look for updated params
 			 */
-			if (rc == BOOT_HOOK_EXIT_UPDATE) {
-				boot_hook_update(task, hooks[i]->d_name,
-						process->stdout_buf);
-				boot_hook_setenv(task);
-			}
+			boot_hook_update(task, hooks[i]->d_name,
+					process->stdout_buf);
+			boot_hook_setenv(task);
 		}
 
 		process_release(process);
