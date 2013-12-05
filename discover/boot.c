@@ -32,6 +32,9 @@ struct boot_task {
 	struct load_url_result *image;
 	struct load_url_result *initrd;
 	struct load_url_result *dtb;
+	const char *local_image;
+	const char *local_initrd;
+	const char *local_dtb;
 	const char *args;
 	boot_status_fn status_fn;
 	void *status_arg;
@@ -55,16 +58,16 @@ static int kexec_load(struct boot_task *boot_task)
 	*p++ = pb_system_apps.kexec;	/* 1 */
 	*p++ = "-l";			/* 2 */
 
-	if (boot_task->initrd) {
+	if (boot_task->local_initrd) {
 		s_initrd = talloc_asprintf(boot_task, "--initrd=%s",
-				boot_task->initrd->local);
+				boot_task->local_initrd);
 		assert(s_initrd);
 		*p++ = s_initrd;	 /* 3 */
 	}
 
-	if (boot_task->dtb) {
+	if (boot_task->local_dtb) {
 		s_dtb = talloc_asprintf(boot_task, "--dtb=%s",
-						boot_task->dtb->local);
+						boot_task->local_dtb);
 		assert(s_dtb);
 		*p++ = s_dtb;		 /* 4 */
 	}
@@ -76,7 +79,7 @@ static int kexec_load(struct boot_task *boot_task)
 		*p++ = s_args;		/* 5 */
 	}
 
-	*p++ = boot_task->image->local;	/* 6 */
+	*p++ = boot_task->local_image;	/* 6 */
 	*p++ = NULL;			/* 7 */
 
 	result = process_run_simple_argv(boot_task, argv);
@@ -151,9 +154,9 @@ static void boot_hook_update_param(void *ctx, struct boot_task *task,
 		const char *name;
 		const char **p;
 	} *param, params[] = {
-		{ "boot_image",		&task->image->local },
-		{ "boot_initrd",	&task->initrd->local },
-		{ "boot_dtb",		&task->dtb->local },
+		{ "boot_image",		&task->local_image },
+		{ "boot_initrd",	&task->local_initrd },
+		{ "boot_dtb",		&task->local_dtb },
 		{ "boot_args",		&task->args },
 		{ NULL, NULL },
 	};
@@ -201,11 +204,11 @@ static void boot_hook_setenv(struct boot_task *task)
 	unsetenv("boot_dtb");
 	unsetenv("boot_args");
 
-	setenv("boot_image", task->image->local, 1);
-	if (task->initrd)
-		setenv("boot_initrd", task->initrd->local, 1);
-	if (task->dtb)
-		setenv("boot_dtb", task->dtb->local, 1);
+	setenv("boot_image", task->local_image, 1);
+	if (task->local_initrd)
+		setenv("boot_initrd", task->local_initrd, 1);
+	if (task->local_dtb)
+		setenv("boot_dtb", task->local_dtb, 1);
 	if (task->args)
 		setenv("boot_args", task->args, 1);
 }
@@ -361,6 +364,12 @@ static void boot_process(struct load_url_result *result, void *data)
 			check_load(task, "initrd", task->initrd) ||
 			check_load(task, "dtb", task->dtb))
 		goto no_load;
+
+	/* we make a copy of the local paths, as the boot hooks might update
+	 * and/or create these */
+	task->local_image = task->image ? task->image->local : NULL;
+	task->local_initrd = task->initrd ? task->initrd->local : NULL;
+	task->local_dtb = task->dtb ? task->dtb->local : NULL;
 
 	run_boot_hooks(task);
 
