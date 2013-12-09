@@ -44,7 +44,7 @@ enum pb_nc_sig {
 	pb_pmenu_sig		= 222,
 	pb_item_sig		= 333,
 	pb_boot_editor_sig	= 444,
-	pb_sysinfo_screen_sig	= 555,
+	pb_text_screen_sig	= 555,
 	pb_config_screen_sig	= 666,
 	pb_removed_sig		= -777,
 };
