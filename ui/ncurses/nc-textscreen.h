@@ -24,7 +24,7 @@
 struct text_screen {
 	struct nc_scr	scr;
 	struct cui	*cui;
-	char		**lines;
+	const char	**lines;
 	int		n_lines;
 	int		n_alloc_lines;
 	int		scroll_y;
@@ -41,6 +41,7 @@ struct nc_scr *text_screen_scr(struct text_screen *screen);
 void text_screen_clear(struct text_screen *screen);
 void text_screen_append_line(struct text_screen *screen,
 		const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void text_screen_set_text(struct text_screen *screen, const char *text);
 
 /* interaction */
 void text_screen_process_key(struct nc_scr *scr, int key);

@@ -24,6 +24,7 @@
 #include <talloc/talloc.h>
 #include <types/types.h>
 #include <log/log.h>
+#include <fold/fold.h>
 #include <util/util.h>
 
 #include "nc-cui.h"
@@ -87,7 +88,22 @@ void text_screen_clear(struct text_screen *screen)
 	talloc_free(screen->lines);
 	screen->n_lines = 0;
 	screen->n_alloc_lines = 16;
-	screen->lines = talloc_array(screen, char *, screen->n_alloc_lines);
+	screen->lines = talloc_array(screen, const char *,
+			screen->n_alloc_lines);
+}
+
+static void __text_screen_append_line(struct text_screen *screen,
+		const char *line)
+{
+	if (screen->n_lines == screen->n_alloc_lines) {
+		screen->n_alloc_lines *= 2;
+		screen->lines = talloc_realloc(screen, screen->lines,
+						const char *,
+						screen->n_alloc_lines);
+	}
+
+	screen->lines[screen->n_lines] = line;
+	screen->n_lines++;
 }
 
 void text_screen_append_line(struct text_screen *screen, const char *fmt, ...)
@@ -103,16 +119,24 @@ void text_screen_append_line(struct text_screen *screen, const char *fmt, ...)
 		line = "";
 	}
 
-	if (screen->n_lines == screen->n_alloc_lines) {
-		screen->n_alloc_lines *= 2;
-		screen->lines = talloc_realloc(screen, screen->lines,
-						char *, screen->n_alloc_lines);
-	}
-
-	screen->lines[screen->n_lines] = line;
-	screen->n_lines++;
+	__text_screen_append_line(screen, line);
 }
 
+static int text_screen_fold_cb(void *arg, const char *buf, int len)
+{
+	struct text_screen *screen = arg;
+
+	buf = len ? talloc_strndup(screen->lines, buf, len) : "";
+	__text_screen_append_line(screen, buf);
+
+	return 0;
+}
+
+void text_screen_set_text(struct text_screen *screen, const char *text)
+{
+	fold_text(text, getmaxx(screen->scr.sub_ncw), text_screen_fold_cb,
+			screen);
+}
 
 void text_screen_process_key(struct nc_scr *scr, int key)
 {
@@ -156,6 +180,10 @@ void text_screen_init(struct text_screen *screen, struct cui *cui,
 	nc_scr_init(&screen->scr, pb_text_screen_sig, 0,
 			cui, text_screen_process_key,
 			text_screen_post, NULL, text_screen_resize);
+
+	/* this will establish our array of lines */
+	screen->lines = NULL;
+	text_screen_clear(screen);
 
 	screen->cui = cui;
 	screen->on_exit = on_exit;
