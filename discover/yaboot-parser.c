@@ -102,7 +102,8 @@ static void yaboot_finish(struct conf_context *conf)
 	const char *default_label;
 	struct boot_option *opt;
 
-	assert(state->opt);
+	if (!state->opt)
+		return;
 
 	opt = state->opt->option;
 	assert(opt);

@@ -42,6 +42,7 @@ TESTS = \
 	test-grub2-lexer-error \
 	test-grub2-parser-error \
 	test-kboot-single \
+	test-yaboot-empty \
 	test-yaboot-single \
 	test-yaboot-partition \
 	test-yaboot-partition-override \
