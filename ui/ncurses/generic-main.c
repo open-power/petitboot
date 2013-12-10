@@ -36,6 +36,8 @@
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
 
+extern const char *main_menu_help_text;
+
 static void print_version(void)
 {
 	printf("petitboot-nc (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
@@ -161,7 +163,7 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		"Petitboot (" PACKAGE_VERSION ")");
 	m->scr.frame.rtitle = NULL;
 	m->scr.frame.help = talloc_strdup(m,
-		"Enter=accept, e=edit, n=new, x=exit");
+		"Enter=accept, e=edit, n=new, x=exit, h=help");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
 	i = pmenu_item_init(m, 0, " ");
@@ -180,6 +182,9 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 			strerror(errno));
 		goto fail_setup;
 	}
+
+	m->help_title = "main menu";
+	m->help_text = main_menu_help_text;
 
 	menu_opts_off(m->ncm, O_SHOWDESC);
 	set_menu_mark(m->ncm, " *");

@@ -55,7 +55,7 @@ sbin_PROGRAMS += petitboot-ps3-nc
 endif
 
 
-petitboot_nc_SOURCES = generic-main.c
+petitboot_nc_SOURCES = generic-main.c generic-main-help.c
 petitboot_nc_LDADD = $(common_libs)
 
 petitboot_ps3_nc_SOURCES = ps3-main.c

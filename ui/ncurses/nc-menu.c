@@ -250,6 +250,11 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 	case 'c':
 		cui_show_config(cui_from_arg(scr->ui_ctx));
 		break;
+	case 'h':
+		if (menu->help_text)
+			cui_show_help(cui_from_arg(scr->ui_ctx),
+					menu->help_title, menu->help_text);
+		break;
 	default:
 		menu_driver(menu->ncm, key);
 		break;
