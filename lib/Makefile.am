@@ -20,6 +20,8 @@ AM_CFLAGS = $(DEFAULT_CFLAGS)
 noinst_LTLIBRARIES = libpbcore.la
 
 libpbcore_la_SOURCES = \
+	fold/fold.h \
+	fold/fold.c \
 	log/log.h \
 	log/log.c \
 	list/list.c \
