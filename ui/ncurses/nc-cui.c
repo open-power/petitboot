@@ -38,6 +38,7 @@
 #include "nc-boot-editor.h"
 #include "nc-config.h"
 #include "nc-sysinfo.h"
+#include "nc-helpscreen.h"
 
 static void cui_start(void)
 {
@@ -244,6 +245,28 @@ void cui_show_config(struct cui *cui)
 	cui->config_screen = config_screen_init(cui, cui->config,
 			cui->sysinfo, cui_config_exit);
 	cui_set_current(cui, config_screen_scr(cui->config_screen));
+}
+
+static void cui_help_exit(struct cui *cui)
+{
+	cui_set_current(cui, help_screen_return_scr(cui->help_screen));
+	talloc_free(cui->help_screen);
+	cui->help_screen = NULL;
+}
+
+void cui_show_help(struct cui *cui, const char *title, const char *text)
+{
+	if (!cui->current)
+		return;
+
+	if (cui->help_screen)
+		return;
+
+	cui->help_screen = help_screen_init(cui, cui->current,
+			title, text, cui_help_exit);
+
+	if (cui->help_screen)
+		cui_set_current(cui, help_screen_scr(cui->help_screen));
 }
 
 /**

@@ -59,6 +59,7 @@ struct cui {
 	struct config *config;
 	struct config_screen *config_screen;
 	struct boot_editor *boot_editor;
+	struct help_screen *help_screen;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
@@ -74,6 +75,7 @@ void cui_item_edit(struct pmenu_item *item);
 void cui_item_new(struct pmenu *menu);
 void cui_show_sysinfo(struct cui *cui);
 void cui_show_config(struct cui *cui);
+void cui_show_help(struct cui *cui, const char *title, const char *text);
 int cui_send_config(struct cui *cui, struct config *config);
 
 /* convenience routines */
