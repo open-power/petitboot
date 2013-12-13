@@ -36,6 +36,7 @@ libpbnc_la_SOURCES = \
 	nc-cui.h \
 	nc-boot-editor.c \
 	nc-boot-editor.h \
+	nc-boot-editor-help.c \
 	nc-helpscreen.c \
 	nc-helpscreen.h \
 	nc-menu.c \

@@ -37,6 +37,7 @@ struct boot_editor {
 		STATE_EDIT,
 		STATE_CANCEL,
 		STATE_SAVE,
+		STATE_HELP,
 	}			state;
 	void			(*on_exit)(struct cui *cui,
 					struct pmenu_item *item,
@@ -60,6 +61,7 @@ struct boot_editor {
 		struct nc_widget_label		*args_l;
 		struct nc_widget_textbox	*args_f;
 		struct nc_widget_button		*ok_b;
+		struct nc_widget_button		*help_b;
 		struct nc_widget_button		*cancel_b;
 	} widgets;
 
@@ -69,6 +71,8 @@ struct boot_editor {
 	char			*dtb;
 	char			*args;
 };
+
+extern const char *boot_editor_help_text;
 
 static struct boot_editor *boot_editor_from_scr(struct nc_scr *scr)
 {
@@ -103,9 +107,10 @@ static struct boot_editor *boot_editor_from_arg(void *arg)
 static int boot_editor_post(struct nc_scr *scr)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
-
 	widgetset_post(boot_editor->widgetset);
 	nc_scr_frame_draw(scr);
+	redrawwin(scr->main_ncw);
+	wrefresh(boot_editor->scr.main_ncw);
 	pad_refresh(boot_editor);
 	return 0;
 }
@@ -199,6 +204,9 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 	else if (key == 'x' || key == 27)
 		boot_editor->state = STATE_CANCEL;
 
+	else if (key == 'h')
+		boot_editor->state = STATE_HELP;
+
 	item = NULL;
 	bd = NULL;
 
@@ -209,6 +217,11 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 		/* fall through */
 	case STATE_CANCEL:
 		boot_editor->on_exit(boot_editor->cui, item, bd);
+		break;
+	case STATE_HELP:
+		boot_editor->state = STATE_EDIT;
+		cui_show_help(boot_editor->cui, "Boot Option Editor",
+				boot_editor_help_text);
 		break;
 	default:
 		break;
@@ -232,6 +245,12 @@ static void ok_click(void *arg)
 {
 	struct boot_editor *boot_editor = arg;
 	boot_editor->state = STATE_SAVE;
+}
+
+static void help_click(void *arg)
+{
+	struct boot_editor *boot_editor = arg;
+	boot_editor->state = STATE_HELP;
 }
 
 static void cancel_click(void *arg)
@@ -284,7 +303,8 @@ static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 
 	y++;
 	widget_move(widget_button_base(boot_editor->widgets.ok_b), y, 9);
-	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 19);
+	widget_move(widget_button_base(boot_editor->widgets.help_b), y, 19);
+	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 29);
 }
 
 static void boot_editor_widget_focus(struct nc_widget *widget, void *arg)
@@ -456,6 +476,8 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 
 	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 6,
 					"OK", ok_click, boot_editor);
+	boot_editor->widgets.help_b = widget_new_button(set, 0, 0, 6,
+					"Help", help_click, boot_editor);
 	boot_editor->widgets.cancel_b = widget_new_button(set, 0, 0, 6,
 					"Cancel", cancel_click, boot_editor);
 }
