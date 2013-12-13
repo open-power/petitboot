@@ -43,6 +43,7 @@ libpbnc_la_SOURCES = \
 	nc-scr.h \
 	nc-sysinfo.c \
 	nc-sysinfo.h \
+	nc-sysinfo-help.c \
 	nc-textscreen.c \
 	nc-textscreen.h \
 	nc-widgets.c \
