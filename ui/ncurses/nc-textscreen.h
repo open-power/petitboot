@@ -28,6 +28,8 @@ struct text_screen {
 	int		n_lines;
 	int		n_alloc_lines;
 	int		scroll_y;
+	const char	*help_title;
+	const char	*help_text;
 	void		(*on_exit)(struct cui *);
 };
 
@@ -42,6 +44,8 @@ void text_screen_clear(struct text_screen *screen);
 void text_screen_append_line(struct text_screen *screen,
 		const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 void text_screen_set_text(struct text_screen *screen, const char *text);
+void text_screen_set_help(struct text_screen *screen, const char *title,
+		const char *text);
 
 /* interaction */
 void text_screen_process_key(struct nc_scr *scr, int key);

@@ -150,6 +150,11 @@ void text_screen_process_key(struct nc_scr *scr, int key)
 	case KEY_UP:
 		text_screen_scroll(screen, key);
 		break;
+	case 'h':
+		if (screen->help_text)
+			cui_show_help(screen->cui, screen->help_title,
+					screen->help_text);
+		break;
 	default:
 		break;
 	}
@@ -164,6 +169,14 @@ static void text_screen_resize(struct nc_scr *scr)
 struct nc_scr *text_screen_scr(struct text_screen *screen)
 {
 	return &screen->scr;
+}
+
+void text_screen_set_help(struct text_screen *screen, const char *title,
+		const char *text)
+{
+	screen->help_title = title;
+	screen->help_text = text;
+	screen->scr.frame.help = "x=exit h=help";
 }
 
 static int text_screen_post(struct nc_scr *scr)
