@@ -131,6 +131,8 @@ static int config_screen_post(struct nc_scr *scr)
 	struct config_screen *screen = config_screen_from_scr(scr);
 	widgetset_post(screen->widgetset);
 	nc_scr_frame_draw(scr);
+	redrawwin(scr->main_ncw);
+	wrefresh(screen->scr.main_ncw);
 	pad_refresh(screen);
 	return 0;
 }
@@ -580,8 +582,7 @@ static void config_screen_widget_focus(struct nc_widget *widget, void *arg)
 	pad_refresh(screen);
 }
 
-
-void config_screen_update(struct config_screen *screen,
+static void config_screen_draw(struct config_screen *screen,
 		const struct config *config,
 		const struct system_info *sysinfo)
 {
@@ -626,7 +627,13 @@ void config_screen_update(struct config_screen *screen,
 
 	if (repost)
 		widgetset_post(screen->widgetset);
+}
 
+void config_screen_update(struct config_screen *screen,
+		const struct config *config,
+		const struct system_info *sysinfo)
+{
+	config_screen_draw(screen, config, sysinfo);
 	pad_refresh(screen);
 }
 
@@ -666,9 +673,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 
 	scrollok(screen->scr.sub_ncw, true);
 
-	config_screen_update(screen, config, sysinfo);
-
-	wrefresh(screen->scr.main_ncw);
+	config_screen_draw(screen, config, sysinfo);
 
 	return screen;
 }
