@@ -32,7 +32,9 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	23
+#define N_FIELDS	24
+
+extern const char *config_help_text;
 
 enum net_conf_type {
 	NET_CONF_TYPE_DHCP_ALL,
@@ -47,6 +49,7 @@ struct config_screen {
 	WINDOW			*pad;
 
 	bool			exit;
+	bool			show_help;
 	void			(*on_exit)(struct cui *);
 
 	int			scroll_y;
@@ -83,6 +86,7 @@ struct config_screen {
 		struct nc_widget_label		*dns_help_l;
 
 		struct nc_widget_button		*ok_b;
+		struct nc_widget_button		*help_b;
 		struct nc_widget_button		*cancel_b;
 	} widgets;
 };
@@ -114,10 +118,17 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 	bool handled;
 
 	handled = widgetset_process_key(screen->widgetset, key);
-	if (screen->exit)
+	if (screen->exit) {
 		screen->on_exit(screen->cui);
-	else if (handled)
+
+	} else if (screen->show_help || (!handled && key == 'h')) {
+		screen->show_help = false;
+		cui_show_help(screen->cui, "System Configuration",
+				config_help_text);
+
+	} else if (handled) {
 		pad_refresh(screen);
+	}
 }
 
 static void config_screen_resize(struct nc_scr *scr)
@@ -269,6 +280,12 @@ static void ok_click(void *arg)
 		screen->exit = true;
 }
 
+static void help_click(void *arg)
+{
+	struct config_screen *screen = arg;
+	screen->show_help = true;
+}
+
 static void cancel_click(void *arg)
 {
 	struct config_screen *screen = arg;
@@ -388,8 +405,10 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
-	widget_move(widget_button_base(screen->widgets.cancel_b),
+	widget_move(widget_button_base(screen->widgets.help_b),
 			y, screen->field_x + 10);
+	widget_move(widget_button_base(screen->widgets.cancel_b),
+			y, screen->field_x + 20);
 }
 
 static void config_screen_network_change(void *arg, int value)
@@ -558,6 +577,8 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, "OK",
 			ok_click, screen);
+	screen->widgets.help_b = widget_new_button(set, 0, 0, 6, "Help",
+			help_click, screen);
 	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 6, "Cancel",
 			cancel_click, screen);
 }

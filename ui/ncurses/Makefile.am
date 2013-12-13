@@ -31,6 +31,7 @@ noinst_LTLIBRARIES = libpbnc.la
 libpbnc_la_SOURCES = \
 	nc-config.c \
 	nc-config.h \
+	nc-config-help.c \
 	nc-cui.c \
 	nc-cui.h \
 	nc-boot-editor.c \
