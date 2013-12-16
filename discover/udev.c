@@ -1,5 +1,7 @@
 
-#define _GNU_SOURCE
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
 
 #include <assert.h>
 #include <errno.h>

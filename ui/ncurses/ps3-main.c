@@ -24,9 +24,9 @@
  * ncurses mouse support
  */
 
+#if defined(HAVE_CONFIG_H)
 #include "config.h"
-
-#define _GNU_SOURCE
+#endif
 
 #include <assert.h>
 #include <errno.h>

@@ -15,8 +15,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define _GNU_SOURCE
-
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
 
 #include <string.h>
 
@@ -25,7 +26,6 @@
 #include <log/log.h>
 #include <util/util.h>
 
-#include "config.h"
 #include "nc-cui.h"
 #include "nc-sysinfo.h"
 
