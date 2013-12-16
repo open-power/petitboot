@@ -15,11 +15,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
 #include <util/util.h>
+
+static const char hex[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+			    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', };
 
 void mac_str(uint8_t *mac, unsigned int maclen, char *buf, unsigned int buflen)
 {
@@ -36,8 +38,9 @@ void mac_str(uint8_t *mac, unsigned int maclen, char *buf, unsigned int buflen)
 	pos = buf;
 
 	for (i = 0; i < maclen; i++) {
-		snprintf(pos, 4, "%02x:", mac[i]);
-		pos += 3;
+		*(pos++) = hex[mac[i] >> 4 & 0xf];
+		*(pos++) = hex[mac[i] & 0xf];
+		*(pos++) = ':';
 	}
 
 	*(pos - 1) = '\0';
