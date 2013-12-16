@@ -471,17 +471,22 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 			config_screen_network_change, screen);
 
 	screen->widgets.iface_l = widget_new_label(set, 0, 0, "Device:");
-	screen->widgets.iface_f = widget_new_select(set, 0, 0, 20);
+	screen->widgets.iface_f = widget_new_select(set, 0, 0, 50);
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *info = sysinfo->interfaces[i];
+		char str[50], mac[20];
 		bool is_default;
 
 		is_default = ifcfg && !memcmp(ifcfg->hwaddr, info->hwaddr,
 					sizeof(ifcfg->hwaddr));
 
+		mac_str(info->hwaddr, info->hwaddr_size, mac, sizeof(mac));
+		snprintf(str, sizeof(str), "%s [%s, %s]", info->name, mac,
+				info->link ? "link up" : "link down");
+
 		widget_select_add_option(screen->widgets.iface_f,
-						i, info->name, is_default);
+						i, str, is_default);
 	}
 
 	gw = ip = mask = NULL;

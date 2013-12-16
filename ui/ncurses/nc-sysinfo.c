@@ -175,7 +175,8 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		if_info_mac_str(info, macbuf, sizeof(macbuf));
 
 		line("%s:", info->name);
-		line(" MAC: %s", macbuf);
+		line(" MAC:  %s", macbuf);
+		line(" link: %s", info->link ? "up" : "down");
 		line(NULL);
 	}
 
