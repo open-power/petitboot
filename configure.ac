@@ -31,6 +31,8 @@ AC_PROG_INSTALL
 
 AM_INIT_AUTOMAKE
 AC_GNU_SOURCE
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION(0.18.1)
 LT_INIT
 
 AX_WITH_CURSES
@@ -271,6 +273,7 @@ AC_CONFIG_FILES([
 	ui/test/Makefile
 	ui/twin/Makefile
 	utils/Makefile
+	po/Makefile.in
 ])
 
 AC_OUTPUT

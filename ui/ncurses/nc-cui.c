@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <locale.h>
 #include <sys/ioctl.h>
 
 #include "log/log.h"
@@ -676,8 +675,6 @@ struct cui *cui_init(void* platform_info,
 	cui->waitset = waitset_create(cui);
 
 	process_init(cui, cui->waitset, false);
-
-	setlocale(LC_ALL, "");
 
 	/* Loop here for scripts that just started the server. */
 

@@ -14,7 +14,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = lib discover test ui utils man
+SUBDIRS = lib discover test ui utils man po
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -26,7 +26,7 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
 
-EXTRA_DIST = version.sh configure.ac $(srcdir)/m4
+EXTRA_DIST = version.sh configure.ac $(srcdir)/m4 config.rpath
 
 MAINTAINERCLEANFILES = aclocal.m4 config.* configure configure.ac depcomp \
 	install-sh ltmain.sh Makefile.in missing ylwrap $(PACKAGE)-*.gz
