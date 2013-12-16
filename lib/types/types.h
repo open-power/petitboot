@@ -64,6 +64,7 @@ struct interface_info {
 	unsigned int	hwaddr_size;
 	uint8_t		*hwaddr;
 	char		*name;
+	bool		link;
 };
 
 struct blockdev_info {

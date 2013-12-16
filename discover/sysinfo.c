@@ -18,12 +18,14 @@ const struct system_info *system_info_get(void)
 }
 
 void system_info_register_interface(unsigned int hwaddr_size, uint8_t *hwaddr,
-		const char *name)
+		const char *name, bool link)
 {
 	struct interface_info *if_info;
 	unsigned int i;
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		bool changed = false;
+
 		if_info = sysinfo->interfaces[i];
 
 		if (if_info->hwaddr_size != hwaddr_size)
@@ -32,10 +34,22 @@ void system_info_register_interface(unsigned int hwaddr_size, uint8_t *hwaddr,
 		if (memcmp(if_info->hwaddr, hwaddr, hwaddr_size))
 			continue;
 
-		/* update the name and we're done */
-		talloc_free(if_info->name);
-		if_info->name = talloc_strdup(if_info, name);
-		discover_server_notify_system_info(server, sysinfo);
+		/* Found an existing interface. Notify clients on any name or
+		 * link changes */
+		if (strcmp(if_info->name, name)) {
+			talloc_free(if_info->name);
+			if_info->name = talloc_strdup(if_info, name);
+			changed = true;
+		}
+
+		if (if_info->link != link) {
+			if_info->link = link;
+			changed = true;
+		}
+
+		if (changed)
+			discover_server_notify_system_info(server, sysinfo);
+
 		return;
 	}
 
@@ -43,6 +57,7 @@ void system_info_register_interface(unsigned int hwaddr_size, uint8_t *hwaddr,
 	if_info->hwaddr_size = hwaddr_size;
 	if_info->hwaddr = talloc_memdup(if_info, hwaddr, hwaddr_size);
 	if_info->name = talloc_strdup(if_info, name);
+	if_info->link = link;
 
 	sysinfo->n_interfaces++;
 	sysinfo->interfaces = talloc_realloc(sysinfo, sysinfo->interfaces,

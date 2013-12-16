@@ -416,13 +416,14 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		memcpy(interface->hwaddr, ifaddr, sizeof(interface->hwaddr));
 		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
 		add_interface(network, interface);
-
-		/* tell the sysinfo code about this interface */
-		if (strcmp(interface->name, "lo"))
-			system_info_register_interface(
-					sizeof(interface->hwaddr),
-					interface->hwaddr, interface->name);
 	}
+
+	/* notify the sysinfo code about changes to this interface */
+	if (strcmp(interface->name, "lo"))
+		system_info_register_interface(
+				sizeof(interface->hwaddr),
+				interface->hwaddr, interface->name,
+				info->ifi_flags & IFF_LOWER_UP);
 
 	configure_interface(network, interface,
 			info->ifi_flags & IFF_UP,
