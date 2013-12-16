@@ -18,6 +18,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <stdint.h>
+
 #ifndef container_of
 #define container_of(_ptr, _type, _member) ({ \
 	const typeof( ((_type *)0)->_member ) *__mptr = (_ptr); \
@@ -46,6 +48,8 @@
 
 #define build_assert(x) \
 	do { (void)sizeof(char[(x)?1:-1]); } while (0)
+
+void mac_str(uint8_t *mac, unsigned int maclen, char *buf, unsigned int buflen);
 
 #endif /* UTIL_H */
 

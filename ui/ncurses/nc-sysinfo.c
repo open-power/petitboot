@@ -127,28 +127,10 @@ static __attribute__((format(printf, 2, 3))) void sysinfo_screen_append_line(
 	screen->n_lines++;
 }
 
-static void mac_str(struct interface_info *info, char *buf, unsigned int buflen)
+static void if_info_mac_str(struct interface_info *info,
+		char *buf, unsigned int buflen)
 {
-	unsigned int i;
-	char *pos;
-
-	assert(buflen > sizeof("unknown"));
-
-	if (!info->hwaddr_size || info->hwaddr_size * 3 + 1 > buflen) {
-		strcpy(buf, "unknown");
-		return;
-	}
-
-	pos = buf;
-
-	for (i = 0; i < info->hwaddr_size; i++) {
-		snprintf(pos, 4, "%02x:", info->hwaddr[i]);
-		pos += 3;
-	}
-
-	*(pos - 1) = '\0';
-
-	return;
+	return mac_str(info->hwaddr, info->hwaddr_size, buf, buflen);
 }
 
 static void sysinfo_screen_populate(struct sysinfo_screen *screen,
@@ -190,7 +172,7 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		struct interface_info *info = sysinfo->interfaces[i];
 		char macbuf[32];
 
-		mac_str(info, macbuf, sizeof(macbuf));
+		if_info_mac_str(info, macbuf, sizeof(macbuf));
 
 		line("%s:", info->name);
 		line(" MAC: %s", macbuf);
