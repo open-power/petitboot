@@ -28,6 +28,7 @@ check_PROGRAMS = list-test \
 	test-process-sync-stdout \
 	test-process-async \
 	test-process-async-stdout \
+	test-process-parent-stdout \
 	test-process-both
 
 TESTS = $(check_PROGRAMS)
