@@ -25,6 +25,7 @@
 #include <types/types.h>
 #include <log/log.h>
 #include <util/util.h>
+#include <i18n/i18n.h>
 
 #include "nc-cui.h"
 #include "nc-textscreen.h"
@@ -56,10 +57,10 @@ struct help_screen *help_screen_init(struct cui *cui,
 	screen = talloc_zero(cui, struct help_screen);
 	screen->return_scr = current_scr;
 
-	title = "Petitboot help";
+	title = _("Petitboot help");
 	if (title_suffix)
 		title = talloc_asprintf(screen,
-				"Petitboot help: %s", title_suffix);
+				_("Petitboot help: %s"), title_suffix);
 
 	text_screen_init(&screen->text_scr, cui, title, on_exit);
 	text_screen_set_text(&screen->text_scr, text);

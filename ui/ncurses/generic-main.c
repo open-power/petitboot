@@ -30,10 +30,13 @@
 #include <string.h>
 #include <limits.h>
 #include <sys/time.h>
+#include <libintl.h>
+#include <locale.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
 #include "waiter/waiter.h"
+#include "i18n/i18n.h"
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
 
@@ -48,8 +51,9 @@ static void print_usage(void)
 {
 	print_version();
 	printf(
-"Usage: petitboot-nc [-h, --help] [-l, --log log-file]\n"
-"                    [-s, --start-daemon] [-v, --verbose] [-V, --version]\n");
+"%s: petitboot-nc [-h, --help] [-l, --log log-file]\n"
+"                    [-s, --start-daemon] [-v, --verbose] [-V, --version]\n",
+			_("Usage"));
 }
 
 /**
@@ -198,26 +202,26 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		"Petitboot (" PACKAGE_VERSION ")");
 	m->scr.frame.rtitle = NULL;
 	m->scr.frame.help = talloc_strdup(m,
-		"Enter=accept, e=edit, n=new, x=exit, h=help");
-	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
+		_("Enter=accept, e=edit, n=new, x=exit, h=help"));
+	m->scr.frame.status = talloc_strdup(m, _("Welcome to Petitboot"));
 
 	i = pmenu_item_create(m, " ");
 	item_opts_off(i->nci, O_SELECTABLE);
 	pmenu_item_insert(m, i, 0);
 
-	i = pmenu_item_create(m, "System information");
+	i = pmenu_item_create(m, _("System information"));
 	i->on_execute = pmenu_sysinfo;
 	pmenu_item_insert(m, i, 1);
 
-	i = pmenu_item_create(m, "System configuration");
+	i = pmenu_item_create(m, _("System configuration"));
 	i->on_execute = pmenu_config;
 	pmenu_item_insert(m, i, 2);
 
-	i = pmenu_item_create(m, "Rescan devices");
+	i = pmenu_item_create(m, _("Rescan devices"));
 	i->on_execute = pmenu_reinit;
 	pmenu_item_insert(m, i, 3);
 
-	i = pmenu_item_create(m, "Exit to shell");
+	i = pmenu_item_create(m, _("Exit to shell"));
 	i->on_execute = pmenu_exit_cb;
 	pmenu_item_insert(m, i, 4);
 
@@ -229,7 +233,7 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		goto fail_setup;
 	}
 
-	m->help_title = "main menu";
+	m->help_title = _("main menu");
 	m->help_text = main_menu_help_text;
 
 	menu_opts_off(m->ncm, O_SHOWDESC);
@@ -280,6 +284,10 @@ int main(int argc, char *argv[])
 	FILE *log;
 
 	result = opts_parse(&opts, argc, argv);
+
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
 
 	if (result) {
 		print_usage();

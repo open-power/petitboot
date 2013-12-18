@@ -29,6 +29,7 @@
 
 #include "log/log.h"
 #include "talloc/talloc.h"
+#include "i18n/i18n.h"
 #include "ui/common/ui-system.h"
 #include "nc-cui.h"
 #include "nc-menu.h"
@@ -99,7 +100,7 @@ static const char *pmenu_item_label(struct pmenu_item *item, const char *name)
 	/* if we have an invalid multibyte sequence, create an entirely
 	 * new name, indicating that we had invalid input */
 	if (len == SIZE_MAX) {
-		name = talloc_asprintf(item, "!Invalid option %d\n",
+		name = talloc_asprintf(item, _("!Invalid option %d"),
 				++invalid_idx);
 		return name;
 	}

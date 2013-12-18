@@ -15,6 +15,7 @@
 AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
+	-DLOCALEDIR='"$(localedir)"' \
 	$(DEFAULT_CPPFLAGS)
 
 AM_CFLAGS = \

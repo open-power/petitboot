@@ -27,6 +27,7 @@
 #include <talloc/talloc.h>
 #include <types/types.h>
 #include <log/log.h>
+#include <i18n/i18n.h>
 
 #include "nc-cui.h"
 #include "nc-config.h"
@@ -144,7 +145,7 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 
 	} else if (screen->show_help) {
 		screen->show_help = false;
-		cui_show_help(screen->cui, "System Configuration",
+		cui_show_help(screen->cui, _("System Configuration"),
 				config_help_text);
 
 	} else if (handled) {
@@ -267,7 +268,7 @@ static int screen_process_form(struct config_screen *screen)
 
 		if (!ip || !*ip || !mask || !*mask) {
 			screen->scr.frame.status =
-				"No IP / mask values are set";
+				_("No IP / mask values are set");
 			nc_scr_frame_draw(&screen->scr);
 			talloc_free(config);
 			return -1;
@@ -530,9 +531,10 @@ static enum net_conf_type find_net_conf_type(const struct config *config)
 static void config_screen_setup_empty(struct config_screen *screen)
 {
 	widget_new_label(screen->widgetset, 2, screen->field_x,
-			"Waiting for configuration data...");
+			_("Waiting for configuration data..."));
 	screen->widgets.cancel_b = widget_new_button(screen->widgetset,
-			4, screen->field_x, 6, "Cancel", cancel_click, screen);
+			4, screen->field_x, 6, _("Cancel"),
+			cancel_click, screen);
 }
 
 
@@ -553,7 +555,8 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	type = screen->net_conf_type;
 	ifcfg = first_active_interface(config);
 
-	screen->widgets.autoboot_l = widget_new_label(set, 0, 0, "Autoboot:");
+	screen->widgets.autoboot_l = widget_new_label(set, 0, 0,
+					_("Autoboot:"));
 	screen->widgets.autoboot_f = widget_new_select(set, 0, 0, 55);
 
 	widget_select_on_change(screen->widgets.autoboot_f,
@@ -563,18 +566,19 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	widget_select_add_option(screen->widgets.autoboot_f,
 					AUTOBOOT_DISABLED,
-					"Don't autoboot",
+					_("Don't autoboot"),
 					screen->autoboot_type ==
 						AUTOBOOT_DISABLED);
 	widget_select_add_option(screen->widgets.autoboot_f,
 					AUTOBOOT_ANY,
-					"Autoboot from any disk/network device",
+					_("Autoboot from any "
+						"disk/network device"),
 					screen->autoboot_type ==
 						AUTOBOOT_ANY);
 	widget_select_add_option(screen->widgets.autoboot_f,
 					AUTOBOOT_ONE,
-					"Only autoboot from a specific "
-					"disk/network device",
+					_("Only autoboot from a specific "
+						"disk/network device"),
 					screen->autoboot_type ==
 						AUTOBOOT_ONE);
 
@@ -590,7 +594,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		if (selected)
 			found = true;
 
-		label = talloc_asprintf(screen, "disk: %s [uuid: %s]",
+		label = talloc_asprintf(screen, _("disk: %s [uuid: %s]"),
 				bd->name, bd->uuid);
 
 		widget_select_add_option(screen->widgets.boot_device_f, i,
@@ -608,7 +612,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		if (selected)
 			found = true;
 
-		label = talloc_asprintf(screen, "net:  %s [mac: %s]",
+		label = talloc_asprintf(screen, _("net:  %s [mac: %s]"),
 				info->name, mac);
 
 		widget_select_add_option(screen->widgets.boot_device_f,
@@ -619,7 +623,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	if (screen->autoboot_type == AUTOBOOT_ONE && !found) {
 		char *label;
 
-		label = talloc_asprintf(screen, "Unknown UUID: %s",
+		label = talloc_asprintf(screen, _("Unknown UUID: %s"),
 				config->boot_device);
 
 		widget_select_add_option(screen->widgets.boot_device_f, -1,
@@ -627,33 +631,34 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	}
 
 	str = talloc_asprintf(screen, "%d", config->autoboot_timeout_sec);
-	screen->widgets.timeout_l = widget_new_label(set, 0, 0, "Timeout:");
+	screen->widgets.timeout_l = widget_new_label(set, 0, 0, _("Timeout:"));
 	screen->widgets.timeout_f = widget_new_textbox(set, 0, 0, 5, str);
-	screen->widgets.timeout_help_l = widget_new_label(set, 0, 0, "seconds");
+	screen->widgets.timeout_help_l = widget_new_label(set, 0, 0,
+					_("seconds"));
 
 	widget_textbox_set_fixed_size(screen->widgets.timeout_f);
 	widget_textbox_set_validator_integer(screen->widgets.timeout_f, 0, 999);
 
-	screen->widgets.network_l = widget_new_label(set, 0, 0, "Network:");
+	screen->widgets.network_l = widget_new_label(set, 0, 0, _("Network:"));
 	screen->widgets.network_f = widget_new_select(set, 0, 0, 50);
 
 	widget_select_add_option(screen->widgets.network_f,
 					NET_CONF_TYPE_DHCP_ALL,
-					"DHCP on all active interfaces",
+					_("DHCP on all active interfaces"),
 					type == NET_CONF_TYPE_DHCP_ALL);
 	widget_select_add_option(screen->widgets.network_f,
 					NET_CONF_TYPE_DHCP_ONE,
-					"DHCP on a specific interface",
+					_("DHCP on a specific interface"),
 					type == NET_CONF_TYPE_DHCP_ONE);
 	widget_select_add_option(screen->widgets.network_f,
 					NET_CONF_TYPE_STATIC,
-					"Static IP configuration",
+					_("Static IP configuration"),
 					type == NET_CONF_TYPE_STATIC);
 
 	widget_select_on_change(screen->widgets.network_f,
 			config_screen_network_change, screen);
 
-	screen->widgets.iface_l = widget_new_label(set, 0, 0, "Device:");
+	screen->widgets.iface_l = widget_new_label(set, 0, 0, _("Device:"));
 	screen->widgets.iface_f = widget_new_select(set, 0, 0, 50);
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
@@ -666,7 +671,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 		mac_str(info->hwaddr, info->hwaddr_size, mac, sizeof(mac));
 		snprintf(str, sizeof(str), "%s [%s, %s]", info->name, mac,
-				info->link ? "link up" : "link down");
+				info->link ? _("link up") : _("link down"));
 
 		widget_select_add_option(screen->widgets.iface_f,
 						i, str, is_default);
@@ -687,22 +692,22 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		gw = ifcfg->static_config.gateway;
 	}
 
-	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, "IP/mask:");
+	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, _("IP/mask:"));
 	screen->widgets.ip_addr_f = widget_new_textbox(set, 0, 0, 16, ip);
 	screen->widgets.ip_mask_l = widget_new_label(set, 0, 0, "/");
 	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 3, mask);
 	screen->widgets.ip_addr_mask_help_l =
-		widget_new_label(set, 0, 0, "(eg. 192.168.0.10 / 24)");
+		widget_new_label(set, 0, 0, _("(eg. 192.168.0.10 / 24)"));
 
 	widget_textbox_set_fixed_size(screen->widgets.ip_addr_f);
 	widget_textbox_set_fixed_size(screen->widgets.ip_mask_f);
 	widget_textbox_set_validator_ipv4(screen->widgets.ip_addr_f);
 	widget_textbox_set_validator_integer(screen->widgets.ip_mask_f, 1, 31);
 
-	screen->widgets.gateway_l = widget_new_label(set, 0, 0, "Gateway:");
+	screen->widgets.gateway_l = widget_new_label(set, 0, 0, _("Gateway:"));
 	screen->widgets.gateway_f = widget_new_textbox(set, 0, 0, 16, gw);
 	screen->widgets.gateway_help_l =
-		widget_new_label(set, 0, 0, "(eg. 192.168.0.1)");
+		widget_new_label(set, 0, 0, _("(eg. 192.168.0.1)"));
 
 	widget_textbox_set_fixed_size(screen->widgets.gateway_f);
 	widget_textbox_set_validator_ipv4(screen->widgets.gateway_f);
@@ -714,21 +719,22 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 				config->network.dns_servers[i]);
 	}
 
-	screen->widgets.dns_l = widget_new_label(set, 0, 0, "DNS Server(s):");
+	screen->widgets.dns_l = widget_new_label(set, 0, 0,
+					_("DNS Server(s):"));
 	screen->widgets.dns_f = widget_new_textbox(set, 0, 0, 32, str);
 	screen->widgets.dns_help_l =
-		widget_new_label(set, 0, 0, "(eg. 192.168.0.2)");
+		widget_new_label(set, 0, 0, _("(eg. 192.168.0.2)"));
 
 	widget_textbox_set_validator_ipv4_multi(screen->widgets.dns_f);
 
 	screen->widgets.dns_dhcp_help_l = widget_new_label(set, 0, 0,
-			"(if not provided by DHCP server)");
+			_("(if not provided by DHCP server)"));
 
-	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, "OK",
+	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
 			ok_click, screen);
-	screen->widgets.help_b = widget_new_button(set, 0, 0, 6, "Help",
+	screen->widgets.help_b = widget_new_button(set, 0, 0, 6, _("Help"),
 			help_click, screen);
-	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 6, "Cancel",
+	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 6, _("Cancel"),
 			cancel_click, screen);
 }
 
@@ -840,10 +846,10 @@ struct config_screen *config_screen_init(struct cui *cui,
 	screen->field_x = 17;
 
 	screen->scr.frame.ltitle = talloc_strdup(screen,
-			"Petitboot System Configuration");
+			_("Petitboot System Configuration"));
 	screen->scr.frame.rtitle = NULL;
 	screen->scr.frame.help = talloc_strdup(screen,
-			"tab=next, shift+tab=previous, x=exit, h=help");
+			_("tab=next, shift+tab=previous, x=exit, h=help"));
 	nc_scr_frame_draw(&screen->scr);
 
 	scrollok(screen->scr.sub_ncw, true);

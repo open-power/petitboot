@@ -31,6 +31,7 @@
 #include "talloc/talloc.h"
 #include "waiter/waiter.h"
 #include "process/process.h"
+#include "i18n/i18n.h"
 #include "ui/common/discover-client.h"
 #include "ui/common/ui-system.h"
 #include "nc-cui.h"
@@ -116,7 +117,7 @@ int cui_run_cmd(struct pmenu_item *item)
 	struct cui *cui = cui_from_item(item);
 	const char **cmd_argv = item->data;
 
-	nc_scr_status_printf(cui->current, "Running %s...", cmd_argv[0]);
+	nc_scr_status_printf(cui->current, _("Running %s..."), cmd_argv[0]);
 
 	def_prog_mode();
 
@@ -127,7 +128,8 @@ int cui_run_cmd(struct pmenu_item *item)
 
 	if (result) {
 		pb_log("%s: failed: '%s'\n", __func__, cmd_argv[0]);
-		nc_scr_status_printf(cui->current, "Failed: %s", cmd_argv[0]);
+		nc_scr_status_printf(cui->current, _("Failed: %s"),
+				cmd_argv[0]);
 	}
 
 	return result;
@@ -147,13 +149,13 @@ static int cui_boot(struct pmenu_item *item)
 
 	pb_debug("%s: %s\n", __func__, cod->name);
 
-	nc_scr_status_printf(cui->current, "Booting %s...", cod->name);
+	nc_scr_status_printf(cui->current, _("Booting %s..."), cod->name);
 
 	result = discover_client_boot(cui->client, NULL, cod->opt, cod->bd);
 
 	if (result) {
 		nc_scr_status_printf(cui->current,
-				"Failed: boot %s", cod->bd->image);
+				_("Failed: boot %s"), cod->bd->image);
 	}
 
 	return 0;
@@ -180,7 +182,7 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 		int insert_pt;
 
 		cod = talloc_zero(NULL, struct cui_opt_data);
-		cod->name = talloc_asprintf(cod, "User item %u", ++user_idx);
+		cod->name = talloc_asprintf(cod, _("User item %u"), ++user_idx);
 
 		item = pmenu_item_create(menu, cod->name);
 		if (!item) {
@@ -572,7 +574,8 @@ static void cui_update_status(struct boot_status *status, void *arg)
 
 	nc_scr_status_printf(cui->current,
 			"%s: %s",
-			status->type == BOOT_STATUS_ERROR ? "Error" : "Info",
+			status->type == BOOT_STATUS_ERROR ?
+				_("Error") : _("Info"),
 			status->message);
 
 }
@@ -666,7 +669,7 @@ struct cui *cui_init(void* platform_info,
 
 	if (!cui) {
 		pb_log("%s: alloc cui failed.\n", __func__);
-		fprintf(stderr, "%s: alloc cui failed.\n", __func__);
+		fprintf(stderr, _("%s: alloc cui failed.\n"), __func__);
 		goto fail_alloc;
 	}
 
@@ -699,19 +702,19 @@ retry_start:
 			goto retry_start;
 
 		pb_log("%s: discover_client_init failed.\n", __func__);
-		fprintf(stderr, "%s: error: discover_client_init failed.\n",
+		fprintf(stderr, _("%s: error: discover_client_init failed.\n"),
 			__func__);
-		fprintf(stderr, "could not start pb-discover, the petitboot "
-			"daemon.\n");
+		fprintf(stderr, _("could not start pb-discover, the petitboot "
+			"daemon.\n"));
 		goto fail_client_init;
 	}
 
 	if (!cui->client) {
 		pb_log("%s: discover_client_init failed.\n", __func__);
-		fprintf(stderr, "%s: error: discover_client_init failed.\n",
+		fprintf(stderr, _("%s: error: discover_client_init failed.\n"),
 			__func__);
-		fprintf(stderr, "check that pb-discover, "
-			"the petitboot daemon is running.\n");
+		fprintf(stderr, _("check that pb-discover, "
+			"the petitboot daemon is running.\n"));
 		goto fail_client_init;
 	}
 

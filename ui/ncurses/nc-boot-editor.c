@@ -25,6 +25,7 @@
 
 #include "log/log.h"
 #include "talloc/talloc.h"
+#include "i18n/i18n.h"
 #include "nc-boot-editor.h"
 #include "nc-widgets.h"
 
@@ -220,7 +221,7 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 		break;
 	case STATE_HELP:
 		boot_editor->state = STATE_EDIT;
-		cui_show_help(boot_editor->cui, "Boot Option Editor",
+		cui_show_help(boot_editor->cui, _("Boot Option Editor"),
 				boot_editor_help_text);
 		break;
 	default:
@@ -365,7 +366,7 @@ static void boot_editor_populate_device_select(struct boot_editor *boot_editor,
 	 * changed. */
 	selected = !boot_editor->selected_device;
 
-	widget_select_add_option(select, -1, "Specify paths/URLs manually",
+	widget_select_add_option(select, -1, _("Specify paths/URLs manually"),
 			selected);
 }
 
@@ -445,7 +446,8 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 	widgetset_set_widget_focus(boot_editor->widgetset,
 			boot_editor_widget_focus, boot_editor);
 
-	boot_editor->widgets.device_l = widget_new_label(set, 0, 0, "Device:");
+	boot_editor->widgets.device_l = widget_new_label(set, 0, 0,
+			_("Device:"));
 	boot_editor->widgets.device_f = widget_new_select(set, 0, 0,
 						field_size);
 	widget_select_on_change(boot_editor->widgets.device_f,
@@ -454,32 +456,32 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 	boot_editor_populate_device_select(boot_editor, sysinfo);
 
 	boot_editor->widgets.image_l = widget_new_label(set, 0, 0,
-			"Kernel:");
+			_("Kernel:"));
 	boot_editor->widgets.image_f = widget_new_textbox(set, 0, 0,
 						field_size, boot_editor->image);
 
 	boot_editor->widgets.initrd_l = widget_new_label(set, 0, 0,
-			"Initrd:");
+			_("Initrd:"));
 	boot_editor->widgets.initrd_f = widget_new_textbox(set, 0, 0,
 						field_size,
 						boot_editor->initrd);
 
 	boot_editor->widgets.dtb_l = widget_new_label(set, 0, 0,
-			"Device tree:");
+			_("Device tree:"));
 	boot_editor->widgets.dtb_f = widget_new_textbox(set, 0, 0,
 						field_size, boot_editor->dtb);
 
 	boot_editor->widgets.args_l = widget_new_label(set, 0, 0,
-			"Boot arguments:");
+			_("Boot arguments:"));
 	boot_editor->widgets.args_f = widget_new_textbox(set, 0, 0,
 					field_size, boot_editor->args);
 
 	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 6,
-					"OK", ok_click, boot_editor);
+					_("OK"), ok_click, boot_editor);
 	boot_editor->widgets.help_b = widget_new_button(set, 0, 0, 6,
-					"Help", help_click, boot_editor);
+					_("Help"), help_click, boot_editor);
 	boot_editor->widgets.cancel_b = widget_new_button(set, 0, 0, 6,
-					"Cancel", cancel_click, boot_editor);
+					_("Cancel"), cancel_click, boot_editor);
 }
 
 void boot_editor_update(struct boot_editor *boot_editor,
@@ -535,10 +537,10 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 		boot_editor_post, boot_editor_unpost, boot_editor_resize);
 
 	boot_editor->scr.frame.ltitle = talloc_strdup(boot_editor,
-			"Petitboot Option Editor");
+			_("Petitboot Option Editor"));
 	boot_editor->scr.frame.rtitle = NULL;
 	boot_editor->scr.frame.help = talloc_strdup(boot_editor,
-			"tab=next, shift+tab=previous, x=exit, h=help");
+			_("tab=next, shift+tab=previous, x=exit, h=help"));
 	nc_scr_frame_draw(&boot_editor->scr);
 
 	if (item) {

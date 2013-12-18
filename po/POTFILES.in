@@ -1,1 +1,10 @@
 # List of source files which contain translatable strings.
+
+ui/ncurses/nc-boot-editor.c
+ui/ncurses/nc-config.c
+ui/ncurses/nc-cui.c
+ui/ncurses/nc-helpscreen.c
+ui/ncurses/nc-menu.c
+ui/ncurses/nc-sysinfo.c
+ui/ncurses/nc-textscreen.c
+ui/ncurses/generic-main.c

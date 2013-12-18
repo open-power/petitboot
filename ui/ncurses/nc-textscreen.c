@@ -26,6 +26,7 @@
 #include <log/log.h>
 #include <fold/fold.h>
 #include <util/util.h>
+#include <i18n/i18n.h>
 
 #include "nc-cui.h"
 #include "nc-textscreen.h"
@@ -177,7 +178,7 @@ void text_screen_set_help(struct text_screen *screen, const char *title,
 {
 	screen->help_title = title;
 	screen->help_text = text;
-	screen->scr.frame.help = "x=exit, h=help";
+	screen->scr.frame.help = _("x=exit, h=help");
 }
 
 static int text_screen_post(struct nc_scr *scr)
@@ -204,6 +205,6 @@ void text_screen_init(struct text_screen *screen, struct cui *cui,
 
 	screen->scr.frame.ltitle = talloc_strdup(screen, title);
 	screen->scr.frame.rtitle = NULL;
-	screen->scr.frame.help = "x=exit";
+	screen->scr.frame.help = _("x=exit");
 	scrollok(screen->scr.sub_ncw, true);
 }

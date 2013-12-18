@@ -25,6 +25,7 @@
 #include <types/types.h>
 #include <log/log.h>
 #include <util/util.h>
+#include <i18n/i18n.h>
 
 #include "nc-cui.h"
 #include "nc-textscreen.h"
@@ -56,24 +57,24 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 
 #define line(...) text_screen_append_line(&screen->text_scr, __VA_ARGS__)
 	if (!sysinfo) {
-		line("Waiting for system information...");
+		line(_("Waiting for system information..."));
 		return;
 	}
 
-	line("%-12s %s", "System type:", sysinfo->type ?: "");
-	line("%-12s %s", "System id:",   sysinfo->identifier ?: "");
+	line("%-12s %s", _("System type:"), sysinfo->type ?: "");
+	line("%-12s %s", _("System id:"),   sysinfo->identifier ?: "");
 
 	if (sysinfo->n_blockdevs) {
 		line(NULL);
-		line("Storage devices");
+		line(_("Storage devices"));
 	}
 
 	for (i = 0; i < sysinfo->n_blockdevs; i++) {
 		struct blockdev_info *info = sysinfo->blockdevs[i];
 
 		line("%s:", info->name);
-		line(" UUID:       %s", info->uuid);
-		line(" mounted at: %s", info->mountpoint);
+		line(_(" UUID:       %s"), info->uuid);
+		line(_(" mounted at: %s"), info->mountpoint);
 		line(NULL);
 	}
 
@@ -89,8 +90,8 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		if_info_mac_str(info, macbuf, sizeof(macbuf));
 
 		line("%s:", info->name);
-		line(" MAC:  %s", macbuf);
-		line(" link: %s", info->link ? "up" : "down");
+		line(_(" MAC:  %s"), macbuf);
+		line(_(" link: %s"), info->link ? "up" : "down");
 		line(NULL);
 	}
 
@@ -112,9 +113,9 @@ struct sysinfo_screen *sysinfo_screen_init(struct cui *cui,
 
 	screen = talloc_zero(cui, struct sysinfo_screen);
 	text_screen_init(&screen->text_scr, cui,
-			"Petitboot System Information", on_exit);
+			_("Petitboot System Information"), on_exit);
 	text_screen_set_help(&screen->text_scr,
-			"System Information", sysinfo_help_text);
+			_("System Information"), sysinfo_help_text);
 
 	sysinfo_screen_update(screen, sysinfo);
 
