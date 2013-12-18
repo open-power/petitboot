@@ -77,6 +77,9 @@ struct nc_widgetset {
 	void	(*widget_focus)(struct nc_widget *, void *);
 	void	*widget_focus_arg;
 	FIELD	*cur_field;
+
+	/* custom validators */
+	FIELDTYPE *ipv4_multi_type;
 };
 
 struct nc_widget {
@@ -105,6 +108,7 @@ struct nc_widget_checkbox {
 };
 
 struct nc_widget_textbox {
+	struct nc_widgetset	*set;
 	struct nc_widget	widget;
 };
 
@@ -328,6 +332,7 @@ struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
 	FIELD *f;
 
 	textbox = talloc_zero(set, struct nc_widget_textbox);
+	textbox->set = set;
 	textbox->widget.height = 1;
 	textbox->widget.width = len;
 	textbox->widget.x = x;
@@ -346,6 +351,62 @@ struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
 	talloc_set_destructor(textbox, textbox_destructor);
 
 	return textbox;
+}
+
+void widget_textbox_set_validator_integer(struct nc_widget_textbox *textbox,
+		long min, long max)
+{
+	set_field_type(textbox->widget.field, TYPE_INTEGER, 1, min, max);
+}
+
+void widget_textbox_set_validator_ipv4(struct nc_widget_textbox *textbox)
+{
+	set_field_type(textbox->widget.field, TYPE_IPV4);
+}
+
+static bool check_ipv4_multi_char(int c,
+		const void *arg __attribute__((unused)))
+{
+	return isdigit(c) || c == '.' || c == ' ';
+}
+
+static bool check_ipv4_multi_field(FIELD *field,
+		const void *arg __attribute__((unused)))
+{
+	char *buf = field_buffer(field, 0);
+	unsigned int ip[4];
+	int n, len;
+
+	while (*buf != '\0') {
+		n = sscanf(buf, "%u.%u.%u.%u%n",
+				&ip[0], &ip[1], &ip[2], &ip[3], &len);
+		if (n != 4)
+			return false;
+
+		if (ip[0] > 255 || ip[1] > 255 || ip[2] > 255 || ip[3] > 255)
+			return false;
+
+		for (buf += len; *buf != '\0'; buf++) {
+			if (isspace(*buf))
+				continue;
+			else if (isdigit(*buf))
+				break;
+			else
+				return false;
+		}
+	}
+
+	return true;
+}
+
+void widget_textbox_set_validator_ipv4_multi(struct nc_widget_textbox *textbox)
+{
+	if (!textbox->set->ipv4_multi_type) {
+		textbox->set->ipv4_multi_type = new_fieldtype(
+				check_ipv4_multi_field,
+				check_ipv4_multi_char);
+	}
+	set_field_type(textbox->widget.field, textbox->set->ipv4_multi_type);
 }
 
 static void select_option_change(struct select_option *opt, bool selected)
@@ -672,6 +733,8 @@ static int widgetset_destructor(void *ptr)
 {
 	struct nc_widgetset *set = ptr;
 	free_form(set->form);
+	if (set->ipv4_multi_type)
+		free_fieldtype(set->ipv4_multi_type);
 	return 0;
 }
 

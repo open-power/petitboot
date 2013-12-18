@@ -35,6 +35,11 @@ struct nc_widget_button *widget_new_button(struct nc_widgetset *set,
 		int y, int x, int size, const char *str,
 		void (*click)(void *), void *arg);
 
+void widget_textbox_set_validator_integer(struct nc_widget_textbox *textbox,
+		long min, long max);
+void widget_textbox_set_validator_ipv4(struct nc_widget_textbox *textbox);
+void widget_textbox_set_validator_ipv4_multi(struct nc_widget_textbox *textbox);
+
 void widget_select_add_option(struct nc_widget_select *select, int value,
 		const char *text, bool selected);
 
