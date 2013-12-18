@@ -202,15 +202,23 @@ static int screen_process_form(struct config_screen *screen)
 	}
 
 	if (net_conf_type == NET_CONF_TYPE_STATIC) {
+		char *ip, *mask, *gateway;
+
+		ip = widget_textbox_get_value(screen->widgets.ip_addr_f);
+		mask = widget_textbox_get_value(screen->widgets.ip_mask_f);
+		gateway = widget_textbox_get_value(screen->widgets.gateway_f);
+
+		if (!ip || !*ip || !mask || !*mask) {
+			screen->scr.frame.status =
+				"No IP / mask values are set";
+			nc_scr_frame_draw(&screen->scr);
+			return -1;
+		}
+
 		iface->method = CONFIG_METHOD_STATIC;
 		iface->static_config.address = talloc_asprintf(iface, "%s/%s",
-				widget_textbox_get_value(
-					screen->widgets.ip_addr_f),
-				widget_textbox_get_value(
-					screen->widgets.ip_mask_f));
-		iface->static_config.gateway = talloc_strdup(iface,
-				widget_textbox_get_value(
-					screen->widgets.gateway_f));
+				ip, mask);
+		iface->static_config.gateway = talloc_strdup(iface, gateway);
 	}
 
 	str = widget_textbox_get_value(screen->widgets.dns_f);
@@ -250,8 +258,12 @@ static int screen_process_form(struct config_screen *screen)
 static void ok_click(void *arg)
 {
 	struct config_screen *screen = arg;
-	screen_process_form(screen);
-	screen->exit = true;
+	if (screen_process_form(screen))
+		/* errors are written to the status line, so we'll need
+		 * to refresh */
+		wrefresh(screen->scr.main_ncw);
+	else
+		screen->exit = true;
 }
 
 static void cancel_click(void *arg)
@@ -452,6 +464,8 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.timeout_f = widget_new_textbox(set, 0, 0, 5, str);
 	screen->widgets.timeout_help_l = widget_new_label(set, 0, 0, "seconds");
 
+	widget_textbox_set_validator_integer(screen->widgets.timeout_f, 0, 999);
+
 	screen->widgets.network_l = widget_new_label(set, 0, 0, "Network");
 	screen->widgets.network_f = widget_new_select(set, 0, 0, 50);
 
@@ -512,10 +526,15 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.ip_addr_mask_help_l =
 		widget_new_label(set, 0, 0, "(eg. 192.168.0.10 / 24)");
 
+	widget_textbox_set_validator_ipv4(screen->widgets.ip_addr_f);
+	widget_textbox_set_validator_integer(screen->widgets.ip_mask_f, 1, 31);
+
 	screen->widgets.gateway_l = widget_new_label(set, 0, 0, "Gateway:");
 	screen->widgets.gateway_f = widget_new_textbox(set, 0, 0, 16, gw);
 	screen->widgets.gateway_help_l =
 		widget_new_label(set, 0, 0, "(eg. 192.168.0.1)");
+
+	widget_textbox_set_validator_ipv4(screen->widgets.gateway_f);
 
 	str = talloc_strdup(screen, "");
 	for (i = 0; i < config->network.n_dns_servers; i++) {
@@ -528,6 +547,8 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.dns_f = widget_new_textbox(set, 0, 0, 32, str);
 	screen->widgets.dns_help_l =
 		widget_new_label(set, 0, 0, "(eg. 192.168.0.2)");
+
+	widget_textbox_set_validator_ipv4_multi(screen->widgets.dns_f);
 
 	screen->widgets.dns_dhcp_help_l = widget_new_label(set, 0, 0,
 			"(if not provided by DHCP server)");
