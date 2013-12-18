@@ -508,7 +508,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, "IP/mask:");
 	screen->widgets.ip_addr_f = widget_new_textbox(set, 0, 0, 16, ip);
 	screen->widgets.ip_mask_l = widget_new_label(set, 0, 0, "/");
-	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 3, mask);
+	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 4, mask);
 	screen->widgets.ip_addr_mask_help_l =
 		widget_new_label(set, 0, 0, "(eg. 192.168.0.10 / 24)");
 
