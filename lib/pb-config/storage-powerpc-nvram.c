@@ -481,8 +481,7 @@ static int update_config(struct powerpc_nvram_storage *nv,
 		talloc_free(val);
 	}
 
-	if (config->network.n_interfaces)
-		update_network_config(nv, config);
+	update_network_config(nv, config);
 
 	return write_nvram(nv);
 }
