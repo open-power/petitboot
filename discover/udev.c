@@ -135,7 +135,7 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 	prop = udev_device_get_property_value(dev, "ID_FS_LABEL");
 	if (prop)
 		ddev->label = talloc_strdup(ddev, prop);
-	ddev->device->type = DEVICE_TYPE_DISK;
+	ddev->device->type = cdrom ? DEVICE_TYPE_OPTICAL : DEVICE_TYPE_DISK;
 
 	udev_setup_device_params(dev, ddev);
 
