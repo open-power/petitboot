@@ -16,7 +16,6 @@
 
 struct yaboot_state {
 	int globals_done;
-	const char *const *known_names;
 
 	/* current option data */
 	struct discover_boot_option *opt;
@@ -194,9 +193,6 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	if (!state->globals_done && conf_set_global_option(conf, name, value))
 		return;
 
-	if (!conf_param_in_list(state->known_names, name))
-		return;
-
 	/* image */
 	if (streq(name, "image")) {
 		/* an image section finishes our global defintions */
@@ -244,7 +240,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 	/* all other processing requires an image */
 	if (!opt) {
-		pb_log("%s: unknown name: %s\n", __func__, name);
+		pb_debug("%s: unknown name: %s\n", __func__, name);
 		return;
 	}
 
@@ -310,7 +306,7 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 		return;
 	}
 
-	pb_log("%s: unknown name: %s\n", __func__, name);
+	pb_debug("%s: unknown name: %s\n", __func__, name);
 }
 
 static struct conf_global_option yaboot_global_options[] = {
@@ -340,24 +336,6 @@ static const char *const yaboot_conf_files[] = {
 	NULL
 };
 
-static const char *yaboot_known_names[] = {
-	"append",
-	"image",
-	"image[64bit]", /* SUSE extension */
-	"image[32bit]", /* SUSE extension */
-	"initrd",
-	"initrd-size",
-	"label",
-	"literal",
-	"ramdisk",
-	"read-only",
-	"read-write",
-	"root",
-	"device",
-	"partition",
-	NULL
-};
-
 static int yaboot_parse(struct discover_context *dc)
 {
 	const char * const *filename;
@@ -382,8 +360,6 @@ static int yaboot_parse(struct discover_context *dc)
 	conf->process_pair = yaboot_process_pair;
 	conf->finish = yaboot_finish;
 	conf->parser_info = state = talloc_zero(conf, struct yaboot_state);
-
-	state->known_names = yaboot_known_names;
 
 	state->opt = NULL;
 
