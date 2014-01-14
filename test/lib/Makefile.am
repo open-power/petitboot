@@ -26,6 +26,8 @@ check_PROGRAMS = list-test \
 	test-process-noargs \
 	test-process-sync \
 	test-process-sync-stdout \
+	test-process-stderr \
+	test-process-stderr-stdout \
 	test-process-async \
 	test-process-async-stdout \
 	test-process-parent-stdout \

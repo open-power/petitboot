@@ -31,6 +31,7 @@ struct process {
 	const char		*path;
 	const char		**argv;
 	bool			keep_stdout;
+	bool			add_stderr;
 	process_exit_cb		exit_cb;
 	void			*data;
 

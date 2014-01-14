@@ -125,7 +125,10 @@ static void process_setup_stdout_child(struct process_info *procinfo)
 	else
 		dup2(log, STDOUT_FILENO);
 
-	dup2(log, STDERR_FILENO);
+	if (procinfo->process.keep_stdout && procinfo->process.add_stderr)
+		dup2(procinfo->stdout_pipe[1], STDERR_FILENO);
+	else
+		dup2(log, STDERR_FILENO);
 }
 
 static void process_finish_stdout(struct process_info *procinfo)
