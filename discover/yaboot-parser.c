@@ -197,11 +197,10 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 	if (!conf_param_in_list(state->known_names, name))
 		return;
 
-	state->globals_done = 1;
-
 	/* image */
-
 	if (streq(name, "image")) {
+		/* an image section finishes our global defintions */
+		state->globals_done = 1;
 
 		/* First finish any previous image. */
 		if (opt)

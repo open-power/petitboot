@@ -50,6 +50,7 @@ TESTS = \
 	test-yaboot-root-global \
 	test-yaboot-root-override \
 	test-yaboot-device-override \
+	test-yaboot-global-state \
 	test-yaboot-default \
 	test-yaboot-rh8-ppc64 \
 	test-pxe-empty \
