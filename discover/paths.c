@@ -222,6 +222,7 @@ static enum tftp_type check_tftp_type(void *ctx)
 	process->path = pb_system_apps.tftp;
 	process->argv = argv;
 	process->keep_stdout = true;
+	process->add_stderr = true;
 	process_run_sync(process);
 
 	if (!process->stdout_buf || process->stdout_len == 0) {
