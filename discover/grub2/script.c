@@ -103,7 +103,7 @@ static bool is_delim(char c)
 }
 
 static bool option_is_default(struct grub2_script *script,
-		struct discover_boot_option *opt)
+		struct discover_boot_option *opt, const char *id)
 {
 	unsigned int default_idx;
 	const char *var;
@@ -117,7 +117,12 @@ static bool option_is_default(struct grub2_script *script,
 	if (end != var && *end == '\0')
 		return default_idx == script->n_options;
 
-	return !strcmp(opt->option->name, var);
+	/* if we don't have an explicit id for this option, fall back to
+	 * the name */
+	if (!id)
+		id = opt->option->name;
+
+	return !strcmp(id, var);
 }
 
 /* For non-double-quoted variable expansions, we may need to split the
@@ -340,24 +345,36 @@ int statement_menuentry_execute(struct grub2_script *script,
 {
 	struct grub2_statement_menuentry *st = to_stmt_menuentry(statement);
 	struct discover_boot_option *opt;
+	const char *id = NULL;
+	int i;
 
 	process_expansions(script, st->argv);
 
 	opt = discover_boot_option_create(script->ctx, script->ctx->device);
-	if (st->argv->argc > 0) {
-		opt->option->name = talloc_strdup(opt, st->argv->argv[0]);
-	} else {
-		opt->option->name = talloc_strdup(opt, "(unknown)");
+
+	/* XXX: --options=values need to be parsed properly; this is a simple
+	 * implementation to get --id= working.
+	 */
+	for (i = 1; i < st->argv->argc; ++i) {
+		if (strncmp("--id=", st->argv->argv[i], 5) == 0) {
+			id = st->argv->argv[i] + 5;
+			break;
+		}
 	}
+	if (st->argv->argc > 0)
+		opt->option->name = talloc_strdup(opt, st->argv->argv[0]);
+	else
+		opt->option->name = talloc_strdup(opt, "(unknown)");
+
 	opt->option->id = talloc_asprintf(opt->option, "%s#%s",
 			script->ctx->device->device->id,
-			opt->option->name);
+			id ? id : opt->option->name);
 
 	script->opt = opt;
 
 	statements_execute(script, st->statements);
 
-	opt->option->is_default = option_is_default(script, opt);
+	opt->option->is_default = option_is_default(script, opt, id);
 
 	discover_context_add_boot_option(script->ctx, opt);
 	script->n_options++;

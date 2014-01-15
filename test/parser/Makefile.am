@@ -32,6 +32,7 @@ TESTS = \
 	test-grub2-default-index \
 	test-grub2-default-multiword \
 	test-grub2-multiple-resolve \
+	test-grub2-multiple-id \
 	test-grub2-single-line-if \
 	test-grub2-load-env \
 	test-grub2-save-env \
