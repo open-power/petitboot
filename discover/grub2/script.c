@@ -435,6 +435,9 @@ static void init_env(struct grub2_script *script)
 	script_env_set(script, "prefix", prefix ? : default_prefix);
 	if (prefix)
 		talloc_free(prefix);
+
+	/* establish feature settings */
+	script_env_set(script, "feature_menuentry_id", "y");
 }
 
 void script_register_function(struct grub2_script *script,
