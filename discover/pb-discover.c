@@ -200,6 +200,7 @@ int main(int argc, char *argv[])
 			break;
 	}
 
+	network_shutdown(network);
 	device_handler_destroy(handler);
 	user_event_destroy(uev);
 	udev_destroy(udev);

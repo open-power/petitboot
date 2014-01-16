@@ -582,8 +582,13 @@ int network_shutdown(struct network *network)
 	if (network->waiter)
 		waiter_remove(network->waiter);
 
-	list_for_each_entry(&network->interfaces, interface, list)
+	list_for_each_entry(&network->interfaces, interface, list) {
+		if (interface->state == IFSTATE_IGNORED)
+			continue;
+		if (!strcmp(interface->name, "lo"))
+			continue;
 		interface_down(interface);
+	}
 
 	close(network->netlink_sd);
 	talloc_free(network);
