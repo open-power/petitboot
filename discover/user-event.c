@@ -230,7 +230,7 @@ static char *parse_ip_addr(struct discover_context *ctx, const char *ip)
 }
 
 struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
-		struct event *event)
+		struct event *event, bool *is_complete)
 {
 	const char *conffile, *host, *bootfile;
 	char *p, *basedir, *url_str;
@@ -255,7 +255,7 @@ struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 			talloc_free(url_str);
 		}
 
-		ctx->conf_url = url;
+		*is_complete = true;
 	} else {
 		host = parse_host_addr(event);
 		if (!host) {
@@ -284,6 +284,7 @@ struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 
 		talloc_free(url_str);
 		talloc_free(basedir);
+		*is_complete = false;
 	}
 
 	return url;

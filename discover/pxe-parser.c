@@ -101,6 +101,7 @@ static int pxe_parse(struct discover_context *dc)
 	char **pxe_conf_files, **filename;
 	struct pb_url *conf_url, *url;
 	struct conf_context *conf;
+	bool complete_url;
 	int len, rc;
 	char *buf;
 
@@ -121,11 +122,13 @@ static int pxe_parse(struct discover_context *dc)
 	parser_info = talloc_zero(conf, struct pxe_parser_info);
 	conf->parser_info = parser_info;
 
-	conf_url = user_event_parse_conf_url(dc, dc->event);
+	conf_url = user_event_parse_conf_url(dc, dc->event, &complete_url);
 	if (!conf_url)
 		goto out_conf;
 
-	if (dc->conf_url) {
+	if (complete_url) {
+		/* we have a complete URL; use this and we're done. */
+		dc->conf_url = conf_url;
 		rc = parser_request_url(dc, dc->conf_url, &buf, &len);
 		if (rc)
 			goto out_conf;

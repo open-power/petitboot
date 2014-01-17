@@ -19,6 +19,8 @@
 #if !defined(_PB_DISCOVER_USER_EVENT_H)
 #define _PB_DISCOVER_USER_EVENT_H
 
+#include <stdbool.h>
+
 #include "device-handler.h"
 
 #define PBOOT_USER_EVENT_SOCKET "/tmp/petitboot.ev"
@@ -28,7 +30,7 @@ struct user_event;
 struct waitset;
 
 struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
-		struct event *event);
+		struct event *event, bool *complete_url);
 char **user_event_parse_conf_filenames(
 		struct discover_context *ctx, struct event *event);
 struct user_event *user_event_init(struct waitset *waitset,
