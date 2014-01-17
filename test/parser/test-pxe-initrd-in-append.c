@@ -14,7 +14,7 @@ void run_test(struct parser_test *test)
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
 
-	test_read_conf_embedded(test, "conf.txt");
+	test_read_conf_embedded_url(test, "tftp://host/dir/conf.txt");
 
 	test_set_event_source(test);
 	test_set_event_param(test->ctx->event, "pxeconffile",

@@ -112,10 +112,11 @@ void test_fini(struct parser_test *test)
 	talloc_free(test);
 }
 
-void __test_read_conf_data(struct parser_test *test, const char *conf_file,
+void __test_read_conf_data(struct parser_test *test,
+		struct discover_device *dev, const char *conf_file,
 		const char *buf, size_t len)
 {
-	test_add_file_data(test, test->ctx->device, conf_file, buf, len);
+	test_add_file_data(test, dev, conf_file, buf, len);
 }
 
 void test_read_conf_file(struct parser_test *test, const char *filename,
@@ -239,7 +240,10 @@ int parser_request_url(struct discover_context *ctx, struct pb_url *url,
 	char *tmp;
 
 	list_for_each_entry(&test->files, file, list) {
-		if (strcmp(file->name, url->file))
+		if (file->dev)
+			continue;
+
+		if (strcmp(file->name, url->full))
 			continue;
 
 		/* the read_file() interface always adds a trailing null

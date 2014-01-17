@@ -21,9 +21,10 @@ struct discover_device *test_create_device(struct parser_test *test,
 		const char *name);
 
 #define test_read_conf_data(t, f, d) \
-	__test_read_conf_data(t, f, d, sizeof(d))
+	__test_read_conf_data(t, t->ctx->device, f, d, sizeof(d))
 
-void __test_read_conf_data(struct parser_test *test, const char *conf_file,
+void __test_read_conf_data(struct parser_test *test,
+		struct discover_device *dev, const char *conf_file,
 		const char *buf, size_t len);
 void test_read_conf_file(struct parser_test *test, const char *filename,
 		const char *conf_file);
@@ -49,7 +50,12 @@ struct discover_boot_option *get_boot_option(struct discover_context *ctx,
 extern const char __embedded_config[];
 extern const size_t __embedded_config_size;
 #define test_read_conf_embedded(t, f) \
-	__test_read_conf_data(t, f, __embedded_config, __embedded_config_size)
+	__test_read_conf_data(t, t->ctx->device, f, \
+				__embedded_config, __embedded_config_size)
+
+#define test_read_conf_embedded_url(t, u) \
+	__test_read_conf_data(t, NULL, u, \
+				__embedded_config, __embedded_config_size)
 
 /**
  * Checks for parser results.

@@ -15,7 +15,8 @@ void run_test(struct parser_test *test)
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
 
-	test_read_conf_embedded(test, "01-12-34-56-78-9A-BC");
+	test_read_conf_embedded_url(test,
+			"tftp://host/dir/01-12-34-56-78-9A-BC");
 
 	test_set_event_source(test);
 	test_set_event_param(test->ctx->event, "bootfile", "dir/pxe");
