@@ -212,8 +212,9 @@ static void udhcpc_process_exit(struct process *process)
 
 static void configure_interface_dhcp(struct interface *interface)
 {
+	const struct platform *platform;
+	char pidfile[256], id[10];
 	struct process *process;
-	char pidfile[256];
 	int rc;
 	const char *argv[] = {
 		pb_system_apps.udhcpc,
@@ -221,13 +222,20 @@ static void configure_interface_dhcp(struct interface *interface)
 		"-n",
 		"-O", "pxeconffile",
 		"-O", "pxepathprefix",
-		"-x", "0x5d:000a",
 		"-p", pidfile,
 		"-i", interface->name,
+		"-x", id, /* [11,12] - dhcp client identifier */
 		NULL,
 	};
+
 	snprintf(pidfile, sizeof(pidfile), "%s/udhcpc-%s.pid",
 			PIDFILE_BASE, interface->name);
+
+	platform = platform_get();
+	if (platform && platform->dhcp_arch_id != 0xffff)
+		snprintf(id, sizeof(id), "0x5d:%04x", platform->dhcp_arch_id);
+	else
+		argv[11] = NULL;
 
 	process = process_create(interface);
 

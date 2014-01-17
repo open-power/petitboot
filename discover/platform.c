@@ -102,6 +102,11 @@ int platform_init(void *ctx)
 	return 0;
 }
 
+const struct platform *platform_get(void)
+{
+	return platform;
+}
+
 int config_set(struct config *newconfig)
 {
 	int rc;

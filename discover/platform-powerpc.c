@@ -560,6 +560,7 @@ static bool probe(struct platform *p, void *ctx)
 
 static struct platform platform_powerpc = {
 	.name		= "powerpc",
+	.dhcp_arch_id	= 0x000e,
 	.probe		= probe,
 	.load_config	= load_config,
 	.save_config	= save_config,
