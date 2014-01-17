@@ -221,6 +221,7 @@ static void configure_interface_dhcp(struct interface *interface)
 		"-n",
 		"-O", "pxeconffile",
 		"-O", "pxepathprefix",
+		"-x", "0x5d:000a",
 		"-p", pidfile,
 		"-i", interface->name,
 		NULL,
