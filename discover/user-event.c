@@ -232,60 +232,81 @@ static char *parse_ip_addr(struct discover_context *ctx, const char *ip)
 struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 		struct event *event, bool *is_complete)
 {
-	const char *conffile, *host, *bootfile;
+	const char *conffile, *pathprefix, *host, *bootfile;
 	char *p, *basedir, *url_str;
 	struct pb_url *url;
 
 	conffile = event_get_param(event, "pxeconffile");
-	if (conffile) {
-		if (is_url(conffile)) {
-			url = pb_url_parse(ctx, conffile);
-		} else {
-			host = parse_host_addr(event);
-			if (!host) {
-				pb_log("%s: host address not found\n",
-						__func__);
-				return NULL;
-			}
+	pathprefix = event_get_param(event, "pxepathprefix");
+	bootfile = event_get_param(event, "bootfile");
 
-			url_str = talloc_asprintf(ctx, "%s%s/%s", "tftp://",
-					host, conffile);
+	/* If we're given a conf file, we're able to generate a complete URL to
+	 * the configuration file, and the parser doesn't need to do any
+	 * further autodiscovery */
+	*is_complete = !!conffile;
+
+	/* if conffile is a URL, that's all we need */
+	if (conffile && is_url(conffile)) {
+		url = pb_url_parse(ctx, conffile);
+		return url;
+	}
+
+	/* If we can create a URL from pathprefix (optionally with
+	 * conffile appended to create a complete URL), use that */
+	if (pathprefix && is_url(pathprefix)) {
+		if (conffile) {
+			url_str = talloc_asprintf(ctx, "%s%s",
+					pathprefix, conffile);
 			url = pb_url_parse(ctx, url_str);
-
 			talloc_free(url_str);
+		} else {
+			url = pb_url_parse(ctx, pathprefix);
 		}
 
-		*is_complete = true;
-	} else {
-		host = parse_host_addr(event);
-		if (!host) {
-			pb_log("%s: host address not found\n", __func__);
-			return NULL;
-		}
+		return url;
+	}
 
-		bootfile = event_get_param(event, "bootfile");
-		if (!bootfile) {
-			pb_log("%s: bootfile param not found\n", __func__);
-			return NULL;
-		}
+	host = parse_host_addr(event);
+	if (!host) {
+		pb_log("%s: host address not found\n", __func__);
+		return NULL;
+	}
+
+	url_str = talloc_asprintf(ctx, "tftp://%s/", host);
+
+	/* if we have a pathprefix, use that directly.. */
+	if (pathprefix) {
+		/* strip leading slashes */
+		while (pathprefix[0] == '/')
+			pathprefix++;
+		url_str = talloc_asprintf_append(url_str, "%s", pathprefix);
+
+	/* ... otherwise, add a path based on the bootfile name, but only
+	 * if conffile isn't an absolute path itself */
+	} else if (bootfile && !(conffile && conffile[0] == '/')) {
 
 		basedir = talloc_strdup(ctx, bootfile);
-		p = strchr(basedir, '/');
+
+		/* strip filename from the bootfile path, leaving only a
+		 * directory */
+		p = strrchr(basedir, '/');
 		if (p)
 			*p = '\0';
 
-		if (!strcmp(basedir,"") || !strcmp(basedir, "."))
-			url_str = talloc_asprintf(ctx, "%s%s/", "tftp://",host);
-		else
-			url_str = talloc_asprintf(ctx, "%s%s/%s/", "tftp://",host,
+		if (strlen(basedir))
+			url_str = talloc_asprintf_append(url_str, "%s/",
 					basedir);
 
-		url = pb_url_parse(ctx, url_str);
-
-		talloc_free(url_str);
 		talloc_free(basedir);
-		*is_complete = false;
 	}
+
+	/* finally, append conffile */
+	if (conffile)
+		url_str = talloc_asprintf_append(url_str, "%s", conffile);
+
+	url = pb_url_parse(ctx, url_str);
+
+	talloc_free(url_str);
 
 	return url;
 }

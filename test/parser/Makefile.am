@@ -62,6 +62,9 @@ TESTS = \
 	test-pxe-ip-without-conf \
 	test-pxe-non-url-conf \
 	test-pxe-local \
+	test-pxe-pathprefix-with-conf \
+	test-pxe-non-url-pathprefix-with-conf \
+	test-pxe-pathprefix-discover \
 	test-unresolved-remove
 
 $(TESTS): %: %.embedded-config.o
