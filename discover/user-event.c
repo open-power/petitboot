@@ -89,9 +89,9 @@ static struct resource *user_event_resource(struct discover_boot_option *opt,
 		return NULL;
 	}
 
-	boot_file = event_get_param(event, "boot_file");
+	boot_file = event_get_param(event, "bootfile");
 	if (!boot_file) {
-		pb_log("%s: boot_file not found\n", __func__);
+		pb_log("%s: bootfile not found\n", __func__);
 		return NULL;
 	}
 

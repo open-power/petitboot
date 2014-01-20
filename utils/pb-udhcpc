@@ -29,17 +29,18 @@ pb_add () {
 
 	pb-event dhcp@${interface} $paramstr
 
-	# Check if an explicit config file present
-	if [ -n "${conffile}" ]
+	# Check if an explicit boot file present. If there is, add it as
+	# an option directly.
+	if [ -z "${bootfile}" ]
 	then
 		return;
 	fi
 
-        # Finally, add an option for the boot_file parameter
-	paramstr='name=netboot'
+	paramstr=""
 
-	# Collect relevant parameters to add an option to the boot_file parameter
-	for name in rootpath siaddr boot_file
+	# Collect relevant parameters to add an option to the bootfile
+	# parameter
+	for name in rootpath siaddr bootfile
         do
                 value=$(eval "echo \${$name}")
                 [ -n "$value" ] || continue;
@@ -47,11 +48,12 @@ pb_add () {
                 paramstr="$paramstr $name=$value"
         done
 
-	pb-event add@${interface} $paramstr
+	pb-event add@${interface} name="netboot $interface ($bootfile)" \
+		$paramstr
 }
 
 pb_remove () {
-	pb-event remove@${interface} name=netboot
+	pb-event remove@${interface}
 }
 
 case "$1" in
