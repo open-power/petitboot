@@ -27,7 +27,7 @@ pb_add () {
 		paramstr="$paramstr $name=$value"
 	done
 
-	pb-event dhcp@{interface} $paramstr
+	pb-event dhcp@${interface} $paramstr
 
 	# Check if an explicit config file present
 	if [ -n "${conffile}" ]
@@ -47,7 +47,7 @@ pb_add () {
                 paramstr="$paramstr $name=$value"
         done
 
-	pb-event add@{interface} $paramstr
+	pb-event add@${interface} $paramstr
 }
 
 pb_remove () {
