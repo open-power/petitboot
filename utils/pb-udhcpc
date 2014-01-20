@@ -14,7 +14,7 @@ pb_add () {
 	# parameter was in the header, or specified by options
 	[ -z "$bootfile" ] && bootfile=${boot_file}
 
-	mac=$(< /sys/class/net/$interface/address)
+	mac=$(cat /sys/class/net/$interface/address)
 	paramstr=''
 
 	# Collect relevant DHCP response parameters into $paramstr
