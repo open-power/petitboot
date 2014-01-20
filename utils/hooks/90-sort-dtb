@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Last pass for the DTB: sort properties.
+
+[ -n "$boot_dtb" ] || exit
+
+dtb_in=$boot_dtb
+dtb_out=$(mktemp)
+
+dtc -s -I dtb -O dtb -o $dtb_out $dtb_in 
+
+[ $? = 0 ] && mv $dtb_out $dtb_in
