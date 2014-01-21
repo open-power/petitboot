@@ -86,7 +86,7 @@ static void load_url_process_exit(struct process *process)
 
 	if (result->status == LOAD_CANCELLED) {
 		load_url_result_cleanup_local(result);
-	} else if (process->exit_status == 0) {
+	} else if (process_exit_ok(process)) {
 		result->status = LOAD_OK;
 	} else {
 		result->status = LOAD_ERROR;
@@ -131,7 +131,7 @@ static void load_process_to_local_file(struct load_task *task,
 		task->result->status = rc ? LOAD_ERROR : LOAD_ASYNC;
 	} else {
 		rc = process_run_sync(task->process);
-		if (rc || WEXITSTATUS(task->process->exit_status))
+		if (rc || !process_exit_ok(task->process))
 			task->result->status = LOAD_ERROR;
 		else
 			task->result->status = LOAD_OK;

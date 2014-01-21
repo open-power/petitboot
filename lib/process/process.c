@@ -447,3 +447,9 @@ int process_run_simple(void *ctx, const char *name, ...)
 
 	return rc;
 }
+
+bool process_exit_ok(struct process *process)
+{
+	return WIFEXITED(process->exit_status) &&
+		WEXITSTATUS(process->exit_status) == 0;
+}

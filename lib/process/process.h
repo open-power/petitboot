@@ -74,4 +74,9 @@ int process_run_simple(void *ctx, const char *name, ...)
 int process_run_async(struct process *process);
 
 void process_stop_async(struct process *process);
+
+/* helper function to determine if a process exited cleanly, with a non-zero
+ * exit status */
+bool process_exit_ok(struct process *process);
+
 #endif /* PROCESS_H */

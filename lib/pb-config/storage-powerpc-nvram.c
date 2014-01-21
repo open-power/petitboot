@@ -137,8 +137,7 @@ static int parse_nvram(struct powerpc_nvram_storage *nv)
 
 	rc = process_run_sync(process);
 
-	if (rc || !WIFEXITED(process->exit_status)
-			|| WEXITSTATUS(process->exit_status)) {
+	if (rc || !process_exit_ok(process)) {
 		fprintf(stderr, "nvram process returned "
 				"non-zero exit status\n");
 		rc = -1;
@@ -183,8 +182,7 @@ static int write_nvram(struct powerpc_nvram_storage *nv)
 
 		talloc_free(paramstr);
 
-		if (rc || !WIFEXITED(process->exit_status)
-				|| WEXITSTATUS(process->exit_status)) {
+		if (rc || !process_exit_ok(process)) {
 			rc = -1;
 			pb_log("nvram update process returned "
 					"non-zero exit status\n");
