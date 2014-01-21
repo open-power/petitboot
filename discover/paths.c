@@ -131,7 +131,10 @@ static void load_process_to_local_file(struct load_task *task,
 		task->result->status = rc ? LOAD_ERROR : LOAD_ASYNC;
 	} else {
 		rc = process_run_sync(task->process);
-		task->result->status = rc ? LOAD_ERROR : LOAD_OK;
+		if (rc || WEXITSTATUS(task->process->exit_status))
+			task->result->status = LOAD_ERROR;
+		else
+			task->result->status = LOAD_OK;
 		process_release(task->process);
 		task->process = NULL;
 	}
