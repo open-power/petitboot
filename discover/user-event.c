@@ -208,7 +208,7 @@ static char *parse_mac_addr(struct discover_context *ctx, const char *mac)
 			mac_addr_arr + 2, mac_addr_arr + 3, mac_addr_arr + 4,
 			mac_addr_arr + 5);
 
-	mac_addr = talloc_asprintf(ctx, "01-%02X-%02X-%02X-%02X-%02X-%02X",
+	mac_addr = talloc_asprintf(ctx, "01-%02x-%02x-%02x-%02x-%02x-%02x",
 			mac_addr_arr[0], mac_addr_arr[1], mac_addr_arr[2],
 			mac_addr_arr[3], mac_addr_arr[4], mac_addr_arr[5]);
 

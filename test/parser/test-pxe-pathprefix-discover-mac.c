@@ -5,9 +5,9 @@
 default linux
 
 label linux
-kernel ./pxe/de-ad-de-ad-be-ef.vmlinuz
+kernel ./kernel
 append command line
-initrd=./pxe/de-ad-de-ad-be-ef.initrd
+initrd /initrd
 #endif
 
 void run_test(struct parser_test *test)
@@ -16,12 +16,12 @@ void run_test(struct parser_test *test)
 	struct discover_context *ctx;
 
 	test_read_conf_embedded_url(test,
-			"tftp://host/dir/01-12-34-56-78-9a-bc");
+			"tftp://host/path/to/01-12-34-56-78-9a-bc");
 
 	test_set_event_source(test);
-	test_set_event_param(test->ctx->event, "bootfile", "dir/pxe");
-	test_set_event_param(test->ctx->event, "tftp", "host");
 	test_set_event_param(test->ctx->event, "mac", "12:34:56:78:9a:bc");
+	test_set_event_param(test->ctx->event, "pxepathprefix",
+			"tftp://host/path/to/");
 
 	test_run_parser(test, "pxe");
 
@@ -34,7 +34,6 @@ void run_test(struct parser_test *test)
 	check_args(opt, "command line");
 
 	check_resolved_url_resource(opt->boot_image,
-			"tftp://host/dir/./pxe/de-ad-de-ad-be-ef.vmlinuz");
-	check_resolved_url_resource(opt->initrd,
-			"tftp://host/dir/./pxe/de-ad-de-ad-be-ef.initrd");
+			"tftp://host/path/to/./kernel");
+	check_resolved_url_resource(opt->initrd, "tftp://host/initrd");
 }
