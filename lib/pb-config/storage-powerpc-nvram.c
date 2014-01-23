@@ -434,6 +434,20 @@ static char *dns_config_str(void *ctx, const char **dns_servers, int n)
 	return str;
 }
 
+static void update_string_config(struct powerpc_nvram_storage *nv,
+		const char *name, const char *value)
+{
+	const char *cur;
+
+	cur = get_param(nv, name);
+
+	/* don't set an empty parameter if it doesn't already exist */
+	if (!cur && !strlen(value))
+		return;
+
+	set_param(nv, name, value);
+}
+
 static void update_network_config(struct powerpc_nvram_storage *nv,
 	struct config *config)
 {
@@ -458,7 +472,7 @@ static void update_network_config(struct powerpc_nvram_storage *nv,
 		talloc_free(dns_str);
 	}
 
-	set_param(nv, "petitboot,network", val);
+	update_string_config(nv, "petitboot,network", val);
 
 	talloc_free(val);
 }
@@ -466,18 +480,24 @@ static void update_network_config(struct powerpc_nvram_storage *nv,
 static int update_config(struct powerpc_nvram_storage *nv,
 		struct config *config, struct config *defaults)
 {
-	char *val;
+	char *tmp = NULL;
+	const char *val;
 
-	if (config->autoboot_enabled != defaults->autoboot_enabled) {
+	if (config->autoboot_enabled == defaults->autoboot_enabled)
+		val = "";
+	else
 		val = config->autoboot_enabled ? "true" : "false";
-		set_param(nv, "auto-boot?", val);
-	}
+	update_string_config(nv, "auto-boot?", val);
 
-	if (config->autoboot_timeout_sec != defaults->autoboot_timeout_sec) {
-		val = talloc_asprintf(nv, "%d", config->autoboot_timeout_sec);
-		set_param(nv, "petitboot,timeout", val);
-		talloc_free(val);
-	}
+	if (config->autoboot_timeout_sec == defaults->autoboot_timeout_sec)
+		val = "";
+	else
+		val = tmp = talloc_asprintf(nv, "%d",
+				config->autoboot_timeout_sec);
+
+	update_string_config(nv, "petitboot,timeout", val);
+	if (tmp)
+		talloc_free(tmp);
 
 	update_network_config(nv, config);
 
