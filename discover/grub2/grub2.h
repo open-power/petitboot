@@ -83,6 +83,13 @@ struct grub2_statement_function {
 	struct grub2_statements	*body;
 };
 
+struct grub2_statement_for {
+	struct grub2_statement	st;
+	struct grub2_word	*var;
+	struct grub2_argv	*list;
+	struct grub2_statements	*body;
+};
+
 struct grub2_script {
 	struct grub2_statements		*statements;
 	struct list			environment;
@@ -125,6 +132,10 @@ struct grub2_statement *create_statement_block(struct grub2_parser *parser,
 struct grub2_statement *create_statement_function(struct grub2_parser *parser,
 		struct grub2_word *name, struct grub2_statements *body);
 
+struct grub2_statement *create_statement_for(struct grub2_parser *parser,
+		struct grub2_word *var, struct grub2_argv *list,
+		struct grub2_statements *body);
+
 struct grub2_word *create_word_text(struct grub2_parser *parser,
 		const char *text);
 
@@ -152,6 +163,8 @@ int statement_if_execute(struct grub2_script *script,
 int statement_menuentry_execute(struct grub2_script *script,
 		struct grub2_statement *statement);
 int statement_function_execute(struct grub2_script *script,
+		struct grub2_statement *statement);
+int statement_for_execute(struct grub2_script *script,
 		struct grub2_statement *statement);
 
 struct grub2_script *create_script(struct grub2_parser *parser,

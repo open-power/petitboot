@@ -130,6 +130,12 @@ statement:
 		/* we just flatten everything */
 		$$ = create_statement_block(parser, $6);
 	}
+	| "for" TOKEN_DELIM word TOKEN_DELIM "in" TOKEN_DELIM words TOKEN_EOL
+		"do" sep
+		statements
+		"done" {
+		$$ = create_statement_for(parser, $3, $7, $11);
+	}
 
 words:	word {
 		$$ = create_argv(parser);
@@ -239,6 +245,19 @@ struct grub2_statement *create_statement_function(struct grub2_parser *parser,
 		talloc(parser, struct grub2_statement_function);
 	stmt->st.exec = statement_function_execute;
 	stmt->name = name;
+	stmt->body = body;
+	return &stmt->st;
+}
+
+struct grub2_statement *create_statement_for(struct grub2_parser *parser,
+		struct grub2_word *var, struct grub2_argv *list,
+		struct grub2_statements *body)
+{
+	struct grub2_statement_for *stmt =
+		talloc(parser, struct grub2_statement_for);
+	stmt->st.exec = statement_for_execute;
+	stmt->var = var;
+	stmt->list = list;
 	stmt->body = body;
 	return &stmt->st;
 }

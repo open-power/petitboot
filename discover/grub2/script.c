@@ -19,6 +19,8 @@
 	container_of(stmt, struct grub2_statement_menuentry, st)
 #define to_stmt_function(stmt) \
 	container_of(stmt, struct grub2_statement_function, st)
+#define to_stmt_for(stmt) \
+	container_of(stmt, struct grub2_statement_for, st)
 #define to_stmt_conditional(stmt) \
 	container_of(stmt, struct grub2_statement_conditional, st)
 
@@ -399,6 +401,27 @@ int statement_function_execute(struct grub2_script *script,
 	script_register_function(script, name, function_invoke, st);
 
 	return 0;
+}
+
+int statement_for_execute(struct grub2_script *script,
+		struct grub2_statement *statement)
+{
+	struct grub2_statement_for *st = to_stmt_for(statement);
+	const char *varname;
+	int i, rc = 0;
+
+	if (st->var->type == GRUB2_WORD_VAR)
+		expand_var(script, st->var);
+	varname = st->var->text;
+
+	process_expansions(script, st->list);
+
+	for (i = 0; i < st->list->argc; ++i) {
+		script_env_set(script, varname, st->list->argv[i]);
+		rc = statements_execute(script, st->body);
+	}
+
+	return rc;
 }
 
 static void init_env(struct grub2_script *script)
