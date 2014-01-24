@@ -26,6 +26,10 @@ struct p_item {
 
 struct test_file {
 	struct discover_device	*dev;
+	enum {
+		TEST_FILE,
+		TEST_DIR,
+	}			type;
 	const char		*name;
 	void			*data;
 	int			size;
@@ -158,10 +162,23 @@ void test_add_file_data(struct parser_test *test, struct discover_device *dev,
 	struct test_file *file;
 
 	file = talloc_zero(test, struct test_file);
+	file->type = TEST_FILE;
 	file->dev = dev;
 	file->name = filename;
 	file->data = talloc_memdup(test, data, size);
 	file->size = size;
+	list_add(&test->files, &file->list);
+}
+
+void test_add_dir(struct parser_test *test, struct discover_device *dev,
+		const char *dirname)
+{
+	struct test_file *file;
+
+	file = talloc_zero(test, struct test_file);
+	file->type = TEST_DIR;
+	file->dev = dev;
+	file->name = dirname;
 	list_add(&test->files, &file->list);
 }
 
@@ -189,6 +206,8 @@ int parser_request_file(struct discover_context *ctx,
 			continue;
 		if (strcmp(file->name, filename))
 			continue;
+		if (file->type != TEST_FILE)
+			continue;
 
 		/* the read_file() interface always adds a trailing null
 		 * for string-safety; do the same here */
@@ -198,6 +217,25 @@ int parser_request_file(struct discover_context *ctx,
 		*buf = tmp;
 		*len = file->size;
 		return 0;
+	}
+
+	return -1;
+}
+
+int parser_check_dir(struct discover_context *ctx,
+		struct discover_device *dev, const char *dirname)
+{
+	struct parser_test *test = ctx->test_data;
+	struct test_file *file;
+
+	printf("%s: %s\n", __func__, dirname);
+
+	list_for_each_entry(&test->files, file, list) {
+		if (file->dev != dev)
+			continue;
+		if (strcmp(file->name, dirname))
+			continue;
+		return file->type == TEST_DIR ? 0 : -1;
 	}
 
 	return -1;

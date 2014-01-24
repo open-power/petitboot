@@ -62,5 +62,7 @@ int parser_replace_file(struct discover_context *ctx,
 		char *buf, int len);
 int parser_request_url(struct discover_context *ctx, struct pb_url *url,
 		char **buf, int *len);
+int parser_check_dir(struct discover_context *ctx,
+		struct discover_device *dev, const char *dirname);
 
 #endif /* _PARSER_H */

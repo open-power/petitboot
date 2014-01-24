@@ -36,6 +36,8 @@ void test_remove_device(struct parser_test *test, struct discover_device *dev);
 
 void test_add_file_data(struct parser_test *test, struct discover_device *dev,
 		const char *filename, const void *data, int size);
+void test_add_dir(struct parser_test *test, struct discover_device *dev,
+		const char *dirname);
 void test_set_event_source(struct parser_test *test);
 void test_set_event_param(struct event *event, const char *name,
 		const char *value);

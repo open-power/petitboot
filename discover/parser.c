@@ -49,6 +49,25 @@ int parser_request_file(struct discover_context *ctx,
 	return rc;
 }
 
+int parser_check_dir(struct discover_context *ctx,
+		struct discover_device *dev, const char *dirname)
+{
+	struct stat statbuf;
+	char *path;
+	int rc;
+
+	if (!dev->mount_path)
+		return -1;
+
+	path = local_path(ctx, dev, dirname);
+
+	rc = stat(path, &statbuf);
+	if (!rc)
+		return -1;
+
+	return S_ISDIR(statbuf.st_mode) ? 0 : -1;
+}
+
 int parser_replace_file(struct discover_context *ctx,
 		struct discover_device *dev, const char *filename,
 		char *buf, int len)

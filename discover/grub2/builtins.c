@@ -154,6 +154,15 @@ static bool builtin_test_op_file(struct grub2_script *script, char op,
 	return result;
 }
 
+static bool builtin_test_op_dir(struct grub2_script *script, char op,
+		const char *dir)
+{
+	if (op != 'd')
+		return false;
+
+	return parser_check_dir(script->ctx, script->ctx->device, dir) == 0;
+}
+
 static bool builtin_test_op(struct grub2_script *script,
 		int argc, char **argv, int *consumed)
 {
@@ -206,6 +215,11 @@ static bool builtin_test_op(struct grub2_script *script,
 		if (!strcmp(op, "-s") || !strcmp(op, "-f")) {
 			*consumed = 2;
 			return builtin_test_op_file(script, op[1], a1);
+		}
+
+		if (!strcmp(op, "-d")) {
+			*consumed = 2;
+			return builtin_test_op_dir(script, op[1], a1);
 		}
 	}
 
