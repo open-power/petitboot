@@ -374,6 +374,9 @@ int statement_menuentry_execute(struct grub2_script *script,
 
 	statements_execute(script, st->statements);
 
+	if (!opt->boot_image)
+		return -1;
+
 	opt->option->is_default = option_is_default(script, opt, id);
 
 	discover_context_add_boot_option(script->ctx, opt);
