@@ -432,13 +432,9 @@ static void init_env(struct grub2_script *script)
 					sep - script->filename);
 	}
 
-	env->name = talloc_strdup(env, "prefix");
+	script_env_set(script, "prefix", prefix ? : default_prefix);
 	if (prefix)
-		env->value = prefix;
-	else
-		env->value = talloc_strdup(env, default_prefix);
-
-	list_add(&script->environment, &env->list);
+		talloc_free(prefix);
 }
 
 void script_register_function(struct grub2_script *script,
