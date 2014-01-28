@@ -39,6 +39,7 @@ TESTS = \
 	test-grub2-saved-default \
 	test-grub2-nondefault-prefix \
 	test-grub2-f18-ppc64 \
+	test-grub2-f20-ppc64 \
 	test-grub2-ubuntu-13_04-x86 \
 	test-grub2-lexer-error \
 	test-grub2-parser-error \
@@ -105,6 +106,7 @@ check_PROGRAMS = $(TESTS) libtest.ro
 
 check_DATA = \
 	data/grub2-f18-ppc64.conf \
+	data/grub2-f20-ppc.conf \
 	data/grub2-ubuntu-13_04-x86.conf \
 	data/yaboot-rh8-ppc64.conf
 
