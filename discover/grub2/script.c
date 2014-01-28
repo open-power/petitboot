@@ -84,7 +84,7 @@ void script_env_set(struct grub2_script *script,
 	entry->value = talloc_strdup(entry, value);
 }
 
-static bool expand_var(struct grub2_script *script, struct grub2_word *word)
+static char *expand_var(struct grub2_script *script, struct grub2_word *word)
 {
 	const char *val;
 
@@ -92,9 +92,7 @@ static bool expand_var(struct grub2_script *script, struct grub2_word *word)
 	if (!val)
 		val = "";
 
-	word->text = talloc_strdup(script, val);
-
-	return true;
+	return talloc_strdup(script, val);
 }
 
 static bool is_delim(char c)
@@ -125,125 +123,110 @@ static bool option_is_default(struct grub2_script *script,
 	return !strcmp(id, var);
 }
 
-/* For non-double-quoted variable expansions, we may need to split the
- * variable's value into multiple argv items.
- *
- * This function sets the word->text to the initial set of non-delimiter chars
- * in the expanded var value. We then skip any delimiter chars, and (if
- * required), create the new argv item with the remaining text, and
- * add it to the argv list, after top_word.
- */
-static void process_split(struct grub2_script *script,
-		struct grub2_word *top_word,
-		struct grub2_word *word)
+static void append_text_to_current_arg(struct grub2_argv *argv,
+		const char *text, int len)
 {
-	int i, len, delim_start = -1, delim_end = -1;
-	struct grub2_word *new_word;
-	char *remainder;
+	char *cur = argv->argv[argv->argc - 1];
 
-	len = strlen(word->text);
+	if (cur) {
+		int curlen = strlen(cur);
+		cur = talloc_realloc(argv->argv, cur, char, len + curlen + 1);
+		memcpy(cur + curlen, text, len);
+		cur[len + curlen] = '\0';
 
-	/* Scan our string for the start of a delim (delim_start), and the
-	 * start of any new text (delim_end). */
+	} else {
+		cur = talloc_strndup(argv->argv, text, len);
+	}
+
+	argv->argv[argv->argc-1] = cur;
+}
+
+/* Add a word to the argv array. Depending on the word type, and presence of
+ * delimiter characters, we may add multiple items to the array.
+ */
+static void append_word_to_argv(struct grub2_script *script,
+		struct grub2_argv *argv, struct grub2_word *word)
+{
+	const char *text, *pos;
+	int i, len;
+
+	/* If it's a variable, perform substitution */
+	if (word->type == GRUB2_WORD_VAR)
+		text = expand_var(script, word);
+	else
+		text = word->text;
+
+	len = strlen(text);
+
+	/* If we have no text, we leave the current word as-is. The caller
+	 * has allocated an empty string for the case where this is the
+	 * first text token */
+	if (!len)
+		return;
+
+	/* If we're not splitting, we just add the entire block to the
+	 * current argv item */
+	if (!word->split) {
+		append_text_to_current_arg(argv, text, len);
+		return;
+	}
+
+	/* Scan for delimiters. If we find a word-end boundary, add the word
+	 * to the argv array, and start a new argv item */
+	pos = !is_delim(text[0]) ? text : NULL;
 	for (i = 0; i < len; i++) {
-		if (is_delim(word->text[i])) {
-			if (delim_start == -1)
-				delim_start = i;
-		} else if (delim_start != -1) {
-			delim_end = i;
-			break;
+
+		/* first delimiter after a word: add the accumulated word to
+		 * argv */
+		if (pos && is_delim(text[i])) {
+			append_text_to_current_arg(argv, pos,
+					text + i - pos);
+			pos = NULL;
+
+		/* first non-delimeter after a delimiter: record the starting
+		 * position, and create another argv item */
+		} else if (!pos && !is_delim(text[i])) {
+			pos = text + i;
+			argv->argc++;
+			argv->argv = talloc_realloc(argv, argv->argv, char *,
+					argv->argc);
+			argv->argv[argv->argc - 1] = NULL;
 		}
 	}
 
-	/* No delim? nothing to do. The process_expansions loop will
-	 * append this word's text to the top word, if necessary
-	 */
-	if (delim_start == -1)
-		return;
-
-	/* Set this word's text value to the text before the delimiter.
-	 * this will get appended to the top word
-	 */
-	word->text[delim_start] = '\0';
-
-	/* No trailing text? If there are no following word tokens, we're done.
-	 * Otherwise, we need to start a new argv item with those tokens */
-	if (delim_end == -1) {
-		if (!word->next)
-			return;
-		remainder = "";
-	} else {
-		remainder = word->text + delim_end;
-	}
-
-	new_word = talloc(script, struct grub2_word);
-	new_word->type = GRUB2_WORD_TEXT;
-	/* if there's no trailing text, we know we don't need to re-split */
-	new_word->split = delim_end != -1;
-	new_word->next = word->next;
-	new_word->last = NULL;
-	new_word->text = talloc_strdup(new_word, remainder);
-
-	/* stitch it into the argv list before this word */
-	list_insert_after(&top_word->argv_list,
-			   &new_word->argv_list);
-
-	/* terminate this word */
-	word->next = NULL;
+	/* add remaining word characters */
+	if (pos)
+		append_text_to_current_arg(argv, pos, text + len - pos);
 }
 
-/* iterate through the words in an argv_list, looking for GRUB2_WORD_VAR
+/* Transform an argv word-token list (returned from the parser) into an
+ * expanded argv array (as used by the script execution code). We do this by
+ * iterating through the words in an argv_list, looking for GRUB2_WORD_VAR
  * expansions.
- *
- * Once that's done, we may (if split == true) have to split the word to create
- * new argv items
  */
 static void process_expansions(struct grub2_script *script,
 		struct grub2_argv *argv)
 {
 	struct grub2_word *top_word, *word;
-	int i;
 
 	argv->argc = 0;
+	argv->argv = NULL;
 
 	list_for_each_entry(&argv->words, top_word, argv_list) {
 		argv->argc++;
+		argv->argv = talloc_realloc(argv, argv->argv, char *,
+				argv->argc);
+		/* because we've parsed a separate word here, we know that
+		 * we need at least an empty string */
+		argv->argv[argv->argc - 1] = talloc_strdup(argv->argv, "");
 
-		/* expand vars and squash the list of words into the head
-		 * of the argv word list */
-		for (word = top_word; word; word = word->next) {
-
-			/* if it's a variable, perform the substitution */
-			if (word->type == GRUB2_WORD_VAR) {
-				expand_var(script, word);
-				word->type = GRUB2_WORD_TEXT;
-			}
-
-			/* split; this will potentially insert argv
-			 * entries after top_word. */
-			if (word->split)
-				process_split(script, top_word, word);
-
-			/* accumulate word text into the top word, so
-			 * we end up with a shallow tree of argv data */
-			/* todo: don't do this in process_split */
-			if (word != top_word) {
-				top_word->text = talloc_asprintf_append(
-							top_word->text,
-							"%s", word->text);
-			}
-
-
-		}
-		top_word->next = NULL;
+		for (word = top_word; word; word = word->next)
+			append_word_to_argv(script, argv, word);
 	}
 
-	/* convert the list to an argv array, to pass to the function */
-	argv->argv = talloc_array(script, char *, argv->argc);
-	i = 0;
-
-	list_for_each_entry(&argv->words, word, argv_list)
-		argv->argv[i++] = word->text;
+	/* we may have allocated an extra argv element but not populated it */
+	if (!argv->argv[argv->argc - 1])
+		argv->argc--;
 }
 
 static int statements_execute(struct grub2_script *script,
@@ -409,9 +392,10 @@ int statement_function_execute(struct grub2_script *script,
 	const char *name;
 
 	if (st->name->type == GRUB2_WORD_VAR)
-		expand_var(script, st->name);
+		name = expand_var(script, st->name);
+	else
+		name = st->name->text;
 
-	name = st->name->text;
 	script_register_function(script, name, function_invoke, st);
 
 	return 0;
