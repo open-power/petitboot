@@ -16,5 +16,7 @@ int config_fini(void);
 /* for use by the storage backends */
 void config_set_defaults(struct config *config);
 
+struct config *config_copy(void *ctx, const struct config *src);
+
 #endif /* CONFIGURATION_H */
 

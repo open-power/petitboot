@@ -150,13 +150,13 @@ struct nc_scr *config_screen_scr(struct config_screen *screen)
 static int screen_process_form(struct config_screen *screen)
 {
 	const struct system_info *sysinfo = screen->cui->sysinfo;
-	struct config *config = talloc_zero(screen, struct config);
 	enum net_conf_type net_conf_type;
 	struct interface_config *iface;
+	struct config *config;
 	char *str, *end;
 	int rc;
 
-	config_set_defaults(config);
+	config = config_copy(screen, screen->cui->config);
 
 	config->autoboot_enabled =
 		widget_checkbox_get_value(screen->widgets.autoboot_f);
@@ -212,6 +212,7 @@ static int screen_process_form(struct config_screen *screen)
 			screen->scr.frame.status =
 				"No IP / mask values are set";
 			nc_scr_frame_draw(&screen->scr);
+			talloc_free(config);
 			return -1;
 		}
 
