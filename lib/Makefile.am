@@ -30,10 +30,6 @@ libpbcore_la_SOURCES = \
 	pb-protocol/pb-protocol.h \
 	pb-config/pb-config.c \
 	pb-config/pb-config.h \
-	pb-config/storage.h \
-	pb-config/storage-powerpc-nvram.c \
-	pb-config/storage-null.c \
-	pb-config/storage-test.c \
 	process/process.c \
 	process/process.h \
 	types/types.h \

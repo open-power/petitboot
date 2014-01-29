@@ -10,7 +10,6 @@ struct parser_test {
 	struct device_handler *handler;
 	struct discover_context *ctx;
 	struct list files;
-	struct config *config;
 };
 
 /* interface required for parsers */

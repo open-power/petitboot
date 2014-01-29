@@ -10,8 +10,7 @@
 #include <log/log.h>
 #include <process/process.h>
 
-#include "pb-config.h"
-#include "storage.h"
+#include "platform.h"
 
 static const char *partition = "common";
 
@@ -22,8 +21,7 @@ struct param {
 	struct list_item	list;
 };
 
-struct powerpc_nvram_storage {
-	struct config_storage	storage;
+struct platform_powerpc {
 	struct list		params;
 };
 
@@ -34,8 +32,8 @@ static const char *known_params[] = {
 	NULL,
 };
 
-#define to_powerpc_nvram_storage(s) \
-	container_of(s, struct powerpc_nvram_storage, storage)
+#define to_platform_powerpc(p) \
+	(struct platform_powerpc *)(p->platform_data)
 
 /* a partition max a max size of 64k * 16bytes = 1M */
 static const int max_partition_size = 64 * 1024 * 16;
@@ -55,7 +53,7 @@ static bool param_is_known(const char *param, unsigned int len)
 	return false;
 }
 
-static int parse_nvram_params(struct powerpc_nvram_storage *nv,
+static int parse_nvram_params(struct platform_powerpc *platform,
 		char *buf, int len)
 {
 	char *pos, *name, *value;
@@ -108,17 +106,17 @@ static int parse_nvram_params(struct powerpc_nvram_storage *nv,
 
 		value++;
 
-		param = talloc(nv, struct param);
+		param = talloc(platform, struct param);
 		param->modified = false;
-		param->name = talloc_strndup(nv, name, namelen);
-		param->value = talloc_strdup(nv, value);
-		list_add(&nv->params, &param->list);
+		param->name = talloc_strndup(platform, name, namelen);
+		param->value = talloc_strdup(platform, value);
+		list_add(&platform->params, &param->list);
 	}
 
 	return 0;
 }
 
-static int parse_nvram(struct powerpc_nvram_storage *nv)
+static int parse_nvram(struct platform_powerpc *platform)
 {
 	struct process *process;
 	const char *argv[5];
@@ -130,7 +128,7 @@ static int parse_nvram(struct powerpc_nvram_storage *nv)
 	argv[3] = partition;
 	argv[4] = NULL;
 
-	process = process_create(nv);
+	process = process_create(platform);
 	process->path = "nvram";
 	process->argv = argv;
 	process->keep_stdout = true;
@@ -142,7 +140,7 @@ static int parse_nvram(struct powerpc_nvram_storage *nv)
 				"non-zero exit status\n");
 		rc = -1;
 	} else {
-		rc = parse_nvram_params(nv, process->stdout_buf,
+		rc = parse_nvram_params(platform, process->stdout_buf,
 					    process->stdout_len);
 	}
 
@@ -150,7 +148,7 @@ static int parse_nvram(struct powerpc_nvram_storage *nv)
 	return rc;
 }
 
-static int write_nvram(struct powerpc_nvram_storage *nv)
+static int write_nvram(struct platform_powerpc *platform)
 {
 	struct process *process;
 	struct param *param;
@@ -164,17 +162,17 @@ static int write_nvram(struct powerpc_nvram_storage *nv)
 	argv[4] = partition;
 	argv[5] = NULL;
 
-	process = process_create(nv);
+	process = process_create(platform);
 	process->path = "nvram";
 	process->argv = argv;
 
-	list_for_each_entry(&nv->params, param, list) {
+	list_for_each_entry(&platform->params, param, list) {
 		char *paramstr;
 
 		if (!param->modified)
 			continue;
 
-		paramstr = talloc_asprintf(nv, "%s=%s",
+		paramstr = talloc_asprintf(platform, "%s=%s",
 				param->name, param->value);
 		argv[2] = paramstr;
 
@@ -194,23 +192,23 @@ static int write_nvram(struct powerpc_nvram_storage *nv)
 	return rc;
 }
 
-static const char *get_param(struct powerpc_nvram_storage *nv,
+static const char *get_param(struct platform_powerpc *platform,
 		const char *name)
 {
 	struct param *param;
 
-	list_for_each_entry(&nv->params, param, list)
+	list_for_each_entry(&platform->params, param, list)
 		if (!strcmp(param->name, name))
 			return param->value;
 	return NULL;
 }
 
-static void set_param(struct powerpc_nvram_storage *nv, const char *name,
+static void set_param(struct platform_powerpc *platform, const char *name,
 		const char *value)
 {
 	struct param *param;
 
-	list_for_each_entry(&nv->params, param, list) {
+	list_for_each_entry(&platform->params, param, list) {
 		if (strcmp(param->name, name))
 			continue;
 
@@ -224,11 +222,11 @@ static void set_param(struct powerpc_nvram_storage *nv, const char *name,
 	}
 
 
-	param = talloc(nv, struct param);
+	param = talloc(platform, struct param);
 	param->modified = true;
-	param->name = talloc_strdup(nv, name);
-	param->value = talloc_strdup(nv, value);
-	list_add(&nv->params, &param->list);
+	param->name = talloc_strdup(platform, name);
+	param->value = talloc_strdup(platform, value);
+	list_add(&platform->params, &param->list);
 }
 
 static int parse_hwaddr(struct interface_config *ifconf, char *str)
@@ -338,14 +336,14 @@ static int parse_one_dns_config(struct config *config,
 	return 0;
 }
 
-static void populate_network_config(struct powerpc_nvram_storage *nv,
+static void populate_network_config(struct platform_powerpc *platform,
 		struct config *config)
 {
 	const char *cval;
 	char *val;
 	int i;
 
-	cval = get_param(nv, "petitboot,network");
+	cval = get_param(platform, "petitboot,network");
 	if (!cval || !strlen(cval))
 		return;
 
@@ -368,7 +366,7 @@ static void populate_network_config(struct powerpc_nvram_storage *nv,
 	talloc_free(val);
 }
 
-static void populate_config(struct powerpc_nvram_storage *nv,
+static void populate_config(struct platform_powerpc *platform,
 		struct config *config)
 {
 	const char *val;
@@ -377,10 +375,10 @@ static void populate_config(struct powerpc_nvram_storage *nv,
 
 	/* if the "auto-boot?' property is present and "false", disable auto
 	 * boot */
-	val = get_param(nv, "auto-boot?");
+	val = get_param(platform, "auto-boot?");
 	config->autoboot_enabled = !val || strcmp(val, "false");
 
-	val = get_param(nv, "petitboot,timeout");
+	val = get_param(platform, "petitboot,timeout");
 	if (val) {
 		timeout = strtoul(val, &end, 10);
 		if (end != val) {
@@ -390,7 +388,7 @@ static void populate_config(struct powerpc_nvram_storage *nv,
 		}
 	}
 
-	populate_network_config(nv, config);
+	populate_network_config(platform, config);
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)
@@ -434,30 +432,30 @@ static char *dns_config_str(void *ctx, const char **dns_servers, int n)
 	return str;
 }
 
-static void update_string_config(struct powerpc_nvram_storage *nv,
+static void update_string_config(struct platform_powerpc *platform,
 		const char *name, const char *value)
 {
 	const char *cur;
 
-	cur = get_param(nv, name);
+	cur = get_param(platform, name);
 
 	/* don't set an empty parameter if it doesn't already exist */
 	if (!cur && !strlen(value))
 		return;
 
-	set_param(nv, name, value);
+	set_param(platform, name, value);
 }
 
-static void update_network_config(struct powerpc_nvram_storage *nv,
+static void update_network_config(struct platform_powerpc *platform,
 	struct config *config)
 {
 	unsigned int i;
 	char *val;
 
-	val = talloc_strdup(nv, "");
+	val = talloc_strdup(platform, "");
 
 	for (i = 0; i < config->network.n_interfaces; i++) {
-		char *iface_str = iface_config_str(nv,
+		char *iface_str = iface_config_str(platform,
 					config->network.interfaces[i]);
 		val = talloc_asprintf_append(val, "%s%s",
 				*val == '\0' ? "" : " ", iface_str);
@@ -465,19 +463,20 @@ static void update_network_config(struct powerpc_nvram_storage *nv,
 	}
 
 	if (config->network.n_dns_servers) {
-		char *dns_str = dns_config_str(nv, config->network.dns_servers,
+		char *dns_str = dns_config_str(platform,
+						config->network.dns_servers,
 						config->network.n_dns_servers);
 		val = talloc_asprintf_append(val, "%s%s",
 				*val == '\0' ? "" : " ", dns_str);
 		talloc_free(dns_str);
 	}
 
-	update_string_config(nv, "petitboot,network", val);
+	update_string_config(platform, "petitboot,network", val);
 
 	talloc_free(val);
 }
 
-static int update_config(struct powerpc_nvram_storage *nv,
+static int update_config(struct platform_powerpc *platform,
 		struct config *config, struct config *defaults)
 {
 	char *tmp = NULL;
@@ -487,60 +486,68 @@ static int update_config(struct powerpc_nvram_storage *nv,
 		val = "";
 	else
 		val = config->autoboot_enabled ? "true" : "false";
-	update_string_config(nv, "auto-boot?", val);
+	update_string_config(platform, "auto-boot?", val);
 
 	if (config->autoboot_timeout_sec == defaults->autoboot_timeout_sec)
 		val = "";
 	else
-		val = tmp = talloc_asprintf(nv, "%d",
+		val = tmp = talloc_asprintf(platform, "%d",
 				config->autoboot_timeout_sec);
 
-	update_string_config(nv, "petitboot,timeout", val);
+	update_string_config(platform, "petitboot,timeout", val);
 	if (tmp)
 		talloc_free(tmp);
 
-	update_network_config(nv, config);
+	update_network_config(platform, config);
 
-	return write_nvram(nv);
+	return write_nvram(platform);
 }
 
-static int load(struct config_storage *st, struct config *config)
+static int load_config(struct platform *p, struct config *config)
 {
-	struct powerpc_nvram_storage *nv = to_powerpc_nvram_storage(st);
+	struct platform_powerpc *platform = to_platform_powerpc(p);
 	int rc;
 
-	rc = parse_nvram(nv);
+	rc = parse_nvram(platform);
 	if (rc)
 		return rc;
 
-	populate_config(nv, config);
+	populate_config(platform, config);
 
 	return 0;
 }
 
-static int save(struct config_storage *st, struct config *config)
+static int save_config(struct platform *p, struct config *config)
 {
-	struct powerpc_nvram_storage *nv = to_powerpc_nvram_storage(st);
+	struct platform_powerpc *platform = to_platform_powerpc(p);
 	struct config *defaults;
 	int rc;
 
-	defaults = talloc_zero(nv, struct config);
+	defaults = talloc_zero(platform, struct config);
 	config_set_defaults(defaults);
 
-	rc = update_config(nv, config, defaults);
+	rc = update_config(platform, config, defaults);
 
 	talloc_free(defaults);
 	return rc;
 }
 
-struct config_storage *create_powerpc_nvram_storage(void *ctx)
+static bool probe(struct platform *p, void *ctx)
 {
-	struct powerpc_nvram_storage *nv;
+	struct platform_powerpc *platform;
 
-	nv = talloc(ctx, struct powerpc_nvram_storage);
-	nv->storage.load = load;
-	nv->storage.save = save;
-	list_init(&nv->params);
+	platform = talloc(ctx, struct platform_powerpc);
+	list_init(&platform->params);
 
-	return &nv->storage;
+	p->platform_data = platform;
+	return true;
 }
+
+static struct platform platform_powerpc = {
+	.name		= "powerpc",
+	.probe		= probe,
+	.load_config	= load_config,
+	.save_config	= save_config,
+};
+
+register_platform(platform_powerpc);

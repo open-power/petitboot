@@ -11,7 +11,6 @@
 
 #include <waiter/waiter.h>
 #include <log/log.h>
-#include <pb-config/pb-config.h>
 #include <process/process.h>
 #include <talloc/talloc.h>
 
@@ -21,6 +20,7 @@
 #include "device-handler.h"
 #include "network.h"
 #include "sysinfo.h"
+#include "platform.h"
 
 static void print_version(void)
 {
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 	if (!procset)
 		return EXIT_FAILURE;
 
-	config_init(NULL);
+	platform_init(NULL);
 	if (opts.no_autoboot == opt_yes)
 		config_set_autoboot(false);
 
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
 	user_event_destroy(uev);
 	udev_destroy(udev);
 	discover_server_destroy(server);
-	config_fini();
+	platform_fini();
 	talloc_free(waitset);
 
 	pb_log("--- end ---\n");

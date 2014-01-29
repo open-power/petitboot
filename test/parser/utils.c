@@ -16,6 +16,7 @@
 #include "parser.h"
 #include "resource.h"
 #include "event.h"
+#include "platform.h"
 
 #include "parser-test.h"
 
@@ -95,14 +96,26 @@ static struct discover_context *test_create_context(struct parser_test *test)
 	return ctx;
 }
 
-extern struct config *test_config_init(struct parser_test *test);
+/* define our own test platform */
+static bool test_platform_probe(struct platform *p __attribute__((unused)),
+		void *ctx __attribute__((unused)))
+{
+	return true;
+}
+
+struct platform test_platform = {
+	.name = "test",
+	.probe = test_platform_probe,
+};
+
+register_platform(test_platform);
 
 struct parser_test *test_init(void)
 {
 	struct parser_test *test;
 
 	test = talloc_zero(NULL, struct parser_test);
-	test->config = test_config_init(test);
+	platform_init(NULL);
 	test->handler = device_handler_init(NULL, NULL, 0);
 	test->ctx = test_create_context(test);
 	list_init(&test->files);
@@ -114,6 +127,7 @@ void test_fini(struct parser_test *test)
 {
 	device_handler_destroy(test->handler);
 	talloc_free(test);
+	platform_fini();
 }
 
 void __test_read_conf_data(struct parser_test *test,

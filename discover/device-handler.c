@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-#include <pb-config/pb-config.h>
 #include <talloc/talloc.h>
 #include <list/list.h>
 #include <log/log.h>
@@ -19,6 +18,7 @@
 
 #include "device-handler.h"
 #include "discover-server.h"
+#include "platform.h"
 #include "event.h"
 #include "parser.h"
 #include "resource.h"

@@ -14,13 +14,13 @@
 #include <types/types.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
-#include <pb-config/pb-config.h>
 #include <process/process.h>
 #include <system/system.h>
 
 #include "file.h"
 #include "network.h"
 #include "sysinfo.h"
+#include "platform.h"
 #include "device-handler.h"
 
 #define HWADDR_SIZE	6

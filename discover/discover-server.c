@@ -20,6 +20,7 @@
 
 #include "device-handler.h"
 #include "discover-server.h"
+#include "platform.h"
 #include "sysinfo.h"
 
 struct discover_server {

@@ -82,6 +82,7 @@ parser_objs = \
 	$(top_srcdir)/discover/yaboot-parser.c \
 	$(top_srcdir)/discover/kboot-parser.c \
 	$(top_srcdir)/discover/pxe-parser.c \
+	$(top_srcdir)/discover/platform.c \
 	$(top_srcdir)/discover/resource.c \
 	$(top_srcdir)/discover/paths.c \
 	$(top_srcdir)/discover/device-handler.c \

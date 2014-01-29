@@ -54,6 +54,9 @@ pb_discover_SOURCES = \
 	paths.h \
 	pb-discover.c \
 	pb-discover.h \
+	platform.c \
+	platform.h \
+	platform-powerpc.c \
 	resource.c \
 	resource.h \
 	sysinfo.c \
