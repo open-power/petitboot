@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include <talloc/talloc.h>
 #include <list/list.h>
@@ -535,6 +536,20 @@ static int save_config(struct platform *p, struct config *config)
 static bool probe(struct platform *p, void *ctx)
 {
 	struct platform_powerpc *platform;
+	struct stat statbuf;
+	int rc;
+
+	/* we need a device tree and a working nvram binary */
+	rc = stat("/proc/device-tree", &statbuf);
+	if (rc)
+		return false;
+
+	if (!S_ISDIR(statbuf.st_mode))
+		return false;
+
+	rc = process_run_simple(ctx, "nvram", "--print-config", NULL);
+	if (!WIFEXITED(rc) || WEXITSTATUS(rc) != 0)
+		return false;
 
 	platform = talloc(ctx, struct platform_powerpc);
 	list_init(&platform->params);
