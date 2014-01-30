@@ -12,6 +12,8 @@ static const char *device_type_string(enum device_type type)
 		return "network";
 	case DEVICE_TYPE_OPTICAL:
 		return "optical";
+	case DEVICE_TYPE_ANY:
+		return "any";
 	case DEVICE_TYPE_UNKNOWN:
 		return "unknown";
 	}

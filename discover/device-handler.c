@@ -372,7 +372,8 @@ static int default_timeout(void *arg)
 static bool priority_match(struct boot_priority *prio,
 		struct discover_boot_option *opt)
 {
-	return prio->type == opt->device->device->type;
+	return prio->type == opt->device->device->type ||
+		prio->type == DEVICE_TYPE_ANY;
 }
 
 static int default_option_priority(struct discover_boot_option *opt)
