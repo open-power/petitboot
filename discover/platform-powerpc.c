@@ -1,9 +1,11 @@
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/fcntl.h>
 #include <sys/stat.h>
 
 #include <talloc/talloc.h>
@@ -14,6 +16,7 @@
 #include "platform.h"
 
 static const char *partition = "common";
+static const char *sysparams_dir = "/sys/firmware/opal/sysparams";
 
 struct param {
 	char			*name;
@@ -504,6 +507,103 @@ static int update_config(struct platform_powerpc *platform,
 	return write_nvram(platform);
 }
 
+static void set_exclusive_devtype(struct config *config,
+		enum device_type devtype)
+{
+	config->n_boot_priorities = 2;
+	config->boot_priorities = talloc_realloc(config,
+			config->boot_priorities, struct boot_priority,
+			config->n_boot_priorities);
+	config->boot_priorities[0].type = devtype;
+	config->boot_priorities[0].priority = 0;
+	config->boot_priorities[1].type = DEVICE_TYPE_ANY;
+	config->boot_priorities[1].priority = -1;
+}
+
+/* bootdev options that we recognise */
+enum ipmi_bootdev {
+	IPMI_BOOTDEV_NONE = 0x00,
+	IPMI_BOOTDEV_NETWORK = 0x01,
+	IPMI_BOOTDEV_DISK = 0x2,
+	IPMI_BOOTDEV_CDROM = 0x5,
+	IPMI_BOOTDEV_SETUP = 0x6,
+};
+
+static int read_bootdev_sysparam(const char *name, uint8_t *val)
+{
+	uint8_t buf[2];
+	char path[50];
+	int fd, rc;
+
+	strcpy(path, sysparams_dir);
+	assert(strlen(name) < sizeof(path) - strlen(path));
+	strcat(path, name);
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0)
+		return -1;
+
+	rc = read(fd, buf, sizeof(buf));
+
+	close(fd);
+
+	/* bootdev definitions should only be one byte in size */
+	if (rc != 1)
+		return -1;
+
+	switch (buf[0]) {
+	default:
+		return -1;
+	case IPMI_BOOTDEV_NONE:
+	case IPMI_BOOTDEV_NETWORK:
+	case IPMI_BOOTDEV_DISK:
+	case IPMI_BOOTDEV_CDROM:
+	case IPMI_BOOTDEV_SETUP:
+		*val = buf[0];
+	}
+
+	return 0;
+}
+
+static void parse_opal_sysparams(struct config *config)
+{
+	uint8_t next_bootdev, default_bootdev;
+	bool next_valid, default_valid;
+	int rc;
+
+	rc = read_bootdev_sysparam("next-boot-device", &next_bootdev);
+	next_valid = rc == 0;
+
+	rc = read_bootdev_sysparam("default-boot-device", &default_bootdev);
+	default_valid = rc == 0;
+
+	/* nothing valid? no need to change the config */
+	if (!next_valid && !default_valid)
+		return;
+
+	if (!next_valid)
+		next_bootdev = default_bootdev;
+
+	/* todo: copy default to next */
+
+	switch (next_bootdev) {
+	case IPMI_BOOTDEV_NONE:
+		return;
+	case IPMI_BOOTDEV_DISK:
+		set_exclusive_devtype(config, DEVICE_TYPE_DISK);
+		break;
+	case IPMI_BOOTDEV_NETWORK:
+		set_exclusive_devtype(config, DEVICE_TYPE_NETWORK);
+		break;
+	case IPMI_BOOTDEV_CDROM:
+		set_exclusive_devtype(config, DEVICE_TYPE_OPTICAL);
+		break;
+	case IPMI_BOOTDEV_SETUP:
+		config->autoboot_enabled = false;
+		break;
+	}
+}
+
 static int load_config(struct platform *p, struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
@@ -514,6 +614,8 @@ static int load_config(struct platform *p, struct config *config)
 		return rc;
 
 	populate_config(platform, config);
+
+	parse_opal_sysparams(config);
 
 	return 0;
 }
