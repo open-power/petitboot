@@ -425,7 +425,7 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 	widgetset_set_widget_focus(boot_editor->widgetset,
 			boot_editor_widget_focus, boot_editor);
 
-	boot_editor->widgets.device_l = widget_new_label(set, 0, 0, "device:");
+	boot_editor->widgets.device_l = widget_new_label(set, 0, 0, "Device:");
 	boot_editor->widgets.device_f = widget_new_select(set, 0, 0,
 						field_size);
 	widget_select_on_change(boot_editor->widgets.device_f,
@@ -433,20 +433,24 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 
 	boot_editor_populate_device_select(boot_editor, sysinfo);
 
-	boot_editor->widgets.image_l = widget_new_label(set, 0, 0, "image:");
+	boot_editor->widgets.image_l = widget_new_label(set, 0, 0,
+			"Kernel:");
 	boot_editor->widgets.image_f = widget_new_textbox(set, 0, 0,
 						field_size, boot_editor->image);
 
-	boot_editor->widgets.initrd_l = widget_new_label(set, 0, 0, "initrd:");
+	boot_editor->widgets.initrd_l = widget_new_label(set, 0, 0,
+			"Initrd:");
 	boot_editor->widgets.initrd_f = widget_new_textbox(set, 0, 0,
 						field_size,
 						boot_editor->initrd);
 
-	boot_editor->widgets.dtb_l = widget_new_label(set, 0, 0, "dtb:");
+	boot_editor->widgets.dtb_l = widget_new_label(set, 0, 0,
+			"Device tree:");
 	boot_editor->widgets.dtb_f = widget_new_textbox(set, 0, 0,
 						field_size, boot_editor->dtb);
 
-	boot_editor->widgets.args_l = widget_new_label(set, 0, 0, "args:");
+	boot_editor->widgets.args_l = widget_new_label(set, 0, 0,
+			"Boot arguments:");
 	boot_editor->widgets.args_f = widget_new_textbox(set, 0, 0,
 					field_size, boot_editor->args);
 
@@ -502,7 +506,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->state = STATE_EDIT;
 
 	boot_editor->label_x = 1;
-	boot_editor->field_x = 9;
+	boot_editor->field_x = 17;
 
 	nc_scr_init(&boot_editor->scr, pb_boot_editor_sig, 0,
 			cui, boot_editor_process_key,
