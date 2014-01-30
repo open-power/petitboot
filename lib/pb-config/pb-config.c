@@ -62,8 +62,11 @@ struct config *config_copy(void *ctx, const struct config *src)
 	dest->boot_priorities = talloc_array(dest, struct boot_priority,
 			src->n_boot_priorities);
 
-	for (i = 0; i < src->n_boot_priorities; i++)
+	for (i = 0; i < src->n_boot_priorities; i++) {
+		dest->boot_priorities[i].priority =
+					src->boot_priorities[i].priority;
 		dest->boot_priorities[i].type = src->boot_priorities[i].type;
+	}
 
 	return dest;
 }

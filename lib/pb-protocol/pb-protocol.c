@@ -279,7 +279,7 @@ int pb_protocol_config_len(const struct config *config)
 		len += 4 + optional_strlen(config->network.dns_servers[i]);
 
 	len += 4;
-	len += config->n_boot_priorities * 4;
+	len += config->n_boot_priorities * 8;
 
 	return len;
 }
@@ -464,7 +464,11 @@ int pb_protocol_serialise_config(const struct config *config,
 	*(uint32_t *)pos = __cpu_to_be32(config->n_boot_priorities);
 	pos += 4;
 	for (i = 0; i < config->n_boot_priorities; i++) {
-		*(uint32_t *)pos = __cpu_to_be32(config->boot_priorities[i].type);
+		*(uint32_t *)pos =
+			__cpu_to_be32(config->boot_priorities[i].type);
+		pos += 4;
+		*(uint32_t *)pos =
+			__cpu_to_be32(config->boot_priorities[i].priority);
 		pos += 4;
 	}
 

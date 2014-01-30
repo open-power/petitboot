@@ -109,6 +109,11 @@ struct network_config {
 };
 
 struct boot_priority {
+	/* Boot options with higher priority values will take precedence over
+	 * lower values. Negative priorities signify "don't boot this by
+	 * default".
+	 */
+	int			priority;
 	enum device_type	type;
 };
 

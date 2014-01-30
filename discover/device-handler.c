@@ -386,28 +386,36 @@ static int default_option_priority(struct discover_boot_option *opt)
 	for (i = 0; i < config->n_boot_priorities; i++) {
 		prio = &config->boot_priorities[i];
 		if (priority_match(prio, opt))
-			break;
+			return prio->priority;
 	}
 
-	return i;
+	return 0;
 }
 
 static void set_default(struct device_handler *handler,
 		struct discover_boot_option *opt)
 {
+	int new_prio;
+
 	if (!handler->autoboot_enabled)
+		return;
+
+	new_prio = default_option_priority(opt);
+
+	/* A negative priority indicates that we don't want to boot this device
+	 * by default */
+	if (new_prio < 0)
 		return;
 
 	/* Resolve any conflicts: if we have a new default option, it only
 	 * replaces the current if it has a higher priority. */
 	if (handler->default_boot_option) {
-		int new_prio, cur_prio;
+		int cur_prio;
 
-		new_prio = default_option_priority(opt);
 		cur_prio = default_option_priority(
 					handler->default_boot_option);
 
-		if (new_prio < cur_prio) {
+		if (new_prio > cur_prio) {
 			handler->default_boot_option = opt;
 			/* extend the timeout a little, so the user sees some
 			 * indication of the change */

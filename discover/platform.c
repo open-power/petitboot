@@ -67,8 +67,9 @@ void config_set_defaults(struct config *config)
 	config->boot_priorities = talloc_array(config, struct boot_priority,
 						config->n_boot_priorities);
 	config->boot_priorities[0].type = DEVICE_TYPE_NETWORK;
+	config->boot_priorities[0].priority = 2;
 	config->boot_priorities[1].type = DEVICE_TYPE_DISK;
-
+	config->boot_priorities[1].priority = 1;
 }
 
 int platform_init(void *ctx)
