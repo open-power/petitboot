@@ -118,10 +118,23 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 	bool handled;
 
 	handled = widgetset_process_key(screen->widgetset, key);
+
+	if (!handled) {
+		switch (key) {
+		case 'x':
+		case 27: /* esc */
+			screen->exit = true;
+			break;
+		case 'h':
+			screen->show_help = true;
+			break;
+		}
+	}
+
 	if (screen->exit) {
 		screen->on_exit(screen->cui);
 
-	} else if (screen->show_help || (!handled && key == 'h')) {
+	} else if (screen->show_help) {
 		screen->show_help = false;
 		cui_show_help(screen->cui, "System Configuration",
 				config_help_text);
@@ -689,7 +702,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 			"Petitboot System Configuration");
 	screen->scr.frame.rtitle = NULL;
 	screen->scr.frame.help = talloc_strdup(screen,
-			"tab=next, shift+tab=previous");
+			"tab=next, shift+tab=previous, x=exit, h=help");
 	nc_scr_frame_draw(&screen->scr);
 
 	scrollok(screen->scr.sub_ncw, true);

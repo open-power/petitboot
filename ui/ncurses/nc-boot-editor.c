@@ -538,7 +538,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 			"Petitboot Option Editor");
 	boot_editor->scr.frame.rtitle = NULL;
 	boot_editor->scr.frame.help = talloc_strdup(boot_editor,
-			"Enter=accept");
+			"tab=next, shift+tab=previous, x=exit, h=help");
 	nc_scr_frame_draw(&boot_editor->scr);
 
 	if (item) {

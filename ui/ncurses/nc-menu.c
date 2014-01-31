@@ -227,8 +227,14 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 	case KEY_UP:
 		pmenu_move_cursor(menu, REQ_UP_ITEM);
 		break;
+	case KEY_BTAB:
+		pmenu_move_cursor(menu, REQ_PREV_ITEM);
+		break;
 	case KEY_DOWN:
 		pmenu_move_cursor(menu, REQ_DOWN_ITEM);
+		break;
+	case '\t':
+		pmenu_move_cursor(menu, REQ_NEXT_ITEM);
 		break;
 	case 'e':
 		if (item->on_edit)
@@ -250,6 +256,7 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 	case 'c':
 		cui_show_config(cui_from_arg(scr->ui_ctx));
 		break;
+	case KEY_F(1):
 	case 'h':
 		if (menu->help_text)
 			cui_show_help(cui_from_arg(scr->ui_ctx),

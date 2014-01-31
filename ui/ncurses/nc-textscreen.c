@@ -144,6 +144,7 @@ void text_screen_process_key(struct nc_scr *scr, int key)
 
 	switch (key) {
 	case 'x':
+	case 27: /* esc */
 		screen->on_exit(screen->cui);
 		break;
 	case KEY_DOWN:
@@ -176,7 +177,7 @@ void text_screen_set_help(struct text_screen *screen, const char *title,
 {
 	screen->help_title = title;
 	screen->help_text = text;
-	screen->scr.frame.help = "x=exit h=help";
+	screen->scr.frame.help = "x=exit, h=help";
 }
 
 static int text_screen_post(struct nc_scr *scr)

@@ -1,0 +1,44 @@
+Petitboot ncurses UI guidelines
+
+General key bindings:
+
+ x: Exit the current screen
+ 
+    When the focus is on a text-input field, this key will be treated
+    litereally (ie, it inputs an 'x' in to the text field). Because of this,
+    we should avoid putting a text field as the first field on a screen.
+
+    We also support 'Esc' as a secondary exit key, but this can cause
+    problems with some terminals (because Esc is used to initiate an input
+    escape sequence, it causes ncurses to delay, waiting for more keys).
+    So, Esc should not be listed as a key in the UI help.
+
+ h: Show help
+
+    Same restrictions as the 'x' key with text input widgets. We support F1
+    too, but this is often used by the actual terminal emulator to show help
+    locally instead.
+
+Form key bindings:
+
+ tab: Next widget
+ shift+tab: Previous widget
+
+ down: Next widget
+ up: Previous widget
+
+Text screen key bindings:
+
+ up/down: scroll
+
+Menu key bindings:
+
+ up: Next item
+ down: Previous item
+
+ tab: Next item
+ shift+tab: Previous item
+
+ Enter: select item
+ Space: select item
+

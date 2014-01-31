@@ -65,5 +65,6 @@ petitboot_ps3_nc_SOURCES = ps3-main.c
 petitboot_ps3_nc_LDADD = $(common_libs) $(libdir)/libps3-utils.so
 #petitboot_ps3_nc_LDFLAGS = -L$(libdir) -lps3-utils
 
+EXTRA_DIST = ui-guidelines.text
 
 MAINTAINERCLEANFILES = Makefile.in
