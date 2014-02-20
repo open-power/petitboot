@@ -32,6 +32,7 @@ check_PROGRAMS = list-test \
 	test-process-async-stdout \
 	test-process-parent-stdout \
 	test-process-both \
+	test-process-stdout-eintr \
 	test-fold
 
 TESTS = $(check_PROGRAMS)

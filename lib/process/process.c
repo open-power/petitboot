@@ -61,7 +61,13 @@ static struct process_info *get_info(struct process *process)
 }
 
 /* Read as much as possible into the currently-allocated stdout buffer, and
- * possibly realloc it for the next read */
+ * possibly realloc it for the next read
+ *
+ * Returns:
+ *  > 0 on success (even though no bytes may have been read)
+ *    0 on EOF (no error, but no more reads can be performed)
+ *  < 0 on error
+ **/
 static int process_read_stdout_once(struct process_info *procinfo)
 {
 	struct process *process = &procinfo->process;
@@ -74,8 +80,14 @@ static int process_read_stdout_once(struct process_info *procinfo)
 	max_len =  procinfo->stdout_buf_len - process->stdout_len - 1;
 
 	rc = read(fd, process->stdout_buf + process->stdout_len, max_len);
-	if (rc <= 0)
+	if (rc == 0)
+		return 0;
+	if (rc < 0) {
+		if (errno == EINTR)
+			return 1;
+		pb_log("%s: read failed: %s\n", __func__, strerror(errno));
 		return rc;
+	}
 
 	process->stdout_len += rc;
 	if (process->stdout_len == procinfo->stdout_buf_len - 1) {
@@ -85,7 +97,7 @@ static int process_read_stdout_once(struct process_info *procinfo)
 				procinfo->stdout_buf_len);
 	}
 
-	return rc;
+	return 1;
 }
 
 static int process_setup_stdout_pipe(struct process_info *procinfo)
