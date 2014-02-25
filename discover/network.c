@@ -533,7 +533,7 @@ static void network_init_dns(struct network *network)
 		buf = talloc_realloc(network, buf, char, len + dns_conf_len + 1);
 		memcpy(buf + len, dns_conf, dns_conf_len);
 		len += dns_conf_len;
-		buf[len - 1] = '\0';
+		buf[len] = '\0';
 		modified = true;
 
 		talloc_free(dns_conf);
