@@ -290,8 +290,9 @@ struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 		/* strip filename from the bootfile path, leaving only a
 		 * directory */
 		p = strrchr(basedir, '/');
-		if (p)
-			*p = '\0';
+		if (!p)
+			p = basedir;
+		*p = '\0';
 
 		if (strlen(basedir))
 			url_str = talloc_asprintf_append(url_str, "%s/",
