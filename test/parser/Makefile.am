@@ -69,6 +69,11 @@ TESTS = \
 	test-pxe-pathprefix-discover-mac \
 	test-pxe-path-resolve-relative \
 	test-pxe-path-resolve-absolute \
+	test-pxe-discover-bootfile-root \
+	test-pxe-discover-bootfile-subdir \
+	test-pxe-discover-bootfile-pathprefix \
+	test-pxe-discover-bootfile-relative-conffile \
+	test-pxe-discover-bootfile-absolute-conffile \
 	test-unresolved-remove
 
 $(TESTS): %: %.embedded-config.o
