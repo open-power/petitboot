@@ -67,6 +67,8 @@ TESTS = \
 	test-pxe-non-url-pathprefix-with-conf \
 	test-pxe-pathprefix-discover \
 	test-pxe-pathprefix-discover-mac \
+	test-pxe-path-resolve-relative \
+	test-pxe-path-resolve-absolute \
 	test-unresolved-remove
 
 $(TESTS): %: %.embedded-config.o

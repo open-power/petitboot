@@ -36,5 +36,5 @@ void run_test(struct parser_test *test)
 	check_resolved_url_resource(opt->boot_image,
 			"tftp://host/path/to/./kernel");
 	check_resolved_url_resource(opt->initrd,
-			"tftp://host/initrd");
+			"tftp://host/path/to/initrd");
 }

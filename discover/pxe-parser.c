@@ -28,6 +28,44 @@ static void pxe_finish(struct conf_context *conf)
 		discover_context_add_boot_option(conf->dc, info->opt);
 }
 
+/* We need a slightly modified version of pb_url_join, to allow for the
+ * pxelinux "::filename" syntax for absolute URLs
+ */
+static struct pb_url *pxe_url_join(void *ctx, const struct pb_url *url,
+		const char *s)
+{
+	struct pb_url *new_url;
+	int len;
+
+	len = strlen(s);
+
+	if (len > 2 && s[0] == ':' && s[1] == ':') {
+		char *tmp;
+
+		if (s[2] == '/') {
+			/* ::/path -> /path */
+			tmp = talloc_strdup(ctx, s+2);
+		} else {
+			/* ::path -> /path */
+			tmp = talloc_strdup(ctx, s+1);
+			tmp[0] = '/';
+		}
+
+		new_url = pb_url_join(ctx, url, tmp);
+
+		talloc_free(tmp);
+
+	} else {
+		const char *tmp;
+		/* strip leading slashes */
+		for (tmp = s; *tmp == '/'; tmp++);
+			;
+		new_url = pb_url_join(ctx, url, tmp);
+	}
+
+	return new_url;
+}
+
 static void pxe_process_pair(struct conf_context *ctx,
 		const char *name, char *value)
 {
@@ -72,11 +110,11 @@ static void pxe_process_pair(struct conf_context *ctx,
 		return;
 
 	if (streq(name, "KERNEL")) {
-		url = pb_url_join(ctx->dc, ctx->dc->conf_url, value);
+		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
 		opt->boot_image = create_url_resource(opt, url);
 
 	} else if (streq(name, "INITRD")) {
-		url = pb_url_join(ctx->dc, ctx->dc->conf_url, value);
+		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
 		opt->initrd = create_url_resource(opt, url);
 
 	} else if (streq(name, "APPEND")) {
@@ -90,7 +128,7 @@ static void pxe_process_pair(struct conf_context *ctx,
 			end = strchrnul(str, ' ');
 			*end = '\0';
 
-			url = pb_url_join(ctx->dc, ctx->dc->conf_url, str);
+			url = pxe_url_join(ctx->dc, ctx->dc->conf_url, str);
 			opt->initrd = create_url_resource(opt, url);
 		}
 	}
