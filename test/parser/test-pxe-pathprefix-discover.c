@@ -15,7 +15,8 @@ void run_test(struct parser_test *test)
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
 
-	test_read_conf_embedded_url(test, "tftp://host/path/to/C0A8");
+	test_read_conf_embedded_url(test,
+			"tftp://host/path/to/pxelinux.cfg/C0A8");
 
 	test_set_event_source(test);
 	test_set_event_param(test->ctx->event, "ip", "192.168.0.1");
@@ -34,5 +35,6 @@ void run_test(struct parser_test *test)
 
 	check_resolved_url_resource(opt->boot_image,
 			"tftp://host/path/to/./kernel");
-	check_resolved_url_resource(opt->initrd, "tftp://host/initrd");
+	check_resolved_url_resource(opt->initrd,
+			"tftp://host/initrd");
 }

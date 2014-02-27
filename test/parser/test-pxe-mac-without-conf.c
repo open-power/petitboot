@@ -16,7 +16,7 @@ void run_test(struct parser_test *test)
 	struct discover_context *ctx;
 
 	test_read_conf_embedded_url(test,
-			"tftp://host/dir/01-12-34-56-78-9a-bc");
+			"tftp://host/dir/pxelinux.cfg/01-12-34-56-78-9a-bc");
 
 	test_set_event_source(test);
 	test_set_event_param(test->ctx->event, "bootfile", "dir/pxe");

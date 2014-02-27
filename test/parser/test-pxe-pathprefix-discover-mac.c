@@ -16,7 +16,8 @@ void run_test(struct parser_test *test)
 	struct discover_context *ctx;
 
 	test_read_conf_embedded_url(test,
-			"tftp://host/path/to/01-12-34-56-78-9a-bc");
+			"tftp://host/path/to/pxelinux.cfg/"
+				"01-12-34-56-78-9a-bc");
 
 	test_set_event_source(test);
 	test_set_event_param(test->ctx->event, "mac", "12:34:56:78:9a:bc");
@@ -35,5 +36,6 @@ void run_test(struct parser_test *test)
 
 	check_resolved_url_resource(opt->boot_image,
 			"tftp://host/path/to/./kernel");
-	check_resolved_url_resource(opt->initrd, "tftp://host/initrd");
+	check_resolved_url_resource(opt->initrd,
+			"tftp://host/initrd");
 }

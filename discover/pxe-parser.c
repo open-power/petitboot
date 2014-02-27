@@ -14,6 +14,8 @@
 #include "paths.h"
 #include "user-event.h"
 
+static const char *pxelinux_prefix = "pxelinux.cfg/";
+
 struct pxe_parser_info {
 	struct discover_boot_option *opt;
 	const char *default_name;
@@ -97,9 +99,9 @@ static void pxe_process_pair(struct conf_context *ctx,
 
 static int pxe_parse(struct discover_context *dc)
 {
+	struct pb_url *pxe_base_url, *url;
 	struct pxe_parser_info *parser_info;
 	char **pxe_conf_files, **filename;
-	struct pb_url *conf_url, *url;
 	struct conf_context *conf;
 	bool complete_url;
 	int len, rc;
@@ -122,13 +124,12 @@ static int pxe_parse(struct discover_context *dc)
 	parser_info = talloc_zero(conf, struct pxe_parser_info);
 	conf->parser_info = parser_info;
 
-	conf_url = user_event_parse_conf_url(dc, dc->event, &complete_url);
-	if (!conf_url)
+	dc->conf_url = user_event_parse_conf_url(dc, dc->event, &complete_url);
+	if (!dc->conf_url)
 		goto out_conf;
 
 	if (complete_url) {
 		/* we have a complete URL; use this and we're done. */
-		dc->conf_url = conf_url;
 		rc = parser_request_url(dc, dc->conf_url, &buf, &len);
 		if (rc)
 			goto out_conf;
@@ -139,10 +140,14 @@ static int pxe_parse(struct discover_context *dc)
 
 		rc = -1;
 
+		pxe_base_url = pb_url_join(dc, dc->conf_url, pxelinux_prefix);
+		if (!pxe_base_url)
+			goto out_pxe_conf;
+
 		for (filename = pxe_conf_files; *filename; filename++) {
-			url = pb_url_join(dc, conf_url, *filename);
+			url = pb_url_join(dc, pxe_base_url, *filename);
 			if (!url)
-				goto out_pxe_conf;
+				continue;
 
 			rc = parser_request_url(dc, url, &buf, &len);
 			if (!rc) /* found one, just break */
@@ -151,13 +156,12 @@ static int pxe_parse(struct discover_context *dc)
 			talloc_free(url);
 		}
 
+		talloc_free(pxe_base_url);
+
 		/* No configuration file found on the boot server */
 		if (rc)
 			goto out_pxe_conf;
 
-		dc->conf_url = url;
-
-		talloc_free(conf_url);
 		talloc_free(pxe_conf_files);
 	}
 
