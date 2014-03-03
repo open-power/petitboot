@@ -390,13 +390,14 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	struct cui *cui = cui_from_arg(arg);
 	struct cui_opt_data *cod;
 	unsigned int insert_pt;
+	int result, rows, cols;
 	struct pmenu_item *i;
 	ITEM *selected;
-	int result;
 
 	pb_debug("%s: %p %s\n", __func__, opt, opt->id);
 
 	selected = current_item(cui->main->ncm);
+	menu_format(cui->main->ncm, &rows, &cols);
 
 	if (cui->current == &cui->main->scr)
 		nc_scr_unpost(cui->current);
@@ -449,10 +450,20 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 			item_count(cui->main->ncm) + 1);
 	}
 
-	/* FIXME: need to make item visible somehow */
-	menu_driver(cui->main->ncm, REQ_SCR_UPAGE);
-	menu_driver(cui->main->ncm, REQ_SCR_DPAGE);
-	set_current_item(cui->main->ncm, selected);
+	if (!item_visible(selected)) {
+		int idx, top;
+
+		top = top_row(cui->main->ncm);
+		idx = item_index(selected);
+
+		/* If our index is above the current top row, align
+		 * us to the new top. Otherwise, align us to the new
+		 * bottom */
+		top = top < idx ? idx - rows : idx;
+
+		set_top_row(cui->main->ncm, top);
+		set_current_item(cui->main->ncm, selected);
+	}
 
 	if (cui->current == &cui->main->scr)
 		nc_scr_post(cui->current);
