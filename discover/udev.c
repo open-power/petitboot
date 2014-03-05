@@ -60,22 +60,16 @@ static void udev_setup_device_params(struct udev_device *udev,
 				udev_list_entry_get_value(entry));
 }
 
-static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
+static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
+		const char *name)
 {
 	struct discover_device *ddev;
 	const char *typestr;
 	const char *uuid;
 	const char *path;
-	const char *name;
 	const char *node;
 	const char *prop;
 	bool cdrom;
-
-	name = udev_device_get_sysname(dev);
-	if (!name) {
-		pb_debug("udev_device_get_sysname failed\n");
-		return -1;
-	}
 
 	typestr = udev_device_get_devtype(dev);
 	if (!typestr) {
@@ -107,12 +101,6 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 		}
 	}
 
-	/* We have enough info to create the device and start discovery */
-	ddev = device_lookup_by_id(udev->handler, name);
-	if (ddev) {
-		pb_debug("device %s is already present?\n", name);
-		return -1;
-	}
 
 	/* We may see multipath devices; they'll have the same uuid as an
 	 * existing device, so only parse the first. */
@@ -143,6 +131,37 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 
 	return 0;
 }
+
+static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
+{
+	const char *subsys;
+	const char *name;
+
+	name = udev_device_get_sysname(dev);
+	if (!name) {
+		pb_debug("udev_device_get_sysname failed\n");
+		return -1;
+	}
+
+	subsys = udev_device_get_subsystem(dev);
+	if (!subsys) {
+		pb_debug("udev_device_get_subsystem failed\n");
+		return -1;
+	}
+
+	if (device_lookup_by_id(udev->handler, name)) {
+		pb_debug("device %s is already present?\n", name);
+		return -1;
+	}
+
+	if (!strcmp(subsys, "block")) {
+		return udev_handle_block_add(udev, dev, name);
+	}
+
+	pb_debug("SKIP %s: unknown subsystem %s\n", name, subsys);
+	return -1;
+}
+
 
 static int udev_handle_dev_remove(struct pb_udev *udev, struct udev_device *dev)
 {
