@@ -250,7 +250,7 @@ const char *discover_device_get_param(struct discover_device *device,
 
 	list_for_each_entry(&device->params, param, list) {
 		if (!strcmp(param->name, name))
-			return param->name;
+			return param->value;
 	}
 	return NULL;
 }
