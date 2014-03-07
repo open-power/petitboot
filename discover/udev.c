@@ -183,17 +183,15 @@ static int udev_handle_dev_remove(struct pb_udev *udev, struct udev_device *dev)
 	return 0;
 }
 
-static int udev_handle_dev_change(struct pb_udev *udev, struct udev_device *dev)
+/* returns true if further event processing should stop (eg., we've
+ * ejected the cdrom)
+ */
+static bool udev_handle_cdrom_events(struct pb_udev *udev,
+		struct udev_device *dev, struct discover_device *ddev)
 {
-	struct discover_device *ddev;
-	const char *name, *node;
+	const char *node;
 
-	name = udev_device_get_sysname(dev);
 	node = udev_device_get_devnode(dev);
-
-	/* we're only interested in CDROM change events at present */
-	if (!udev_device_get_property_value(dev, "ID_CDROM"))
-		return 0;
 
 	/* handle CDROM eject requests */
 	if (udev_device_get_property_value(dev, "DISK_EJECT_REQUEST")) {
@@ -204,26 +202,51 @@ static int udev_handle_dev_change(struct pb_udev *udev, struct udev_device *dev)
 		/* If the device is mounted, cdrom_id's own eject request may
 		 * have failed. So, we'll need to do our own here.
 		 */
-		ddev = device_lookup_by_id(udev->handler, name);
 		if (ddev) {
 			eject = ddev->mounted;
 			udev_handle_dev_remove(udev, dev);
+			return false;
 		}
 
 		if (eject)
 			cdrom_eject(node);
 
-		return 0;
+		return true;
 	}
 
 	if (udev_device_get_property_value(dev, "DISK_MEDIA_CHANGE")) {
 		if (cdrom_media_present(node))
-			return udev_handle_dev_add(udev, dev);
+			udev_handle_dev_add(udev, dev);
 		else
-			return udev_handle_dev_remove(udev, dev);
+			udev_handle_dev_remove(udev, dev);
+		return true;
 	}
 
-	return 0;
+	return false;
+}
+
+static int udev_handle_dev_change(struct pb_udev *udev, struct udev_device *dev)
+{
+	struct discover_device *ddev;
+	const char *name;
+	int rc = 0;
+
+	name = udev_device_get_sysname(dev);
+
+	ddev = device_lookup_by_id(udev->handler, name);
+
+	/* if this is a CDROM device, process eject & media change requests;
+	 * these may stop further processing */
+	if (!udev_device_get_property_value(dev, "ID_CDROM")) {
+		if (udev_handle_cdrom_events(udev, dev, ddev))
+			return 0;
+	}
+
+	/* if this is a new device, treat it as an add */
+	if (!ddev)
+		rc = udev_handle_dev_add(udev, dev);
+
+	return rc;
 }
 
 static int udev_handle_dev_action(struct udev_device *dev, const char *action)
@@ -273,9 +296,14 @@ static int udev_enumerate(struct udev *udev)
 	}
 
 	result = udev_enumerate_add_match_subsystem(enumerate, "block");
-
 	if (result) {
 		pb_log("udev_enumerate_add_match_subsystem failed\n");
+		goto fail;
+	}
+
+	result = udev_enumerate_add_match_is_initialized(enumerate);
+	if (result) {
+		pb_log("udev_enumerate_add_match_is_initialised failed\n");
 		goto fail;
 	}
 
@@ -407,15 +435,13 @@ struct pb_udev *udev_init(struct waitset *waitset,
 
 	udev_set_log_fn(udev->udev, udev_log_fn);
 
-	result = udev_enumerate(udev->udev);
-
-	if (result)
-		goto fail_enumerate;
-
 	result = udev_setup_monitor(udev->udev, &udev->monitor);
-
 	if (result)
 		goto fail_monitor;
+
+	result = udev_enumerate(udev->udev);
+	if (result)
+		goto fail_enumerate;
 
 	waiter_register_io(waitset, udev_monitor_get_fd(udev->monitor), WAIT_IN,
 		udev_process, udev->monitor);
@@ -425,6 +451,7 @@ struct pb_udev *udev_init(struct waitset *waitset,
 	return udev;
 
 fail_monitor:
+	udev_monitor_unref(udev->monitor);
 fail_enumerate:
 	udev_unref(udev->udev);
 fail_new:
