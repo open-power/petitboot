@@ -836,6 +836,9 @@ static int mount_device(struct discover_device *dev)
 		return 0;
 	}
 
+	pb_log("couldn't mount device %s: mount failed with rc %d\n",
+			dev->device_path, rc);
+
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 err_free:
 	talloc_free(dev->mount_path);
