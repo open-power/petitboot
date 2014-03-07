@@ -836,17 +836,6 @@ static int mount_device(struct discover_device *dev)
 		return 0;
 	}
 
-	/* Retry mount without ro option. */
-	rc = process_run_simple(dev, pb_system_apps.mount,
-			dev->device_path, dev->mount_path, NULL);
-
-	if (!rc) {
-		dev->mounted = true;
-		dev->mounted_rw = true;
-		dev->unmount = true;
-		return 0;
-	}
-
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 err_free:
 	talloc_free(dev->mount_path);
