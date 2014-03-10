@@ -540,16 +540,24 @@ static int read_bootdev_sysparam(const char *name, uint8_t *val)
 	strcat(path, name);
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		pb_debug("powerpc: can't access sysparam %s\n",
+				name);
 		return -1;
+	}
 
 	rc = read(fd, buf, sizeof(buf));
 
 	close(fd);
 
 	/* bootdev definitions should only be one byte in size */
-	if (rc != 1)
+	if (rc != 1) {
+		pb_debug("powerpc: sysparam %s read returned %d\n",
+				name, rc);
 		return -1;
+	}
+
+	pb_debug("powerpc: sysparam %s: 0x%02x\n", name, buf[0]);
 
 	switch (buf[0]) {
 	default:
