@@ -16,7 +16,7 @@
 #include "platform.h"
 
 static const char *partition = "common";
-static const char *sysparams_dir = "/sys/firmware/opal/sysparams";
+static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
 
 struct param {
 	char			*name;
