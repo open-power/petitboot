@@ -11,6 +11,23 @@ void			*platform_ctx;
 static struct platform	*platform;
 static struct config	*config;
 
+static const char *device_type_name(enum device_type type)
+{
+	switch (type) {
+	case DEVICE_TYPE_DISK:
+		return "disk";
+	case DEVICE_TYPE_OPTICAL:
+		return "optical";
+	case DEVICE_TYPE_NETWORK:
+		return "network";
+	case DEVICE_TYPE_ANY:
+		return "any";
+	case DEVICE_TYPE_UNKNOWN:
+	default:
+		return "unknown";
+	}
+}
+
 static void dump_config(struct config *config)
 {
 	unsigned int i;
@@ -52,6 +69,15 @@ static void dump_config(struct config *config)
 	}
 	for (i = 0; i < config->network.n_dns_servers; i++)
 		pb_log("  dns server %s\n", config->network.dns_servers[i]);
+
+	if (config->n_boot_priorities)
+		pb_log(" boot priority order:\n");
+
+	for (i = 0; i < config->n_boot_priorities; i++) {
+		struct boot_priority *prio = &config->boot_priorities[i];
+		pb_log(" %10s: %d\n", device_type_name(prio->type),
+					prio->priority);
+	}
 }
 
 void config_set_defaults(struct config *config)
