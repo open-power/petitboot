@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/fcntl.h>
@@ -573,6 +574,46 @@ static int read_bootdev_sysparam(const char *name, uint8_t *val)
 	return 0;
 }
 
+static int write_bootdev_sysparam(const char *name, uint8_t val)
+{
+	char path[50];
+	int fd, rc;
+
+	strcpy(path, sysparams_dir);
+	assert(strlen(name) < sizeof(path) - strlen(path));
+	strcat(path, name);
+
+	fd = open(path, O_WRONLY);
+	if (fd < 0) {
+		pb_debug("powerpc: can't access sysparam %s for writing\n",
+				name);
+		return -1;
+	}
+
+	for (;;) {
+		errno = 0;
+		rc = write(fd, &val, sizeof(val));
+		if (rc == sizeof(val)) {
+			rc = 0;
+			break;
+		}
+
+		if (rc <= 0 && errno != EINTR) {
+			pb_log("powerpc: error updating sysparam %s: %s",
+					name, strerror(errno));
+			rc = -1;
+			break;
+		}
+	}
+
+	close(fd);
+
+	if (!rc)
+		pb_debug("powerpc: set sysparam %s: 0x%02x\n", name, val);
+
+	return rc;
+}
+
 static void parse_opal_sysparams(struct config *config)
 {
 	uint8_t next_bootdev, default_bootdev;
@@ -589,10 +630,12 @@ static void parse_opal_sysparams(struct config *config)
 	if (!next_valid && !default_valid)
 		return;
 
-	if (!next_valid)
+	if (next_valid) {
+		/* invalidate next-boot-device setting */
+		write_bootdev_sysparam("next-boot-device", 0xff);
+	} else {
 		next_bootdev = default_bootdev;
-
-	/* todo: copy default to next */
+	}
 
 	switch (next_bootdev) {
 	case IPMI_BOOTDEV_NONE:
