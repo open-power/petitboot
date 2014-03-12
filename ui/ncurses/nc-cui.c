@@ -175,22 +175,27 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 	if (!item) {
 		int insert_pt;
 
+		cod = talloc_zero(NULL, struct cui_opt_data);
+		cod->name = talloc_asprintf(cod, "User item %u", ++user_idx);
+
+		item = pmenu_item_create(menu, cod->name);
+		if (!item) {
+			talloc_free(cod);
+			goto out;
+		}
+
+		item->on_edit = cui_item_edit;
+		item->on_execute = cui_boot;
+		item->data = cod;
+
+		talloc_steal(item, cod);
+
 		/* Detach the items array. */
 		set_menu_items(menu->ncm, NULL);
 
 		/* Insert new item at insert_pt. */
 		insert_pt = pmenu_grow(menu, 1);
-		item = pmenu_item_alloc(menu);
-		item->on_edit = cui_item_edit;
-		item->on_execute = cui_boot;
-		item->data = cod = talloc_zero(item, struct cui_opt_data);
-
-		cod->name = talloc_asprintf(cod, "User item %u:", ++user_idx);
-		if (pmenu_item_setup(menu, item, insert_pt,
-				talloc_strdup(item, cod->name)) == NULL) {
-			talloc_free(item);
-			item = NULL;
-		}
+		pmenu_item_insert(menu, item, insert_pt);
 
 		/* Re-attach the items array. */
 		set_menu_items(menu->ncm, menu->items);
@@ -201,8 +206,8 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 
 	cod->bd = talloc_steal(cod, bd);
 
-	if (item)
-		set_current_item(item->pmenu->ncm, item->nci);
+	set_current_item(item->pmenu->ncm, item->nci);
+out:
 	cui_set_current(cui, &cui->main->scr);
 	talloc_free(cui->boot_editor);
 	cui->boot_editor = NULL;
@@ -407,19 +412,11 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	if (cui->current == &cui->main->scr)
 		nc_scr_unpost(cui->current);
 
-	/* This disconnects items array from menu. */
-
-	result = set_menu_items(cui->main->ncm, NULL);
-
-	if (result)
-		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
-
-	/* Insert new items at insert_pt. */
-	insert_pt = pmenu_grow(cui->main, 1);
-
 	/* Save the item in opt->ui_info for cui_device_remove() */
 
-	opt->ui_info = i = pmenu_item_alloc(cui->main);
+	opt->ui_info = i = pmenu_item_create(cui->main, opt->name);
+	if (!i)
+		return -1;
 
 	i->on_edit = cui_item_edit;
 	i->on_execute = cui_boot;
@@ -436,7 +433,15 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	cod->bd->dtb = talloc_strdup(cod->bd, opt->dtb_file);
 	cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
 
-	pmenu_item_setup(cui->main, i, insert_pt, cod->name);
+	/* This disconnects items array from menu. */
+	result = set_menu_items(cui->main->ncm, NULL);
+
+	if (result)
+		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
+
+	/* Insert new items at insert_pt. */
+	insert_pt = pmenu_grow(cui->main, 1);
+	pmenu_item_insert(cui->main, i, insert_pt);
 
 	pb_log("%s: adding opt '%s'\n", __func__, cod->name);
 	pb_log("   image  '%s'\n", cod->bd->image);

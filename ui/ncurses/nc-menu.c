@@ -77,43 +77,39 @@ static void pmenu_resize(struct nc_scr *scr)
 }
 
 /**
- * pmenu_item_init - Allocate and initialize a new pmenu_item instance.
+ * pmenu_item_create - Allocate and initialize a new pmenu_item instance.
  *
  * Returns a pointer the the initialized struct pmenu_item instance or NULL
  * on error. The caller is responsible for calling talloc_free() for the
  * returned instance.
  */
-
-struct pmenu_item *pmenu_item_alloc(struct pmenu *menu)
+struct pmenu_item *pmenu_item_create(struct pmenu *menu, const char *name)
 {
-	/* Items go with the menu, not the pointer array. */
+	struct pmenu_item *item = talloc_zero(menu, struct pmenu_item);
 
-	struct pmenu_item *i = talloc_zero(menu, struct pmenu_item);
+	item->i_sig = pb_item_sig;
+	item->pmenu = menu;
+	item->nci = new_item(name, NULL);
 
-	return i;
+	if (!item->nci) {
+		talloc_free(item);
+		return NULL;
+	}
+
+	set_item_userptr(item->nci, item);
+
+	return item;
 }
 
-struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
-	unsigned int index, const char *name)
+void pmenu_item_insert(struct pmenu *menu, struct pmenu_item *item,
+	unsigned int index)
 {
-	assert(i);
-	assert(name);
+	assert(item);
+	assert(index < menu->item_count);
+	assert(menu->items[index] == NULL);
+	assert(menu_items(menu->ncm) == NULL);
 
-	if (!i)
-		return NULL;
-
-	i->i_sig = pb_item_sig;
-	i->pmenu = menu;
-	i->nci = new_item(name, NULL);
-
-	if (!i->nci)
-		return NULL;
-
-	set_item_userptr(i->nci, i);
-
-	menu->items[index] = i->nci;
-
-	return i;
+	menu->items[index] = item->nci;
 }
 
 static int pmenu_item_get_index(const struct pmenu_item *item)

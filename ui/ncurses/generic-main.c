@@ -201,16 +201,25 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 		"Enter=accept, e=edit, n=new, x=exit, h=help");
 	m->scr.frame.status = talloc_strdup(m, "Welcome to Petitboot");
 
-	i = pmenu_item_init(m, 0, " ");
+	i = pmenu_item_create(m, " ");
 	item_opts_off(i->nci, O_SELECTABLE);
-	i = pmenu_item_init(m, 1, "System information");
+	pmenu_item_insert(m, i, 0);
+
+	i = pmenu_item_create(m, "System information");
 	i->on_execute = pmenu_sysinfo;
-	i = pmenu_item_init(m, 2, "System configuration");
+	pmenu_item_insert(m, i, 1);
+
+	i = pmenu_item_create(m, "System configuration");
 	i->on_execute = pmenu_config;
-	i = pmenu_item_init(m, 3, "Rescan devices");
+	pmenu_item_insert(m, i, 2);
+
+	i = pmenu_item_create(m, "Rescan devices");
 	i->on_execute = pmenu_reinit;
-	i = pmenu_item_init(m, 4, "Exit to shell");
+	pmenu_item_insert(m, i, 3);
+
+	i = pmenu_item_create(m, "Exit to shell");
 	i->on_execute = pmenu_exit_cb;
+	pmenu_item_insert(m, i, 4);
 
 	result = pmenu_setup(m);
 

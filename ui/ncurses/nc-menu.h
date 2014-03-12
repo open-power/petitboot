@@ -53,9 +53,9 @@ struct pmenu_item {
 	int (*on_execute)(struct pmenu_item *item);
 };
 
-struct pmenu_item *pmenu_item_alloc(struct pmenu *menu);
-struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
-	unsigned int index, const char *name);
+struct pmenu_item *pmenu_item_create(struct pmenu *menu, const char *name);
+void pmenu_item_insert(struct pmenu *menu, struct pmenu_item *item,
+	unsigned int index);
 void pmenu_item_delete(struct pmenu_item *item);
 
 static inline struct pmenu_item *pmenu_item_from_arg(void *arg)
@@ -69,19 +69,6 @@ static inline struct pmenu_item *pmenu_item_from_arg(void *arg)
 static inline struct cui_opt_data *cod_from_item(struct pmenu_item *item)
 {
 	return item->data;
-}
-
-static inline struct pmenu_item *pmenu_item_init(struct pmenu *menu,
-	unsigned int index, const char *name)
-{
-	struct pmenu_item *item = pmenu_item_alloc(menu);
-
-	if (pmenu_item_setup(menu, item, index, name)) {
-		talloc_free(item);
-		item = NULL;
-	}
-
-	return item;
 }
 
 /**
