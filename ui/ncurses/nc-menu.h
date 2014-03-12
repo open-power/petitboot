@@ -56,7 +56,6 @@ struct pmenu_item {
 struct pmenu_item *pmenu_item_alloc(struct pmenu *menu);
 struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
 	unsigned int index, const char *name);
-int pmenu_item_replace(struct pmenu_item *i, const char *name);
 void pmenu_item_delete(struct pmenu_item *item);
 
 static inline struct pmenu_item *pmenu_item_from_arg(void *arg)

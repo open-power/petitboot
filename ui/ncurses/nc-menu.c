@@ -130,54 +130,6 @@ static int pmenu_item_get_index(const struct pmenu_item *item)
 }
 
 /**
- * pmenu_item_replace - Replace the menu item with a new one.
- *
- * Use this routine to change a menu item's text.
- */
-
-int pmenu_item_replace(struct pmenu_item *i, const char *name)
-{
-	struct pmenu *menu;
-	ITEM *nci;
-	int index;
-
-	assert(name);
-	assert(i->nci);
-
-	menu = i->pmenu;
-	index = pmenu_item_get_index(i);
-
-	if (index < 0) {
-		assert(0 && "get_index failed");
-		return -1;
-	}
-
-	nci = new_item(name, NULL);
-
-	if (!nci) {
-		assert(0 && "new_item failed");
-		return -1;
-	}
-
-	set_item_userptr(nci, i);
-
-	nc_scr_unpost(&menu->scr);
-	set_menu_items(menu->ncm, NULL);
-
-	// FIXME: need to assure item name is a talloc string.
-	/* talloc_free((char *)item_name(i->nci)); */
-
-	free_item(i->nci);
-	menu->items[index] = nci;
-	i->nci = nci;
-
-	set_menu_items(menu->ncm, menu->items);
-	nc_scr_post(&menu->scr);
-
-	return 0;
-}
-
-/**
  * pmenu_move_cursor - Move the cursor.
  * @req: An ncurses request or char to send to menu_driver().
  */
