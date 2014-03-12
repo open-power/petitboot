@@ -185,8 +185,11 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 		item->data = cod = talloc_zero(item, struct cui_opt_data);
 
 		cod->name = talloc_asprintf(cod, "User item %u:", insert_pt);
-		pmenu_item_setup(menu, item, insert_pt,
-				talloc_strdup(item, cod->name));
+		if (pmenu_item_setup(menu, item, insert_pt,
+				talloc_strdup(item, cod->name)) == NULL) {
+			talloc_free(item);
+			item = NULL;
+		}
 
 		/* Re-attach the items array. */
 		set_menu_items(menu->ncm, menu->items);
@@ -197,7 +200,8 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 
 	cod->bd = talloc_steal(cod, bd);
 
-	set_current_item(item->pmenu->ncm, item->nci);
+	if (item)
+		set_current_item(item->pmenu->ncm, item->nci);
 	cui_set_current(cui, &cui->main->scr);
 	talloc_free(cui->boot_editor);
 	cui->boot_editor = NULL;

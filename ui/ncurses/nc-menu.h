@@ -75,7 +75,14 @@ static inline struct cui_opt_data *cod_from_item(struct pmenu_item *item)
 static inline struct pmenu_item *pmenu_item_init(struct pmenu *menu,
 	unsigned int index, const char *name)
 {
-	return pmenu_item_setup(menu, pmenu_item_alloc(menu), index, name);
+	struct pmenu_item *item = pmenu_item_alloc(menu);
+
+	if (pmenu_item_setup(menu, item, index, name)) {
+		talloc_free(item);
+		item = NULL;
+	}
+
+	return item;
 }
 
 /**

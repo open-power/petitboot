@@ -106,10 +106,8 @@ struct pmenu_item *pmenu_item_setup(struct pmenu *menu, struct pmenu_item *i,
 	i->pmenu = menu;
 	i->nci = new_item(name, NULL);
 
-	if (!i->nci) {
-		talloc_free(i);
+	if (!i->nci)
 		return NULL;
-	}
 
 	set_item_userptr(i->nci, i);
 
