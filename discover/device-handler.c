@@ -7,6 +7,7 @@
 #include <mntent.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/mount.h>
 
 #include <talloc/talloc.h>
 #include <list/list.h>
@@ -831,9 +832,10 @@ static int mount_device(struct discover_device *dev)
 		goto err_free;
 	}
 
-	rc = process_run_simple(dev, pb_system_apps.mount,
-			dev->device_path, dev->mount_path,
-			"-t", fstype, "-o", "ro", NULL);
+	pb_log("mounting device %s read-only\n", dev->device_path);
+	errno = 0;
+	rc = mount(dev->device_path, dev->mount_path, fstype,
+			MS_RDONLY | MS_SILENT, "");
 	if (!rc) {
 		dev->mounted = true;
 		dev->mounted_rw = false;
@@ -841,8 +843,8 @@ static int mount_device(struct discover_device *dev)
 		return 0;
 	}
 
-	pb_log("couldn't mount device %s: mount failed with rc %d\n",
-			dev->device_path, rc);
+	pb_log("couldn't mount device %s: mount failed: %s\n",
+			dev->device_path, strerror(errno));
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 err_free:
@@ -853,15 +855,14 @@ err_free:
 
 static int umount_device(struct discover_device *dev)
 {
-	int status;
+	int rc;
 
 	if (!dev->mounted || !dev->unmount)
 		return 0;
 
-	status = process_run_simple(dev, pb_system_apps.umount,
-			dev->mount_path, NULL);
-
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+	pb_log("unmounting device %s\n", dev->device_path);
+	rc = umount(dev->mount_path);
+	if (rc)
 		return -1;
 
 	dev->mounted = false;
@@ -886,8 +887,9 @@ int device_request_write(struct discover_device *dev, bool *release)
 	if (dev->mounted_rw)
 		return 0;
 
-	rc = process_run_simple(dev, pb_system_apps.mount, dev->mount_path,
-			"-o", "remount,rw", NULL);
+	pb_log("remounting device %s read-write\n", dev->device_path);
+	rc = mount(dev->device_path, dev->mount_path, "",
+			MS_REMOUNT | MS_SILENT, "");
 	if (rc)
 		return -1;
 
@@ -901,8 +903,9 @@ void device_release_write(struct discover_device *dev, bool release)
 	if (!release)
 		return;
 
-	process_run_simple(dev, pb_system_apps.mount, dev->mount_path,
-			"-o", "remount,ro", NULL);
+	pb_log("remounting device %s read-only\n", dev->device_path);
+	mount(dev->device_path, dev->mount_path, "",
+			MS_REMOUNT | MS_RDONLY | MS_SILENT, "");
 	dev->mounted_rw = false;
 }
 
