@@ -23,6 +23,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
+#include <wctype.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -83,6 +85,43 @@ static int pmenu_item_destructor(void *arg)
 	return 0;
 }
 
+static const char *pmenu_item_label(struct pmenu_item *item, const char *name)
+{
+	static int invalid_idx;
+	unsigned int i;
+	wchar_t *tmp;
+	char *label;
+	size_t len;
+
+	len = mbstowcs(NULL, name, 0);
+
+	/* if we have an invalid multibyte sequence, create an entirely
+	 * new name, indicating that we had invalid input */
+	if (len == SIZE_MAX) {
+		name = talloc_asprintf(item, "!Invalid option %d\n",
+				++invalid_idx);
+		return name;
+	}
+
+	tmp = talloc_array(item, wchar_t, len + 1);
+	mbstowcs(tmp, name, len + 1);
+
+	/* replace anything unprintable with U+FFFD REPLACEMENT CHARACTER */
+	for (i = 0; i < len; i++) {
+		if (!iswprint(tmp[i]))
+			tmp[i] = 0xfffd;
+	}
+
+	len = wcstombs(NULL, tmp, 0);
+	label = talloc_array(item, char, len + 1);
+	wcstombs(label, tmp, len + 1);
+
+	pb_log("%s: %s\n", __func__, label);
+
+	talloc_free(tmp);
+	return label;
+}
+
 /**
  * pmenu_item_create - Allocate and initialize a new pmenu_item instance.
  *
@@ -93,10 +132,13 @@ static int pmenu_item_destructor(void *arg)
 struct pmenu_item *pmenu_item_create(struct pmenu *menu, const char *name)
 {
 	struct pmenu_item *item = talloc_zero(menu, struct pmenu_item);
+	const char *label;
+
+	label = pmenu_item_label(item, name);
 
 	item->i_sig = pb_item_sig;
 	item->pmenu = menu;
-	item->nci = new_item(name, NULL);
+	item->nci = new_item(label, NULL);
 
 	if (!item->nci) {
 		talloc_free(item);
