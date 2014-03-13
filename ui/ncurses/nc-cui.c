@@ -677,6 +677,7 @@ retry_start:
 	}
 
 	atexit(cui_atexit);
+	talloc_steal(cui, cui->client);
 	cui_start();
 
 	waiter_register_io(cui->waitset, STDIN_FILENO, WAIT_IN,
