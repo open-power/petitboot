@@ -367,6 +367,7 @@ void pmenu_delete(struct pmenu *menu)
 	assert(menu->scr.sig == pb_pmenu_sig);
 	menu->scr.sig = pb_removed_sig;
 
+	unpost_menu(menu->ncm);
 	free_menu(menu->ncm);
 	delwin(menu->scr.sub_ncw);
 	delwin(menu->scr.main_ncw);
