@@ -76,6 +76,13 @@ static void pmenu_resize(struct nc_scr *scr)
 	pmenu_post(scr);
 }
 
+static int pmenu_item_destructor(void *arg)
+{
+	struct pmenu_item *item = arg;
+	free_item(item->nci);
+	return 0;
+}
+
 /**
  * pmenu_item_create - Allocate and initialize a new pmenu_item instance.
  *
@@ -95,6 +102,8 @@ struct pmenu_item *pmenu_item_create(struct pmenu *menu, const char *name)
 		talloc_free(item);
 		return NULL;
 	}
+
+	talloc_set_destructor(item, pmenu_item_destructor);
 
 	set_item_userptr(item->nci, item);
 
@@ -270,7 +279,6 @@ int pmenu_remove(struct pmenu *menu, struct pmenu_item *item)
 	if (index < 0)
 		return -1;
 
-	free_item(item->nci);
 	talloc_free(item);
 
 	/* Note that items array has a null terminator. */
@@ -356,13 +364,8 @@ int pmenu_setup(struct pmenu *menu)
 
 void pmenu_delete(struct pmenu *menu)
 {
-	unsigned int i;
-
 	assert(menu->scr.sig == pb_pmenu_sig);
 	menu->scr.sig = pb_removed_sig;
-
-	for (i = item_count(menu->ncm); i; i--)
-		free_item(menu->items[i - 1]);
 
 	free_menu(menu->ncm);
 	delwin(menu->scr.sub_ncw);
