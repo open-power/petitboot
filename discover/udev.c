@@ -69,6 +69,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	const char *path;
 	const char *node;
 	const char *prop;
+	const char *type;
 	bool cdrom;
 
 	typestr = udev_device_get_devtype(dev);
@@ -101,6 +102,11 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		}
 	}
 
+	type = udev_device_get_property_value(dev, "ID_FS_TYPE");
+	if (!type) {
+		pb_debug("SKIP: %s: no ID_FS_TYPE property\n", name);
+		return 0;
+	}
 
 	/* We may see multipath devices; they'll have the same uuid as an
 	 * existing device, so only parse the first. */

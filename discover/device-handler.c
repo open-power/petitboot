@@ -806,6 +806,7 @@ static bool check_existing_mount(struct discover_device *dev)
 
 static int mount_device(struct discover_device *dev)
 {
+	const char *fstype;
 	int rc;
 
 	if (!dev->device_path)
@@ -815,6 +816,10 @@ static int mount_device(struct discover_device *dev)
 		return 0;
 
 	if (check_existing_mount(dev))
+		return 0;
+
+	fstype = discover_device_get_param(dev, "ID_FS_TYPE");
+	if (!fstype)
 		return 0;
 
 	dev->mount_path = join_paths(dev, mount_base(),
@@ -828,7 +833,7 @@ static int mount_device(struct discover_device *dev)
 
 	rc = process_run_simple(dev, pb_system_apps.mount,
 			dev->device_path, dev->mount_path,
-			"-o", "ro", NULL);
+			"-t", fstype, "-o", "ro", NULL);
 	if (!rc) {
 		dev->mounted = true;
 		dev->mounted_rw = false;
