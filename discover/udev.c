@@ -79,7 +79,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	}
 
 	if (!(!strcmp(typestr, "disk") || !strcmp(typestr, "partition"))) {
-		pb_debug("SKIP %s: invalid type %s\n", name, typestr);
+		pb_log("SKIP %s: invalid type %s\n", name, typestr);
 		return 0;
 	}
 
@@ -87,7 +87,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	path = udev_device_get_devpath(dev);
 	if (path && (strstr(path, "virtual/block/loop")
 			|| strstr(path, "virtual/block/ram"))) {
-		pb_debug("SKIP: %s: ignored (path=%s)\n", name, path);
+		pb_log("SKIP: %s: ignored (path=%s)\n", name, path);
 		return 0;
 	}
 
@@ -97,14 +97,14 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		 * petitboot-compatible tray behaviour */
 		cdrom_init(node);
 		if (!cdrom_media_present(node)) {
-			pb_debug("SKIP: %s: no media present\n", name);
+			pb_log("SKIP: %s: no media present\n", name);
 			return 0;
 		}
 	}
 
 	type = udev_device_get_property_value(dev, "ID_FS_TYPE");
 	if (!type) {
-		pb_debug("SKIP: %s: no ID_FS_TYPE property\n", name);
+		pb_log("SKIP: %s: no ID_FS_TYPE property\n", name);
 		return 0;
 	}
 
@@ -164,7 +164,7 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 		return udev_handle_block_add(udev, dev, name);
 	}
 
-	pb_debug("SKIP %s: unknown subsystem %s\n", name, subsys);
+	pb_log("SKIP %s: unknown subsystem %s\n", name, subsys);
 	return -1;
 }
 
