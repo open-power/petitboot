@@ -40,5 +40,5 @@ sed -e s,@version@,${version},g configure.ac.in > configure.ac
 aclocal
 libtoolize --force --copy
 autoheader
-automake --foreign --add-missing --copy
+automake --add-missing --copy
 autoconf
