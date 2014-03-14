@@ -14,7 +14,9 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AC_INIT([petitboot], [@version@], [Geoff Levand <geoff@infradead.org>])
+AC_INIT([petitboot],
+    [m4_esyscmd_s([./version.sh])],
+    [Geoff Levand <geoff@infradead.org>])
 
 AC_CONFIG_MACRO_DIR([m4])
 
