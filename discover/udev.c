@@ -26,6 +26,11 @@
 #include "device-handler.h"
 #include "cdrom.h"
 
+/* We set a default monitor buffer size, as we may not process monitor
+ * events while performing device discvoery. systemd uses a 128M buffer, so
+ * we'll do the same here */
+static const int monitor_bufsize = 128 * 1024 * 1024;
+
 struct pb_udev {
 	struct udev *udev;
 	struct udev_monitor *monitor;
@@ -353,6 +358,12 @@ static int udev_setup_monitor(struct udev *udev, struct udev_monitor **monitor)
 	if (!m) {
 		pb_log("udev_monitor_new_from_netlink failed\n");
 		goto out_err;
+	}
+
+	result = udev_monitor_set_receive_buffer_size(m, monitor_bufsize);
+	if (result) {
+		pb_log("udev_monitor_set_rx_bufsize(%d) failed\n",
+			monitor_bufsize);
 	}
 
 	result = udev_monitor_filter_add_match_subsystem_devtype(m, "block",
