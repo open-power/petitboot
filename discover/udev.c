@@ -121,7 +121,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		if (ddev) {
 			pb_log("SKIP: %s UUID [%s] already present (as %s)\n",
 					name, uuid, ddev->device->id);
-			return -1;
+			return 0;
 		}
 	}
 
