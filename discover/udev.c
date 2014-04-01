@@ -398,10 +398,8 @@ static int udev_process(void *arg)
 	struct udev_monitor *monitor = arg;
 	struct udev_device *dev;
 	const char *action;
-	int result;
 
 	dev = udev_monitor_receive_device(monitor);
-
 	if (!dev) {
 		pb_log("udev_monitor_receive_device failed\n");
 		return -1;
@@ -411,17 +409,12 @@ static int udev_process(void *arg)
 
 	if (!action) {
 		pb_log("udev_device_get_action failed\n");
-		goto fail;
+	} else {
+		udev_handle_dev_action(dev, action);
 	}
 
-	result = udev_handle_dev_action(dev, action);
-
 	udev_device_unref(dev);
-	return result;
-
-fail:
-	udev_device_unref(dev);
-	return -1;
+	return 0;
 }
 
 static void udev_log_fn(struct udev __attribute__((unused)) *udev,
