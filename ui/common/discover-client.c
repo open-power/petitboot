@@ -60,6 +60,7 @@ static void device_add(struct discover_client *client, struct device *device)
 
 	client->devices[client->n_devices - 1] = device;
 	talloc_steal(client, device);
+	list_init(&device->boot_options);
 
 	if (client->ops.device_add)
 		client->ops.device_add(device, client->ops.cb_arg);
@@ -77,6 +78,7 @@ static void boot_option_add(struct discover_client *client,
 	assert(dev);
 
 	talloc_steal(dev, opt);
+	list_add(&dev->boot_options, &opt->list);
 
 	if (client->ops.boot_option_add)
 		client->ops.boot_option_add(dev, opt, client->ops.cb_arg);
