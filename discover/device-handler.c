@@ -294,7 +294,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	return handler;
 }
 
-static void device_handler_reinit(struct device_handler *handler)
+void device_handler_reinit(struct device_handler *handler)
 {
 	struct discover_boot_option *opt, *tmp;
 	unsigned int i;

@@ -245,6 +245,10 @@ static int discover_server_process_message(void *arg)
 		device_handler_cancel_default(client->server->device_handler);
 		break;
 
+	case PB_PROTOCOL_ACTION_REINIT:
+		device_handler_reinit(client->server->device_handler);
+		break;
+
 	case PB_PROTOCOL_ACTION_CONFIG:
 		config = talloc_zero(client, struct config);
 

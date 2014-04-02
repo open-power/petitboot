@@ -21,6 +21,7 @@ enum pb_protocol_action {
 	PB_PROTOCOL_ACTION_CANCEL_DEFAULT	= 0x7,
 	PB_PROTOCOL_ACTION_SYSTEM_INFO		= 0x8,
 	PB_PROTOCOL_ACTION_CONFIG		= 0x9,
+	PB_PROTOCOL_ACTION_REINIT		= 0xa,
 };
 
 struct pb_protocol_message {

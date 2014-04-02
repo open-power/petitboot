@@ -76,6 +76,9 @@ int discover_client_boot(struct discover_client *client,
  */
 int discover_client_cancel_default(struct discover_client *client);
 
+/* Tell the discover server to reinitialise */
+int discover_client_send_reinit(struct discover_client *client);
+
 /* Send new configuration data to the discover server */
 int discover_client_send_config(struct discover_client *client,
 		struct config *config);
