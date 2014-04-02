@@ -5,8 +5,7 @@ struct pb_udev;
 struct device_handler;
 struct waitset;
 
-struct pb_udev *udev_init(struct waitset *waitset,
-	struct device_handler *handler);
-void udev_destroy(struct pb_udev *udev);
+struct pb_udev *udev_init(struct device_handler *handler,
+		struct waitset *waitset);
 
 #endif /* _UDEV_H */

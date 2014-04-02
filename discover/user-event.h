@@ -33,8 +33,7 @@ struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 		struct event *event, bool *complete_url);
 char **user_event_parse_conf_filenames(
 		struct discover_context *ctx, struct event *event);
-struct user_event *user_event_init(struct waitset *waitset,
-		struct device_handler *handler);
-void user_event_destroy(struct user_event *uev);
+struct user_event *user_event_init(struct device_handler *handler,
+		struct waitset *waitset);
 
 #endif

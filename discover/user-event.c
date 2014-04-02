@@ -505,15 +505,15 @@ static int user_event_destructor(void *arg)
 	return 0;
 }
 
-struct user_event *user_event_init(struct waitset *waitset,
-		struct device_handler *handler)
+struct user_event *user_event_init(struct device_handler *handler,
+		struct waitset *waitset)
 {
 	struct sockaddr_un addr;
 	struct user_event *uev;
 
 	unlink(PBOOT_USER_EVENT_SOCKET);
 
-	uev = talloc(NULL, struct user_event);
+	uev = talloc(handler, struct user_event);
 
 	uev->handler = handler;
 
@@ -545,9 +545,4 @@ struct user_event *user_event_init(struct waitset *waitset,
 out_err:
 	talloc_free(uev);
 	return NULL;
-}
-
-void user_event_destroy(struct user_event *uev)
-{
-	talloc_free(uev);
 }

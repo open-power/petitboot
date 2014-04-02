@@ -19,6 +19,7 @@
 
 #include "device-handler.h"
 #include "discover-server.h"
+#include "user-event.h"
 #include "platform.h"
 #include "event.h"
 #include "parser.h"
@@ -26,10 +27,16 @@
 #include "paths.h"
 #include "sysinfo.h"
 #include "boot.h"
+#include "udev.h"
+#include "network.h"
 
 struct device_handler {
 	struct discover_server	*server;
 	int			dry_run;
+
+	struct pb_udev		*udev;
+	struct network		*network;
+	struct user_event	*user_event;
 
 	struct discover_device	**devices;
 	unsigned int		n_devices;
@@ -48,6 +55,8 @@ struct device_handler {
 
 static int mount_device(struct discover_device *dev);
 static int umount_device(struct discover_device *dev);
+
+static int device_handler_init_sources(struct device_handler *handler);
 
 void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *boot_option)
@@ -260,6 +269,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 		struct waitset *waitset, int dry_run)
 {
 	struct device_handler *handler;
+	int rc;
 
 	handler = talloc_zero(NULL, struct device_handler);
 	handler->server = server;
@@ -273,6 +283,12 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	pb_mkdir_recursive(mount_base());
 
 	parser_init();
+
+	rc = device_handler_init_sources(handler);
+	if (rc) {
+		talloc_free(handler);
+		return NULL;
+	}
 
 	return handler;
 }
@@ -750,6 +766,26 @@ void device_handler_update_config(struct device_handler *handler,
 }
 
 #ifndef PETITBOOT_TEST
+
+static int device_handler_init_sources(struct device_handler *handler)
+{
+	/* init our device sources: udev, network and user events */
+	handler->udev = udev_init(handler, handler->waitset);
+	if (!handler->udev)
+		return -1;
+
+	handler->network = network_init(handler, handler->waitset,
+			handler->dry_run);
+	if (!handler->network)
+		return -1;
+
+	handler->user_event = user_event_init(handler, handler->waitset);
+	if (!handler->user_event)
+		return -1;
+
+	return 0;
+}
+
 static bool check_existing_mount(struct discover_device *dev)
 {
 	struct stat devstat, mntstat;
@@ -910,6 +946,12 @@ void device_release_write(struct discover_device *dev, bool release)
 }
 
 #else
+
+static int device_handler_init_sources(
+		struct device_handler *handler __attribute__((unused)))
+{
+	return 0;
+}
 
 static int umount_device(struct discover_device *dev __attribute__((unused)))
 {

@@ -14,11 +14,8 @@
 #include <process/process.h>
 #include <talloc/talloc.h>
 
-#include "udev.h"
-#include "user-event.h"
 #include "discover-server.h"
 #include "device-handler.h"
-#include "network.h"
 #include "sysinfo.h"
 #include "platform.h"
 
@@ -119,12 +116,9 @@ int main(int argc, char *argv[])
 {
 	struct device_handler *handler;
 	struct discover_server *server;
-	struct network *network;
 	struct waitset *waitset;
 	struct procset *procset;
 	struct opts opts;
-	struct pb_udev *udev;
-	struct user_event *uev;
 	FILE *log;
 
 	if (opts_parse(&opts, argc, argv)) {
@@ -182,28 +176,12 @@ int main(int argc, char *argv[])
 
 	discover_server_set_device_source(server, handler);
 
-	/* init our device sources: udev, network and user events */
-	udev = udev_init(waitset, handler);
-	if (!udev)
-		return EXIT_FAILURE;
-
-	network = network_init(handler, waitset, opts.dry_run == opt_yes);
-	if (!network)
-		return EXIT_FAILURE;
-
-	uev = user_event_init(waitset, handler);
-	if (!uev)
-		return EXIT_FAILURE;
-
 	for (running = 1; running;) {
 		if (waiter_poll(waitset))
 			break;
 	}
 
-	network_shutdown(network);
 	device_handler_destroy(handler);
-	user_event_destroy(uev);
-	udev_destroy(udev);
 	discover_server_destroy(server);
 	platform_fini();
 	talloc_free(waitset);

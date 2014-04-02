@@ -425,12 +425,13 @@ static void udev_log_fn(struct udev __attribute__((unused)) *udev,
       vfprintf(pb_log_get_stream(), format, args);
 }
 
-struct pb_udev *udev_init(struct waitset *waitset,
-	struct device_handler *handler)
+struct pb_udev *udev_init(struct device_handler *handler,
+		struct waitset *waitset)
 {
+	struct pb_udev *udev;
 	int result;
-	struct pb_udev *udev = talloc(NULL, struct pb_udev);
 
+	udev = talloc(handler, struct pb_udev);
 	talloc_set_destructor(udev, udev_destructor);
 	udev->handler = handler;
 
@@ -467,9 +468,4 @@ fail_enumerate:
 fail_new:
 	talloc_free(udev);
 	return NULL;
-}
-
-void udev_destroy(struct pb_udev *udev)
-{
-	talloc_free(udev);
 }
