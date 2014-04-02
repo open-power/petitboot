@@ -469,3 +469,9 @@ fail_new:
 	talloc_free(udev);
 	return NULL;
 }
+
+void udev_reinit(struct pb_udev *udev)
+{
+	pb_log("udev: reinit requested, starting enumeration\n");
+	udev_enumerate(udev->udev);
+}

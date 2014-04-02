@@ -57,6 +57,7 @@ static int mount_device(struct discover_device *dev);
 static int umount_device(struct discover_device *dev);
 
 static int device_handler_init_sources(struct device_handler *handler);
+static void device_handler_reinit_sources(struct device_handler *handler);
 
 void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *boot_option)
@@ -291,6 +292,31 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	}
 
 	return handler;
+}
+
+static void device_handler_reinit(struct device_handler *handler)
+{
+	struct discover_boot_option *opt, *tmp;
+	unsigned int i;
+
+	device_handler_cancel_default(handler);
+
+	/* free unresolved boot options */
+	list_for_each_entry_safe(&handler->unresolved_boot_options,
+			opt, tmp, list)
+		talloc_free(opt);
+	list_init(&handler->unresolved_boot_options);
+
+	/* drop all devices */
+	for (i = 0; i < handler->n_devices; i++)
+		discover_server_notify_device_remove(handler->server,
+				handler->devices[i]->device);
+
+	talloc_free(handler->devices);
+	handler->devices = NULL;
+	handler->n_devices = 0;
+
+	device_handler_reinit_sources(handler);
 }
 
 void device_handler_remove(struct device_handler *handler,
@@ -763,6 +789,7 @@ void device_handler_update_config(struct device_handler *handler,
 {
 	config_set(config);
 	discover_server_notify_config(handler->server, config);
+	device_handler_reinit(handler);
 }
 
 #ifndef PETITBOOT_TEST
@@ -784,6 +811,15 @@ static int device_handler_init_sources(struct device_handler *handler)
 		return -1;
 
 	return 0;
+}
+
+static void device_handler_reinit_sources(struct device_handler *handler)
+{
+	udev_reinit(handler->udev);
+
+	network_shutdown(handler->network);
+	handler->network = network_init(handler, handler->waitset,
+			handler->dry_run);
 }
 
 static bool check_existing_mount(struct discover_device *dev)
@@ -951,6 +987,11 @@ static int device_handler_init_sources(
 		struct device_handler *handler __attribute__((unused)))
 {
 	return 0;
+}
+
+static void device_handler_reinit_sources(
+		struct device_handler *handler __attribute__((unused)))
+{
 }
 
 static int umount_device(struct discover_device *dev __attribute__((unused)))

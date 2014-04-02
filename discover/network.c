@@ -584,7 +584,6 @@ err:
 	return NULL;
 }
 
-
 int network_shutdown(struct network *network)
 {
 	struct interface *interface;
