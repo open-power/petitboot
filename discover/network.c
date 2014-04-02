@@ -181,6 +181,15 @@ static int interface_change(struct interface *interface, bool up)
 		process_release(interface->udhcpc_process);
 	}
 
+	if (!up) {
+		rc = process_run_simple(interface, pb_system_apps.ip,
+				"address", "flush", "dev", interface->name,
+				NULL);
+		if (rc)
+			pb_log("failed to flush addresses from interface %s\n",
+				interface->name);
+	}
+
 	rc = process_run_simple(interface, pb_system_apps.ip,
 			"link", "set", interface->name, statestr, NULL);
 	if (rc) {
