@@ -140,6 +140,12 @@ static int pmenu_config(struct pmenu_item *item)
 	return 0;
 }
 
+static int pmenu_reinit(struct pmenu_item *item)
+{
+	cui_send_reinit(cui_from_item(item));
+	return 0;
+}
+
 /**
  * pb_mm_init - Setup the main menu instance.
  */
@@ -150,7 +156,7 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 	struct pmenu *m;
 	struct pmenu_item *i;
 
-	m = pmenu_init(pb_cui->cui, 4, cui_on_exit);
+	m = pmenu_init(pb_cui->cui, 5, cui_on_exit);
 
 	if (!m) {
 		pb_log("%s: failed\n", __func__);
@@ -172,7 +178,9 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 	i->on_execute = pmenu_sysinfo;
 	i = pmenu_item_init(m, 2, "System configuration");
 	i->on_execute = pmenu_config;
-	i = pmenu_item_init(m, 3, "Exit to shell");
+	i = pmenu_item_init(m, 3, "Rescan devices");
+	i->on_execute = pmenu_reinit;
+	i = pmenu_item_init(m, 4, "Exit to shell");
 	i->on_execute = pmenu_exit_cb;
 
 	result = pmenu_setup(m);

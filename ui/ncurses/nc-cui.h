@@ -77,6 +77,7 @@ void cui_show_sysinfo(struct cui *cui);
 void cui_show_config(struct cui *cui);
 void cui_show_help(struct cui *cui, const char *title, const char *text);
 int cui_send_config(struct cui *cui, struct config *config);
+void cui_send_reinit(struct cui *cui);
 
 /* convenience routines */
 
