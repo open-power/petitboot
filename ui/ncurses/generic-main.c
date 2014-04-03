@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <sys/time.h>
 
 #include "log/log.h"
@@ -82,9 +83,7 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 		{ NULL,          0,                 NULL, 0},
 	};
 	static const char short_options[] = "dhl:sV";
-	static const struct opts default_values = {
-		.log_file = "/var/log/petitboot/petitboot-nc.log",
-	};
+	static const struct opts default_values = { 0 };
 
 	*opts = default_values;
 
@@ -117,6 +116,31 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 	return 0;
 }
 
+static char *default_log_filename(void)
+{
+	const char *base = "/var/log/petitboot/petitboot-nc";
+	static char name[PATH_MAX];
+	char *tty;
+	int i;
+
+	tty = ttyname(STDIN_FILENO);
+
+	/* strip /dev/ */
+	if (tty && !strncmp(tty, "/dev/", 5))
+		tty += 5;
+
+	/* change slashes to hyphens */
+	for (i = 0; tty && tty[i]; i++)
+		if (tty[i] == '/')
+			tty[i] = '-';
+
+	if (!tty || !*tty)
+		tty = "unknown";
+
+	snprintf(name, sizeof(name), "%s.%s.log", base, tty);
+
+	return name;
+}
 /**
  * struct pb_cui - Main cui program instance.
  * @mm: Main menu.
@@ -235,6 +259,7 @@ static void sig_handler(int signum)
 int main(int argc, char *argv[])
 {
 	static struct sigaction sa;
+	const char *log_filename;
 	int result;
 	int cui_result;
 	struct opts opts;
@@ -257,9 +282,14 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
+	if (opts.log_file)
+		log_filename = opts.log_file;
+	else
+		log_filename = default_log_filename();
+
 	log = stderr;
-	if (strcmp(opts.log_file, "-")) {
-		log = fopen(opts.log_file, "a");
+	if (strcmp(log_filename, "-")) {
+		log = fopen(log_filename, "a");
 
 		if (!log)
 			log = fopen("/dev/null", "a");
