@@ -409,6 +409,7 @@ int process_run_async(struct process *process)
 
 void process_stop_async(struct process *process)
 {
+	pb_debug("process: sending SIGTERM to pid %d\n", process->pid);
 	kill(process->pid, SIGTERM);
 }
 
