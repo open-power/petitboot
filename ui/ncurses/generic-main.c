@@ -49,7 +49,7 @@ static void print_usage(void)
 	print_version();
 	printf(
 "Usage: petitboot-nc [-h, --help] [-l, --log log-file]\n"
-"                    [-s, --start-daemon] [-V, --version]\n");
+"                    [-s, --start-daemon] [-v, --verbose] [-V, --version]\n");
 }
 
 /**
@@ -66,6 +66,7 @@ struct opts {
 	enum opt_value show_help;
 	const char *log_file;
 	enum opt_value start_daemon;
+	enum opt_value verbose;
 	enum opt_value show_version;
 };
 
@@ -79,10 +80,11 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 		{"help",         no_argument,       NULL, 'h'},
 		{"log",          required_argument, NULL, 'l'},
 		{"start-daemon", no_argument,       NULL, 's'},
+		{"verbose",      no_argument,       NULL, 'v'},
 		{"version",      no_argument,       NULL, 'V'},
 		{ NULL,          0,                 NULL, 0},
 	};
-	static const char short_options[] = "dhl:sV";
+	static const char short_options[] = "dhl:svV";
 	static const struct opts default_values = { 0 };
 
 	*opts = default_values;
@@ -103,6 +105,9 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 			break;
 		case 's':
 			opts->start_daemon = opt_yes;
+			break;
+		case 'v':
+			opts->verbose = opt_yes;
 			break;
 		case 'V':
 			opts->show_version = opt_yes;
@@ -296,6 +301,9 @@ int main(int argc, char *argv[])
 	}
 
 	pb_log_init(log);
+
+	if (opts.verbose)
+		pb_log_set_debug(true);
 
 	pb_log("--- petitboot-nc ---\n");
 

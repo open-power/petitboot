@@ -96,9 +96,16 @@ do
 	fi
 done
 
+verbose_opt=
+sysinfo_bin=$(dirname $0)/pb-sysinfo
+if [ -x $sysinfo_bin ] && $sysinfo_bin --debug-enabled
+then
+	verbose_opt=--verbose
+fi
+
 while :
 do
-	$ui
+	$ui $verbose_opt
 	reset
 	echo "Exiting petitboot. Type 'exit' to return."
 	$shell

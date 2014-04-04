@@ -263,23 +263,18 @@ static int udev_handle_dev_change(struct pb_udev *udev, struct udev_device *dev)
 static int udev_handle_dev_action(struct udev_device *dev, const char *action)
 {
 	struct pb_udev *udev = udev_get_userdata(udev_device_get_udev(dev));
+	struct udev_list_entry *list;
+	const char *name;
 
-#ifdef DEBUG
-	{
-		struct udev_list_entry *list;
-		const char *name;
+	list = udev_device_get_properties_list_entry(dev);
+	name = udev_device_get_sysname(dev);
 
-		list = udev_device_get_properties_list_entry(dev);
-		name = udev_device_get_sysname(dev);
+	pb_debug("udev: action %s, device %s\n", action, name);
+	pb_debug("udev: properties:\n");
 
-		pb_debug("%s: action %s, device %s\n", __func__, action, name);
-		pb_debug("%s properties:\n", __func__);
-
-		for (; list; list = udev_list_entry_get_next(list))
-			pb_log("\t%-20s: %s\n", udev_list_entry_get_name(list),
-					udev_list_entry_get_value(list));
-	} while (0);
-#endif
+	for (; list; list = udev_list_entry_get_next(list))
+		pb_debug("\t%-20s: %s\n", udev_list_entry_get_name(list),
+				udev_list_entry_get_value(list));
 
 	if (!strcmp(action, "add"))
 		return udev_handle_dev_add(udev, dev);

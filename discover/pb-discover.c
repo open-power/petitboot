@@ -29,7 +29,7 @@ static void print_usage(void)
 	print_version();
 	printf(
 "Usage: pb-discover [-a, --no-autoboot] [-h, --help] [-l, --log log-file]\n"
-"                   [-n, --dry-run] [-V, --version]\n");
+"                   [-n, --dry-run] [-v, --verbose] [-V, --version]\n");
 }
 
 /**
@@ -48,6 +48,7 @@ struct opts {
 	const char *log_file;
 	enum opt_value dry_run;
 	enum opt_value show_version;
+	enum opt_value verbose;
 };
 
 /**
@@ -61,14 +62,16 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 		{"help",           no_argument,       NULL, 'h'},
 		{"log",            required_argument, NULL, 'l'},
 		{"dry-run",        no_argument,       NULL, 'n'},
+		{"verbose",        no_argument,       NULL, 'v'},
 		{"version",        no_argument,       NULL, 'V'},
 		{ NULL, 0, NULL, 0},
 	};
-	static const char short_options[] = "ahl:nV";
+	static const char short_options[] = "ahl:nvV";
 	static const struct opts default_values = {
 		.no_autoboot = opt_no,
 		.log_file = "/var/log/petitboot/pb-discover.log",
 		.dry_run = opt_no,
+		.verbose = opt_no,
 	};
 
 	*opts = default_values;
@@ -92,6 +95,9 @@ static int opts_parse(struct opts *opts, int argc, char *argv[])
 			break;
 		case 'n':
 			opts->dry_run = opt_yes;
+			break;
+		case 'v':
+			opts->verbose = opt_yes;
 			break;
 		case 'V':
 			opts->show_version = opt_yes;
@@ -146,6 +152,9 @@ int main(int argc, char *argv[])
 		}
 	}
 	pb_log_init(log);
+
+	if (opts.verbose)
+		pb_log_set_debug(true);
 
 	pb_log("--- pb-discover ---\n");
 

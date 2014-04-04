@@ -41,6 +41,11 @@ void __pb_log_init(FILE *fp, bool _debug)
 	debug = _debug;
 }
 
+void pb_log_set_debug(bool _debug)
+{
+	debug = _debug;
+}
+
 FILE *pb_log_get_stream(void)
 {
 	static FILE *null_stream;

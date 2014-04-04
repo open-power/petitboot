@@ -7,4 +7,10 @@ case "$1" in
 '--id')
 	tr -d '\0' < /proc/device-tree/system-id
 	;;
+'--debug-enabled')
+	exec >/dev/null 2>&1
+	nvram --print-config=petitboot,debug? | grep -q true && exit 0
+	grep -Fq petitboot.debug /proc/cmdline && exit 0
+	exit 1
+	;;
 esac
