@@ -249,6 +249,10 @@ static int screen_process_form(struct config_screen *screen)
 	}
 
 	str = widget_textbox_get_value(screen->widgets.dns_f);
+	talloc_free(config->network.dns_servers);
+	config->network.dns_servers = NULL;
+	config->network.n_dns_servers = 0;
+
 	if (str && strlen(str)) {
 		char *dns, *tmp;
 		int i;
