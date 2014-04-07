@@ -892,6 +892,9 @@ int pb_protocol_deserialise_config(struct config *config,
 	for (i = 0; i < config->n_boot_priorities; i++) {
 		if (read_u32(&pos, &len, &tmp))
 			goto out;
+		config->boot_priorities[i].priority = (int)tmp;
+		if (read_u32(&pos, &len, &tmp))
+			goto out;
 		config->boot_priorities[i].type = tmp;
 	}
 
