@@ -161,6 +161,7 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 {
 	struct pmenu *menu = cui->main;
 	struct cui_opt_data *cod;
+	static int user_idx = 0;
 
 	/* Was the edit cancelled? */
 	if (!bd) {
@@ -184,7 +185,7 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 		item->on_execute = cui_boot;
 		item->data = cod = talloc_zero(item, struct cui_opt_data);
 
-		cod->name = talloc_asprintf(cod, "User item %u:", insert_pt);
+		cod->name = talloc_asprintf(cod, "User item %u:", ++user_idx);
 		if (pmenu_item_setup(menu, item, insert_pt,
 				talloc_strdup(item, cod->name)) == NULL) {
 			talloc_free(item);
