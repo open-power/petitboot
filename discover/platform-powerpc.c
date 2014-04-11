@@ -344,8 +344,8 @@ static int parse_one_dns_config(struct config *config,
 static void populate_network_config(struct platform_powerpc *platform,
 		struct config *config)
 {
+	char *val, *saveptr = NULL;
 	const char *cval;
-	char *val;
 	int i;
 
 	cval = get_param(platform, "petitboot,network");
@@ -355,7 +355,7 @@ static void populate_network_config(struct platform_powerpc *platform,
 	val = talloc_strdup(config, cval);
 
 	for (i = 0; ; i++) {
-		char *tok, *saveptr;
+		char *tok;
 
 		tok = strtok_r(i == 0 ? val : NULL, " ", &saveptr);
 		if (!tok)
