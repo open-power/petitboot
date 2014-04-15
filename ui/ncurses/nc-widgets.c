@@ -353,6 +353,11 @@ struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
 	return textbox;
 }
 
+void widget_textbox_set_fixed_size(struct nc_widget_textbox *textbox)
+{
+	field_opts_on(textbox->widget.field, O_STATIC);
+}
+
 void widget_textbox_set_validator_integer(struct nc_widget_textbox *textbox,
 		long min, long max)
 {

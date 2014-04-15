@@ -503,6 +503,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.timeout_f = widget_new_textbox(set, 0, 0, 5, str);
 	screen->widgets.timeout_help_l = widget_new_label(set, 0, 0, "seconds");
 
+	widget_textbox_set_fixed_size(screen->widgets.timeout_f);
 	widget_textbox_set_validator_integer(screen->widgets.timeout_f, 0, 999);
 
 	screen->widgets.network_l = widget_new_label(set, 0, 0, "Network");
@@ -561,10 +562,12 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, "IP/mask:");
 	screen->widgets.ip_addr_f = widget_new_textbox(set, 0, 0, 16, ip);
 	screen->widgets.ip_mask_l = widget_new_label(set, 0, 0, "/");
-	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 4, mask);
+	screen->widgets.ip_mask_f = widget_new_textbox(set, 0, 0, 3, mask);
 	screen->widgets.ip_addr_mask_help_l =
 		widget_new_label(set, 0, 0, "(eg. 192.168.0.10 / 24)");
 
+	widget_textbox_set_fixed_size(screen->widgets.ip_addr_f);
+	widget_textbox_set_fixed_size(screen->widgets.ip_mask_f);
 	widget_textbox_set_validator_ipv4(screen->widgets.ip_addr_f);
 	widget_textbox_set_validator_integer(screen->widgets.ip_mask_f, 1, 31);
 
@@ -573,6 +576,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.gateway_help_l =
 		widget_new_label(set, 0, 0, "(eg. 192.168.0.1)");
 
+	widget_textbox_set_fixed_size(screen->widgets.gateway_f);
 	widget_textbox_set_validator_ipv4(screen->widgets.gateway_f);
 
 	str = talloc_strdup(screen, "");
