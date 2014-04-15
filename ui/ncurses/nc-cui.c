@@ -58,6 +58,11 @@ static void cui_start(void)
 	define_key("\x7f", KEY_BACKSPACE);
 	define_key("\x08", KEY_BACKSPACE);
 
+	/* we need backtab too, for form navigation. vt220 doesn't include
+	 * this (kcbt), but we don't want to require a full linux/xterm termcap
+	 */
+	define_key("\x1b[Z", KEY_BTAB);
+
 	while (getch() != ERR)		/* flush stdin */
 		(void)0;
 }
