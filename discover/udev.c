@@ -41,11 +41,15 @@ static int udev_destructor(void *p)
 {
 	struct pb_udev *udev = p;
 
-	udev_monitor_unref(udev->monitor);
-	udev->monitor = NULL;
+	if (udev->monitor) {
+		udev_monitor_unref(udev->monitor);
+		udev->monitor = NULL;
+	}
 
-	udev_unref(udev->udev);
-	udev->udev = NULL;
+	if (udev->udev) {
+		udev_unref(udev->udev);
+		udev->udev = NULL;
+	}
 
 	return 0;
 }
@@ -426,7 +430,7 @@ struct pb_udev *udev_init(struct device_handler *handler,
 	struct pb_udev *udev;
 	int result;
 
-	udev = talloc(handler, struct pb_udev);
+	udev = talloc_zero(handler, struct pb_udev);
 	talloc_set_destructor(udev, udev_destructor);
 	udev->handler = handler;
 
@@ -434,7 +438,7 @@ struct pb_udev *udev_init(struct device_handler *handler,
 
 	if (!udev->udev) {
 		pb_log("udev_new failed\n");
-		goto fail_new;
+		goto fail;
 	}
 
 	udev_set_userdata(udev->udev, udev);
@@ -443,11 +447,11 @@ struct pb_udev *udev_init(struct device_handler *handler,
 
 	result = udev_setup_monitor(udev->udev, &udev->monitor);
 	if (result)
-		goto fail_monitor;
+		goto fail;
 
 	result = udev_enumerate(udev->udev);
 	if (result)
-		goto fail_enumerate;
+		goto fail;
 
 	waiter_register_io(waitset, udev_monitor_get_fd(udev->monitor), WAIT_IN,
 		udev_process, udev->monitor);
@@ -456,11 +460,7 @@ struct pb_udev *udev_init(struct device_handler *handler,
 
 	return udev;
 
-fail_monitor:
-	udev_monitor_unref(udev->monitor);
-fail_enumerate:
-	udev_unref(udev->udev);
-fail_new:
+fail:
 	talloc_free(udev);
 	return NULL;
 }
