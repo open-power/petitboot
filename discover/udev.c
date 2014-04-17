@@ -321,11 +321,6 @@ static int udev_enumerate(struct udev *udev)
 
 	list = udev_enumerate_get_list_entry(enumerate);
 
-	if (!list) {
-		pb_log("udev_enumerate_get_list_entry failed\n");
-		goto fail;
-	}
-
 	udev_list_entry_foreach(entry, list) {
 		const char *syspath;
 		struct udev_device *dev;
