@@ -327,10 +327,6 @@ static int cui_process_key(void *arg)
 
 	assert(cui->current);
 
-	if (!cui->has_input)
-		discover_client_cancel_default(cui->client);
-	cui->has_input = true;
-
 	for (;;) {
 		int c = getch();
 
@@ -338,6 +334,13 @@ static int cui_process_key(void *arg)
 
 		if (c == ERR)
 			break;
+
+		if (!cui->has_input) {
+			pb_log("UI input received (key = %d), aborting "
+					"default boot\n", c);
+			discover_client_cancel_default(cui->client);
+			cui->has_input = true;
+		}
 
 		if (process_global_keys(cui, c))
 			continue;
