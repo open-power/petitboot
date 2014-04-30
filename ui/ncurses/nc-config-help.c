@@ -1,11 +1,25 @@
 const char *config_help_text = "\
-Autoboot: If you select this option, Petitboot will automatically choose the \
-default option shown in the main menu. Use this option if you want to quickly \
-boot your system without changing any boot option settings.\n"
+Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"\n"
+"Don't autoboot: boot options will be listed in the petitboot menu, but none \
+will be booted automatically. User interaction will be required to continue \
+past the petitboot menu. Use this option if you want the machine to wait for \
+an explicit boot selection, or want to interact with petitboot before \
+booting the system\n"
+"\n"
+"Autoboot from any disk/network device: any boot option that is marked as a \
+default (by bootloader configuration) will be booted automatically after a \
+timeout. Use this option if you want to quickly boot your system without \
+changing any boot option settings. This is the typical configuration.\n"
+"\n"
+"Autoboot from a specific disk/network device: only boot options \
+from a single device (specifed here) will be booted automatically after a \
+timeout. Use this option if you have multiple operating system images \
+installed.\n"
 "\n"
 "Timeout: Specify the length of time, in seconds, that the main menu will be \
-displayed before the first option on the main menu is started by default. \
-Timeout is applied only if the Autoboot option is selected.\n"
+displayed before the default boot option is started. This option is only \
+displayed if autoboot is enabled.\n"
 "\n"
 "Network options:\n"
 "\n"

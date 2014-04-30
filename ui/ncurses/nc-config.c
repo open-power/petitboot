@@ -32,9 +32,15 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	24
+#define N_FIELDS	25
 
 extern const char *config_help_text;
+
+enum autoboot_type {
+	AUTOBOOT_ANY,
+	AUTOBOOT_ONE,
+	AUTOBOOT_DISABLED,
+};
 
 enum net_conf_type {
 	NET_CONF_TYPE_DHCP_ALL,
@@ -59,10 +65,12 @@ struct config_screen {
 	int			network_config_y;
 
 	enum net_conf_type	net_conf_type;
+	enum autoboot_type	autoboot_type;
 
 	struct {
-		struct nc_widget_checkbox	*autoboot_f;
+		struct nc_widget_select		*autoboot_f;
 		struct nc_widget_label		*autoboot_l;
+		struct nc_widget_select		*boot_device_f;
 		struct nc_widget_textbox	*timeout_f;
 		struct nc_widget_label		*timeout_l;
 		struct nc_widget_label		*timeout_help_l;
@@ -180,13 +188,38 @@ static int screen_process_form(struct config_screen *screen)
 	struct interface_config *iface;
 	struct config *config;
 	char *str, *end;
-	int rc;
+	int rc, idx;
 
 	config = config_copy(screen, screen->cui->config);
 
-	config->autoboot_enabled =
-		widget_checkbox_get_value(screen->widgets.autoboot_f);
+	screen->autoboot_type =
+		widget_select_get_value(screen->widgets.autoboot_f);
 
+	config->autoboot_enabled = screen->autoboot_type != AUTOBOOT_DISABLED;
+
+	if (screen->autoboot_type == AUTOBOOT_ONE) {
+		char mac[20], *uuid = NULL;
+
+		/* if idx is -1 here, we have an unknown UUID selected.
+		 * Otherwise, it's a blockdev index (idx <= n_blockdevs) or an
+		 * interface index.
+		 */
+		idx = widget_select_get_value(screen->widgets.boot_device_f);
+		if (idx >= (int)sysinfo->n_blockdevs) {
+			struct interface_info *info = sysinfo->
+				interfaces[idx - sysinfo->n_blockdevs];
+			mac_str(info->hwaddr, info->hwaddr_size,
+					mac, sizeof(mac));
+			uuid = mac;
+		} else if (idx != -1) {
+			uuid = sysinfo->blockdevs[idx]->uuid;
+		}
+
+		if (uuid) {
+			talloc_free(config->boot_device);
+			config->boot_device = talloc_strdup(config, uuid);
+		}
+	}
 
 	str = widget_textbox_get_value(screen->widgets.timeout_f);
 	if (str) {
@@ -208,8 +241,6 @@ static int screen_process_form(struct config_screen *screen)
 		config->network.n_interfaces = 0;
 
 	} else {
-		int idx;
-
 		iface = talloc_zero(config, struct interface_config);
 		config->network.n_interfaces = 1;
 		config->network.interfaces = talloc_array(config,
@@ -330,16 +361,35 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		widget_width(widget_textbox_base(screen->widgets.dns_f));
 
 	y += layout_pair(screen, y, screen->widgets.autoboot_l,
-			widget_checkbox_base(screen->widgets.autoboot_f));
+			widget_select_base(screen->widgets.autoboot_f));
+
+	wf = widget_select_base(screen->widgets.boot_device_f);
+	if (screen->autoboot_type == AUTOBOOT_ONE) {
+		widget_set_visible(wf, true);
+		widget_move(wf, y, screen->field_x + 3);
+		y += widget_height(wf);
+	} else {
+		widget_set_visible(wf, false);
+	}
+
+	y += 1;
 
 	wf = widget_textbox_base(screen->widgets.timeout_f);
-	widget_move(widget_label_base(screen->widgets.timeout_l),
-			y, screen->label_x);
-	widget_move(wf, y, screen->field_x);
-	widget_move(widget_label_base(screen->widgets.timeout_help_l),
-			y, screen->field_x + widget_width(wf) + 1);
-
-	y += 2;
+	wl = widget_label_base(screen->widgets.timeout_l);
+	wh = widget_label_base(screen->widgets.timeout_help_l);
+	if (screen->autoboot_type != AUTOBOOT_DISABLED) {
+		widget_set_visible(wl, true);
+		widget_set_visible(wf, true);
+		widget_set_visible(wh, true);
+		widget_move(wl, y, screen->label_x);
+		widget_move(wf, y, screen->field_x);
+		widget_move(wh, y, screen->field_x + widget_width(wf) + 1);
+		y += 2;
+	} else {
+		widget_set_visible(wl, false);
+		widget_set_visible(wf, false);
+		widget_set_visible(wh, false);
+	}
 
 	y += layout_pair(screen, y, screen->widgets.network_l,
 			widget_select_base(screen->widgets.network_f));
@@ -436,6 +486,15 @@ static void config_screen_network_change(void *arg, int value)
 	widgetset_post(screen->widgetset);
 }
 
+static void config_screen_autoboot_change(void *arg, int value)
+{
+	struct config_screen *screen = arg;
+	screen->autoboot_type = value;
+	widgetset_unpost(screen->widgetset);
+	config_screen_layout_widgets(screen);
+	widgetset_post(screen->widgetset);
+}
+
 static struct interface_config *first_active_interface(
 		const struct config *config)
 {
@@ -486,6 +545,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	char *str, *ip, *mask, *gw;
 	enum net_conf_type type;
 	unsigned int i;
+	bool found;
 
 	build_assert(sizeof(screen->widgets) / sizeof(struct widget *)
 			== N_FIELDS);
@@ -494,8 +554,77 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	ifcfg = first_active_interface(config);
 
 	screen->widgets.autoboot_l = widget_new_label(set, 0, 0, "Autoboot:");
-	screen->widgets.autoboot_f = widget_new_checkbox(set, 0, 0,
-					config->autoboot_enabled);
+	screen->widgets.autoboot_f = widget_new_select(set, 0, 0, 55);
+
+	widget_select_on_change(screen->widgets.autoboot_f,
+			config_screen_autoboot_change, screen);
+
+	screen->widgets.boot_device_f = widget_new_select(set, 0, 0, 55);
+
+	widget_select_add_option(screen->widgets.autoboot_f,
+					AUTOBOOT_DISABLED,
+					"Don't autoboot",
+					screen->autoboot_type ==
+						AUTOBOOT_DISABLED);
+	widget_select_add_option(screen->widgets.autoboot_f,
+					AUTOBOOT_ANY,
+					"Autoboot from any disk/network device",
+					screen->autoboot_type ==
+						AUTOBOOT_ANY);
+	widget_select_add_option(screen->widgets.autoboot_f,
+					AUTOBOOT_ONE,
+					"Only autoboot from a specific "
+					"disk/network device",
+					screen->autoboot_type ==
+						AUTOBOOT_ONE);
+
+	found = false;
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+		struct blockdev_info *bd = sysinfo->blockdevs[i];
+		bool selected;
+		char *label;
+
+		selected = config->boot_device &&
+				!strcmp(config->boot_device, bd->uuid);
+		if (selected)
+			found = true;
+
+		label = talloc_asprintf(screen, "disk: %s [uuid: %s]",
+				bd->name, bd->uuid);
+
+		widget_select_add_option(screen->widgets.boot_device_f, i,
+					label, selected);
+	}
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		struct interface_info *info = sysinfo->interfaces[i];
+		char *label, mac[20];
+		bool selected;
+
+		mac_str(info->hwaddr, info->hwaddr_size, mac, sizeof(mac));
+		selected = config->boot_device &&
+				!strcmp(config->boot_device, mac);
+		if (selected)
+			found = true;
+
+		label = talloc_asprintf(screen, "net:  %s [mac: %s]",
+				info->name, mac);
+
+		widget_select_add_option(screen->widgets.boot_device_f,
+						i + sysinfo->n_blockdevs,
+						label, selected);
+	}
+
+	if (screen->autoboot_type == AUTOBOOT_ONE && !found) {
+		char *label;
+
+		label = talloc_asprintf(screen, "Unknown UUID: %s",
+				config->boot_device);
+
+		widget_select_add_option(screen->widgets.boot_device_f, -1,
+						label, true);
+	}
 
 	str = talloc_asprintf(screen, "%d", config->autoboot_timeout_sec);
 	screen->widgets.timeout_l = widget_new_label(set, 0, 0, "Timeout:");
@@ -661,6 +790,11 @@ static void config_screen_draw(struct config_screen *screen,
 		config_screen_setup_empty(screen);
 	} else {
 		screen->net_conf_type = find_net_conf_type(config);
+		if (!config->autoboot_enabled)
+			screen->autoboot_type = AUTOBOOT_DISABLED;
+		else
+			screen->autoboot_type = config->boot_device ?
+					AUTOBOOT_ONE : AUTOBOOT_ANY;
 
 		config_screen_setup_widgets(screen, config, sysinfo);
 		config_screen_layout_widgets(screen);
