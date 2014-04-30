@@ -34,6 +34,7 @@ static const char *known_params[] = {
 	"auto-boot?",
 	"petitboot,network",
 	"petitboot,timeout",
+	"petitboot,bootdev",
 	NULL,
 };
 
@@ -371,6 +372,32 @@ static void populate_network_config(struct platform_powerpc *platform,
 	talloc_free(val);
 }
 
+static void populate_bootdev_config(struct platform_powerpc *platform,
+		struct config *config)
+
+{
+	const char *val;
+
+	config->boot_device = NULL;
+
+	val = get_param(platform, "petitboot,bootdev");
+	if (!val || !strlen(val))
+		return;
+
+	if (!strncmp(val, "uuid:", strlen("uuid:"))) {
+		config->boot_device = talloc_strdup(config,
+						val + strlen("uuid:"));
+
+	} else if (!strncmp(val, "mac:", strlen("mac:"))) {
+		config->boot_device = talloc_strdup(config,
+						val + strlen("mac:"));
+
+	} else {
+		pb_log("bootdev config is in an unknown format "
+				"(expected uuid:... or mac:...)");
+	}
+}
+
 static void populate_config(struct platform_powerpc *platform,
 		struct config *config)
 {
@@ -394,6 +421,8 @@ static void populate_config(struct platform_powerpc *platform,
 	}
 
 	populate_network_config(platform, config);
+
+	populate_bootdev_config(platform, config);
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)
@@ -481,6 +510,21 @@ static void update_network_config(struct platform_powerpc *platform,
 	talloc_free(val);
 }
 
+static void update_bootdev_config(struct platform_powerpc *platform,
+		struct config *config)
+{
+	char *val, *tmp = NULL;
+
+	if (!config->boot_device)
+		val = "";
+	else
+		tmp = val = talloc_asprintf(platform,
+				"uuid:%s", config->boot_device);
+
+	update_string_config(platform, "petitboot,bootdev", val);
+	talloc_free(tmp);
+}
+
 static int update_config(struct platform_powerpc *platform,
 		struct config *config, struct config *defaults)
 {
@@ -504,6 +548,8 @@ static int update_config(struct platform_powerpc *platform,
 		talloc_free(tmp);
 
 	update_network_config(platform, config);
+
+	update_bootdev_config(platform, config);
 
 	return write_nvram(platform);
 }
