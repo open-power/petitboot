@@ -281,6 +281,8 @@ int pb_protocol_config_len(const struct config *config)
 	len += 4;
 	len += config->n_boot_priorities * 8;
 
+	len += 4 + optional_strlen(config->boot_device);
+
 	return len;
 }
 

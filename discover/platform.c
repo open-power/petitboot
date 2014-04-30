@@ -88,6 +88,7 @@ void config_set_defaults(struct config *config)
 	config->network.n_interfaces = 0;
 	config->network.dns_servers = NULL;
 	config->network.n_dns_servers = 0;
+	config->boot_device = NULL;
 
 	config->n_boot_priorities = 2;
 	config->boot_priorities = talloc_array(config, struct boot_priority,

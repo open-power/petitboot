@@ -441,12 +441,32 @@ static int default_option_priority(struct discover_boot_option *opt)
 	return 0;
 }
 
+static bool device_allows_default(struct discover_device *dev)
+{
+	const char *dev_str;
+
+	dev_str = config_get()->boot_device;
+
+	if (!dev_str || !strlen(dev_str))
+		return true;
+
+	/* default devices are specified by UUIDs at present */
+	if (strcmp(dev->uuid, dev_str))
+		return false;
+
+	return true;
+}
+
 static void set_default(struct device_handler *handler,
 		struct discover_boot_option *opt)
 {
 	int new_prio;
 
 	if (!handler->autoboot_enabled)
+		return;
+
+	/* do we allow default-booting from this device? */
+	if (!device_allows_default(opt->device))
 		return;
 
 	new_prio = default_option_priority(opt);
