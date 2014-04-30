@@ -472,6 +472,8 @@ int pb_protocol_serialise_config(const struct config *config,
 		pos += 4;
 	}
 
+	pos += pb_protocol_serialise_string(pos, config->boot_device);
+
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
 
@@ -846,6 +848,7 @@ int pb_protocol_deserialise_config(struct config *config,
 	unsigned int len, i, tmp;
 	const char *pos;
 	int rc = -1;
+	char *str;
 
 	len = message->payload_len;
 	pos = message->payload;
@@ -878,10 +881,9 @@ int pb_protocol_deserialise_config(struct config *config,
 			config->network.n_dns_servers);
 
 	for (i = 0; i < config->network.n_dns_servers; i++) {
-		char *tmp;
-		if (read_string(config->network.dns_servers, &pos, &len, &tmp))
+		if (read_string(config->network.dns_servers, &pos, &len, &str))
 			goto out;
-		config->network.dns_servers[i] = tmp;
+		config->network.dns_servers[i] = str;
 	}
 
 	if (read_u32(&pos, &len, &config->n_boot_priorities))
@@ -897,6 +899,11 @@ int pb_protocol_deserialise_config(struct config *config,
 			goto out;
 		config->boot_priorities[i].type = tmp;
 	}
+
+	if (read_string(config, &pos, &len, &str))
+		goto out;
+
+	config->boot_device = str;
 
 	rc = 0;
 

@@ -68,5 +68,10 @@ struct config *config_copy(void *ctx, const struct config *src)
 		dest->boot_priorities[i].type = src->boot_priorities[i].type;
 	}
 
+	if (src->boot_device && strlen(src->boot_device))
+		dest->boot_device = talloc_strdup(dest, src->boot_device);
+	else
+		dest->boot_device = NULL;
+
 	return dest;
 }

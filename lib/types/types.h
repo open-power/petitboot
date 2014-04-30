@@ -124,6 +124,7 @@ struct config {
 	struct network_config	network;
 	struct boot_priority	*boot_priorities;
 	unsigned int		n_boot_priorities;
+	char			*boot_device;
 };
 
 #endif /* _TYPES_H */
