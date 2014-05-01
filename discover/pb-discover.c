@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 	}
 	pb_log_init(log);
 
-	if (opts.verbose)
+	if (opts.verbose == opt_yes)
 		pb_log_set_debug(true);
 
 	pb_log("--- pb-discover ---\n");
