@@ -36,8 +36,8 @@ static void nc_scr_status_clear(struct nc_scr *scr)
 
 static void nc_scr_status_draw(struct nc_scr *scr)
 {
-	mvwaddstr(scr->main_ncw, LINES - nc_scr_pos_status, 1,
-		scr->frame.status);
+	mvwaddnstr(scr->main_ncw, LINES - nc_scr_pos_status, 1,
+		scr->frame.status, COLS);
 }
 
 int nc_scr_post(struct nc_scr *scr)
