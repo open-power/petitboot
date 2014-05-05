@@ -373,7 +373,7 @@ static void countdown_status(struct device_handler *handler,
 	status.progress = -1;
 	status.detail = NULL;
 	status.message = talloc_asprintf(handler,
-			"Booting %s in %u sec", opt->option->name, sec);
+			"Booting in %d sec: %s", sec, opt->option->name);
 
 	discover_server_notify_boot_status(handler->server, &status);
 
