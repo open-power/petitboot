@@ -96,6 +96,13 @@ do
 	fi
 done
 
+# we force local terminals to use the linux termcap definition
+case "$(tty)" in
+/dev/tty[0-9]*)
+	export TERM=linux
+	;;
+esac
+
 verbose_opt=
 sysinfo_bin=$(dirname $0)/pb-sysinfo
 if [ -x $sysinfo_bin ] && $sysinfo_bin --debug-enabled
