@@ -340,6 +340,11 @@ static void cleanup_cancellations(struct boot_task *task,
 		} else if (result->status == LOAD_ASYNC) {
 			load_url_async_cancel(result);
 			pending = true;
+
+		/* if we're waiting for a cancellation, we still need to
+		 * wait for the completion before freeing the boot task */
+		} else if (result->status == LOAD_CANCELLED) {
+			pending = true;
 		}
 	}
 
