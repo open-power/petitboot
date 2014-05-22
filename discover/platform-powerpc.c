@@ -692,16 +692,12 @@ static bool probe(struct platform *p, void *ctx)
 	struct stat statbuf;
 	int rc;
 
-	/* we need a device tree and a working nvram binary */
+	/* we need a device tree */
 	rc = stat("/proc/device-tree", &statbuf);
 	if (rc)
 		return false;
 
 	if (!S_ISDIR(statbuf.st_mode))
-		return false;
-
-	rc = process_run_simple(ctx, "nvram", "--print-config", NULL);
-	if (!WIFEXITED(rc) || WEXITSTATUS(rc) != 0)
 		return false;
 
 	platform = talloc(ctx, struct platform_powerpc);
