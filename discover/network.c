@@ -245,7 +245,7 @@ static void configure_interface_dhcp(struct interface *interface)
 	if (platform && platform->dhcp_arch_id != 0xffff)
 		snprintf(id, sizeof(id), "0x5d:%04x", platform->dhcp_arch_id);
 	else
-		argv[11] = NULL;
+		argv[12] = NULL;
 
 	process = process_create(interface);
 
