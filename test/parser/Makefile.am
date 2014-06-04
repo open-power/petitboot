@@ -29,6 +29,7 @@ TESTS = \
 	test-null \
 	test-grub2-single \
 	test-grub2-default \
+	test-grub2-empty \
 	test-grub2-default-index \
 	test-grub2-default-multiword \
 	test-grub2-multiple-resolve \

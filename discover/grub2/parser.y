@@ -329,6 +329,9 @@ void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
 	YY_BUFFER_STATE bufstate;
 	int rc;
 
+	if (!len)
+		return;
+
 	parser->script->filename = filename;
 
 	bufstate = yy_scan_bytes(buf, len - 1, parser->scanner);
