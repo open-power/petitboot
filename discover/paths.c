@@ -310,8 +310,9 @@ static void load_wget(struct load_task *task, int flags)
 		pb_system_apps.wget,
 		"-O",
 		NULL, /* 2: local file */
-		NULL,
-		NULL,
+		NULL, /* 3 (optional): --quiet */
+		NULL, /* 4 (optional): --no-check-certificate */
+		NULL, /* 5: URL */
 		NULL,
 	};
 	int i;
