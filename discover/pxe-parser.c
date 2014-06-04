@@ -58,7 +58,7 @@ static struct pb_url *pxe_url_join(void *ctx, const struct pb_url *url,
 	} else {
 		const char *tmp;
 		/* strip leading slashes */
-		for (tmp = s; *tmp == '/'; tmp++);
+		for (tmp = s; *tmp == '/'; tmp++)
 			;
 		new_url = pb_url_join(ctx, url, tmp);
 	}
