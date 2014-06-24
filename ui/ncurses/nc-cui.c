@@ -627,8 +627,8 @@ static void cui_update_config(struct config *config, void *arg)
 
 	if (config->safe_mode)
 		nc_scr_status_printf(cui->current,
-				"SAFE MODE: select '%s' to continue",
-				"Rescan devices");
+				_("SAFE MODE: select '%s' to continue"),
+				_("Rescan devices"));
 }
 
 int cui_send_config(struct cui *cui, struct config *config)
