@@ -1,5 +1,7 @@
 
-const char *main_menu_help_text =
+#include "nc-helpscreen.h"
+
+struct help_text main_menu_help_text = define_help_text(
 "From the main menu screen, select a boot option. The options displayed are \
 available on the system and the network.\n\
 \n\
@@ -14,4 +16,5 @@ network interface, type I (information).\n\
 \n\
 To make changes to the system configuration, type C (configure).\n\
 \n\
-To close the Petitboot interface, type X (exit).\n";
+To close the Petitboot interface, type X (exit).\n"
+);

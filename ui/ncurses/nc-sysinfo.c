@@ -35,7 +35,7 @@ struct sysinfo_screen {
 	struct text_screen text_scr;
 };
 
-extern const char *sysinfo_help_text;
+extern const struct help_text sysinfo_help_text;
 
 struct nc_scr *sysinfo_screen_scr(struct sysinfo_screen *screen)
 {
@@ -115,7 +115,7 @@ struct sysinfo_screen *sysinfo_screen_init(struct cui *cui,
 	text_screen_init(&screen->text_scr, cui,
 			_("Petitboot System Information"), on_exit);
 	text_screen_set_help(&screen->text_scr,
-			_("System Information"), sysinfo_help_text);
+			_("System Information"), &sysinfo_help_text);
 
 	sysinfo_screen_update(screen, sysinfo);
 

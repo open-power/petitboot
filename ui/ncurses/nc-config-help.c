@@ -1,4 +1,6 @@
-const char *config_help_text = "\
+#include "nc-helpscreen.h"
+
+struct help_text config_help_text = define_help_text("\
 Autoboot: There are three possible options for automatic-boot hehaviour:\n"
 "\n"
 "Don't autoboot: boot options will be listed in the petitboot menu, but none \
@@ -35,5 +37,4 @@ only want to configure a single interface during boot.\n"
 "Static IP configuration: Allows you to specify an IPv4 address and network \
 mask, gateway, and a DNS server or servers for a network interface. Select \
 this option if you do not have a DHCP server, or want explicit control of \
-network settings."
-;
+network settings.");

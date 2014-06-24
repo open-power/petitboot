@@ -48,7 +48,8 @@ struct nc_scr *help_screen_return_scr(struct help_screen *screen)
 
 struct help_screen *help_screen_init(struct cui *cui,
 		struct nc_scr *current_scr,
-		const char *title_suffix, const char *text,
+		const char *title_suffix,
+		const struct help_text *text,
 		void (*on_exit)(struct cui *))
 {
 	struct help_screen *screen;
@@ -63,7 +64,7 @@ struct help_screen *help_screen_init(struct cui *cui,
 				_("Petitboot help: %s"), title_suffix);
 
 	text_screen_init(&screen->text_scr, cui, title, on_exit);
-	text_screen_set_text(&screen->text_scr, text);
+	text_screen_set_text(&screen->text_scr, text->text);
 	text_screen_draw(&screen->text_scr);
 
 	return screen;

@@ -174,7 +174,7 @@ struct nc_scr *text_screen_scr(struct text_screen *screen)
 }
 
 void text_screen_set_help(struct text_screen *screen, const char *title,
-		const char *text)
+		const struct help_text *text)
 {
 	screen->help_title = title;
 	screen->help_text = text;

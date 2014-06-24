@@ -23,6 +23,7 @@
 
 #include "ui/common/joystick.h"
 #include "nc-menu.h"
+#include "nc-helpscreen.h"
 
 struct cui_opt_data {
 	const char *name;
@@ -75,7 +76,8 @@ void cui_item_edit(struct pmenu_item *item);
 void cui_item_new(struct pmenu *menu);
 void cui_show_sysinfo(struct cui *cui);
 void cui_show_config(struct cui *cui);
-void cui_show_help(struct cui *cui, const char *title, const char *text);
+void cui_show_help(struct cui *cui, const char *title,
+		const struct help_text *text);
 int cui_send_config(struct cui *cui, struct config *config);
 void cui_send_reinit(struct cui *cui);
 

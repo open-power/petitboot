@@ -270,7 +270,8 @@ static void cui_help_exit(struct cui *cui)
 	cui->help_screen = NULL;
 }
 
-void cui_show_help(struct cui *cui, const char *title, const char *text)
+void cui_show_help(struct cui *cui, const char *title,
+		const struct help_text *text)
 {
 	if (!cui->current)
 		return;

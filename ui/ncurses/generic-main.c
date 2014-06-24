@@ -40,7 +40,7 @@
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
 
-extern const char *main_menu_help_text;
+extern const struct help_text main_menu_help_text;
 
 static void print_version(void)
 {
@@ -234,7 +234,7 @@ static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
 	}
 
 	m->help_title = _("main menu");
-	m->help_text = main_menu_help_text;
+	m->help_text = &main_menu_help_text;
 
 	menu_opts_off(m->ncm, O_SHOWDESC);
 	set_menu_mark(m->ncm, " *");

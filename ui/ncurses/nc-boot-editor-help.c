@@ -1,4 +1,6 @@
-const char *boot_editor_help_text = "\
+#include "nc-helpscreen.h"
+
+struct help_text boot_editor_help_text = define_help_text("\
 This screen allows you to edit or create boot options.\n\
 \n\
 Device: This is a list of block devices available on the system. Select \
@@ -21,4 +23,4 @@ Example: /boot/device-tree.dtb\n\
 \n\
 Boot arguments: enter the kernel command-line arguments. This is optional.\n\
 Example: root=/dev/sda1 console=hvc0\n\
-\n";
+\n");

@@ -35,7 +35,7 @@
 
 #define N_FIELDS	25
 
-extern const char *config_help_text;
+extern struct help_text config_help_text;
 
 enum autoboot_type {
 	AUTOBOOT_ANY,
@@ -146,7 +146,7 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 	} else if (screen->show_help) {
 		screen->show_help = false;
 		cui_show_help(screen->cui, _("System Configuration"),
-				config_help_text);
+				&config_help_text);
 
 	} else if (handled) {
 		pad_refresh(screen);

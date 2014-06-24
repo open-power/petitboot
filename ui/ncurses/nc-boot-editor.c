@@ -73,7 +73,7 @@ struct boot_editor {
 	char			*args;
 };
 
-extern const char *boot_editor_help_text;
+extern const struct help_text boot_editor_help_text;
 
 static struct boot_editor *boot_editor_from_scr(struct nc_scr *scr)
 {
@@ -222,7 +222,7 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 	case STATE_HELP:
 		boot_editor->state = STATE_EDIT;
 		cui_show_help(boot_editor->cui, _("Boot Option Editor"),
-				boot_editor_help_text);
+				&boot_editor_help_text);
 		break;
 	default:
 		break;

@@ -88,7 +88,7 @@ struct pmenu {
 	unsigned int item_count;
 	unsigned int insert_pt;
 	const char *help_title;
-	const char *help_text;
+	const struct help_text *help_text;
 	int (*hot_key)(struct pmenu *menu, struct pmenu_item *item, int c);
 	void (*on_exit)(struct pmenu *menu);
 	void (*on_new)(struct pmenu *menu);
