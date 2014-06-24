@@ -7,4 +7,8 @@ ui/ncurses/nc-helpscreen.c
 ui/ncurses/nc-menu.c
 ui/ncurses/nc-sysinfo.c
 ui/ncurses/nc-textscreen.c
+ui/ncurses/generic-main-help.c
+ui/ncurses/nc-boot-editor-help.c
+ui/ncurses/nc-config-help.c
+ui/ncurses/nc-sysinfo-help.c
 ui/ncurses/generic-main.c
