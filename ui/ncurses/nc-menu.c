@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <wctype.h>
+#include <util/util.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -161,6 +162,160 @@ void pmenu_item_insert(struct pmenu *menu, struct pmenu_item *item,
 	assert(menu_items(menu->ncm) == NULL);
 
 	menu->items[index] = item->nci;
+}
+
+/**
+ * pmenu_item_add - Insert item into appropriate position
+ *
+ * Inserts boot entry under matching, predefined device header entry,
+ * moving items in the list if necessary
+ */
+
+void pmenu_item_add(struct pmenu *menu, struct pmenu_item *item,
+	unsigned int insert_pt)
+{
+	struct cui_opt_data *cod = item->data;
+	bool found = false;
+	unsigned int dev;
+
+	/* Items array should already be disconnected */
+
+	for (dev = 0; dev < menu->item_count; dev++) {
+		if (!menu->items[dev])
+			continue;
+
+		struct pmenu_item *i = item_userptr(menu->items[dev]);
+		struct cui_opt_data *d = i->data;
+		/* Device header will have opt == NULL */
+		if (d && !d->opt) {
+			if (cod->dev == d->dev) {
+				found = true;
+				break;
+			}
+		}
+	}
+
+	if (found) {
+		assert(dev < insert_pt);
+		/* Shift down entries between header and insert_pt */
+		memmove(menu->items + dev + 2, menu->items + dev + 1,
+			((menu->items + insert_pt) - (menu->items + dev + 1))
+			* sizeof(menu->items[0]));
+		memset(menu->items + dev + 1, 0, sizeof(menu->items[0]));
+		insert_pt = dev + 1;
+	}
+	/* If for some reason we didn't find the matching device,
+	 * at least add it to a valid position */
+	pmenu_item_insert(menu, item, insert_pt);
+}
+
+/**
+ * pmenu_find_device - Determine if a boot option is new, and if
+ * so return a new pmenu_item to represent its parent device
+ */
+
+struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
+	struct boot_option *opt)
+{
+	struct pmenu_item *item, *dev_hdr = NULL;
+	struct cui *cui = cui_from_pmenu(menu);
+	bool newdev = true, matched = false;
+	struct interface_info *intf;
+	struct blockdev_info *bd;
+	struct cui_opt_data *cod;
+	struct system_info *sys;
+	char hwaddr[32];
+	unsigned int i;
+	char buf[256];
+
+	for (i = 0; i < menu->item_count; i++) {
+		item = item_userptr(menu->items[i]);
+		cod = item->data;
+		/* boot entries will have opt defined */
+		if (!cod || cod->opt)
+			continue;
+		if (cod->dev == dev) {
+			pb_debug("%s: opt %s fits under %s\n",__func__,
+				 opt->name, opt->device_id);
+			newdev = false;
+			break;
+		}
+	}
+
+	if (!newdev) {
+		pb_debug("%s: No new device\n",__func__);
+		return NULL;
+	}
+
+	/* Create a dummy pmenu_item to represent the dev */
+	pb_debug("%s: Building new item\n",__func__);
+	sys = cui->sysinfo;
+	switch (dev->type) {
+	case DEVICE_TYPE_OPTICAL:
+	case DEVICE_TYPE_DISK:
+		/* Find block info */
+		for (i = 0; sys && i < sys->n_blockdevs; i++) {
+			bd = sys->blockdevs[i];
+			if (!strcmp(opt->device_id, bd->name)) {
+				matched = true;
+				break;
+			}
+		}
+		if (matched) {
+			snprintf(buf,sizeof(buf),"[%s: %s / %s]",
+				dev->type == DEVICE_TYPE_DISK ?
+				"Disk" : "CD/DVD",
+				bd->name, bd->uuid);
+		}
+		break;
+
+	case DEVICE_TYPE_NETWORK:
+		/* Find interface info */
+		for (i = 0; sys && i < sys->n_interfaces; i++) {
+			intf = sys->interfaces[i];
+			if (!strcmp(opt->device_id, intf->name)) {
+				matched = true;
+				break;
+			}
+		}
+		if (matched) {
+			mac_str(intf->hwaddr, intf->hwaddr_size,
+				hwaddr, sizeof(hwaddr));
+			snprintf(buf,sizeof(buf),"[Interface %s / %s]",
+				intf->name, hwaddr);
+		}
+		break;
+
+	default:
+		/* Assume the device may be able to boot */
+		break;
+	}
+	if (!matched) {
+		pb_debug("%s: No matching device found for %s (%s)\n",
+			__func__,opt->device_id, dev->id);
+		snprintf(buf,sizeof(buf),"[Unknown Device: %s]",
+			dev->id);
+	}
+
+	dev_hdr = pmenu_item_create(menu, buf);
+	if (!dev_hdr) {
+		pb_log("%s: Failed to create item\n",__func__);
+		return NULL;
+	}
+
+	dev_hdr->on_execute = NULL;
+	item_opts_off(dev_hdr->nci, O_SELECTABLE);
+
+	/* We identify dev_hdr items as having a valid c->name,
+	 * but a NULL c->opt */
+	cod = talloc(dev_hdr, struct cui_opt_data);
+	cod->name = talloc_strdup(dev_hdr, opt->device_id);
+	cod->dev = dev;
+	cod->opt = NULL;
+	dev_hdr->data = cod;
+
+	pb_debug("%s: returning %s\n",__func__,cod->name);
+	return dev_hdr;
 }
 
 static int pmenu_item_get_index(const struct pmenu_item *item)

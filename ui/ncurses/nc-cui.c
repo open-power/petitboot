@@ -405,12 +405,14 @@ static void cui_handle_resize(struct cui *cui)
 static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		void *arg)
 {
+	struct pmenu_item *i, *dev_hdr = NULL;
 	struct cui *cui = cui_from_arg(arg);
 	struct cui_opt_data *cod;
+	const char *tab = "  ";
 	unsigned int insert_pt;
 	int result, rows, cols;
-	struct pmenu_item *i;
 	ITEM *selected;
+	char *name;
 
 	pb_debug("%s: %p %s\n", __func__, opt, opt->id);
 
@@ -420,9 +422,16 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	if (cui->current == &cui->main->scr)
 		nc_scr_unpost(cui->current);
 
-	/* Save the item in opt->ui_info for cui_device_remove() */
+	/* Check if the boot device is new */
+	dev_hdr = pmenu_find_device(cui->main, dev, opt);
 
-	opt->ui_info = i = pmenu_item_create(cui->main, opt->name);
+	/* All actual boot entries are 'tabbed' across */
+	name = talloc_asprintf(cui->main, "%s%s",
+			tab, opt->name ? : "Unknown Name");
+
+	/* Save the item in opt->ui_info for cui_device_remove() */
+	opt->ui_info = i = pmenu_item_create(cui->main, name);
+	talloc_free(name);
 	if (!i)
 		return -1;
 
@@ -448,8 +457,16 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
 
 	/* Insert new items at insert_pt. */
-	insert_pt = pmenu_grow(cui->main, 1);
-	pmenu_item_insert(cui->main, i, insert_pt);
+	if (dev_hdr) {
+		insert_pt = pmenu_grow(cui->main, 2);
+		pmenu_item_insert(cui->main, dev_hdr, insert_pt);
+		pb_log("%s: adding new device hierarchy %s\n",
+			__func__,opt->device_id);
+		pmenu_item_insert(cui->main, i, insert_pt+1);
+	} else {
+		insert_pt = pmenu_grow(cui->main, 1);
+		pmenu_item_add(cui->main, i, insert_pt);
+	}
 
 	pb_log("%s: adding opt '%s'\n", __func__, cod->name);
 	pb_log("   image  '%s'\n", cod->bd->image);
@@ -499,8 +516,9 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 static void cui_device_remove(struct device *dev, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
-	int result;
 	struct boot_option *opt;
+	unsigned int i;
+	int result;
 
 	pb_log("%s: %p %s\n", __func__, dev, dev->id);
 
@@ -515,10 +533,21 @@ static void cui_device_remove(struct device *dev, void *arg)
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
 
 	list_for_each_entry(&dev->boot_options, opt, list) {
-		struct pmenu_item *i = pmenu_item_from_arg(opt->ui_info);
+		struct pmenu_item *item = pmenu_item_from_arg(opt->ui_info);
 
-		assert(pb_protocol_device_cmp(dev, cod_from_item(i)->dev));
-		pmenu_remove(cui->main, i);
+		assert(pb_protocol_device_cmp(dev, cod_from_item(item)->dev));
+		pmenu_remove(cui->main, item);
+	}
+
+	/* Manually remove remaining device hierarchy item */
+	for (i=0; i < cui->main->item_count; i++) {
+		struct pmenu_item *item = item_userptr(cui->main->items[i]);
+		if (!item || !item->data )
+			continue;
+
+		struct cui_opt_data *data = item->data;
+		if (data && data->dev && data->dev == dev)
+			pmenu_remove(cui->main,item);
 	}
 
 	/* Re-attach the items array. */
