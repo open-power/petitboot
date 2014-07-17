@@ -319,8 +319,7 @@ static int layout_pair(struct config_screen *screen, int y,
 	return max(widget_height(label_w), widget_height(field));
 }
 
-static void config_screen_layout_widgets(struct config_screen *screen,
-		enum net_conf_type net_conf)
+static void config_screen_layout_widgets(struct config_screen *screen)
 {
 	struct nc_widget *wl, *wf, *wh;
 	int y, x, help_x;
@@ -351,8 +350,8 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 	wl = widget_label_base(screen->widgets.iface_l);
 	wf = widget_select_base(screen->widgets.iface_f);
 
-	show = net_conf == NET_CONF_TYPE_DHCP_ONE ||
-		net_conf == NET_CONF_TYPE_STATIC;
+	show = screen->net_conf_type == NET_CONF_TYPE_DHCP_ONE ||
+		screen->net_conf_type == NET_CONF_TYPE_STATIC;
 
 	widget_set_visible(wl, show);
 	widget_set_visible(wf, show);
@@ -361,7 +360,7 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 		y += layout_pair(screen, y, screen->widgets.iface_l, wf) + 1;
 
 	/* conditionally show static IP params */
-	show = net_conf == NET_CONF_TYPE_STATIC;
+	show = screen->net_conf_type == NET_CONF_TYPE_STATIC;
 
 	wl = widget_label_base(screen->widgets.ip_addr_l);
 	wf = widget_textbox_base(screen->widgets.ip_addr_f);
@@ -410,7 +409,7 @@ static void config_screen_layout_widgets(struct config_screen *screen,
 	y++;
 
 	/* we show the DNS/DHCP help if we're configuring DHCP */
-	show = net_conf != NET_CONF_TYPE_STATIC;
+	show = screen->net_conf_type != NET_CONF_TYPE_STATIC;
 	wl = widget_label_base(screen->widgets.dns_dhcp_help_l);
 	widget_set_visible(wl, show);
 	if (show) {
@@ -433,7 +432,7 @@ static void config_screen_network_change(void *arg, int value)
 	struct config_screen *screen = arg;
 	screen->net_conf_type = value;
 	widgetset_unpost(screen->widgetset);
-	config_screen_layout_widgets(screen, value);
+	config_screen_layout_widgets(screen);
 	widgetset_post(screen->widgetset);
 }
 
@@ -664,7 +663,7 @@ static void config_screen_draw(struct config_screen *screen,
 		screen->net_conf_type = find_net_conf_type(config);
 
 		config_screen_setup_widgets(screen, config, sysinfo);
-		config_screen_layout_widgets(screen, screen->net_conf_type);
+		config_screen_layout_widgets(screen);
 	}
 
 	if (repost)
