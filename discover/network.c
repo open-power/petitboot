@@ -150,6 +150,25 @@ static int network_send_link_query(struct network *network)
 	return 0;
 }
 
+static char *mac_bytes_to_string(void *ctx, uint8_t *addr, int len)
+{
+	const int l = strlen("xx:");
+	char *buf;
+	int i;
+
+	if (len <= 0)
+		return talloc_strdup(ctx, "");
+
+	buf = talloc_array(ctx, char, (len * l) + 1);
+
+	for (i = 0; i < len; i++)
+		sprintf(buf + (l * i), "%02x:", addr[i]);
+
+	*(buf + (l * len) - 1) = '\0';
+
+	return buf;
+}
+
 static void add_interface(struct network *network,
 		struct interface *interface)
 {
@@ -157,6 +176,8 @@ static void add_interface(struct network *network,
 	interface->dev = discover_device_create(network->handler,
 					interface->name);
 	interface->dev->device->type = DEVICE_TYPE_NETWORK;
+	interface->dev->uuid = mac_bytes_to_string(interface->dev,
+			interface->hwaddr, sizeof(interface->hwaddr));
 	device_handler_add_device(network->handler, interface->dev);
 }
 
