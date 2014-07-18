@@ -689,19 +689,26 @@ static void widget_focus_change(struct nc_widget *widget, FIELD *field,
 bool widgetset_process_key(struct nc_widgetset *set, int key)
 {
 	struct nc_widget *widget;
-	FIELD *field;
+	FIELD *field, *tmp;
 	int req = 0;
+	bool tab;
 
 	field = current_field(set->form);
 	assert(field);
 
+	tab = false;
+
 	/* handle field change events */
 	switch (key) {
 	case KEY_BTAB:
+		tab = true;
+		/* fall through */
 	case KEY_UP:
 		req = REQ_PREV_FIELD;
 		break;
 	case '\t':
+		tab = true;
+		/* fall through */
 	case KEY_DOWN:
 		req = REQ_NEXT_FIELD;
 		break;
@@ -717,8 +724,18 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 	if (req) {
 		widget_focus_change(widget, field, false);
 		form_driver(set->form, req);
-		form_driver(set->form, REQ_END_FIELD);
+
+		/* if we're doing a tabbed-field-change, skip until we
+		 * see the next widget */
+		tmp = field;
 		field = current_field(set->form);
+
+		for (; tab && tmp != field && field_userptr(field) == widget;) {
+			form_driver(set->form, req);
+			field = current_field(set->form);
+		}
+
+		form_driver(set->form, REQ_END_FIELD);
 		widget = field_userptr(field);
 		widget_focus_change(widget, field, true);
 		if (widget->field_focus)
