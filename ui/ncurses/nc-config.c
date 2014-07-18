@@ -634,7 +634,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	widget_textbox_set_fixed_size(screen->widgets.timeout_f);
 	widget_textbox_set_validator_integer(screen->widgets.timeout_f, 0, 999);
 
-	screen->widgets.network_l = widget_new_label(set, 0, 0, "Network");
+	screen->widgets.network_l = widget_new_label(set, 0, 0, "Network:");
 	screen->widgets.network_f = widget_new_select(set, 0, 0, 50);
 
 	widget_select_add_option(screen->widgets.network_f,
