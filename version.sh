@@ -5,6 +5,8 @@
 version=
 datefmt='%Y%m%d'
 
+export GIT_DIR=$(basename $0)/.git/
+
 if head=$(git rev-parse --short=8 --verify HEAD 2>/dev/null); then
 
 	suffix=''
