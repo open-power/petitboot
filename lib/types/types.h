@@ -121,6 +121,7 @@ struct boot_priority {
 struct config {
 	bool			autoboot_enabled;
 	unsigned int		autoboot_timeout_sec;
+	bool			safe_mode;
 	struct network_config	network;
 	struct boot_priority	*boot_priorities;
 	unsigned int		n_boot_priorities;

@@ -267,7 +267,8 @@ int pb_protocol_config_len(const struct config *config)
 	unsigned int i, len;
 
 	len =	4 /* config->autoboot_enabled */ +
-		4 /* config->autoboot_timeout_sec */;
+		4 /* config->autoboot_timeout_sec */ +
+		4 /* config->safe_mode */;
 
 	len += 4;
 	for (i = 0; i < config->network.n_interfaces; i++)
@@ -446,6 +447,9 @@ int pb_protocol_serialise_config(const struct config *config,
 	pos += 4;
 
 	*(uint32_t *)pos = __cpu_to_be32(config->autoboot_timeout_sec);
+	pos += 4;
+
+	*(uint32_t *)pos = config->safe_mode;
 	pos += 4;
 
 	*(uint32_t *)pos = __cpu_to_be32(config->network.n_interfaces);
@@ -861,6 +865,10 @@ int pb_protocol_deserialise_config(struct config *config,
 
 	if (read_u32(&pos, &len, &config->autoboot_timeout_sec))
 		goto out;
+
+	if (read_u32(&pos, &len, &tmp))
+		goto out;
+	config->safe_mode = !!tmp;
 
 	if (read_u32(&pos, &len, &config->network.n_interfaces))
 		goto out;

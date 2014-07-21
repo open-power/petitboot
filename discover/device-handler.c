@@ -285,6 +285,9 @@ struct device_handler *device_handler_init(struct discover_server *server,
 
 	parser_init();
 
+	if (config_get()->safe_mode)
+		return handler;
+
 	rc = device_handler_init_sources(handler);
 	if (rc) {
 		talloc_free(handler);
@@ -842,6 +845,13 @@ static int device_handler_init_sources(struct device_handler *handler)
 
 static void device_handler_reinit_sources(struct device_handler *handler)
 {
+	/* if we haven't initialised sources previously (becuase we started in
+	 * safe mode), then init once here. */
+	if (!(handler->udev || handler->network || handler->user_event)) {
+		device_handler_init_sources(handler);
+		return;
+	}
+
 	udev_reinit(handler->udev);
 
 	network_shutdown(handler->network);

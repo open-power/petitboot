@@ -42,6 +42,7 @@ struct config *config_copy(void *ctx, const struct config *src)
 	dest = talloc(ctx, struct config);
 	dest->autoboot_enabled = src->autoboot_enabled;
 	dest->autoboot_timeout_sec = src->autoboot_timeout_sec;
+	dest->safe_mode = src->safe_mode;
 
 	dest->network.n_interfaces = src->network.n_interfaces;
 	dest->network.interfaces = talloc_array(dest, struct interface_config *,

@@ -43,6 +43,9 @@ static void dump_config(struct config *config)
 	if (config->network.n_interfaces || config->network.n_dns_servers)
 		pb_log(" network configuration:\n");
 
+	if (config->safe_mode)
+		pb_log(" safe mode: active\n");
+
 	for (i = 0; i < config->network.n_interfaces; i++) {
 		struct interface_config *ifconf =
 			config->network.interfaces[i];
