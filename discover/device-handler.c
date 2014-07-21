@@ -344,6 +344,11 @@ void device_handler_remove(struct device_handler *handler,
 		talloc_free(opt);
 	}
 
+	/* if this is a network device, we have to unregister it from the
+	 * network code */
+	if (device->device->type == DEVICE_TYPE_NETWORK)
+		network_unregister_device(handler->network, device);
+
 	handler->n_devices--;
 	memmove(&handler->devices[i], &handler->devices[i + 1],
 		(handler->n_devices - i) * sizeof(handler->devices[0]));
@@ -646,6 +651,8 @@ void device_handler_add_device(struct device_handler *handler,
 				struct discover_device *, handler->n_devices);
 	handler->devices[handler->n_devices - 1] = device;
 
+	if (device->device->type == DEVICE_TYPE_NETWORK)
+		network_register_device(handler->network, device);
 }
 
 /* Start discovery on a hotplugged device. The device will be in our devices

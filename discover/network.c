@@ -97,6 +97,18 @@ static struct interface *find_interface_by_ifindex(struct network *network,
 	return NULL;
 }
 
+static struct interface *find_interface_by_name(struct network *network,
+		const char *name)
+{
+	struct interface *interface;
+
+	list_for_each_entry(&network->interfaces, interface, list)
+		if (!strcmp(interface->name, name))
+			return interface;
+
+	return NULL;
+}
+
 static int network_init_netlink(struct network *network)
 {
 	struct sockaddr_nl addr;
@@ -184,9 +196,36 @@ static void add_interface(struct network *network,
 static void remove_interface(struct network *network,
 		struct interface *interface)
 {
-	device_handler_remove(network->handler, interface->dev);
+	if (interface->dev)
+		device_handler_remove(network->handler, interface->dev);
 	list_remove(&interface->list);
 	talloc_free(interface);
+}
+
+void network_register_device(struct network *network,
+		struct discover_device *dev)
+{
+	struct interface *iface;
+
+	iface = find_interface_by_name(network, dev->device->id);
+	if (!iface)
+		return;
+
+	iface->dev = dev;
+	dev->uuid = mac_bytes_to_string(iface->dev, iface->hwaddr,
+			sizeof(iface->hwaddr));
+}
+
+void network_unregister_device(struct network *network,
+		struct discover_device *dev)
+{
+	struct interface *iface;
+
+	iface = find_interface_by_name(network, dev->device->id);
+	if (!iface)
+		return;
+
+	iface->dev = NULL;
 }
 
 static int interface_change(struct interface *interface, bool up)
