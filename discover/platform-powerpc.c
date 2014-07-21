@@ -572,6 +572,7 @@ enum ipmi_bootdev {
 	IPMI_BOOTDEV_NONE = 0x00,
 	IPMI_BOOTDEV_NETWORK = 0x01,
 	IPMI_BOOTDEV_DISK = 0x2,
+	IPMI_BOOTDEV_SAFE = 0x3,
 	IPMI_BOOTDEV_CDROM = 0x5,
 	IPMI_BOOTDEV_SETUP = 0x6,
 };
@@ -612,6 +613,7 @@ static int read_bootdev_sysparam(const char *name, uint8_t *val)
 	case IPMI_BOOTDEV_NONE:
 	case IPMI_BOOTDEV_NETWORK:
 	case IPMI_BOOTDEV_DISK:
+	case IPMI_BOOTDEV_SAFE:
 	case IPMI_BOOTDEV_CDROM:
 	case IPMI_BOOTDEV_SETUP:
 		*val = buf[0];
@@ -697,6 +699,10 @@ static void parse_opal_sysparams(struct config *config)
 		break;
 	case IPMI_BOOTDEV_SETUP:
 		config->autoboot_enabled = false;
+		break;
+	case IPMI_BOOTDEV_SAFE:
+		config->autoboot_enabled = false;
+		config->safe_mode = true;
 		break;
 	}
 }
