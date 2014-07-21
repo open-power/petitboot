@@ -87,6 +87,7 @@ void config_set_defaults(struct config *config)
 {
 	config->autoboot_enabled = true;
 	config->autoboot_timeout_sec = 10;
+	config->autoboot_enabled = true;
 	config->network.interfaces = NULL;
 	config->network.n_interfaces = 0;
 	config->network.dns_servers = NULL;

@@ -592,6 +592,11 @@ static void cui_update_config(struct config *config, void *arg)
 
 	if (cui->config_screen)
 		config_screen_update(cui->config_screen, config, cui->sysinfo);
+
+	if (config->safe_mode)
+		nc_scr_status_printf(cui->current,
+				"SAFE MODE: select '%s' to continue",
+				"Rescan devices");
 }
 
 int cui_send_config(struct cui *cui, struct config *config)
