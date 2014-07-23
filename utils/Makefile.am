@@ -14,9 +14,10 @@
 
 dist_sbin_SCRIPTS += utils/pb-udhcpc
 dist_pkglibexec_SCRIPTS = utils/pb-console utils/pb-sysinfo
-sbin_PROGRAMS += utils/pb-event
+sbin_PROGRAMS += utils/pb-event utils/pb-config
 
-utils_pb_event_SOURCES = utils/pb-event.c
+utils_pb_config_LDADD = $(top_builddir)/lib/libpbcore.la \
+		  $(top_builddir)/discover/platform.ro
 
 dist_pkgdata_DATA = \
 	utils/kboot.conf.sample \
