@@ -185,6 +185,9 @@ int main(int argc, char *argv[])
 	if (config_get()->lang)
 		setlocale(LC_ALL, config_get()->lang);
 
+	if (config_get()->debug)
+		pb_log_set_debug(true);
+
 	system_info_init(server);
 
 	handler = device_handler_init(server, waitset, opts.dry_run == opt_yes);

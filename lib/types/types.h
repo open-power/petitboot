@@ -121,12 +121,15 @@ struct boot_priority {
 struct config {
 	bool			autoboot_enabled;
 	unsigned int		autoboot_timeout_sec;
-	bool			safe_mode;
 	struct network_config	network;
 	struct boot_priority	*boot_priorities;
 	unsigned int		n_boot_priorities;
 	char			*boot_device;
 	char			*lang;
+
+	/* not user-settable */
+	bool			safe_mode;
+	bool			debug;
 };
 
 #endif /* _TYPES_H */

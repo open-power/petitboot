@@ -36,6 +36,7 @@ static const char *known_params[] = {
 	"petitboot,network",
 	"petitboot,timeout",
 	"petitboot,bootdev",
+	"petitboot,debug?",
 	NULL,
 };
 
@@ -424,6 +425,11 @@ static void populate_config(struct platform_powerpc *platform,
 	populate_network_config(platform, config);
 
 	populate_bootdev_config(platform, config);
+
+	if (!config->debug) {
+		val = get_param(platform, "petitboot,debug?");
+		config->debug = val && !strcmp(val, "true");
+	}
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)

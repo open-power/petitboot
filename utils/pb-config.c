@@ -68,6 +68,8 @@ static void print_config(void *ctx, struct config *config, const char *var)
 			config->autoboot_timeout_sec);
 	print_one_config(ctx, var, "safe-mode", "%s",
 			config->safe_mode ? "enabled" : "disabled");
+	print_one_config(ctx, var, "debug", "%s",
+			config->debug ? "enabled" : "disabled");
 }
 
 int main(int argc, char **argv)

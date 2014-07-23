@@ -1,7 +1,11 @@
 
+#define _GNU_SOURCE
+
+#include <fcntl.h>
 #include <string.h>
 
 #include <log/log.h>
+#include <file/file.h>
 #include <types/types.h>
 #include <talloc/talloc.h>
 
@@ -10,6 +14,8 @@
 void			*platform_ctx;
 static struct platform	*platform;
 static struct config	*config;
+
+static const char *kernel_cmdline_debug = "petitboot.debug";
 
 static const char *device_type_name(enum device_type type)
 {
@@ -85,6 +91,25 @@ static void dump_config(struct config *config)
 	pb_log(" language: %s\n", config->lang ?: "");
 }
 
+static bool config_debug_on_cmdline(void)
+{
+	char buf[600];
+	int rc, fd;
+
+	fd = open("/proc/cmdline", O_RDONLY);
+	if (fd < 0)
+		return false;
+
+	rc = read(fd, buf, sizeof(buf));
+	close(fd);
+
+	if (rc <= 0)
+		return false;
+
+	return memmem(buf, rc, kernel_cmdline_debug,
+			strlen(kernel_cmdline_debug)) != NULL;
+}
+
 void config_set_defaults(struct config *config)
 {
 	config->autoboot_enabled = true;
@@ -105,6 +130,8 @@ void config_set_defaults(struct config *config)
 	config->boot_priorities[0].priority = 2;
 	config->boot_priorities[1].type = DEVICE_TYPE_DISK;
 	config->boot_priorities[1].priority = 1;
+
+	config->debug = config_debug_on_cmdline();
 }
 
 int platform_init(void *ctx)

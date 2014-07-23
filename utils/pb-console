@@ -9,6 +9,7 @@ shell=sh
 getty=/sbin/getty
 use_getty=0
 detach=0
+pb_config=pb-config
 
 usage() {
 	cat >&2 <<EOF
@@ -104,8 +105,7 @@ case "$(tty)" in
 esac
 
 verbose_opt=
-sysinfo_bin=$(dirname $0)/pb-sysinfo
-if [ -x $sysinfo_bin ] && $sysinfo_bin --debug-enabled
+if $pb_config debug | grep -q enabled
 then
 	verbose_opt=--verbose
 fi

@@ -13,7 +13,7 @@
 #
 
 dist_sbin_SCRIPTS += utils/pb-udhcpc
-dist_pkglibexec_SCRIPTS = utils/pb-console utils/pb-sysinfo
+dist_pkglibexec_SCRIPTS = utils/pb-console
 sbin_PROGRAMS += utils/pb-event utils/pb-config
 
 utils_pb_config_LDADD = $(top_builddir)/lib/libpbcore.la \
