@@ -9,6 +9,7 @@
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 
+#include <file/file.h>
 #include <talloc/talloc.h>
 #include <list/list.h>
 #include <log/log.h>
@@ -738,6 +739,23 @@ static int save_config(struct platform *p, struct config *config)
 	return rc;
 }
 
+static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
+{
+	struct platform_powerpc *platform = p->platform_data;
+	int len, rc;
+	char *buf;
+
+	rc = read_file(platform, "/proc/device_tree/model", &buf, &len);
+	if (rc == 0)
+		sysinfo->type = talloc_steal(sysinfo, buf);
+
+	rc = read_file(platform, "/proc/device_tree/system-id", &buf, &len);
+	if (rc == 0)
+		sysinfo->identifier = talloc_steal(sysinfo, buf);
+
+	return 0;
+}
+
 static bool probe(struct platform *p, void *ctx)
 {
 	struct platform_powerpc *platform;
@@ -759,12 +777,14 @@ static bool probe(struct platform *p, void *ctx)
 	return true;
 }
 
+
 static struct platform platform_powerpc = {
 	.name		= "powerpc",
 	.dhcp_arch_id	= 0x000e,
 	.probe		= probe,
 	.load_config	= load_config,
 	.save_config	= save_config,
+	.get_sysinfo	= get_sysinfo,
 };
 
 register_platform(platform_powerpc);

@@ -143,6 +143,13 @@ const struct platform *platform_get(void)
 	return platform;
 }
 
+int platform_get_sysinfo(struct system_info *info)
+{
+	if (platform && platform->get_sysinfo)
+		return platform->get_sysinfo(platform, info);
+	return -1;
+}
+
 int config_set(struct config *newconfig)
 {
 	int rc;
