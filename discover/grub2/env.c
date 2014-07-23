@@ -3,12 +3,12 @@
 #include <string.h>
 
 #include <log/log.h>
+#include <file/file.h>
 #include <types/types.h>
 #include <talloc/talloc.h>
 #include <util/util.h>
 
 #include <discover/parser.h>
-#include <discover/file.h>
 
 #include "grub2.h"
 

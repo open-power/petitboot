@@ -21,6 +21,8 @@ lib_libpbcore_la_CPPFLAGS = \
 	-DPREFIX='"$(prefix)"'
 
 lib_libpbcore_la_SOURCES = \
+	lib/file/file.h \
+	lib/file/file.c \
 	lib/fold/fold.h \
 	lib/fold/fold.c \
 	lib/i18n/i18n.h \
@@ -45,4 +47,3 @@ lib_libpbcore_la_SOURCES = \
 	lib/url/url.h \
 	lib/util/util.c \
 	lib/util/util.h
-

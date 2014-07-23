@@ -26,8 +26,6 @@ discover_pb_discover_SOURCES = \
 	discover/discover-server.h \
 	discover/event.c \
 	discover/event.h \
-	discover/file.c \
-	discover/file.h \
 	discover/params.c \
 	discover/params.h \
 	discover/parser.c \
@@ -75,6 +73,3 @@ discover_platform_ro_SOURCES = \
 
 discover_platform_ro_LINK = \
 	$(LD) -r -o $@
-
-EXTRA_DIST += discover/native-parser.c
-

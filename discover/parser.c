@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 
 #include "types/types.h"
+#include <file/file.h>
 #include <log/log.h>
 #include <talloc/talloc.h>
 
@@ -12,7 +13,6 @@
 #include "parser.h"
 #include "parser-utils.h"
 #include "paths.h"
-#include "file.h"
 
 struct p_item {
 	struct list_item list;
