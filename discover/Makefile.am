@@ -13,6 +13,7 @@
 #
 
 sbin_PROGRAMS += discover/pb-discover
+noinst_PROGRAMS += discover/platform.ro
 
 discover_pb_discover_SOURCES = \
 	discover/boot.c \
@@ -39,9 +40,6 @@ discover_pb_discover_SOURCES = \
 	discover/paths.h \
 	discover/pb-discover.c \
 	discover/pb-discover.h \
-	discover/platform.c \
-	discover/platform.h \
-	discover/platform-powerpc.c \
 	discover/resource.c \
 	discover/resource.h \
 	discover/sysinfo.c \
@@ -58,6 +56,7 @@ discover_pb_discover_SOURCES = \
 
 discover_pb_discover_LDADD = \
 	discover/grub2/grub2-parser.ro \
+	discover/platform.ro \
 	$(core_lib) \
 	$(UDEV_LIBS)
 
@@ -68,6 +67,14 @@ discover_pb_discover_CPPFLAGS = \
 	-DPKG_LIBEXEC_DIR='"$(pkglibexecdir)"' \
 	-DPKG_SHARE_DIR='"$(pkgsharedir)"' \
 	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"'
+
+discover_platform_ro_SOURCES = \
+	discover/platform.c \
+	discover/platform.h \
+	discover/platform-powerpc.c
+
+discover_platform_ro_LINK = \
+	$(LD) -r -o $@
 
 EXTRA_DIST += discover/native-parser.c
 
