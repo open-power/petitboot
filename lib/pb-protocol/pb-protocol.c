@@ -289,6 +289,12 @@ int pb_protocol_config_len(const struct config *config)
 	return len;
 }
 
+int pb_protocol_url_len(const char *url)
+{
+	/* url + length field */
+	return 4 + optional_strlen(url);
+}
+
 int pb_protocol_serialise_device(const struct device *dev,
 		char *buf, int buf_len)
 {
@@ -485,6 +491,18 @@ int pb_protocol_serialise_config(const struct config *config,
 	pos += pb_protocol_serialise_string(pos, config->lang);
 
 	assert(pos <= buf + buf_len);
+	(void)buf_len;
+
+	return 0;
+}
+
+int pb_protocol_serialise_url(const char *url, char *buf, int buf_len)
+{
+	char *pos = buf;
+
+	pos += pb_protocol_serialise_string(pos, url);
+
+	assert(pos <=buf+buf_len);
 	(void)buf_len;
 
 	return 0;
