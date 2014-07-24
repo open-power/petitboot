@@ -216,6 +216,7 @@ static int discover_server_process_message(void *arg)
 	struct boot_command *boot_command;
 	struct client *client = arg;
 	struct config *config;
+	char *url;
 	int rc;
 
 	message = pb_protocol_read_message(client, client->fd);
@@ -260,6 +261,12 @@ static int discover_server_process_message(void *arg)
 
 		device_handler_update_config(client->server->device_handler,
 				config);
+		break;
+
+	case PB_PROTOCOL_ACTION_ADD_URL:
+		url = pb_protocol_deserialise_string((void *) client, message);
+
+		device_handler_process_url(client->server->device_handler, url);
 		break;
 
 	default:
