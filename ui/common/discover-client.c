@@ -383,3 +383,21 @@ int discover_client_send_config(struct discover_client *client,
 
 	return pb_protocol_write_message(client->fd, message);
 }
+
+int discover_client_send_url(struct discover_client *client,
+		char *url)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_url_len(url);
+
+	message = pb_protocol_create_message(client,
+				PB_PROTOCOL_ACTION_ADD_URL, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_url(url, message->payload, len);
+
+	return pb_protocol_write_message(client->fd, message);
+}

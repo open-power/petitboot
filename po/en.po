@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-07-28 13:48+0800\n"
+"POT-Creation-Date: 2014-07-28 16:06+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: English\n"
@@ -59,6 +59,42 @@ msgstr "Booting in %d sec: %s"
 msgid "Default boot cancelled"
 msgstr "Default boot cancelled"
 
+#, c-format
+msgid "Received config URL %s"
+msgstr "Received config URL %s"
+
+msgid "Invalid config URL!"
+msgstr "Invalid config URL!"
+
+#, c-format
+msgid "Unable to route to host %s"
+msgstr "Unable to route to host %s"
+
+#, c-format
+msgid "Config file %s parsed"
+msgstr "Config file %s parsed"
+
+msgid "Retrieve Config"
+msgstr "Retrieve Config"
+
+msgid "Configuration URL:"
+msgstr "Configuration URL:"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Petitboot Config Retrieval"
+msgstr "Petitboot Config Retrieval"
+
+msgid "tab=next, shift+tab=previous, x=exit, h=help"
+msgstr "tab=next, shift+tab=previous, x=exit, h=help"
+
 msgid "Boot Option Editor"
 msgstr "Boot Option Editor"
 
@@ -80,20 +116,8 @@ msgstr "Device tree:"
 msgid "Boot arguments:"
 msgstr "Boot arguments:"
 
-msgid "OK"
-msgstr "OK"
-
-msgid "Help"
-msgstr "Help"
-
-msgid "Cancel"
-msgstr "Cancel"
-
 msgid "Petitboot Option Editor"
 msgstr "Petitboot Option Editor"
-
-msgid "tab=next, shift+tab=previous, x=exit, h=help"
-msgstr "tab=next, shift+tab=previous, x=exit, h=help"
 
 msgid "System Configuration"
 msgstr "System Configuration"
@@ -221,6 +245,9 @@ msgstr "System information"
 msgid "System configuration"
 msgstr "System configuration"
 
+msgid "Retrieve config from URL"
+msgstr "Retrieve config from URL"
+
 msgid "Exit to shell"
 msgstr "Exit to shell"
 
@@ -336,6 +363,19 @@ msgstr ""
 "To make changes to the system configuration, type C (configure).\n"
 "\n"
 "To close the Petitboot interface, type X (exit).\n"
+
+msgid ""
+"Supply a valid URL here to retrieve a remote boot config file, (eg: "
+"petitboot.conf) and parse it.\n"
+"\n"
+"URLs are of the form 'scheme://host/path/to/petitboot.conf', such as tftp://"
+"host/petitboot.conf or http://host/petitboot.conf"
+msgstr ""
+"Supply a valid URL here to retrieve a remote boot config file, (eg: "
+"petitboot.conf) and parse it.\n"
+"\n"
+"URLs are of the form 'scheme://host/path/to/petitboot.conf', such as tftp://"
+"host/petitboot.conf or http://host/petitboot.conf"
 
 msgid ""
 "This screen allows you to edit or create boot options.\n"

@@ -2,6 +2,7 @@
 
 discover/boot.c
 discover/device-handler.c
+ui/ncurses/nc-add-url.c
 ui/ncurses/nc-boot-editor.c
 ui/ncurses/nc-config.c
 ui/ncurses/nc-cui.c
@@ -11,6 +12,7 @@ ui/ncurses/nc-menu.c
 ui/ncurses/nc-sysinfo.c
 ui/ncurses/nc-textscreen.c
 ui/ncurses/nc-cui-help.c
+ui/ncurses/nc-add-url-help.c
 ui/ncurses/nc-boot-editor-help.c
 ui/ncurses/nc-config-help.c
 ui/ncurses/nc-sysinfo-help.c

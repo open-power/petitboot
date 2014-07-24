@@ -53,7 +53,10 @@ libpbnc_la_SOURCES = \
 	nc-textscreen.c \
 	nc-textscreen.h \
 	nc-widgets.c \
-	nc-widgets.h
+	nc-widgets.h \
+	nc-add-url.c \
+	nc-add-url.h \
+	nc-add-url-help.c
 
 sbin_PROGRAMS = petitboot-nc
 

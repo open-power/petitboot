@@ -87,4 +87,8 @@ int discover_client_send_config(struct discover_client *client,
  * and ops->boot_option_add on each.
  */
 void discover_client_enumerate(struct discover_client *client);
+
+/* Send url to config to the discover server */
+int discover_client_send_url(struct discover_client *client, char *url);
+
 #endif

@@ -59,6 +59,7 @@ struct cui {
 	struct sysinfo_screen *sysinfo_screen;
 	struct config *config;
 	struct config_screen *config_screen;
+	struct add_url_screen *add_url_screen;
 	struct boot_editor *boot_editor;
 	struct lang_screen *lang_screen;
 	struct help_screen *help_screen;
@@ -80,7 +81,9 @@ void cui_show_config(struct cui *cui);
 void cui_show_lang(struct cui *cui);
 void cui_show_help(struct cui *cui, const char *title,
 		const struct help_text *text);
+void cui_show_add_url(struct cui *cui);
 int cui_send_config(struct cui *cui, struct config *config);
+int cui_send_url(struct cui *cui, char *url);
 void cui_send_reinit(struct cui *cui);
 
 /* convenience routines */

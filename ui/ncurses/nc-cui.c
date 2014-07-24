@@ -37,6 +37,7 @@
 #include "nc-cui.h"
 #include "nc-boot-editor.h"
 #include "nc-config.h"
+#include "nc-add-url.h"
 #include "nc-sysinfo.h"
 #include "nc-lang.h"
 #include "nc-helpscreen.h"
@@ -279,6 +280,19 @@ void cui_show_lang(struct cui *cui)
 {
 	cui->lang_screen = lang_screen_init(cui, cui->config, cui_lang_exit);
 	cui_set_current(cui, lang_screen_scr(cui->lang_screen));
+}
+
+static void cui_add_url_exit(struct cui *cui)
+{
+	cui_set_current(cui, &cui->main->scr);
+	talloc_free(cui->add_url_screen);
+	cui->add_url_screen = NULL;
+}
+
+void cui_show_add_url(struct cui *cui)
+{
+	cui->add_url_screen = add_url_screen_init(cui, cui_add_url_exit);
+	cui_set_current(cui, add_url_screen_scr(cui->add_url_screen));
 }
 
 static void cui_help_exit(struct cui *cui)
@@ -684,6 +698,11 @@ int cui_send_config(struct cui *cui, struct config *config)
 	return discover_client_send_config(cui->client, config);
 }
 
+int cui_send_url(struct cui *cui, char * url)
+{
+	return discover_client_send_url(cui->client, url);
+}
+
 void cui_send_reinit(struct cui *cui)
 {
 	discover_client_send_reinit(cui->client);
@@ -713,6 +732,12 @@ static int menu_reinit_execute(struct pmenu_item *item)
 	return 0;
 }
 
+static int menu_add_url_execute(struct pmenu_item *item)
+{
+	cui_show_add_url(cui_from_item(item));
+	return 0;
+}
+
 /**
  * pb_mm_init - Setup the main menu instance.
  */
@@ -722,7 +747,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	struct pmenu *m;
 	int result;
 
-	m = pmenu_init(cui, 6, cui_on_exit);
+	m = pmenu_init(cui, 7, cui_on_exit);
 	if (!m) {
 		pb_log("%s: failed\n", __func__);
 		return NULL;
@@ -760,9 +785,13 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	i->on_execute = menu_reinit_execute;
 	pmenu_item_insert(m, i, 4);
 
+	i = pmenu_item_create(m, _("Retrieve config from URL"));
+	i->on_execute = menu_add_url_execute;
+	pmenu_item_insert(m, i, 5);
+
 	i = pmenu_item_create(m, _("Exit to shell"));
 	i->on_execute = pmenu_exit_cb;
-	pmenu_item_insert(m, i, 5);
+	pmenu_item_insert(m, i, 6);
 
 	result = pmenu_setup(m);
 
