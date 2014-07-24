@@ -117,6 +117,8 @@ void device_handler_boot(struct device_handler *handler,
 void device_handler_cancel_default(struct device_handler *handler);
 void device_handler_update_config(struct device_handler *handler,
 		struct config *config);
+void device_handler_process_url(struct device_handler *handler,
+		const char *url);
 void device_handler_reinit(struct device_handler *handler);
 
 int device_request_write(struct discover_device *dev, bool *release);

@@ -54,6 +54,8 @@ static const char *event_action_name(enum event_action action)
 		return "add";
 	case EVENT_ACTION_REMOVE:
 		return "remove";
+	case EVENT_ACTION_URL:
+		return "url";
 	case EVENT_ACTION_DHCP:
 		return "dhcp";
 	default:
@@ -430,6 +432,18 @@ static int user_event_remove(struct user_event *uev, struct event *event)
 	return 0;
 }
 
+static int user_event_url(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	const char *url;
+
+	url = event_get_param(event, "url");
+	if (url)
+		device_handler_process_url(handler, url);
+
+	return 0;
+}
+
 static void user_event_handle_message(struct user_event *uev, char *buf,
 	int len)
 {
@@ -452,6 +466,9 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	case EVENT_ACTION_REMOVE:
 		result = user_event_remove(uev, event);
+		break;
+	case EVENT_ACTION_URL:
+		result = user_event_url(uev, event);
 		break;
 	case EVENT_ACTION_CONF:
 		result = user_event_conf(uev, event);

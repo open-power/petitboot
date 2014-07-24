@@ -18,6 +18,11 @@
 #include <url/url.h>
 #include <i18n/i18n.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
 #include "device-handler.h"
 #include "discover-server.h"
 #include "user-event.h"
@@ -829,6 +834,135 @@ void device_handler_update_config(struct device_handler *handler,
 	discover_server_notify_config(handler->server, config);
 	device_handler_update_lang(config->lang);
 	device_handler_reinit(handler);
+}
+
+static char *device_from_addr(void *ctx, struct pb_url *url)
+{
+	char *ipaddr, *buf, *tok, *dev = NULL;
+	const char *delim = " ";
+	struct sockaddr_in *ip;
+	struct sockaddr_in si;
+	struct addrinfo *res;
+	struct process *p;
+	int rc;
+
+	/* Note: IPv4 only */
+	rc = inet_pton(AF_INET, url->host, &(si.sin_addr));
+	if (rc > 0) {
+		ipaddr = url->host;
+	} else {
+		/* need to turn hostname into a valid IP */
+		rc = getaddrinfo(url->host, NULL, NULL, &res);
+		if (rc) {
+			pb_debug("%s: Invalid URL\n",__func__);
+			return NULL;
+		}
+		ipaddr = talloc_array(ctx,char,INET_ADDRSTRLEN);
+		ip = (struct sockaddr_in *) res->ai_addr;
+		inet_ntop(AF_INET, &(ip->sin_addr), ipaddr, INET_ADDRSTRLEN);
+		freeaddrinfo(res);
+	}
+
+	const char *argv[] = {
+		pb_system_apps.ip,
+		"route", "show", "to", "match",
+		ipaddr,
+		NULL
+	};
+
+	p = process_create(ctx);
+
+	p->path = pb_system_apps.ip;
+	p->argv = argv;
+	p->keep_stdout = true;
+
+	rc = process_run_sync(p);
+
+	if (rc) {
+		/* ip has complained for some reason; most likely
+		 * there is no route to the host - bail out */
+		pb_debug("%s: No route to %s\n",__func__,url->host);
+		return NULL;
+	}
+
+	buf = p->stdout_buf;
+	/* If a route is found, ip-route output will be of the form
+	 * "... dev DEVNAME ... " */
+	tok = strtok(buf, delim);
+	while (tok) {
+		if (!strcmp(tok, "dev")) {
+			tok = strtok(NULL, delim);
+			dev = talloc_strdup(ctx, tok);
+			break;
+		}
+		tok = strtok(NULL, delim);
+	}
+
+	process_release(p);
+	if (dev)
+		pb_debug("%s: Found interface '%s'\n", __func__,dev);
+	return dev;
+}
+
+
+void device_handler_process_url(struct device_handler *handler,
+		const char *url)
+{
+	struct discover_context *ctx;
+	struct discover_device *dev;
+	struct boot_status *status;
+	struct pb_url *pb_url;
+	struct event *event;
+	struct param *param;
+
+	status = talloc(handler, struct boot_status);
+
+	status->type = BOOT_STATUS_ERROR;
+	status->progress = 0;
+	status->detail = talloc_asprintf(status,
+			_("Received config URL %s"), url);
+
+	event = talloc(handler, struct event);
+	event->type = EVENT_TYPE_USER;
+	event->action = EVENT_ACTION_CONF;
+
+	event->params = talloc_array(event, struct param, 1);
+	param = &event->params[0];
+	param->name = talloc_strdup(event, "pxeconffile");
+	param->value = talloc_strdup(event, url);
+	event->n_params = 1;
+
+	pb_url = pb_url_parse(event, event->params->value);
+	if (!pb_url || !pb_url->host) {
+		status->message = talloc_asprintf(handler,
+					_("Invalid config URL!"));
+		goto msg;
+	}
+
+	event->device = device_from_addr(event, pb_url);
+	if (!event->device) {
+		status->message = talloc_asprintf(status,
+					_("Unable to route to host %s"),
+					pb_url->host);
+		goto msg;
+	}
+
+	dev = discover_device_create(handler, event->device);
+	ctx = device_handler_discover_context_create(handler, dev);
+	ctx->event = event;
+
+	iterate_parsers(ctx);
+
+	device_handler_discover_context_commit(handler, ctx);
+
+	talloc_free(ctx);
+
+	status->type = BOOT_STATUS_INFO;
+	status->message = talloc_asprintf(status, _("Config file %s parsed"),
+					pb_url->file);
+msg:
+	boot_status(handler, status);
+	talloc_free(status);
 }
 
 #ifndef PETITBOOT_TEST
