@@ -82,4 +82,9 @@ int discover_client_send_reinit(struct discover_client *client);
 /* Send new configuration data to the discover server */
 int discover_client_send_config(struct discover_client *client,
 		struct config *config);
+
+/* Re-enumerate the collected devices & boot options, calling ops->device_add
+ * and ops->boot_option_add on each.
+ */
+void discover_client_enumerate(struct discover_client *client);
 #endif

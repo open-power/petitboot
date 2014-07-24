@@ -112,6 +112,24 @@ static void device_remove(struct discover_client *client, const char *id)
 	talloc_free(device);
 }
 
+void discover_client_enumerate(struct discover_client *client)
+{
+	struct boot_option *opt;
+	struct device *device;
+	int i;
+
+	for (i = 0; i < client->n_devices; i++) {
+		device = client->devices[i];
+		if (client->ops.device_add)
+			client->ops.device_add(device, client->ops.cb_arg);
+
+		list_for_each_entry(&device->boot_options, opt, list)
+			if (client->ops.boot_option_add)
+				client->ops.boot_option_add(device, opt,
+						client->ops.cb_arg);
+	}
+}
+
 static void update_status(struct discover_client *client,
 		struct boot_status *status)
 {
