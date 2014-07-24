@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-07-28 13:45+0800\n"
+"POT-Creation-Date: 2014-07-28 13:48+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: English\n"
@@ -165,6 +165,24 @@ msgstr "SAFE MODE: select '%s' to continue"
 
 msgid "Rescan devices"
 msgstr "Rescan devices"
+
+msgid "Enter=accept, e=edit, n=new, x=exit, h=help"
+msgstr "Enter=accept, e=edit, n=new, x=exit, h=help"
+
+msgid "Welcome to Petitboot"
+msgstr "Welcome to Petitboot"
+
+msgid "System information"
+msgstr "System information"
+
+msgid "System configuration"
+msgstr "System configuration"
+
+msgid "Exit to shell"
+msgstr "Exit to shell"
+
+msgid "main menu"
+msgstr "main menu"
 
 #, c-format
 msgid "%s: alloc cui failed.\n"
@@ -390,21 +408,3 @@ msgstr ""
 
 msgid "Usage"
 msgstr "Usage"
-
-msgid "Enter=accept, e=edit, n=new, x=exit, h=help"
-msgstr "Enter=accept, e=edit, n=new, x=exit, h=help"
-
-msgid "Welcome to Petitboot"
-msgstr "Welcome to Petitboot"
-
-msgid "System information"
-msgstr "System information"
-
-msgid "System configuration"
-msgstr "System configuration"
-
-msgid "Exit to shell"
-msgstr "Exit to shell"
-
-msgid "main menu"
-msgstr "main menu"

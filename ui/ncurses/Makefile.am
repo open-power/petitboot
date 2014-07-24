@@ -35,6 +35,7 @@ libpbnc_la_SOURCES = \
 	nc-config-help.c \
 	nc-cui.c \
 	nc-cui.h \
+	nc-cui-help.c \
 	nc-boot-editor.c \
 	nc-boot-editor.h \
 	nc-boot-editor-help.c \
@@ -59,7 +60,7 @@ sbin_PROGRAMS += petitboot-ps3-nc
 endif
 
 
-petitboot_nc_SOURCES = generic-main.c generic-main-help.c
+petitboot_nc_SOURCES = generic-main.c
 petitboot_nc_LDADD = $(common_libs)
 
 petitboot_ps3_nc_SOURCES = ps3-main.c

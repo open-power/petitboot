@@ -40,8 +40,6 @@
 #include "ui/common/discover-client.h"
 #include "nc-cui.h"
 
-extern const struct help_text main_menu_help_text;
-
 static void print_version(void)
 {
 	printf("petitboot-nc (" PACKAGE_NAME ") " PACKAGE_VERSION "\n");
@@ -150,104 +148,14 @@ static char *default_log_filename(void)
 
 	return name;
 }
-/**
+
+struct cui *cui;
+
+/*
  * struct pb_cui - Main cui program instance.
  * @mm: Main menu.
  * @svm: Set video mode menu.
  */
-
-struct pb_cui {
-	struct pmenu *mm;
-	struct cui *cui;
-};
-
-static int pmenu_sysinfo(struct pmenu_item *item)
-{
-	cui_show_sysinfo(cui_from_item(item));
-	return 0;
-}
-
-static int pmenu_config(struct pmenu_item *item)
-{
-	cui_show_config(cui_from_item(item));
-	return 0;
-}
-
-static int pmenu_reinit(struct pmenu_item *item)
-{
-	cui_send_reinit(cui_from_item(item));
-	return 0;
-}
-
-/**
- * pb_mm_init - Setup the main menu instance.
- */
-
-static struct pmenu *pb_mm_init(struct pb_cui *pb_cui)
-{
-	int result;
-	struct pmenu *m;
-	struct pmenu_item *i;
-
-	m = pmenu_init(pb_cui->cui, 5, cui_on_exit);
-
-	if (!m) {
-		pb_log("%s: failed\n", __func__);
-		return NULL;
-	}
-
-	m->on_new = cui_item_new;
-
-	m->scr.frame.ltitle = talloc_asprintf(m,
-		"Petitboot (" PACKAGE_VERSION ")");
-	m->scr.frame.rtitle = NULL;
-	m->scr.frame.help = talloc_strdup(m,
-		_("Enter=accept, e=edit, n=new, x=exit, h=help"));
-	m->scr.frame.status = talloc_strdup(m, _("Welcome to Petitboot"));
-
-	i = pmenu_item_create(m, " ");
-	item_opts_off(i->nci, O_SELECTABLE);
-	pmenu_item_insert(m, i, 0);
-
-	i = pmenu_item_create(m, _("System information"));
-	i->on_execute = pmenu_sysinfo;
-	pmenu_item_insert(m, i, 1);
-
-	i = pmenu_item_create(m, _("System configuration"));
-	i->on_execute = pmenu_config;
-	pmenu_item_insert(m, i, 2);
-
-	i = pmenu_item_create(m, _("Rescan devices"));
-	i->on_execute = pmenu_reinit;
-	pmenu_item_insert(m, i, 3);
-
-	i = pmenu_item_create(m, _("Exit to shell"));
-	i->on_execute = pmenu_exit_cb;
-	pmenu_item_insert(m, i, 4);
-
-	result = pmenu_setup(m);
-
-	if (result) {
-		pb_log("%s:%d: pmenu_setup failed: %s\n", __func__, __LINE__,
-			strerror(errno));
-		goto fail_setup;
-	}
-
-	m->help_title = _("main menu");
-	m->help_text = &main_menu_help_text;
-
-	menu_opts_off(m->ncm, O_SHOWDESC);
-	set_menu_mark(m->ncm, " *");
-	set_current_item(m->ncm, i->nci);
-
-	return m;
-
-fail_setup:
-	talloc_free(m);
-	return NULL;
-}
-
-static struct pb_cui pb;
 
 static void sig_handler(int signum)
 {
@@ -255,8 +163,8 @@ static void sig_handler(int signum)
 
 	switch (signum) {
 	case SIGWINCH:
-		if (pb.cui)
-			cui_resize(pb.cui);
+		if (cui)
+			cui_resize(cui);
 		break;
 	default:
 		assert(0 && "unknown sig");
@@ -264,8 +172,8 @@ static void sig_handler(int signum)
 	case SIGINT:
 	case SIGHUP:
 	case SIGTERM:
-		if (pb.cui)
-			cui_abort(pb.cui);
+		if (cui)
+			cui_abort(cui);
 		break;
 	}
 }
@@ -336,18 +244,13 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	pb.cui = cui_init(&pb, NULL, opts.start_daemon);
-
-	if (!pb.cui)
+	cui = cui_init(NULL, NULL, opts.start_daemon);
+	if (!cui)
 		return EXIT_FAILURE;
 
-	pb.mm = pb_mm_init(&pb);
+	cui_result = cui_run(cui);
 
-	cui_result = cui_run(pb.cui, pb.mm, 0);
-
-	pmenu_delete(pb.mm);
-
-	talloc_free(pb.cui);
+	talloc_free(cui);
 
 	pb_log("--- end ---\n");
 

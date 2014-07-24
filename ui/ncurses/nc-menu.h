@@ -97,7 +97,6 @@ struct pmenu {
 struct pmenu *pmenu_init(void *ui_ctx, unsigned int item_count,
 	void (*on_exit)(struct pmenu *));
 int pmenu_setup(struct pmenu *menu);
-void pmenu_delete(struct pmenu *menu);
 unsigned int pmenu_grow(struct pmenu *menu, unsigned int count);
 int pmenu_remove(struct pmenu *menu, struct pmenu_item *item);
 struct pmenu_item *pmenu_find_selected(struct pmenu *menu);

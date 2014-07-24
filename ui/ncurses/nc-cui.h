@@ -71,7 +71,7 @@ struct cui *cui_init(void* platform_info,
 		int (*js_map)(const struct js_event *e),
 		int start_deamon);
 struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr);
-int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item);
+int cui_run(struct cui *cui);
 void cui_item_edit(struct pmenu_item *item);
 void cui_item_new(struct pmenu *menu);
 void cui_show_sysinfo(struct cui *cui);

@@ -492,6 +492,19 @@ int pmenu_remove(struct pmenu *menu, struct pmenu_item *item)
 	return 0;
 }
 
+static int pmenu_destructor(void *ptr)
+{
+	struct pmenu *menu = ptr;
+	assert(menu->scr.sig == pb_pmenu_sig);
+	menu->scr.sig = pb_removed_sig;
+
+	unpost_menu(menu->ncm);
+	free_menu(menu->ncm);
+	delwin(menu->scr.sub_ncw);
+	delwin(menu->scr.main_ncw);
+	return 0;
+}
+
 /**
  * pmenu_init - Allocate and initialize a new menu instance.
  *
@@ -504,14 +517,13 @@ struct pmenu *pmenu_init(void *ui_ctx, unsigned int item_count,
 	void (*on_exit)(struct pmenu *))
 {
 	struct pmenu *menu = talloc_zero(ui_ctx, struct pmenu);
-
 	if (!menu)
 		return NULL;
 
+	talloc_set_destructor(menu, pmenu_destructor);
+
 	/* note items array has a null terminator */
-
 	menu->items = talloc_zero_array(menu, ITEM *, item_count + 1);
-
 	if (!menu->items) {
 		talloc_free(menu);
 		return NULL;
@@ -555,19 +567,3 @@ int pmenu_setup(struct pmenu *menu)
 	return 0;
 }
 
-/**
- * pmenu_delete - Delete a menu instance.
- *
- */
-
-void pmenu_delete(struct pmenu *menu)
-{
-	assert(menu->scr.sig == pb_pmenu_sig);
-	menu->scr.sig = pb_removed_sig;
-
-	unpost_menu(menu->ncm);
-	free_menu(menu->ncm);
-	delwin(menu->scr.sub_ncw);
-	delwin(menu->scr.main_ncw);
-	talloc_free(menu);
-}

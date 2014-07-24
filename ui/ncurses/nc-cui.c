@@ -40,6 +40,8 @@
 #include "nc-sysinfo.h"
 #include "nc-helpscreen.h"
 
+extern const struct help_text main_menu_help_text;
+
 static void cui_start(void)
 {
 	initscr();			/* Initialize ncurses. */
@@ -641,6 +643,92 @@ void cui_send_reinit(struct cui *cui)
 	discover_client_send_reinit(cui->client);
 }
 
+static int menu_sysinfo_execute(struct pmenu_item *item)
+{
+	cui_show_sysinfo(cui_from_item(item));
+	return 0;
+}
+
+static int menu_config_execute(struct pmenu_item *item)
+{
+	cui_show_config(cui_from_item(item));
+	return 0;
+}
+
+static int menu_reinit_execute(struct pmenu_item *item)
+{
+	cui_send_reinit(cui_from_item(item));
+	return 0;
+}
+
+/**
+ * pb_mm_init - Setup the main menu instance.
+ */
+static struct pmenu *main_menu_init(struct cui *cui)
+{
+	struct pmenu_item *i;
+	struct pmenu *m;
+	int result;
+
+	m = pmenu_init(cui, 5, cui_on_exit);
+	if (!m) {
+		pb_log("%s: failed\n", __func__);
+		return NULL;
+	}
+
+	m->on_new = cui_item_new;
+
+	m->scr.frame.ltitle = talloc_asprintf(m,
+		"Petitboot (" PACKAGE_VERSION ")");
+	m->scr.frame.rtitle = NULL;
+	m->scr.frame.help = talloc_strdup(m,
+		_("Enter=accept, e=edit, n=new, x=exit, h=help"));
+	m->scr.frame.status = talloc_strdup(m, _("Welcome to Petitboot"));
+
+	/* add a separator */
+	i = pmenu_item_create(m, " ");
+	item_opts_off(i->nci, O_SELECTABLE);
+	pmenu_item_insert(m, i, 0);
+
+	/* add system items */
+	i = pmenu_item_create(m, _("System information"));
+	i->on_execute = menu_sysinfo_execute;
+	pmenu_item_insert(m, i, 1);
+
+	i = pmenu_item_create(m, _("System configuration"));
+	i->on_execute = menu_config_execute;
+	pmenu_item_insert(m, i, 2);
+
+	i = pmenu_item_create(m, _("Rescan devices"));
+	i->on_execute = menu_reinit_execute;
+	pmenu_item_insert(m, i, 3);
+
+	i = pmenu_item_create(m, _("Exit to shell"));
+	i->on_execute = pmenu_exit_cb;
+	pmenu_item_insert(m, i, 4);
+
+	result = pmenu_setup(m);
+
+	if (result) {
+		pb_log("%s:%d: pmenu_setup failed: %s\n", __func__, __LINE__,
+			strerror(errno));
+		goto fail_setup;
+	}
+
+	m->help_title = _("main menu");
+	m->help_text = &main_menu_help_text;
+
+	menu_opts_off(m->ncm, O_SHOWDESC);
+	set_menu_mark(m->ncm, " *");
+	set_current_item(m->ncm, i->nci);
+
+	return m;
+
+fail_setup:
+	talloc_free(m);
+	return NULL;
+}
+
 static struct discover_client_ops cui_client_ops = {
 	.device_add = NULL,
 	.boot_option_add = cui_boot_option_add,
@@ -667,7 +755,6 @@ struct cui *cui_init(void* platform_info,
 	unsigned int i;
 
 	cui = talloc_zero(NULL, struct cui);
-
 	if (!cui) {
 		pb_log("%s: alloc cui failed.\n", __func__);
 		fprintf(stderr, _("%s: alloc cui failed.\n"), __func__);
@@ -723,6 +810,10 @@ retry_start:
 	talloc_steal(cui, cui->client);
 	cui_start();
 
+	cui->main = main_menu_init(cui);
+	if (!cui->main)
+		goto fail_client_init;
+
 	waiter_register_io(cui->waitset, STDIN_FILENO, WAIT_IN,
 			cui_process_key, cui);
 
@@ -753,13 +844,12 @@ fail_alloc:
  * Returns 0 on success (return to shell), -1 on error (should restart).
  */
 
-int cui_run(struct cui *cui, struct pmenu *main, unsigned int default_item)
+int cui_run(struct cui *cui)
 {
 	assert(main);
 
-	cui->main = main;
 	cui->current = &cui->main->scr;
-	cui->default_item = default_item;
+	cui->default_item = 0;
 
 	nc_scr_post(cui->current);
 
