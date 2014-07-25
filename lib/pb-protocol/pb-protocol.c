@@ -284,6 +284,8 @@ int pb_protocol_config_len(const struct config *config)
 
 	len += 4 + optional_strlen(config->boot_device);
 
+	len += 4 + optional_strlen(config->lang);
+
 	return len;
 }
 
@@ -479,6 +481,8 @@ int pb_protocol_serialise_config(const struct config *config,
 	}
 
 	pos += pb_protocol_serialise_string(pos, config->boot_device);
+
+	pos += pb_protocol_serialise_string(pos, config->lang);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -914,6 +918,11 @@ int pb_protocol_deserialise_config(struct config *config,
 		goto out;
 
 	config->boot_device = str;
+
+	if (read_string(config, &pos, &len, &str))
+		goto out;
+
+	config->lang = str;
 
 	rc = 0;
 

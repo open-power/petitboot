@@ -81,6 +81,8 @@ static void dump_config(struct config *config)
 		pb_log(" %10s: %d\n", device_type_name(prio->type),
 					prio->priority);
 	}
+
+	pb_log(" language: %s\n", config->lang ?: "");
 }
 
 void config_set_defaults(struct config *config)
@@ -93,6 +95,7 @@ void config_set_defaults(struct config *config)
 	config->network.dns_servers = NULL;
 	config->network.n_dns_servers = 0;
 	config->boot_device = NULL;
+	config->lang = NULL;
 
 	config->n_boot_priorities = 2;
 	config->boot_priorities = talloc_array(config, struct boot_priority,

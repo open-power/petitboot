@@ -126,6 +126,7 @@ struct config {
 	struct boot_priority	*boot_priorities;
 	unsigned int		n_boot_priorities;
 	char			*boot_device;
+	char			*lang;
 };
 
 #endif /* _TYPES_H */

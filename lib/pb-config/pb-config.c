@@ -74,5 +74,10 @@ struct config *config_copy(void *ctx, const struct config *src)
 	else
 		dest->boot_device = NULL;
 
+	if (src->lang && strlen(src->lang))
+		dest->lang = talloc_strdup(dest, src->lang);
+	else
+		dest->lang = NULL;
+
 	return dest;
 }
