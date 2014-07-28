@@ -4,6 +4,7 @@ ui/ncurses/nc-boot-editor.c
 ui/ncurses/nc-config.c
 ui/ncurses/nc-cui.c
 ui/ncurses/nc-helpscreen.c
+ui/ncurses/nc-lang.c
 ui/ncurses/nc-menu.c
 ui/ncurses/nc-sysinfo.c
 ui/ncurses/nc-textscreen.c

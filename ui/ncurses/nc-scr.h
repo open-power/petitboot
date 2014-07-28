@@ -46,7 +46,8 @@ enum pb_nc_sig {
 	pb_boot_editor_sig	= 444,
 	pb_text_screen_sig	= 555,
 	pb_config_screen_sig	= 666,
-	pb_removed_sig		= -777,
+	pb_lang_screen_sig	= 777,
+	pb_removed_sig		= -888,
 };
 
 static inline void nc_flush_keys(void)

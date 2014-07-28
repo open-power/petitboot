@@ -41,6 +41,8 @@ libpbnc_la_SOURCES = \
 	nc-boot-editor-help.c \
 	nc-helpscreen.c \
 	nc-helpscreen.h \
+	nc-lang.c \
+	nc-lang.h \
 	nc-menu.c \
 	nc-menu.h \
 	nc-scr.c \

@@ -38,9 +38,12 @@
 #include "nc-boot-editor.h"
 #include "nc-config.h"
 #include "nc-sysinfo.h"
+#include "nc-lang.h"
 #include "nc-helpscreen.h"
 
 extern const struct help_text main_menu_help_text;
+
+static struct pmenu *main_menu_init(struct cui *cui);
 
 static void cui_start(void)
 {
@@ -263,6 +266,19 @@ void cui_show_config(struct cui *cui)
 	cui->config_screen = config_screen_init(cui, cui->config,
 			cui->sysinfo, cui_config_exit);
 	cui_set_current(cui, config_screen_scr(cui->config_screen));
+}
+
+static void cui_lang_exit(struct cui *cui)
+{
+	cui_set_current(cui, &cui->main->scr);
+	talloc_free(cui->lang_screen);
+	cui->lang_screen = NULL;
+}
+
+void cui_show_lang(struct cui *cui)
+{
+	cui->lang_screen = lang_screen_init(cui, cui->config, cui_lang_exit);
+	cui_set_current(cui, lang_screen_scr(cui->lang_screen));
 }
 
 static void cui_help_exit(struct cui *cui)
@@ -619,10 +635,40 @@ static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
 	cui_update_mm_title(cui);
 }
 
+static void cui_update_language(struct cui *cui, char *lang)
+{
+	bool repost_menu;
+	char *cur_lang;
+
+	cur_lang = setlocale(LC_ALL, NULL);
+	if (cur_lang && !strcmp(cur_lang, lang))
+		return;
+
+	setlocale(LC_ALL, lang);
+
+	/* we'll need to update the menu: drop all items and repopulate */
+	repost_menu = cui->current == &cui->main->scr;
+	if (repost_menu)
+		nc_scr_unpost(cui->current);
+
+	talloc_free(cui->main);
+	cui->main = main_menu_init(cui);
+
+	if (repost_menu) {
+		cui->current = &cui->main->scr;
+		nc_scr_post(cui->current);
+	}
+
+	discover_client_enumerate(cui->client);
+}
+
 static void cui_update_config(struct config *config, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
 	cui->config = talloc_steal(cui, config);
+
+	if (config->lang)
+		cui_update_language(cui, config->lang);
 
 	if (cui->config_screen)
 		config_screen_update(cui->config_screen, config, cui->sysinfo);
@@ -655,6 +701,12 @@ static int menu_config_execute(struct pmenu_item *item)
 	return 0;
 }
 
+static int menu_lang_execute(struct pmenu_item *item)
+{
+	cui_show_lang(cui_from_item(item));
+	return 0;
+}
+
 static int menu_reinit_execute(struct pmenu_item *item)
 {
 	cui_send_reinit(cui_from_item(item));
@@ -670,7 +722,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	struct pmenu *m;
 	int result;
 
-	m = pmenu_init(cui, 5, cui_on_exit);
+	m = pmenu_init(cui, 6, cui_on_exit);
 	if (!m) {
 		pb_log("%s: failed\n", __func__);
 		return NULL;
@@ -682,7 +734,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 		"Petitboot (" PACKAGE_VERSION ")");
 	m->scr.frame.rtitle = NULL;
 	m->scr.frame.help = talloc_strdup(m,
-		_("Enter=accept, e=edit, n=new, x=exit, h=help"));
+		_("Enter=accept, e=edit, n=new, x=exit, l=language, h=help"));
 	m->scr.frame.status = talloc_strdup(m, _("Welcome to Petitboot"));
 
 	/* add a separator */
@@ -699,13 +751,18 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	i->on_execute = menu_config_execute;
 	pmenu_item_insert(m, i, 2);
 
+	/* this label isn't translated, so we don't want a gettext() here */
+	i = pmenu_item_create(m, "Language");
+	i->on_execute = menu_lang_execute;
+	pmenu_item_insert(m, i, 3);
+
 	i = pmenu_item_create(m, _("Rescan devices"));
 	i->on_execute = menu_reinit_execute;
-	pmenu_item_insert(m, i, 3);
+	pmenu_item_insert(m, i, 4);
 
 	i = pmenu_item_create(m, _("Exit to shell"));
 	i->on_execute = pmenu_exit_cb;
-	pmenu_item_insert(m, i, 4);
+	pmenu_item_insert(m, i, 5);
 
 	result = pmenu_setup(m);
 

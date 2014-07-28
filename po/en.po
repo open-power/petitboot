@@ -166,8 +166,8 @@ msgstr "SAFE MODE: select '%s' to continue"
 msgid "Rescan devices"
 msgstr "Rescan devices"
 
-msgid "Enter=accept, e=edit, n=new, x=exit, h=help"
-msgstr "Enter=accept, e=edit, n=new, x=exit, h=help"
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
+msgstr "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
 
 msgid "Welcome to Petitboot"
 msgstr "Welcome to Petitboot"
@@ -206,6 +206,16 @@ msgstr "Petitboot help"
 #, c-format
 msgid "Petitboot help: %s"
 msgstr "Petitboot help: %s"
+
+msgid "Language"
+msgstr "Language"
+
+#, c-format
+msgid "Unknown language '%s'"
+msgstr "Unknown language '%s'"
+
+msgid "Petitboot Language Selection"
+msgstr "Petitboot Language Selection"
 
 #, c-format
 msgid "!Invalid option %d"
