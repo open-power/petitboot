@@ -12,66 +12,59 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	-DLOCALEDIR='"$(localedir)"' \
-	$(DEFAULT_CPPFLAGS)
-
-AM_CFLAGS = \
-	$(DEFAULT_CFLAGS)
-
-common_libs = \
-	libpbnc.la \
-	$(top_builddir)/ui/common/libpbui.la \
-	$(top_builddir)/lib/libpbcore.la \
+ui_ncurses_common_libs = \
+	ui/ncurses/libpbnc.la \
+	ui/common/libpbui.la \
+	$(core_lib) \
 	@MENU_LIB@ @FORM_LIB@ @CURSES_LIB@
 
-noinst_LTLIBRARIES = libpbnc.la
+noinst_LTLIBRARIES += ui/ncurses/libpbnc.la
 
-libpbnc_la_SOURCES = \
-	nc-config.c \
-	nc-config.h \
-	nc-config-help.c \
-	nc-cui.c \
-	nc-cui.h \
-	nc-cui-help.c \
-	nc-boot-editor.c \
-	nc-boot-editor.h \
-	nc-boot-editor-help.c \
-	nc-helpscreen.c \
-	nc-helpscreen.h \
-	nc-lang.c \
-	nc-lang.h \
-	nc-menu.c \
-	nc-menu.h \
-	nc-scr.c \
-	nc-scr.h \
-	nc-sysinfo.c \
-	nc-sysinfo.h \
-	nc-sysinfo-help.c \
-	nc-textscreen.c \
-	nc-textscreen.h \
-	nc-widgets.c \
-	nc-widgets.h \
-	nc-add-url.c \
-	nc-add-url.h \
-	nc-add-url-help.c
+ui_ncurses_libpbnc_la_SOURCES = \
+	ui/ncurses/nc-config.c \
+	ui/ncurses/nc-config.h \
+	ui/ncurses/nc-config-help.c \
+	ui/ncurses/nc-cui.c \
+	ui/ncurses/nc-cui.h \
+	ui/ncurses/nc-cui-help.c \
+	ui/ncurses/nc-boot-editor.c \
+	ui/ncurses/nc-boot-editor.h \
+	ui/ncurses/nc-boot-editor-help.c \
+	ui/ncurses/nc-helpscreen.c \
+	ui/ncurses/nc-helpscreen.h \
+	ui/ncurses/nc-lang.c \
+	ui/ncurses/nc-lang.h \
+	ui/ncurses/nc-menu.c \
+	ui/ncurses/nc-menu.h \
+	ui/ncurses/nc-scr.c \
+	ui/ncurses/nc-scr.h \
+	ui/ncurses/nc-sysinfo.c \
+	ui/ncurses/nc-sysinfo.h \
+	ui/ncurses/nc-sysinfo-help.c \
+	ui/ncurses/nc-textscreen.c \
+	ui/ncurses/nc-textscreen.h \
+	ui/ncurses/nc-widgets.c \
+	ui/ncurses/nc-widgets.h \
+	ui/ncurses/nc-add-url.c \
+	ui/ncurses/nc-add-url.h \
+	ui/ncurses/nc-add-url-help.c
 
-sbin_PROGRAMS = petitboot-nc
+sbin_PROGRAMS += ui/ncurses/petitboot-nc
 
 if ENABLE_PS3
-sbin_PROGRAMS += petitboot-ps3-nc
+sbin_PROGRAMS += ui/ncurses/petitboot-ps3-nc
 endif
 
+ui_ncurses_petitboot_nc_CPPFLAGS = \
+	$(DEFAULT_CPPFLAGS) \
+	-DLOCALEDIR='"$(localedir)"' \
+	-I$(top_srcdir)/lib
 
-petitboot_nc_SOURCES = generic-main.c
-petitboot_nc_LDADD = $(common_libs)
+ui_ncurses_petitboot_nc_SOURCES = ui/ncurses/generic-main.c
+ui_ncurses_petitboot_nc_LDADD = $(ui_ncurses_common_libs)
 
-petitboot_ps3_nc_SOURCES = ps3-main.c
-petitboot_ps3_nc_LDADD = $(common_libs) $(libdir)/libps3-utils.so
-#petitboot_ps3_nc_LDFLAGS = -L$(libdir) -lps3-utils
+ui_ncurses_petitboot_ps3_nc_SOURCES = ui/ncurses/ps3-main.c
+ui_ncurses_petitboot_ps3_nc_LDADD = $(ui_ncurses_common_libs) \
+				    $(libdir)/libps3-utils.so
 
-EXTRA_DIST = ui-guidelines.text
-
-MAINTAINERCLEANFILES = Makefile.in
+EXTRA_DIST += ui/ncurses/ui-guidelines.text

@@ -12,6 +12,11 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-dist_man_MANS = pb-console.8 pb-discover.8 pb-event.8 petitboot-nc.8 petitboot-twin.8 pb-udhcpc.8 petitboot.8
-
-MAINTAINERCLEANFILES = Makefile.in
+dist_man_MANS = \
+	man/pb-console.8 \
+	man/pb-discover.8 \
+	man/pb-event.8 \
+	man/petitboot-nc.8 \
+	man/petitboot-twin.8 \
+	man/pb-udhcpc.8 \
+	man/petitboot.8

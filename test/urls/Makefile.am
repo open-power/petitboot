@@ -11,32 +11,24 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-AUTOMAKE_OPTIONS = parallel-tests
+check_PROGRAMS += test/urls/parse-url
+check_SCRIPTS += test/urls/run-url-test
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	$(DEFAULT_CPPFLAGS)
+test_urls_parse_url_SOURCES = test/urls/parse-url.c
+test_urls_parse_url_LDADD = $(core_lib)
 
-AM_CFLAGS = \
-	$(DEFAULT_CFLAGS)
+url_TESTS = \
+	test/urls/data/double-slash.test \
+	test/urls/data/http-simple.test \
+	test/urls/data/join-full.test \
+	test/urls/data/join-absolute.test \
+	test/urls/data/join-relative.test \
+	test/urls/data/localpath.test
 
-parse_url_SOURCES = parse-url.c
-
-parse_url_LDADD = ../../lib/libpbcore.la
-
-check_PROGRAMS = parse-url
-check_SCRIPTS = run-url-test
-
-TESTS = data/double-slash.test \
-	data/http-simple.test \
-	data/join-full.test \
-	data/join-absolute.test \
-	data/join-relative.test \
-	data/localpath.test
+TESTS += $(url_TESTS)
 
 TEST_EXTENSIONS = .test
-TEST_LOG_COMPILER = $(builddir)/run-url-test
+TEST_LOG_COMPILER = $(builddir)/test/urls/run-url-test
 
 if ENABLE_TEST_VALGRIND
 TEST_LOG_FLAGS = --valgrind
@@ -46,18 +38,17 @@ edit = sed \
 	-e 's|@PACKAGE_NAME\@|$(PACKAGE_NAME)|g' \
 	-e 's|@PACKAGE_VERSION\@|$(PACKAGE_VERSION)|g' \
 	-e 's|@PACKAGE_BUGREPORT\@|$(PACKAGE_BUGREPORT)|g' \
-	-e 's|@abs_srcdir\@|$(abs_srcdir)|g' \
-	-e 's|@abs_builddir\@|$(abs_builddir)|g' \
+	-e 's|@abs_srcdir\@|$(abs_srcdir)/test/urls|g' \
+	-e 's|@abs_builddir\@|$(abs_builddir)/test/urls|g' \
 	-e 's|@prefix\@|$(prefix)|g'
 
-EXTRA_DIST = $(TESTS) run-url-test.in
+EXTRA_DIST += $(url_TESTS) test/urls/run-url-test.in
 
-run-url-test: Makefile $(srcdir)/run-url-test.in
+test/urls/run-url-test: $(srcdir)/test/urls/run-url-test.in
 	rm -f $@ $@.tmp
 	$(edit) $(srcdir)/$@.in >$@.tmp
 	chmod +x $@.tmp
 	mv $@.tmp $@
 
-CLEANFILES = run-url-test
+CLEANFILES += test/urls/run-url-test
 
-MAINTAINERCLEANFILES = Makefile.in

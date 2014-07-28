@@ -12,39 +12,49 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir) $(DEFAULT_CPPFLAGS)
+noinst_PROGRAMS += discover/grub2/grub2-parser.ro
 
-AM_CFLAGS = $(DEFAULT_CFLAGS)  \
-	-DPREFIX='"$(prefix)"' \
-	-DPKG_SHARE_DIR='"$(pkgdatadir)"' \
-	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"' \
-	-DLOCAL_STATE_DIR='"$(localstatedir)"'
-
-AM_YFLAGS = -d
-
-noinst_PROGRAMS = grub2-parser.ro
-
-grub2-parser.ro$(EXEEXT): $(grub2_parser_ro_OBJECTS)
+discover/grub2/grub2-parser.ro$(EXEEXT): \
+		$(discover_grub2_grub2_parser_ro_OBJECTS)
 	$(LD) -r -o $@ $^
 
+discover_grub2_grub2_parser_ro_SOURCES = \
+	discover/grub2/builtins.c \
+	discover/grub2/env.c \
+	discover/grub2/grub2.h \
+	discover/grub2/grub2.c \
+	discover/grub2/lexer.l \
+	discover/grub2/parser.y \
+	discover/grub2/script.c
 
-grub2_parser_ro_SOURCES = \
-	builtins.c \
-	env.c \
-	grub2.h \
-	grub2.c \
-	lexer.l \
-	parser.y \
-	script.c \
-	parser.c
+BUILT_SOURCES += \
+	discover/grub2/parser.c \
+	discover/grub2/parser.h \
+	discover/grub2/lexer.h \
+	discover/grub2/lexer.c
 
-BUILT_SOURCES = parser.h lexer.h lexer.c lexer.h
-CLEANFILES = lexer.c lexer.h
-MAINTAINERCLEANFILES = Makefile.in
+CLEANFILES += \
+	discover/grub2/parser.c \
+	discover/grub2/parser.h \
+	discover/grub2/lexer.c \
+	discover/grub2/lexer.h
+
+
+discover_grub2_grub2_parser_ro_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-I$(top_srcdir)/discover/grub2 \
+	-I$(top_builddir)/discover/grub2
+
 
 # ylwrap doesn't handle flex header files well; use our own rule here.
-lexer.h lexer.c: lexer.l
-	$(LEX) $(LFLAGS) --header-file=lexer.h -o lexer.c $^
+discover/grub2/lexer.h discover/grub2/lexer.c: \
+		$(top_srcdir)/discover/grub2/lexer.l
+	$(AM_V_LEX)$(LEXCOMPILE) --header-file=discover/grub2/lexer.h \
+				       -o discover/grub2/lexer.c $^
 
-lexer.o: CFLAGS+=-Wno-unused-parameter -Wno-missing-prototypes \
-		       -Wno-missing-declarations
+# We need to loosen our warnings for the generated lexer code.
+discover/grub2/%lexer.o discover/grub2/lexer.o: \
+		AM_CFLAGS += -Wno-unused-parameter -Wno-missing-prototypes \
+			       -Wno-missing-declarations
+
+$(discover_grub2_grub2_parser_ro_OBJECTS): discover/grub2/parser.h

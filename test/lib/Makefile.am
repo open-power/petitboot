@@ -11,30 +11,21 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-AUTOMAKE_OPTIONS = parallel-tests
+lib_TESTS = \
+	test/lib/list-test \
+	test/lib/test-process-noargs \
+	test/lib/test-process-sync \
+	test/lib/test-process-sync-stdout \
+	test/lib/test-process-stderr \
+	test/lib/test-process-stderr-stdout \
+	test/lib/test-process-async \
+	test/lib/test-process-async-stdout \
+	test/lib/test-process-parent-stdout \
+	test/lib/test-process-both \
+	test/lib/test-process-stdout-eintr \
+	test/lib/test-fold
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	-DDEBUG
+$(lib_TESTS): LIBS += $(core_lib)
 
-AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
-
-LDADD = ../../lib/libpbcore.la
-
-check_PROGRAMS = list-test \
-	test-process-noargs \
-	test-process-sync \
-	test-process-sync-stdout \
-	test-process-stderr \
-	test-process-stderr-stdout \
-	test-process-async \
-	test-process-async-stdout \
-	test-process-parent-stdout \
-	test-process-both \
-	test-process-stdout-eintr \
-	test-fold
-
-TESTS = $(check_PROGRAMS)
-
-MAINTAINERCLEANFILES = Makefile.in
+check_PROGRAMS += $(lib_TESTS)
+TESTS += $(lib_TESTS)

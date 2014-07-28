@@ -12,50 +12,42 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
+ui_twin_common_libs = \
+	ui/twin/libpbt.la \
+	ui/common/libpbui.la \
+	$(core_lib)
+
+ui_twin_common_cppflags = \
 	$(DEFAULT_CPPFLAGS) \
-	$(twin_CFLAGS)
+	-I$(top_srcdir)/lib \
+	-DPB_ARTWORK_PATH='"$(pkgdatadir)/artwork/"'
 
-AM_CFLAGS = \
-	-DPB_ARTWORK_PATH='"$(pkgdatadir)/artwork/"' \
-	$(DEFAULT_CFLAGS)  \
-	 $(twin_CFLAGS)
+noinst_LTLIBRARIES += ui/twin/libpbt.la
 
-AM_LDFLAGS = \
-	$(twin_LIBS)
+ui_twin_libpbt_la_SOURCES = \
+	ui/twin/pbt-client.c \
+	ui/twin/pbt-client.h \
+	ui/twin/pbt-main.c \
+	ui/twin/pbt-main.h \
+	ui/twin/pbt-menu.c \
+	ui/twin/pbt-menu.h \
+	ui/twin/pbt-scr.c \
+	ui/twin/pbt-scr.h
 
-common_libs = \
-	libpbt.la \
-	$(top_builddir)/ui/common/libpbui.la \
-	$(top_builddir)/lib/libpbcore.la
+ui_twin_libpbt_la_CPPFLAGS = $(ui_twin_common_cppflags)
 
-noinst_LTLIBRARIES = libpbt.la
-
-libpbt_la_SOURCES = \
-	pbt-client.c \
-	pbt-client.h \
-	pbt-main.c \
-	pbt-main.h \
-	pbt-menu.c \
-	pbt-menu.h \
-	pbt-scr.c \
-	pbt-scr.h
-
-sbin_PROGRAMS = petitboot-twin
+sbin_PROGRAMS += ui/twin/petitboot-twin
 
 if ENABLE_PS3
-sbin_PROGRAMS += petitboot-ps3-twin
+sbin_PROGRAMS += ui/twin/petitboot-ps3-twin
 endif
 
 
-petitboot_twin_SOURCES = main-generic.c
-petitboot_twin_LDADD = $(common_libs)
+ui_twin_petitboot_twin_SOURCES = ui/twin/main-generic.c
+ui_twin_petitboot_twin_CPPFLAGS = $(ui_twin_common_cppflags)
+ui_twin_petitboot_twin_LDADD = $(ui_twin_common_libs) $(twin_LIBS)
 
-petitboot_ps3_twin_SOURCES = main-ps3.c
-petitboot_ps3_twin_LDADD = $(common_libs)
-petitboot_ps3_twin_LDFLAGS = -lps3-utils
+ui_twin_petitboot_ps3_twin_SOURCES = ui/twin/main-ps3.c
+ui_twin_petitboot_ps3_twin_CPPFLAGS = $(ui_twin_common_cppflags)
+ui_twin_petitboot_ps3_twin_LDADD = $(ui_twin_common_libs) $(twin_LIBS) -lps3-utils
 
-
-MAINTAINERCLEANFILES = Makefile.in

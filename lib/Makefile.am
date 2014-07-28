@@ -12,38 +12,37 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AUTOMAKE_OPTIONS = subdir-objects
+core_lib = lib/libpbcore.la
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib $(DEFAULT_CPPFLAGS) \
+noinst_LTLIBRARIES += $(core_lib)
+
+lib_libpbcore_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
 	-DPREFIX='"$(prefix)"'
 
-AM_CFLAGS = $(DEFAULT_CFLAGS)
+lib_libpbcore_la_SOURCES = \
+	lib/fold/fold.h \
+	lib/fold/fold.c \
+	lib/i18n/i18n.h \
+	lib/log/log.h \
+	lib/log/log.c \
+	lib/list/list.c \
+	lib/list/list.h \
+	lib/waiter/waiter.c \
+	lib/waiter/waiter.h \
+	lib/pb-protocol/pb-protocol.c \
+	lib/pb-protocol/pb-protocol.h \
+	lib/pb-config/pb-config.c \
+	lib/pb-config/pb-config.h \
+	lib/process/process.c \
+	lib/process/process.h \
+	lib/types/types.h \
+	lib/talloc/talloc.c \
+	lib/talloc/talloc.h \
+	lib/system/system.c \
+	lib/system/system.h \
+	lib/url/url.c \
+	lib/url/url.h \
+	lib/util/util.c \
+	lib/util/util.h
 
-noinst_LTLIBRARIES = libpbcore.la
-
-libpbcore_la_SOURCES = \
-	fold/fold.h \
-	fold/fold.c \
-	log/log.h \
-	log/log.c \
-	list/list.c \
-	list/list.h \
-	waiter/waiter.c \
-	waiter/waiter.h \
-	pb-protocol/pb-protocol.c \
-	pb-protocol/pb-protocol.h \
-	pb-config/pb-config.c \
-	pb-config/pb-config.h \
-	process/process.c \
-	process/process.h \
-	types/types.h \
-	talloc/talloc.c \
-	talloc/talloc.h \
-	system/system.c \
-	system/system.h \
-	url/url.c \
-	url/url.h \
-	util/util.c \
-	util/util.h
-
-MAINTAINERCLEANFILES = Makefile.in

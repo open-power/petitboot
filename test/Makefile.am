@@ -17,10 +17,8 @@ AM_LOG_FLAGS = --leak-check=full --error-exitcode=1
 export LOG_COMPILER AM_LOG_FLAGS
 endif
 
-SUBDIRS = lib parser urls
+noinst_SCRIPTS = test/hotplug-device.sh
+EXTRA_DIST += $(noinst_SCRIPTS)
 
-noinst_SCRIPTS = hotplug-device.sh
-
-EXTRA_DIST = $(noinst_SCRIPTS)
-
-MAINTAINERCLEANFILES = Makefile.in
+$(check_PROGRAMS): AM_CFLAGS = -O0 -g -Wall -Wextra -Werror
+$(check_PROGRAMS): AM_CPPFLAGS = -DDEBUG -I$(top_srcdir)/lib

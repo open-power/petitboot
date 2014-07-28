@@ -11,117 +11,111 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-AUTOMAKE_OPTIONS = parallel-tests foreign
+parser_TESTS = \
+	test/parser/test-null \
+	test/parser/test-grub2-single \
+	test/parser/test-grub2-default \
+	test/parser/test-grub2-empty \
+	test/parser/test-grub2-default-index \
+	test/parser/test-grub2-default-multiword \
+	test/parser/test-grub2-multiple-resolve \
+	test/parser/test-grub2-multiple-id \
+	test/parser/test-grub2-single-line-if \
+	test/parser/test-grub2-load-env \
+	test/parser/test-grub2-save-env \
+	test/parser/test-grub2-saved-default \
+	test/parser/test-grub2-nondefault-prefix \
+	test/parser/test-grub2-f18-ppc64 \
+	test/parser/test-grub2-f20-ppc64 \
+	test/parser/test-grub2-ubuntu-13_04-x86 \
+	test/parser/test-grub2-lexer-error \
+	test/parser/test-grub2-parser-error \
+	test/parser/test-kboot-single \
+	test/parser/test-yaboot-empty \
+	test/parser/test-yaboot-single \
+	test/parser/test-yaboot-partition \
+	test/parser/test-yaboot-partition-override \
+	test/parser/test-yaboot-external \
+	test/parser/test-yaboot-root-global \
+	test/parser/test-yaboot-root-override \
+	test/parser/test-yaboot-device-override \
+	test/parser/test-yaboot-global-state \
+	test/parser/test-yaboot-leftovers \
+	test/parser/test-yaboot-default \
+	test/parser/test-yaboot-rh8-ppc64 \
+	test/parser/test-pxe-empty \
+	test/parser/test-pxe-single \
+	test/parser/test-pxe-initrd-in-append \
+	test/parser/test-pxe-mac-without-conf \
+	test/parser/test-pxe-ip-without-conf \
+	test/parser/test-pxe-non-url-conf \
+	test/parser/test-pxe-local \
+	test/parser/test-pxe-pathprefix-with-conf \
+	test/parser/test-pxe-non-url-pathprefix-with-conf \
+	test/parser/test-pxe-pathprefix-discover \
+	test/parser/test-pxe-pathprefix-discover-mac \
+	test/parser/test-pxe-path-resolve-relative \
+	test/parser/test-pxe-path-resolve-absolute \
+	test/parser/test-pxe-discover-bootfile-root \
+	test/parser/test-pxe-discover-bootfile-subdir \
+	test/parser/test-pxe-discover-bootfile-pathprefix \
+	test/parser/test-pxe-discover-bootfile-relative-conffile \
+	test/parser/test-pxe-discover-bootfile-absolute-conffile \
+	test/parser/test-unresolved-remove
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	-I$(top_srcdir)/discover \
-	-DLOCAL_STATE_DIR='"$(localstatedir)"' \
-	-DTEST_CONF_BASE='"$(srcdir)/data"' \
-	-DDEBUG -DPETITBOOT_TEST
+TESTS += $(parser_TESTS)
+check_PROGRAMS += $(parser_TESTS) test/parser/libtest.ro
 
-AM_CFLAGS = -O0 -ggdb -Wall -Wextra -Werror
+check_DATA += \
+	test/parser/data/grub2-f18-ppc64.conf \
+	test/parser/data/grub2-f20-ppc.conf \
+	test/parser/data/grub2-ubuntu-13_04-x86.conf \
+	test/parser/data/yaboot-rh8-ppc64.conf
 
-LDADD = $(top_builddir)/lib/libpbcore.la libtest.ro
+$(parser_TESTS): AM_CPPFLAGS += \
+		-I$(top_srcdir)/discover \
+		-DLOCAL_STATE_DIR='"$(localstatedir)"'
+$(parser_TESTS): LDADD += $@.embedded-config.o test/parser/libtest.ro $(core_lib)
+$(parser_TESTS): %: %.embedded-config.o test/parser/libtest.ro
 
-TESTS = \
-	test-null \
-	test-grub2-single \
-	test-grub2-default \
-	test-grub2-empty \
-	test-grub2-default-index \
-	test-grub2-default-multiword \
-	test-grub2-multiple-resolve \
-	test-grub2-multiple-id \
-	test-grub2-single-line-if \
-	test-grub2-load-env \
-	test-grub2-save-env \
-	test-grub2-saved-default \
-	test-grub2-nondefault-prefix \
-	test-grub2-f18-ppc64 \
-	test-grub2-f20-ppc64 \
-	test-grub2-ubuntu-13_04-x86 \
-	test-grub2-lexer-error \
-	test-grub2-parser-error \
-	test-kboot-single \
-	test-yaboot-empty \
-	test-yaboot-single \
-	test-yaboot-partition \
-	test-yaboot-partition-override \
-	test-yaboot-external \
-	test-yaboot-root-global \
-	test-yaboot-root-override \
-	test-yaboot-device-override \
-	test-yaboot-global-state \
-	test-yaboot-leftovers \
-	test-yaboot-default \
-	test-yaboot-rh8-ppc64 \
-	test-pxe-empty \
-	test-pxe-single \
-	test-pxe-initrd-in-append \
-	test-pxe-mac-without-conf \
-	test-pxe-ip-without-conf \
-	test-pxe-non-url-conf \
-	test-pxe-local \
-	test-pxe-pathprefix-with-conf \
-	test-pxe-non-url-pathprefix-with-conf \
-	test-pxe-pathprefix-discover \
-	test-pxe-pathprefix-discover-mac \
-	test-pxe-path-resolve-relative \
-	test-pxe-path-resolve-absolute \
-	test-pxe-discover-bootfile-root \
-	test-pxe-discover-bootfile-subdir \
-	test-pxe-discover-bootfile-pathprefix \
-	test-pxe-discover-bootfile-relative-conffile \
-	test-pxe-discover-bootfile-absolute-conffile \
-	test-unresolved-remove
-
-$(TESTS): %: %.embedded-config.o
-$(TESTS): LDADD += $@.embedded-config.o
-
-extract_config = $(srcdir)/extract-config.awk
+extract_config = $(srcdir)/test/parser/extract-config.awk
 
 %.embedded-config.c: %.c $(extract_config)
 	$(AWK) -f $(extract_config) $< > $@
 
 # objects under test
-parser_objs = \
-	$(top_srcdir)/discover/yaboot-parser.c \
-	$(top_srcdir)/discover/kboot-parser.c \
-	$(top_srcdir)/discover/pxe-parser.c \
-	$(top_srcdir)/discover/platform.c \
-	$(top_srcdir)/discover/resource.c \
-	$(top_srcdir)/discover/paths.c \
-	$(top_srcdir)/discover/device-handler.c \
-	$(top_srcdir)/discover/parser-conf.c \
-	$(top_srcdir)/discover/user-event.c \
-	$(top_srcdir)/discover/event.c
 
-libtest_ro_SOURCES = \
-	main.c \
-	utils.c \
-	handler.c \
-	parser-test.h \
-	$(parser_objs)
+test_parser_libtest_ro_SOURCES = \
+	test/parser/main.c \
+	test/parser/utils.c \
+	test/parser/handler.c \
+	test/parser/parser-test.h \
+	discover/yaboot-parser.c \
+	discover/kboot-parser.c \
+	discover/pxe-parser.c \
+	discover/platform.c \
+	discover/resource.c \
+	discover/paths.c \
+	discover/device-handler.c \
+	discover/parser-conf.c \
+	discover/user-event.c \
+	discover/event.c \
+	$(discover_grub2_grub2_parser_ro_SOURCES)
 
-libtest_ro_LDADD = \
-	../../discover/grub2/grub2-parser.ro
+test_parser_libtest_ro_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-I$(top_srcdir)/discover \
+	-I$(top_srcdir)/discover/grub2 \
+	-DPETITBOOT_TEST \
+	-DLOCAL_STATE_DIR='"$(localstatedir)"' \
+	-DTEST_CONF_BASE='"$(top_srcdir)/test/parser/data"'
 
-libtest.ro$(EXEEXT): $(libtest_ro_OBJECTS) $(libtest_ro_LDADD)
+test/parser/libtest.ro$(EXEEXT): $(test_parser_libtest_ro_OBJECTS) \
+					   $(test_parser_libtest_ro_LDADD)
 	$(LD) -o $@ -r $^
 
-check_PROGRAMS = $(TESTS) libtest.ro
+EXTRA_DIST += $(check_DATA) $(extract_config)
 
-check_DATA = \
-	data/grub2-f18-ppc64.conf \
-	data/grub2-f20-ppc.conf \
-	data/grub2-ubuntu-13_04-x86.conf \
-	data/yaboot-rh8-ppc64.conf
-
-EXTRA_DIST = $(check_DATA) $(extract_config)
-
-CLEANFILES = \
+CLEANFILES += \
 	$(foreach f, $(TESTS), $(f).embedded-config.c $(f).embedded-config.o)
 
-MAINTAINERCLEANFILES = Makefile.in

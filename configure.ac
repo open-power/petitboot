@@ -265,20 +265,6 @@ AC_SUBST([pkgsysconfdir], ["${sysconfdir}/${package}"])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 	Makefile
-	discover/Makefile
-	discover/grub2/Makefile
-	lib/Makefile
-	man/Makefile
-	test/Makefile
-	test/lib/Makefile
-	test/parser/Makefile
-	test/urls/Makefile
-	ui/Makefile
-	ui/common/Makefile
-	ui/ncurses/Makefile
-	ui/test/Makefile
-	ui/twin/Makefile
-	utils/Makefile
 	po/Makefile.in
 ])
 

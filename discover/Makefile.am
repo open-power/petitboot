@@ -12,69 +12,63 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-pkgsysconfdir = @sysconfdir@/@PACKAGE@
+sbin_PROGRAMS += discover/pb-discover
 
-SUBDIRS = grub2
+discover_pb_discover_SOURCES = \
+	discover/boot.c \
+	discover/boot.h \
+	discover/cdrom.c \
+	discover/cdrom.h \
+	discover/device-handler.c \
+	discover/device-handler.h \
+	discover/discover-server.c \
+	discover/discover-server.h \
+	discover/event.c \
+	discover/event.h \
+	discover/file.c \
+	discover/file.h \
+	discover/params.c \
+	discover/params.h \
+	discover/parser.c \
+	discover/parser.h \
+	discover/parser-conf.c \
+	discover/parser-conf.h \
+	discover/parser-utils.c \
+	discover/parser-utils.h \
+	discover/paths.c \
+	discover/paths.h \
+	discover/pb-discover.c \
+	discover/pb-discover.h \
+	discover/platform.c \
+	discover/platform.h \
+	discover/platform-powerpc.c \
+	discover/resource.c \
+	discover/resource.h \
+	discover/sysinfo.c \
+	discover/sysinfo.h \
+	discover/network.c \
+	discover/network.h \
+	discover/udev.c \
+	discover/udev.h \
+	discover/user-event.c \
+	discover/user-event.h \
+	discover/kboot-parser.c \
+	discover/yaboot-parser.c \
+	discover/pxe-parser.c
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib \
+discover_pb_discover_LDADD = \
+	$(core_lib) \
+	discover/grub2/grub2-parser.ro
+
+discover_pb_discover_LDFLAGS = -ludev
+
+discover_pb_discover_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-DLOCAL_STATE_DIR='"$(localstatedir)"' \
 	-DLOCALEDIR='"$(localedir)"' \
-	$(DEFAULT_CPPFLAGS)
-
-AM_CFLAGS = $(DEFAULT_CFLAGS)  \
-	-DPREFIX='"$(prefix)"' \
-	-DPKG_SHARE_DIR='"$(pkgdatadir)"' \
-	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"' \
 	-DPKG_LIBEXEC_DIR='"$(pkglibexecdir)"' \
-	-DLOCAL_STATE_DIR='"$(localstatedir)"'
+	-DPKG_SHARE_DIR='"$(pkgsharedir)"' \
+	-DPKG_SYSCONF_DIR='"$(pkgsysconfdir)"'
 
-EXTRA_DIST = native-parser.c
+EXTRA_DIST += discover/native-parser.c
 
-sbin_PROGRAMS = pb-discover
-
-pb_discover_SOURCES = \
-	boot.c \
-	boot.h \
-	cdrom.c \
-	cdrom.h \
-	device-handler.c \
-	device-handler.h \
-	discover-server.c \
-	discover-server.h \
-	event.c \
-	event.h \
-	file.c \
-	file.h \
-	params.c \
-	params.h \
-	parser.c \
-	parser.h \
-	parser-conf.c \
-	parser-conf.h \
-	parser-utils.c \
-	parser-utils.h \
-	paths.c \
-	paths.h \
-	pb-discover.c \
-	pb-discover.h \
-	platform.c \
-	platform.h \
-	platform-powerpc.c \
-	resource.c \
-	resource.h \
-	sysinfo.c \
-	sysinfo.h \
-	network.c \
-	network.h \
-	udev.c \
-	udev.h \
-	user-event.c \
-	user-event.h \
-	kboot-parser.c \
-	yaboot-parser.c \
-	pxe-parser.c
-
-pb_discover_LDADD = $(top_builddir)/lib/libpbcore.la grub2/grub2-parser.ro
-
-pb_discover_LDFLAGS = -ludev
-
-MAINTAINERCLEANFILES = Makefile.in

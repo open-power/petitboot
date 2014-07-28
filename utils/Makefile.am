@@ -12,28 +12,17 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	$(DEFAULT_CPPFLAGS)
+dist_sbin_SCRIPTS += utils/pb-udhcpc
+dist_pkglibexec_SCRIPTS = utils/pb-console utils/pb-sysinfo
+sbin_PROGRAMS += utils/pb-event
 
-AM_CFLAGS = \
-	$(DEFAULT_CFLAGS)
-
-dist_sbin_SCRIPTS = pb-udhcpc
-dist_pkglibexec_SCRIPTS = pb-console pb-sysinfo
-
-sbin_PROGRAMS = pb-event
-
-pb_event_SOURCES = pb-event.c
+utils_pb_event_SOURCES = utils/pb-event.c
 
 dist_pkgdata_DATA = \
-	kboot.conf.sample \
-	bb-kexec-reboot \
-	logrotate.conf \
-	hooks/01-create-default-dtb \
-	hooks/20-update-dtb-sample \
-	hooks/20-set-stdout \
-	hooks/90-sort-dtb
-
-MAINTAINERCLEANFILES = Makefile.in
+	utils/kboot.conf.sample \
+	utils/bb-kexec-reboot \
+	utils/logrotate.conf \
+	utils/hooks/01-create-default-dtb \
+	utils/hooks/20-update-dtb-sample \
+	utils/hooks/20-set-stdout \
+	utils/hooks/90-sort-dtb

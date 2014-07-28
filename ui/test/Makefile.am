@@ -11,22 +11,10 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
+#
+noinst_PROGRAMS += ui/test/discover-test
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	$(DEFAULT_CPPFLAGS)
-
-AM_CFLAGS = \
-	$(DEFAULT_CFLAGS)
-
-common_libs = \
-	$(top_builddir)/ui/common/libpbui.la \
-	$(top_builddir)/lib/libpbcore.la
-
-noinst_PROGRAMS = discover-test
-
-discover_test_SOURCES = discover-test.c
-discover_test_LDADD = $(common_libs)
-
-MAINTAINERCLEANFILES = Makefile.in
+ui_test_discover_test_SOURCES = ui/test/discover-test.c
+ui_test_discover_test_LDADD = \
+	ui/common/libpbui.la \
+	$(core_lib)

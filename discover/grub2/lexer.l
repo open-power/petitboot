@@ -17,8 +17,6 @@ void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 %option yylineno
 %option noyyalloc noyyfree noyyrealloc
 %option extra-type="struct grub2_parser *"
-%option header-file="lexer.h"
-%option outfile="lexer.c"
 
 %x sqstring
 %x dqstring

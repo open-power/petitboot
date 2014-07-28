@@ -12,48 +12,39 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
-	$(DEFAULT_CPPFLAGS)
+noinst_LTLIBRARIES += ui/common/libpbui.la
 
-AM_CFLAGS = \
-	$(DEFAULT_CFLAGS)
-
-noinst_LTLIBRARIES = libpbui.la
-
-libpbui_la_SOURCES = \
-	discover-client.c \
-	discover-client.h \
-	joystick.c \
-	joystick.h \
-	timer.c \
-	timer.h \
-	ui-system.c \
-	ui-system.h
+ui_common_libpbui_la_SOURCES = \
+	ui/common/discover-client.c \
+	ui/common/discover-client.h \
+	ui/common/joystick.c \
+	ui/common/joystick.h \
+	ui/common/timer.c \
+	ui/common/timer.h \
+	ui/common/ui-system.c \
+	ui/common/ui-system.h
 
 if ENABLE_PS3
-libpbui_la_SOURCES += \
-	ps3.c \
-	ps3.h
+ui_common_libpbui_la_SOURCES += \
+	ui/common/ps3.c \
+	ui/common/ps3.h
 endif
 
 artwork =
 
 if WITH_TWIN
 artwork += \
-	$(srcdir)/artwork/background.jpg \
-	$(srcdir)/artwork/COPYING-tux \
-	$(srcdir)/artwork/tux.png \
-	$(srcdir)/artwork/oxygen/applications-system.png \
-	$(srcdir)/artwork/oxygen/configure.png \
-	$(srcdir)/artwork/oxygen/COPYING-oxygen \
-	$(srcdir)/artwork/oxygen/drive-harddisk.png \
-	$(srcdir)/artwork/oxygen/network-wired.png \
-	$(srcdir)/artwork/oxygen/utilities-terminal.png
+	$(srcdir)/ui/common/artwork/background.jpg \
+	$(srcdir)/ui/common/artwork/COPYING-tux \
+	$(srcdir)/ui/common/artwork/tux.png \
+	$(srcdir)/ui/common/artwork/oxygen/applications-system.png \
+	$(srcdir)/ui/common/artwork/oxygen/configure.png \
+	$(srcdir)/ui/common/artwork/oxygen/COPYING-oxygen \
+	$(srcdir)/ui/common/artwork/oxygen/drive-harddisk.png \
+	$(srcdir)/ui/common/artwork/oxygen/network-wired.png \
+	$(srcdir)/ui/common/artwork/oxygen/utilities-terminal.png
 endif
 
 artworkdir = $(pkgdatadir)/artwork/
 dist_artwork_DATA = $(artwork)
 
-MAINTAINERCLEANFILES = Makefile.in
