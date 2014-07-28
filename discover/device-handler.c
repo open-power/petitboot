@@ -16,6 +16,7 @@
 #include <system/system.h>
 #include <process/process.h>
 #include <url/url.h>
+#include <i18n/i18n.h>
 
 #include "device-handler.h"
 #include "discover-server.h"
@@ -58,6 +59,8 @@ static int umount_device(struct discover_device *dev);
 
 static int device_handler_init_sources(struct device_handler *handler);
 static void device_handler_reinit_sources(struct device_handler *handler);
+
+static void device_handler_update_lang(const char *lang);
 
 void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *boot_option)
@@ -824,10 +827,25 @@ void device_handler_update_config(struct device_handler *handler,
 		return;
 
 	discover_server_notify_config(handler->server, config);
+	device_handler_update_lang(config->lang);
 	device_handler_reinit(handler);
 }
 
 #ifndef PETITBOOT_TEST
+
+static void device_handler_update_lang(const char *lang)
+{
+	const char *cur_lang;
+
+	if (!lang)
+		return;
+
+	cur_lang = setlocale(LC_ALL, NULL);
+	if (cur_lang && !strcmp(cur_lang, lang))
+		return;
+
+	setlocale(LC_ALL, lang);
+}
 
 static int device_handler_init_sources(struct device_handler *handler)
 {
@@ -1024,6 +1042,10 @@ void device_release_write(struct discover_device *dev, bool release)
 }
 
 #else
+
+static void device_handler_update_lang(const char *lang __attribute__((unused)))
+{
+}
 
 static int device_handler_init_sources(
 		struct device_handler *handler __attribute__((unused)))

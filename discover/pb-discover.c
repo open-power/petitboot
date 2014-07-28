@@ -13,6 +13,7 @@
 #include <log/log.h>
 #include <process/process.h>
 #include <talloc/talloc.h>
+#include <i18n/i18n.h>
 
 #include "discover-server.h"
 #include "device-handler.h"
@@ -127,6 +128,10 @@ int main(int argc, char *argv[])
 	struct opts opts;
 	FILE *log;
 
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	if (opts_parse(&opts, argc, argv)) {
 		print_usage();
 		return EXIT_FAILURE;
@@ -176,6 +181,9 @@ int main(int argc, char *argv[])
 	platform_init(NULL);
 	if (opts.no_autoboot == opt_yes)
 		config_set_autoboot(false);
+
+	if (config_get()->lang)
+		setlocale(LC_ALL, config_get()->lang);
 
 	system_info_init(server);
 

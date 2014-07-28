@@ -16,7 +16,9 @@ pkgsysconfdir = @sysconfdir@/@PACKAGE@
 
 SUBDIRS = grub2
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib $(DEFAULT_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/lib \
+	-DLOCALEDIR='"$(localedir)"' \
+	$(DEFAULT_CPPFLAGS)
 
 AM_CFLAGS = $(DEFAULT_CFLAGS)  \
 	-DPREFIX='"$(prefix)"' \
