@@ -16,6 +16,49 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "running boot hooks"
+msgstr "running boot hooks"
+
+#, c-format
+msgid "Couldn't load %s"
+msgstr "Couldn't load %s"
+
+msgid "performing kexec_load"
+msgstr "performing kexec_load"
+
+msgid "kexec load failed"
+msgstr "kexec load failed"
+
+msgid "performing kexec reboot"
+msgstr "performing kexec reboot"
+
+msgid "kexec reboot failed"
+msgstr "kexec reboot failed"
+
+#, c-format
+msgid "Error loading %s"
+msgstr "Error loading %s"
+
+msgid "(unknown)"
+msgstr "(unknown)"
+
+#, c-format
+msgid "Booting %s."
+msgstr "Booting %s."
+
+msgid "Boot failed: no image specified"
+msgstr "Boot failed: no image specified"
+
+msgid "Boot cancelled"
+msgstr "Boot cancelled"
+
+#, c-format
+msgid "Booting in %d sec: %s"
+msgstr "Booting in %d sec: %s"
+
+msgid "Default boot cancelled"
+msgstr "Default boot cancelled"
+
 msgid "Boot Option Editor"
 msgstr "Boot Option Editor"
 

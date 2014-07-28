@@ -1,5 +1,7 @@
 # List of source files which contain translatable strings.
 
+discover/boot.c
+discover/device-handler.c
 ui/ncurses/nc-boot-editor.c
 ui/ncurses/nc-config.c
 ui/ncurses/nc-cui.c

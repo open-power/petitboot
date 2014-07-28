@@ -18,6 +18,7 @@
 #include <talloc/talloc.h>
 #include <url/url.h>
 #include <util/util.h>
+#include <i18n/i18n.h>
 
 #include "device-handler.h"
 #include "boot.h"
@@ -235,7 +236,7 @@ static void run_boot_hooks(struct boot_task *task)
 		return;
 
 	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
-			"running boot hooks");
+			_("running boot hooks"));
 
 	boot_hook_setenv(task);
 
@@ -298,7 +299,7 @@ static int check_load(struct boot_task *task, const char *name,
 
 	update_status(task->status_fn, task->status_arg,
 			BOOT_STATUS_ERROR,
-			"Couldn't load %s", name);
+			_("Couldn't load %s"), name);
 	return -1;
 }
 
@@ -381,12 +382,12 @@ static void boot_process(struct load_url_result *result, void *data)
 	run_boot_hooks(task);
 
 	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
-			"performing kexec_load");
+			_("performing kexec_load"));
 
 	rc = kexec_load(task);
 	if (rc) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_ERROR, "kexec load failed");
+				BOOT_STATUS_ERROR, _("kexec load failed"));
 	}
 
 no_load:
@@ -397,13 +398,13 @@ no_load:
 	if (!rc) {
 		update_status(task->status_fn, task->status_arg,
 				BOOT_STATUS_INFO,
-				"performing kexec reboot");
+				_("performing kexec reboot"));
 
 		rc = kexec_reboot(task);
 		if (rc) {
 			update_status(task->status_fn, task->status_arg,
 					BOOT_STATUS_ERROR,
-					"kexec reboot failed");
+					_("kexec reboot failed"));
 		}
 	}
 }
@@ -418,7 +419,7 @@ static int start_url_load(struct boot_task *task, const char *name,
 	if (!*result) {
 		update_status(task->status_fn, task->status_arg,
 				BOOT_STATUS_ERROR,
-				"Error loading %s", name);
+				_("Error loading %s"), name);
 		return -1;
 	}
 	return 0;
@@ -438,10 +439,10 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	else if (cmd && cmd->boot_image_file)
 		boot_desc = cmd->boot_image_file;
 	else
-		boot_desc = "(unknown)";
+		boot_desc = _("(unknown)");
 
 	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
-			"Booting %s.", boot_desc);
+			_("Booting %s."), boot_desc);
 
 	if (cmd && cmd->boot_image_file) {
 		image = pb_url_parse(opt, cmd->boot_image_file);
@@ -450,7 +451,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	} else {
 		pb_log("%s: no image specified\n", __func__);
 		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
-				"Boot failed: no image specified");
+				_("Boot failed: no image specified"));
 		return NULL;
 	}
 
@@ -501,7 +502,7 @@ void boot_cancel(struct boot_task *task)
 	task->cancelled = true;
 
 	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
-			"Boot cancelled");
+			_("Boot cancelled"));
 
 	cleanup_cancellations(task, NULL);
 }
