@@ -817,7 +817,12 @@ void device_handler_cancel_default(struct device_handler *handler)
 void device_handler_update_config(struct device_handler *handler,
 		struct config *config)
 {
-	config_set(config);
+	int rc;
+
+	rc = config_set(config);
+	if (rc)
+		return;
+
 	discover_server_notify_config(handler->server, config);
 	device_handler_reinit(handler);
 }
