@@ -6,6 +6,8 @@
 
 #include "device-handler.h"
 
+struct network;
+
 typedef void (*boot_status_fn)(void *arg, struct boot_status *);
 
 void discover_server_notify_device_add(struct discover_server *server,
@@ -49,6 +51,20 @@ void system_info_register_blockdev(const char *name, const char *uuid,
 	(void)name;
 	(void)uuid;
 	(void)mountpoint;
+}
+
+void network_register_device(struct network *network,
+		struct discover_device *dev)
+{
+	(void)network;
+	(void)dev;
+}
+
+void network_unregister_device(struct network *network,
+		struct discover_device *dev)
+{
+	(void)network;
+	(void)dev;
 }
 
 void parser_init(void)
