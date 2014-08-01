@@ -45,10 +45,9 @@ edit = sed \
 EXTRA_DIST += $(url_TESTS) test/urls/run-url-test.in
 
 test/urls/run-url-test: $(srcdir)/test/urls/run-url-test.in
-	rm -f $@ $@.tmp
-	$(edit) $(srcdir)/$@.in >$@.tmp
-	chmod +x $@.tmp
-	mv $@.tmp $@
+	$(AM_V_GEN)$(edit) $(srcdir)/$@.in > $@.tmp && \
+		chmod +x $@.tmp && \
+		mv $@.tmp $@
 
 CLEANFILES += test/urls/run-url-test
 

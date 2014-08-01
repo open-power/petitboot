@@ -81,7 +81,7 @@ $(parser_TESTS): %: %.embedded-config.o test/parser/libtest.ro
 extract_config = $(srcdir)/test/parser/extract-config.awk
 
 %.embedded-config.c: %.c $(extract_config)
-	$(AWK) -f $(extract_config) $< > $@
+	$(AM_V_GEN)$(AWK) -f $(extract_config) $< > $@
 
 # objects under test
 
@@ -112,7 +112,7 @@ test_parser_libtest_ro_CPPFLAGS = \
 
 test/parser/libtest.ro$(EXEEXT): $(test_parser_libtest_ro_OBJECTS) \
 					   $(test_parser_libtest_ro_LDADD)
-	$(LD) -o $@ -r $^
+	$(AM_V_GEN)$(LD) -o $@ -r $^
 
 EXTRA_DIST += $(check_DATA) $(extract_config)
 

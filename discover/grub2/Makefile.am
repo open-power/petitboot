@@ -14,10 +14,6 @@
 
 noinst_PROGRAMS += discover/grub2/grub2-parser.ro
 
-discover/grub2/grub2-parser.ro$(EXEEXT): \
-		$(discover_grub2_grub2_parser_ro_OBJECTS)
-	$(LD) -r -o $@ $^
-
 discover_grub2_grub2_parser_ro_SOURCES = \
 	discover/grub2/builtins.c \
 	discover/grub2/env.c \
@@ -39,12 +35,13 @@ CLEANFILES += \
 	discover/grub2/lexer.c \
 	discover/grub2/lexer.h
 
-
 discover_grub2_grub2_parser_ro_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(top_srcdir)/discover/grub2 \
 	-I$(top_builddir)/discover/grub2
 
+discover_grub2_grub2_parser_ro_LINK = \
+	$(LD) -r -o $@
 
 # ylwrap doesn't handle flex header files well; use our own rule here.
 discover/grub2/lexer.h discover/grub2/lexer.c: \
