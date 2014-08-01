@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <mntent.h>
+#include <locale.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/mount.h>
