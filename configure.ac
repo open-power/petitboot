@@ -247,8 +247,14 @@ AC_ARG_ENABLE(
 
 AS_IF(
 	[test "x$enable_debug" = "xyes"],
-	[AC_SUBST([DEFAULT_CFLAGS], ["$default_cflags -O0 -DDEBUG"])],
-	[AC_SUBST([DEFAULT_CFLAGS], ["$default_cflags -O2 -DNDEBUG"])]
+	[
+		AC_SUBST([DEFAULT_CFLAGS], ["$default_cflags -O0"])
+		AC_SUBST([DEFAULT_CPPFLAGS], ["-DDEBUG"])
+	],
+	[
+		AC_SUBST([DEFAULT_CFLAGS], ["$default_cflags -O2"])
+		AC_SUBST([DEFAULT_CPPFLAGS], ["-DNDEBUG"])
+	]
 )
  
 
