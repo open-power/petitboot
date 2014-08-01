@@ -95,6 +95,7 @@ void config_set_defaults(struct config *config)
 	config->network.dns_servers = NULL;
 	config->network.n_dns_servers = 0;
 	config->boot_device = NULL;
+	config->safe_mode = false;
 	config->lang = NULL;
 
 	config->n_boot_priorities = 2;
