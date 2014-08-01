@@ -57,10 +57,9 @@ discover_pb_discover_SOURCES = \
 	discover/pxe-parser.c
 
 discover_pb_discover_LDADD = \
+	discover/grub2/grub2-parser.ro \
 	$(core_lib) \
-	discover/grub2/grub2-parser.ro
-
-discover_pb_discover_LDFLAGS = -ludev
+	$(UDEV_LIBS)
 
 discover_pb_discover_CPPFLAGS = \
 	$(AM_CPPFLAGS) \

@@ -51,7 +51,7 @@ if test "x$ax_cv_curses" = xyes; then
 fi
 
 AC_CHECK_LIB([udev], [udev_new],
-	[],
+	[UDEV_LIBS=-ludev],
 	[AC_MSG_FAILURE([The libudev development library is required by petitboot.  Try installing the package libudev-dev or libudev-devel.])]
 )
 
@@ -257,7 +257,7 @@ AS_IF(
 	]
 )
  
-
+AC_SUBST([UDEV_LIBS])
 AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([DESTDIR])
 AC_SUBST([pkgsysconfdir], ["${sysconfdir}/${package}"])
