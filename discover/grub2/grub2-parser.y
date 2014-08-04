@@ -61,7 +61,7 @@ void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 %debug
 
 %{
-#include "lexer.h"
+#include "grub2-lexer.h"
 %}
 
 %%

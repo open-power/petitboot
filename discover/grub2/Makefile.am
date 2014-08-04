@@ -19,21 +19,21 @@ discover_grub2_grub2_parser_ro_SOURCES = \
 	discover/grub2/env.c \
 	discover/grub2/grub2.h \
 	discover/grub2/grub2.c \
-	discover/grub2/lexer.l \
-	discover/grub2/parser.y \
+	discover/grub2/grub2-lexer.l \
+	discover/grub2/grub2-parser.y \
 	discover/grub2/script.c
 
 BUILT_SOURCES += \
-	discover/grub2/parser.c \
-	discover/grub2/parser.h \
-	discover/grub2/lexer.h \
-	discover/grub2/lexer.c
+	discover/grub2/grub2-parser.c \
+	discover/grub2/grub2-parser.h \
+	discover/grub2/grub2-lexer.h \
+	discover/grub2/grub2-lexer.c
 
 CLEANFILES += \
-	discover/grub2/parser.c \
-	discover/grub2/parser.h \
-	discover/grub2/lexer.c \
-	discover/grub2/lexer.h
+	discover/grub2/grub2-parser.c \
+	discover/grub2/grub2-parser.h \
+	discover/grub2/grub2-lexer.c \
+	discover/grub2/grub2-lexer.h
 
 discover_grub2_grub2_parser_ro_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
@@ -44,14 +44,14 @@ discover_grub2_grub2_parser_ro_LINK = \
 	$(LD) -r -o $@
 
 # ylwrap doesn't handle flex header files well; use our own rule here.
-discover/grub2/lexer.h discover/grub2/lexer.c: \
-		$(top_srcdir)/discover/grub2/lexer.l
-	$(AM_V_LEX)$(LEXCOMPILE) --header-file=discover/grub2/lexer.h \
-				       -o discover/grub2/lexer.c $^
+discover/grub2/grub2-lexer.h discover/grub2/grub2-lexer.c: \
+		$(top_srcdir)/discover/grub2/grub2-lexer.l
+	$(AM_V_LEX)$(LEXCOMPILE) --header-file=discover/grub2/grub2-lexer.h \
+				       -o discover/grub2/grub2-lexer.c $^
 
 # We need to loosen our warnings for the generated lexer code.
-discover/grub2/%lexer.o discover/grub2/lexer.o: \
+discover/grub2/%grub2-lexer.o discover/grub2/grub2-lexer.o: \
 		AM_CFLAGS += -Wno-unused-parameter -Wno-missing-prototypes \
 			       -Wno-missing-declarations
 
-$(discover_grub2_grub2_parser_ro_OBJECTS): discover/grub2/parser.h
+$(discover_grub2_grub2_parser_ro_OBJECTS): discover/grub2/grub2-parser.h

@@ -106,6 +106,7 @@ test_parser_libtest_ro_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(top_srcdir)/discover \
 	-I$(top_srcdir)/discover/grub2 \
+	-I$(top_builddir)/discover/grub2 \
 	-DPETITBOOT_TEST \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"' \
 	-DTEST_CONF_BASE='"$(top_srcdir)/test/parser/data"'

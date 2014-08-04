@@ -1,7 +1,7 @@
 
 %{
 #include "grub2.h"
-#include "parser.h"
+#include "grub2-parser.h"
 #include <talloc/talloc.h>
 
 void yyerror(struct grub2_parser *parser, const char *fmt, ...);
