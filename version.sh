@@ -23,11 +23,11 @@ if head=$(git rev-parse --short=8 --verify HEAD 2>/dev/null); then
 		# Use the git commit revision for the package version, and add
 		# a date prefix for easy comparisons.
 		date=$(git log --pretty=format:"%ct" -1 HEAD)
-		version=$(printf "%($datefmt)T-g%s%s" ${date} ${head} ${suffix})
+		version=$(printf "%($datefmt)T.g%s%s" ${date} ${head} ${suffix})
 	fi
 else
 	# Default to current date and time.
-	version="$(date +dev-$datefmt)"
+	version="$(date +dev.$datefmt)"
 fi
 
 echo $version
