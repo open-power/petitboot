@@ -19,6 +19,7 @@
 
 static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
+static const char *devtree_dir = "/proc/device-tree/";
 
 struct param {
 	char			*name;
@@ -748,16 +749,20 @@ static int save_config(struct platform *p, struct config *config)
 static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 {
 	struct platform_powerpc *platform = p->platform_data;
+	char *buf, *filename;
 	int len, rc;
-	char *buf;
 
-	rc = read_file(platform, "/proc/device_tree/model", &buf, &len);
+	filename = talloc_asprintf(platform, "%smodel", devtree_dir);
+	rc = read_file(platform, filename, &buf, &len);
 	if (rc == 0)
 		sysinfo->type = talloc_steal(sysinfo, buf);
+	talloc_free(filename);
 
-	rc = read_file(platform, "/proc/device_tree/system-id", &buf, &len);
+	filename = talloc_asprintf(platform, "%ssystem-id", devtree_dir);
+	rc = read_file(platform, filename, &buf, &len);
 	if (rc == 0)
 		sysinfo->identifier = talloc_steal(sysinfo, buf);
+	talloc_free(filename);
 
 	return 0;
 }
