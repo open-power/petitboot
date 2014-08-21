@@ -265,7 +265,7 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 		if (matched) {
 			snprintf(buf,sizeof(buf),"[%s: %s / %s]",
 				dev->type == DEVICE_TYPE_DISK ?
-				"Disk" : "CD/DVD",
+					_("Disk") : _("CD/DVD"),
 				bd->name, bd->uuid);
 		}
 		break;
@@ -282,8 +282,8 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 		if (matched) {
 			mac_str(intf->hwaddr, intf->hwaddr_size,
 				hwaddr, sizeof(hwaddr));
-			snprintf(buf,sizeof(buf),"[Interface %s / %s]",
-				intf->name, hwaddr);
+			snprintf(buf,sizeof(buf),"[%s: %s / %s]",
+				_("Network"), intf->name, hwaddr);
 		}
 		break;
 
@@ -294,8 +294,8 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 	if (!matched) {
 		pb_debug("%s: No matching device found for %s (%s)\n",
 			__func__,opt->device_id, dev->id);
-		snprintf(buf,sizeof(buf),"[Unknown Device: %s]",
-			dev->id);
+		snprintf(buf, sizeof(buf), "[%s: %s]",
+			_("Unknown Device"), dev->id);
 	}
 
 	dev_hdr = pmenu_item_create(menu, buf);
