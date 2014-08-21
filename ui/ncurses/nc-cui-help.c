@@ -16,5 +16,13 @@ network interface, type I (information).\n\
 \n\
 To make changes to the system configuration, type C (configure).\n\
 \n\
+To set the language for the petitboot interface, type L (language).\n\
+\n\
+To to find boot new or updated boot options on the system, select \
+the 'Rescan devices' option.\n\
+\n\
+To retreive new boot options from a remote configuration file, select \
+the 'Retrieve config from URL' option.\n\
+\n\
 To close the Petitboot interface, type X (exit).\n"
 );
