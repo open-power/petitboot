@@ -2,16 +2,19 @@
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
+#include <stdlib.h>
 #include <string.h>
 
 #include <talloc/talloc.h>
 #include <url/url.h>
+#include <log/log.h>
 
 #include "parser.h"
 #include "parser-conf.h"
 #include "parser-utils.h"
 #include "resource.h"
 #include "paths.h"
+#include "event.h"
 #include "user-event.h"
 
 static const char *pxelinux_prefix = "pxelinux.cfg/";
@@ -64,6 +67,42 @@ static struct pb_url *pxe_url_join(void *ctx, const struct pb_url *url,
 	}
 
 	return new_url;
+}
+
+static void pxe_append_string(struct discover_boot_option *opt,
+		const char *str)
+{
+	if (opt->option->boot_args)
+		opt->option->boot_args = talloc_asprintf_append(
+				opt->option->boot_args, " %s", str);
+	else
+		opt->option->boot_args = talloc_strdup(opt->option, str);
+}
+
+static void pxe_process_sysappend(struct discover_context *ctx,
+		struct discover_boot_option *opt,
+		unsigned long val)
+{
+	struct event *event = ctx->event;
+	char *str = NULL;
+
+	if (!event)
+		return;
+
+	if (val & 0x2) {
+		const char *mac = event_get_param(event, "mac");
+		if (mac) {
+			str = talloc_asprintf(ctx, "BOOTIF=%s", mac);
+			pxe_append_string(opt, str);
+			talloc_free(str);
+		}
+		val &= ~0x2;
+	}
+
+	if (val)
+		pb_log("pxe: unsupported features requested in "
+				"ipappend/sysappend: 0x%04lx", val);
+
 }
 
 static void pxe_process_pair(struct conf_context *ctx,
@@ -120,7 +159,7 @@ static void pxe_process_pair(struct conf_context *ctx,
 	} else if (streq(name, "APPEND")) {
 		char *str, *end;
 
-		opt->option->boot_args = talloc_strdup(opt->option, value);
+		pxe_append_string(opt, value);
 
 		str = strcasestr(value, "INITRD=");
 		if (str) {
@@ -131,6 +170,13 @@ static void pxe_process_pair(struct conf_context *ctx,
 			url = pxe_url_join(ctx->dc, ctx->dc->conf_url, str);
 			opt->initrd = create_url_resource(opt, url);
 		}
+	} else if (streq(name, "SYSAPPEND") || streq(name, "IPAPPEND")) {
+		unsigned long type;
+		char *end;
+
+		type = strtoul(value, &end, 10);
+		if (end != value && !(*end))
+			pxe_process_sysappend(ctx->dc, opt, type);
 	}
 
 }

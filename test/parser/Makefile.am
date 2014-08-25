@@ -50,6 +50,7 @@ parser_TESTS = \
 	test/parser/test-pxe-ip-without-conf \
 	test/parser/test-pxe-non-url-conf \
 	test/parser/test-pxe-local \
+	test/parser/test-pxe-ipappend \
 	test/parser/test-pxe-pathprefix-with-conf \
 	test/parser/test-pxe-non-url-pathprefix-with-conf \
 	test/parser/test-pxe-pathprefix-discover \
