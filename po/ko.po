@@ -1,0 +1,534 @@
+# English translations for petitboot package.
+# This file is put in the public domain.
+# Jeremy Kerr <jk@ozlabs.org>, 2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
+"Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
+"POT-Creation-Date: 2014-09-15 11:15+0800\n"
+"PO-Revision-Date: 2014-06-24 13:56+0800\n"
+"Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
+"Language-Team: Korean\n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "running boot hooks"
+msgstr "부트 후크 실행 중"
+
+#, c-format
+msgid "Couldn't load %s"
+msgstr "%s을(를) 로드할 수 없음"
+
+msgid "performing kexec_load"
+msgstr "kexec_load 수행 중"
+
+msgid "kexec load failed"
+msgstr "kexec 로드에 실패함"
+
+msgid "performing kexec reboot"
+msgstr "kexec 다시 부팅 수행 중"
+
+msgid "kexec reboot failed"
+msgstr "kexec 다시 부팅에 실패함"
+
+#, c-format
+msgid "Error loading %s"
+msgstr "%s 로드 중 오류 발생"
+
+msgid "(unknown)"
+msgstr "(알 수 없음)"
+
+#, c-format
+msgid "Booting %s."
+msgstr "%s 부팅 중입니다."
+
+msgid "Boot failed: no image specified"
+msgstr "부트 실패: 이미지가 지정되지 않음"
+
+msgid "Boot cancelled"
+msgstr "부팅이 취소됨"
+
+#, c-format
+msgid "Booting in %d sec: %s"
+msgstr "%d초에 부팅 중: %s"
+
+msgid "Default boot cancelled"
+msgstr "기본 부팅이 취소됨"
+
+#, c-format
+msgid "Received config URL %s"
+msgstr "구성 URL %s을(를) 수신함"
+
+msgid "No network configured"
+msgstr "네크워크가 구성되지 않았습니다."
+
+msgid "Invalid config URL!"
+msgstr "올바르지 않은 구성 URL입니다."
+
+#, c-format
+msgid "Unable to route to host %s"
+msgstr "호스트 %s에 경로 지정할 수 없음"
+
+#, c-format
+msgid "Config file %s parsed"
+msgstr "%s 구성 파일을 구문 분석함"
+
+msgid "Retrieve Config"
+msgstr "구성 검색"
+
+msgid "Configuration URL:"
+msgstr "구성 URL:"
+
+msgid "OK"
+msgstr "확인"
+
+msgid "Help"
+msgstr "도움말"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "Petitboot Config Retrieval"
+msgstr "Petitboot 구성 검색"
+
+msgid "tab=next, shift+tab=previous, x=exit, h=help"
+msgstr "tab=다음, shift+tab=이전, x=종료, h=도움말"
+
+msgid "Boot Option Editor"
+msgstr "부트 옵션 편집기"
+
+msgid "Specify paths/URLs manually"
+msgstr "수동으로 경로/URL 지정"
+
+msgid "Device:"
+msgstr "장치: "
+
+msgid "Kernel:"
+msgstr "커널:"
+
+msgid "Initrd:"
+msgstr "Initrd:"
+
+msgid "Device tree:"
+msgstr "장치 트리:"
+
+msgid "Boot arguments:"
+msgstr "부트 인수:"
+
+msgid "Petitboot Option Editor"
+msgstr "Petitboot 옵션 편집기"
+
+msgid "System Configuration"
+msgstr "시스템 구성"
+
+msgid "No IP / mask values are set"
+msgstr "IP/마스크 값이 설정되지 않음"
+
+msgid "Waiting for configuration data..."
+msgstr "구성 데이터 대기 중..."
+
+msgid "Autoboot:"
+msgstr "자동 부트:"
+
+msgid "Don't autoboot"
+msgstr "자동 부트하지 않음"
+
+msgid "Autoboot from any disk/network device"
+msgstr "모든 디스크/네트워크 장치에서 자동 부트"
+
+msgid "Only autoboot from a specific disk/network device"
+msgstr "특정 디스크/네트워크 장치에서만 자동 부트"
+
+#, c-format
+msgid "disk: %s [uuid: %s]"
+msgstr "디스크: %s [uuid: %s]"
+
+#, c-format
+msgid "net:  %s [mac: %s]"
+msgstr "네트:  %s [mac: %s]"
+
+#, c-format
+msgid "Unknown UUID: %s"
+msgstr "알 수 없는 UUID: %s"
+
+msgid "Timeout:"
+msgstr "제한시간:"
+
+msgid "seconds"
+msgstr "초"
+
+msgid "Network:"
+msgstr "네트워크:"
+
+msgid "DHCP on all active interfaces"
+msgstr "모든 활성 인터페이스의 DHCP"
+
+msgid "DHCP on a specific interface"
+msgstr "특정 인터페이스의 DHCP"
+
+msgid "Static IP configuration"
+msgstr "정적 IP 구성"
+
+msgid "link up"
+msgstr "링크 연결"
+
+msgid "link down"
+msgstr "링크 중단"
+
+msgid "IP/mask:"
+msgstr "IP/마스크:"
+
+msgid "(eg. 192.168.0.10 / 24)"
+msgstr "(예: 192.168.0.10/24)"
+
+msgid "Gateway:"
+msgstr "게이트웨이: "
+
+msgid "(eg. 192.168.0.1)"
+msgstr "(예: 192.168.0.1)"
+
+msgid "DNS Server(s):"
+msgstr "DNS 서버:"
+
+msgid "(eg. 192.168.0.2)"
+msgstr "(예: 192.168.0.2)"
+
+msgid "(if not provided by DHCP server)"
+msgstr "(DHCP 서버에서 제공되지 않은 경우)"
+
+msgid "Selecting 'OK' will exit safe mode"
+msgstr "'확인'을 선택하면 안전 모드를 종료합니다."
+
+msgid "Petitboot System Configuration"
+msgstr "Petitboot 시스템 구성"
+
+#, c-format
+msgid "Running %s..."
+msgstr "%s 실행 중..."
+
+#, c-format
+msgid "Failed: %s"
+msgstr "실패: %s"
+
+#, c-format
+msgid "Booting %s..."
+msgstr "%s 부팅 중..."
+
+#, c-format
+msgid "Failed: boot %s"
+msgstr "실패: %s 부트"
+
+#, c-format
+msgid "User item %u"
+msgstr "사용자 항목 %u"
+
+msgid "Error"
+msgstr "오류"
+
+msgid "Info"
+msgstr "정보"
+
+#, c-format
+msgid "SAFE MODE: select '%s' to continue"
+msgstr "안전 모드: 계속하려면 '%s' 선택"
+
+msgid "Rescan devices"
+msgstr "장치 다시 스캔"
+
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
+msgstr "Enter=허용, e=편집, n=새로 작성, x=종료, l=언어, h=도움말"
+
+msgid "Welcome to Petitboot"
+msgstr "Petitboot 시작"
+
+msgid "System information"
+msgstr "시스템 정보"
+
+msgid "System configuration"
+msgstr "시스템 구성"
+
+msgid "Retrieve config from URL"
+msgstr "URL에서 구성 검색"
+
+msgid "Exit to shell"
+msgstr "쉘로 종료"
+
+msgid "main menu"
+msgstr "기본 메뉴"
+
+#, c-format
+msgid "%s: alloc cui failed.\n"
+msgstr "%s: cui 할당에 실패했습니다.\n"
+
+#, c-format
+msgid "%s: error: discover_client_init failed.\n"
+msgstr "%s: 오류: discover_client_init가 실패했습니다.\n"
+
+#, c-format
+msgid "could not start pb-discover, the petitboot daemon.\n"
+msgstr "pb-discover, petitboot 디먼을 시작할 수 없습니다.\n"
+
+#, c-format
+msgid "check that pb-discover, the petitboot daemon is running.\n"
+msgstr "pb-discover, petitboot 디먼이 실행 중인지 확인하십시오.\n"
+
+msgid "Petitboot help"
+msgstr "Petitboot 도움말"
+
+#, c-format
+msgid "Petitboot help: %s"
+msgstr "Petitboot 도움말: %s"
+
+msgid "Language"
+msgstr "언어"
+
+#, c-format
+msgid "Unknown language '%s'"
+msgstr "알 수 없는 언어 '%s'"
+
+msgid "Petitboot Language Selection"
+msgstr "Petitboot 언어 선택"
+
+#, c-format
+msgid "!Invalid option %d"
+msgstr "!올바르지 않은 옵션 %d"
+
+msgid "Disk"
+msgstr "디스크"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Network"
+msgstr "네트워크"
+
+msgid "Unknown Device"
+msgstr "알 수 없는 장치"
+
+msgid "Waiting for system information..."
+msgstr "시스템 정보 대기 중..."
+
+msgid "System type:"
+msgstr "시스템 유형:"
+
+msgid "System id:"
+msgstr "시스템 ID:"
+
+msgid "Storage devices"
+msgstr "스토리지 장치"
+
+#, c-format
+msgid " UUID:       %s"
+msgstr " UUID:       %s"
+
+#, c-format
+msgid " mounted at: %s"
+msgstr " 마운트 위치: %s"
+
+#, c-format
+msgid " MAC:  %s"
+msgstr " MAC:  %s"
+
+#, c-format
+msgid " link: %s"
+msgstr " 링크: %s"
+
+msgid "Petitboot System Information"
+msgstr "Petitboot 시스템 정보"
+
+msgid "System Information"
+msgstr "시스템 정보"
+
+msgid "x=exit, h=help"
+msgstr "x=종료, h=도움말"
+
+msgid "x=exit"
+msgstr "x=종료"
+
+msgid ""
+"From the main menu screen, select a boot option. The options displayed are "
+"available on the system and the network.\n"
+"\n"
+"To select a boot option, press Enter.\n"
+"\n"
+"To make changes to an existing option, type E (edit).\n"
+"\n"
+"To add a new boot option, type N (new).\n"
+"\n"
+"To display information about the system, including the MAC addresses of each "
+"network interface, type I (information).\n"
+"\n"
+"To make changes to the system configuration, type C (configure).\n"
+"\n"
+"To set the language for the petitboot interface, type L (language).\n"
+"\n"
+"To find new or updated boot options on the system, select the 'Rescan "
+"devices' option.\n"
+"\n"
+"To retreive new boot options from a remote configuration file, select the "
+"'Retrieve config from URL' option.\n"
+"\n"
+"To close the Petitboot interface, type X (exit).\n"
+msgstr ""
+"기본 메뉴 화면에서 부트 옵션을 선택하십시오. 표시된 옵션은 시스템 및 네트워크"
+"에서 사용 가능합니다.\n"
+"\n"
+"부트 옵션을 선택하려면 Enter를 누르십시오.\n"
+"\n"
+"기존 옵션에 변경사항을 작성하려면 E(편집)를 입력하십시오.\n"
+"\n"
+"새 부트 옵션을 추가하려면 N(새로 작성)을 입력하십시오.\n"
+"\n"
+"각 네트워크 인터페이스의 MAC 주소를 포함하여 시스템에 대한 정보를 표시하려면 "
+"I(정보)를 입력하십시오.\n"
+"\n"
+"시스템 구성에 대한 변경사항을 작성하려면 C(구성)를 입력하십시오.\n"
+"\n"
+"Petitboot 인터페이스에 대한 언어를 설정하려면 L(언어)을 입력하십시오.\n"
+"\n"
+"시스템에서 새 부트 또는 업데이트된 부트 옵션을 찾으려면 '장치 다시 스캔' 옵션"
+"을 선택하십시오.\n"
+"\n"
+"원격 구성 파일에서 새 부트 옵션을 검색하려면 'URL에서 구성 검색' 옵션을 선택"
+"하십시오.\n"
+"\n"
+"Petitboot 인터페이스를 닫으려면 X(종료)를 입력하십시오.\n"
+
+msgid ""
+"Supply a valid URL here to retrieve a remote pxe-boot config file and parse "
+"it.\n"
+"\n"
+"URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
+"host/pxeconffile or http://host/pxeconffile"
+msgstr ""
+"원격 pxe-boot 구성 파일을 검색하고 구문 분석하려면 여기서 올바른 URL을 제공하"
+"십시오.\n"
+"\n"
+"URL 양식은 'scheme://host/path/to/pxeconffile'입니다. 예: tftp://host/"
+"pxeconffile or http://host/pxeconffile"
+
+msgid ""
+"This screen allows you to edit or create boot options.\n"
+"\n"
+"Device: This is a list of block devices available on the system. Select the "
+"device which contains your boot resources (kernel, initrd and device tree), "
+"or \"Specify paths/URLs manually\" to use full URLs to the boot resources.\n"
+"\n"
+"Kernel: enter the path to the kernel to boot. This field is mandatory. This "
+"should be a kernel image that the kexec utility can handle. Generally, this "
+"will be a 'vmlinux'-type image.\n"
+"Example: /boot/vmlinux\n"
+"\n"
+"Initrd: enter the path to the initial RAM disk image. This is optional.\n"
+"Example: /boot/initrd.img\n"
+"\n"
+"Device tree: enter the path to the device tree blob file (.dtb). This is "
+"optional; if not specified, and your platform currently provides a device "
+"tree, the current one will be used.\n"
+"Example: /boot/device-tree.dtb\n"
+"\n"
+"Boot arguments: enter the kernel command-line arguments. This is optional.\n"
+"Example: root=/dev/sda1 console=hvc0\n"
+"\n"
+msgstr ""
+"이 화면에서 부트 옵션을 편집하거나 작성할 수 있습니다.\n"
+"\n"
+"장치: 이는 시스템에서 사용 가능한 블록 장치 목록입니다. 부트 자원(커널, "
+"initrd 및 장치 트리)이 포함된 장치를 선택하거나, 부트 자원에 대한 전체 URL을 "
+"사용하려면 \"수동으로 경로/URL 지정\"을 선택하십시오.\n"
+"\n"
+"커널: 부팅할 커널에 대한 경로를 입력하십시오. 이 필드는 필수입니다. 이는 "
+"kexec 유틸리티가 처리할 수 있는 커널 이미지여야 합니다. 일반적으로 'vmlinux' "
+"유형 이미지입니다.\n"
+"예: /boot/vmlinux\n"
+"\n"
+"Initrd: 초기 RAM 디스크 이미지에 대한 경로를 입력하십시오. 이 필드는 선택적입"
+"니다.\n"
+"예: /boot/initrd.img\n"
+"\n"
+"장치 트리: 장치 트리 blob 파일(.dtb)에 대한 경로를 입력하십시오. 이 필드는 선"
+"택적입니다. 지정하지 않은 경우 플랫폼에서 현재 장치 트리를 제공하며 현재 장"
+"치 트리가 사용됩니다.\n"
+"예: /boot/device-tree.dtb\n"
+"\n"
+"부트 인수: 커널 명령행 인수를 입력하십시오. 이 필드는 선택적입니다.\n"
+"예: root=/dev/sda1 console=hvc0\n"
+"\n"
+
+msgid ""
+"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"\n"
+"Don't autoboot: boot options will be listed in the petitboot menu, but none "
+"will be booted automatically. User interaction will be required to continue "
+"past the petitboot menu. Use this option if you want the machine to wait for "
+"an explicit boot selection, or want to interact with petitboot before "
+"booting the system\n"
+"\n"
+"Autoboot from any disk/network device: any boot option that is marked as a "
+"default (by bootloader configuration) will be booted automatically after a "
+"timeout. Use this option if you want to quickly boot your system without "
+"changing any boot option settings. This is the typical configuration.\n"
+"\n"
+"Only autoboot from a specific disk/network device: only boot options from a "
+"single device (specifed here) will be booted automatically after a timeout. "
+"Use this option if you have multiple operating system images installed.\n"
+"\n"
+"Timeout: Specify the length of time, in seconds, that the main menu will be "
+"displayed before the default boot option is started. This option is only "
+"displayed if autoboot is enabled.\n"
+"\n"
+"Network options:\n"
+"\n"
+"DHCP on all active interfaces: Automatically assigns IP addresses to each "
+"network interface. Use this option if you have a DHCP server on your "
+"network.\n"
+"\n"
+"DHCP on a specific interface: Automatically assigns IP addresses to the "
+"selected network interface. The other interfaces are not configured. Select "
+"this option if you have multiple DHCP servers on different interfaces, but "
+"only want to configure a single interface during boot.\n"
+"\n"
+"Static IP configuration: Allows you to specify an IPv4 address and network "
+"mask, gateway, and a DNS server or servers for a network interface. Select "
+"this option if you do not have a DHCP server, or want explicit control of "
+"network settings."
+msgstr ""
+"자동 부트: 자동 부트 작동에는 세 가지 옵션을 사용할 수 있습니다.\n"
+"\n"
+"자동 부트하지 않음: 부트 옵션이 petitboot 메뉴에 나열되지만 자동으로 부팅되"
+"지 않습니다. petitboot 메뉴를 지나 계속 수행하려면 사용자 상호작용이 필요합니"
+"다. 시스템이 명시적 부트 선택을 대기하도록 하거나 시스템을 부팅하기 전에 "
+"petitboot와 상호작용하려면 이 옵션을 사용하십시오.\n"
+"\n"
+"모든 디스크/네트워크 장치에서 자동 부트: 제한시간이 초과된 후 기본값으로 표시"
+"된(부트 로더 구성에 의해) 부트 옵션이 자동으로 부팅됩니다.부트 옵션 설정을 변"
+"경하지 않고 시스템을 신속하게 부팅하려는 경우 이 옵션을 사용하십시오. 이는 일"
+"반적인 구성입니다.\n"
+"\n"
+"특정 디스크/네트워크 장치에서 자동 부트 전용: 제한시간이 초과된 후 단일 장치"
+"(여기에 지정된)에서 부트 옵션만 자동으로 부팅됩니다. 여러 운영 체제 이미지를 "
+"설치한 경우 이 옵션을 사용하십시오.\n"
+"\n"
+"제한시간: 기본 부트 옵션이 시작되기 전에 기본 메뉴가 표시되는 시간(초)을 지정"
+"하십시오. 이 옵션은 자동 부트가 사용되도록  설정된 경우에만 표시됩니다. \n"
+"\n"
+"네트워크 옵션:\n"
+"\n"
+"모든 활성 인터페이스의 DHCP: 각 네트워크 인터페이스에 대해 IP 주소를 자동으"
+"로 지정합니다. 네트워크에 DHCP 서버가 있는 경우 이 옵션을 사용하십시오.\n"
+"\n"
+"특정 인터페이스의 DHCP: 선택한 네트워크 인터페이스에 대해 IP 주소를 자동으로 "
+"지정합니다. 나머지 인터페이스는 구성되지 않습니다. 서로 다른 인터페이스에 여"
+"러 DHCP 서버가 있지만 부트 중에 단일 인터페이스만 구성하려는 경우 이 옵션을 "
+"선택하십시오.\n"
+"\n"
+"정적 IP 구성: 네트워크 인터페이스에 대한 IPv4 주소 및 네트워크 마스크, 게이트"
+"웨이 및 DNS 서버를 지정할 수 있습니다. DHCP가 없거나 네트워크 설정을 명시적으"
+"로 제어하려면 이 옵션을 선택하십시오."
+
+msgid "Usage"
+msgstr "사용법"

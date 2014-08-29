@@ -1,0 +1,542 @@
+# English translations for petitboot package.
+# This file is put in the public domain.
+# Jeremy Kerr <jk@ozlabs.org>, 2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
+"Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
+"POT-Creation-Date: 2014-09-15 11:15+0800\n"
+"PO-Revision-Date: 2014-06-24 13:56+0800\n"
+"Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "running boot hooks"
+msgstr "выполнение привязок загрузки"
+
+#, c-format
+msgid "Couldn't load %s"
+msgstr "Не удалось загрузить %s"
+
+msgid "performing kexec_load"
+msgstr "выполнение kexec_load"
+
+msgid "kexec load failed"
+msgstr "не удалось выполнить kexec load"
+
+msgid "performing kexec reboot"
+msgstr "выполнение kexec reboot"
+
+msgid "kexec reboot failed"
+msgstr "не удалось выполнить kexec reboot"
+
+#, c-format
+msgid "Error loading %s"
+msgstr "Ошибка загрузки %s"
+
+msgid "(unknown)"
+msgstr "(не известно)"
+
+#, c-format
+msgid "Booting %s."
+msgstr "Загружается %s."
+
+msgid "Boot failed: no image specified"
+msgstr "Не удалось загрузить: образ не указан"
+
+msgid "Boot cancelled"
+msgstr "Загрузка отменена"
+
+#, c-format
+msgid "Booting in %d sec: %s"
+msgstr "Загрузка через %d сек: %s"
+
+msgid "Default boot cancelled"
+msgstr "Загрузка по умолчанию отменена"
+
+#, c-format
+msgid "Received config URL %s"
+msgstr "Получен URL конфигурации %s"
+
+msgid "No network configured"
+msgstr "Сеть не настроена"
+
+msgid "Invalid config URL!"
+msgstr "Недопустимый URL конфигурации!"
+
+#, c-format
+msgid "Unable to route to host %s"
+msgstr "Не удалось перенаправить к хосту %s"
+
+#, c-format
+msgid "Config file %s parsed"
+msgstr "Файл конфигурации %s проанализирован"
+
+msgid "Retrieve Config"
+msgstr "Доставка конфигурации"
+
+msgid "Configuration URL:"
+msgstr "URL конфигурации:"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Help"
+msgstr "Справка"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Petitboot Config Retrieval"
+msgstr "Доставка Petitboot Config"
+
+msgid "tab=next, shift+tab=previous, x=exit, h=help"
+msgstr "tab=далее, shift+tab=предыдущий, x=выход, h=помощь"
+
+msgid "Boot Option Editor"
+msgstr "Редактор опций загрузки"
+
+msgid "Specify paths/URLs manually"
+msgstr "Указать пути/URL вручную"
+
+msgid "Device:"
+msgstr "Устройство:"
+
+msgid "Kernel:"
+msgstr "Kernel:"
+
+msgid "Initrd:"
+msgstr "Initrd:"
+
+msgid "Device tree:"
+msgstr "Дерево устройства:"
+
+msgid "Boot arguments:"
+msgstr "Аргументы загрузки:"
+
+msgid "Petitboot Option Editor"
+msgstr "Редактор опций загрузки Petitboot"
+
+msgid "System Configuration"
+msgstr "Конфигурация системы"
+
+msgid "No IP / mask values are set"
+msgstr "Не задано значение IP / маски"
+
+msgid "Waiting for configuration data..."
+msgstr "Ожидание данных конфигурации..."
+
+msgid "Autoboot:"
+msgstr "Автоматическая загрузка:"
+
+msgid "Don't autoboot"
+msgstr "Не загружаться автоматически"
+
+msgid "Autoboot from any disk/network device"
+msgstr "Автоматически загружаться с любого диска/сетевого устройства"
+
+msgid "Only autoboot from a specific disk/network device"
+msgstr ""
+"Автоматически загружаться только с указанного диска/сетевого устройства"
+
+#, c-format
+msgid "disk: %s [uuid: %s]"
+msgstr "диск: %s [uuid: %s]"
+
+#, c-format
+msgid "net:  %s [mac: %s]"
+msgstr "сеть:  %s [mac: %s]"
+
+#, c-format
+msgid "Unknown UUID: %s"
+msgstr "Неизвестный UUID: %s"
+
+msgid "Timeout:"
+msgstr "Тайм-аут:"
+
+msgid "seconds"
+msgstr "секунд"
+
+msgid "Network:"
+msgstr "Сеть:"
+
+msgid "DHCP on all active interfaces"
+msgstr "DHCP на всех активных интерфейсах"
+
+msgid "DHCP on a specific interface"
+msgstr "DHCP на конкретном интерфейсе"
+
+msgid "Static IP configuration"
+msgstr "Конфигурация статического IP"
+
+msgid "link up"
+msgstr "подключиться"
+
+msgid "link down"
+msgstr "отключиться"
+
+msgid "IP/mask:"
+msgstr "IP/маска:"
+
+msgid "(eg. 192.168.0.10 / 24)"
+msgstr "(eg. 192.168.0.10 / 24)"
+
+msgid "Gateway:"
+msgstr "Шлюз:"
+
+msgid "(eg. 192.168.0.1)"
+msgstr "(eg. 192.168.0.1)"
+
+msgid "DNS Server(s):"
+msgstr "Сервер(серверы) DNS:"
+
+msgid "(eg. 192.168.0.2)"
+msgstr "(eg. 192.168.0.2)"
+
+msgid "(if not provided by DHCP server)"
+msgstr "(если не предоставляется сервером DHCP)"
+
+msgid "Selecting 'OK' will exit safe mode"
+msgstr "После нажатия 'OK' безопасный режим будет выключен"
+
+msgid "Petitboot System Configuration"
+msgstr "Конфигурация Petitboot System"
+
+#, c-format
+msgid "Running %s..."
+msgstr "Выполняется %s..."
+
+#, c-format
+msgid "Failed: %s"
+msgstr "Не удалось выполнить: %s"
+
+#, c-format
+msgid "Booting %s..."
+msgstr "Загружается %s..."
+
+#, c-format
+msgid "Failed: boot %s"
+msgstr "Не удалось: загрузиться %s"
+
+#, c-format
+msgid "User item %u"
+msgstr "Объект пользователя %u"
+
+msgid "Error"
+msgstr "Ошибка"
+
+msgid "Info"
+msgstr "Информация"
+
+#, c-format
+msgid "SAFE MODE: select '%s' to continue"
+msgstr "БЕЗОПАСНЫЙ РЕЖИМ: чтобы продолжить, выберите '%s'"
+
+msgid "Rescan devices"
+msgstr "Заново сканировать устройства"
+
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
+msgstr "Enter=принять, e=редактировать, n=новый, x=выход, l=язык, h=помощь"
+
+msgid "Welcome to Petitboot"
+msgstr "Вас приветствует Petitboot"
+
+msgid "System information"
+msgstr "Информация о системе"
+
+msgid "System configuration"
+msgstr "Конфигурация системы"
+
+msgid "Retrieve config from URL"
+msgstr "Получение конфигурации по URL"
+
+msgid "Exit to shell"
+msgstr "Выйти в оболочку"
+
+msgid "main menu"
+msgstr "главное меню"
+
+#, c-format
+msgid "%s: alloc cui failed.\n"
+msgstr "%s: не удалось запустить alloc cui.\n"
+
+#, c-format
+msgid "%s: error: discover_client_init failed.\n"
+msgstr "%s: ошибка: не удалось запустить discover_client_init.\n"
+
+#, c-format
+msgid "could not start pb-discover, the petitboot daemon.\n"
+msgstr "не могу запустить pb-discover, демон petitboot.\n"
+
+#, c-format
+msgid "check that pb-discover, the petitboot daemon is running.\n"
+msgstr "проверяю этот pb-discover, демон petitboot запущен.\n"
+
+msgid "Petitboot help"
+msgstr "Помощь по Petitboot"
+
+#, c-format
+msgid "Petitboot help: %s"
+msgstr "Помощь по Рetitboot: %s"
+
+msgid "Language"
+msgstr "Язык"
+
+#, c-format
+msgid "Unknown language '%s'"
+msgstr "Неизвестный язык '%s'"
+
+msgid "Petitboot Language Selection"
+msgstr "Выбор языка в Petitboot"
+
+#, c-format
+msgid "!Invalid option %d"
+msgstr "!Недопустимая опция %d"
+
+msgid "Disk"
+msgstr "Диск"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Network"
+msgstr "Сеть"
+
+msgid "Unknown Device"
+msgstr "Неизвестное устройство"
+
+msgid "Waiting for system information..."
+msgstr "Ожидание информации о системе..."
+
+msgid "System type:"
+msgstr "Тип системы:"
+
+msgid "System id:"
+msgstr "ИД системы:"
+
+msgid "Storage devices"
+msgstr "Устройства хранения"
+
+#, c-format
+msgid " UUID:       %s"
+msgstr " UUID:       %s"
+
+#, c-format
+msgid " mounted at: %s"
+msgstr " установлено в: %s"
+
+#, c-format
+msgid " MAC:  %s"
+msgstr " MAC:  %s"
+
+#, c-format
+msgid " link: %s"
+msgstr " ссылка: %s"
+
+msgid "Petitboot System Information"
+msgstr "Информация о Petitboot System"
+
+msgid "System Information"
+msgstr "Информация о системе"
+
+msgid "x=exit, h=help"
+msgstr "x=выход, h=помощь"
+
+msgid "x=exit"
+msgstr "x=выход"
+
+msgid ""
+"From the main menu screen, select a boot option. The options displayed are "
+"available on the system and the network.\n"
+"\n"
+"To select a boot option, press Enter.\n"
+"\n"
+"To make changes to an existing option, type E (edit).\n"
+"\n"
+"To add a new boot option, type N (new).\n"
+"\n"
+"To display information about the system, including the MAC addresses of each "
+"network interface, type I (information).\n"
+"\n"
+"To make changes to the system configuration, type C (configure).\n"
+"\n"
+"To set the language for the petitboot interface, type L (language).\n"
+"\n"
+"To find new or updated boot options on the system, select the 'Rescan "
+"devices' option.\n"
+"\n"
+"To retreive new boot options from a remote configuration file, select the "
+"'Retrieve config from URL' option.\n"
+"\n"
+"To close the Petitboot interface, type X (exit).\n"
+msgstr ""
+"Выберите вариант загрузки на экране главного меню. Представленные варианты "
+"доступны в системе и в сети.\n"
+"\n"
+"Для выбора варианта загрузки нажмите клавишу Enter.\n"
+"\n"
+"Для изменения существующего варианта, нажмите клавишу E (edit).\n"
+"\n"
+"Для добавления нового варианта загрузки, нажмите клавишу N (new).\n"
+"\n"
+"Для вывода информации о системе, включая адреса MAC для каждого сетевого "
+"интерфейса, нажмите клавишу I (information).\n"
+"\n"
+"Для изменения конфигурации системы, нажмите клавишу C (configure).\n"
+"\n"
+"Для выбора языка интерфейса petitboot, нажмите клавишу L (language).\n"
+"\n"
+"Для того, чтобы найти в системе вариант новой или обновленной загрузки, "
+"выберите опцию 'Заново сканировать устройства'.\n"
+"\n"
+"Для передачи нового варианта загрузки из удаленного файла конфигурации, "
+"выберите опцию 'Передать конфигурацию по URL'.\n"
+"\n"
+"Закрыть интерфейс Petitboot можно, нажав клавишу X (exit).\n"
+
+msgid ""
+"Supply a valid URL here to retrieve a remote pxe-boot config file and parse "
+"it.\n"
+"\n"
+"URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
+"host/pxeconffile or http://host/pxeconffile"
+msgstr ""
+"Для получения и анализа удаленного файла конфигурации pxe-загрузки укажите "
+"действительный URL.\n"
+"\n"
+"Формат URL: 'scheme://host/path/to/pxeconffile', например: tftp://host/"
+"pxeconffile или http://host/pxeconffile"
+
+msgid ""
+"This screen allows you to edit or create boot options.\n"
+"\n"
+"Device: This is a list of block devices available on the system. Select the "
+"device which contains your boot resources (kernel, initrd and device tree), "
+"or \"Specify paths/URLs manually\" to use full URLs to the boot resources.\n"
+"\n"
+"Kernel: enter the path to the kernel to boot. This field is mandatory. This "
+"should be a kernel image that the kexec utility can handle. Generally, this "
+"will be a 'vmlinux'-type image.\n"
+"Example: /boot/vmlinux\n"
+"\n"
+"Initrd: enter the path to the initial RAM disk image. This is optional.\n"
+"Example: /boot/initrd.img\n"
+"\n"
+"Device tree: enter the path to the device tree blob file (.dtb). This is "
+"optional; if not specified, and your platform currently provides a device "
+"tree, the current one will be used.\n"
+"Example: /boot/device-tree.dtb\n"
+"\n"
+"Boot arguments: enter the kernel command-line arguments. This is optional.\n"
+"Example: root=/dev/sda1 console=hvc0\n"
+"\n"
+msgstr ""
+"В этом окне можно редактировать или создавать варианты загрузки.\n"
+"\n"
+"Устройство: это список блочных устройств, доступных в системе. Выберите "
+"устройство, в котором находятся ваши ресурсы загрузки (kernel, initrd и "
+"дерево устройств), или \"Укажите путь/URL вручную\" для использования полных "
+"URL для ресурсов загрузки..\n"
+"\n"
+"Kernel: введите путь к kernel для загрузки. Данное поле не является "
+"обязательным. Это может быть образ kernel, который может обработать утилита "
+"kexec. В общем, это будет образ типа 'vmlinux'.\n"
+"Пример: /boot/vmlinux\n"
+"\n"
+"Initrd: как путь к начальному образу диска RAM. Не является обязательным.\n"
+"Пример: /boot/initrd.img\n"
+"\n"
+"Дерево устройств: введите путь к blob-файлу дерева устройств (.dtb). "
+"Является необязательным; если не указан и ваша платформа в данный момент "
+"предоставляет дерево устройств, то будет использован текущий вариант.\n"
+"Пример: /boot/device-tree.dtb\n"
+"\n"
+"Аргументы загрузки: введите аргументы командной строки kernel. Не "
+"обязательно.\n"
+"Пример: root=/dev/sda1 console=hvc0\n"
+"\n"
+
+msgid ""
+"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"\n"
+"Don't autoboot: boot options will be listed in the petitboot menu, but none "
+"will be booted automatically. User interaction will be required to continue "
+"past the petitboot menu. Use this option if you want the machine to wait for "
+"an explicit boot selection, or want to interact with petitboot before "
+"booting the system\n"
+"\n"
+"Autoboot from any disk/network device: any boot option that is marked as a "
+"default (by bootloader configuration) will be booted automatically after a "
+"timeout. Use this option if you want to quickly boot your system without "
+"changing any boot option settings. This is the typical configuration.\n"
+"\n"
+"Only autoboot from a specific disk/network device: only boot options from a "
+"single device (specifed here) will be booted automatically after a timeout. "
+"Use this option if you have multiple operating system images installed.\n"
+"\n"
+"Timeout: Specify the length of time, in seconds, that the main menu will be "
+"displayed before the default boot option is started. This option is only "
+"displayed if autoboot is enabled.\n"
+"\n"
+"Network options:\n"
+"\n"
+"DHCP on all active interfaces: Automatically assigns IP addresses to each "
+"network interface. Use this option if you have a DHCP server on your "
+"network.\n"
+"\n"
+"DHCP on a specific interface: Automatically assigns IP addresses to the "
+"selected network interface. The other interfaces are not configured. Select "
+"this option if you have multiple DHCP servers on different interfaces, but "
+"only want to configure a single interface during boot.\n"
+"\n"
+"Static IP configuration: Allows you to specify an IPv4 address and network "
+"mask, gateway, and a DNS server or servers for a network interface. Select "
+"this option if you do not have a DHCP server, or want explicit control of "
+"network settings."
+msgstr ""
+"Автозагрузка: существует три варианта поведения автоматической загрузки:\n"
+"\n"
+"Не загружаться автоматически: вариант загрузки будет казан в меню petitboot, "
+"но ничего не будет загружаться автоматически. Для продолжения потребуется "
+"взаимодействие пользователя в работе с меню petitboot. Используйте этот "
+"вариант в том случае, если хотите, чтобы машина ждала точный выбор загрузки, "
+"или если хотите поработать с petitboot до загрузки системы\n"
+"\n"
+"Автозагрузка с любого диска/сетевого устройства: любой вариант загрузки с "
+"отметкой по умолчанию (задается в настройках bootloader) будет автоматически "
+"загружен после тайм-аута. Используйте этот вариант в том случае, если хотите "
+"быстро загрузить систему без изменения каких-либо настроек варианта "
+"загрузки. Является стандартной конфигурацией.\n"
+"\n"
+"Автоматическая загрузка только с указанного диска/сетевого устройства: "
+"вариант загрузки только с единственного устройства (указанного здесь) будет "
+"загружен автоматически после тайм-аута. Используйте данный вариант, если у "
+"вас установлено несколько образов операционных систем.\n"
+"\n"
+"Тайм-аут: указывает отрезок времени в секундах, который выведет главное меню "
+"до начала текущей загрузки. Эта опция выводится только при включенной "
+"автозагрузке.\n"
+"\n"
+"Сетевые опции:\n"
+"\n"
+"DHCP на всех активных интерфейса: автоматически присваивает IP-адрес каждому "
+"сетевому интерфейсу. Используйте этот вариант в том случае, если сервер DHCP "
+"есть в вашей сети.\n"
+"\n"
+"DHCP на конкретном интерфейс: автоматически присваивает IP-адрес указанному "
+"сетевому интерфейсу. Другие интерфейсы не настроены. Выберите этот вариант, "
+"если у вас несколько серверов DHCP на разных интерфейсах, но хотите "
+"настроить при загрузке только один интерфейс.\n"
+"\n"
+"Настройка статического IP: позволяет указать IPv4-адрес и сетевую маску, "
+"шлюз и сервер DNS или серверы для сетевого интерфейса. Выберите этот вариант "
+"если у вас нет сервера DHCP, или если требуется точный контроль настроек "
+"сети."
+
+msgid "Usage"
+msgstr "Использование"

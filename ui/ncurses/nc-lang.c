@@ -38,7 +38,17 @@ static struct lang {
 	const char	*name;
 	const wchar_t	*label;
 } languages[] = {
+	{ "de_DE.utf8",	L"Deutsch"},
 	{ "en_US.utf8",	L"English"},
+	{ "es_ES.utf8",	L"Espa\u00f1ol"},
+	{ "fr_FR.utf8",	L"Fran\u00e7ais"},
+	{ "it_IT.utf8",	L"Italiano"},
+	{ "ja_JP.utf8",	L"\u65e5\u672c\u8a9e"},
+	{ "ko_KR.utf8",	L"\ud55c\uad6d\uc5b4"},
+	{ "pt_BR.utf8",	L"Portugu\u00eas/Brasil"},
+	{ "ru_RU.utf8",	L"\u0420\u0443\u0441\u0441\u043a\u0438\u0439"},
+	{ "zh_CN.utf8",	L"\u7b80\u4f53\u4e2d\u6587"},
+	{ "zh_TW.utf8",	L"\u7e41\u9ad4\u4e2d\u6587"},
 };
 
 struct lang_screen {

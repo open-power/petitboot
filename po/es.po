@@ -1,0 +1,547 @@
+# English translations for petitboot package.
+# This file is put in the public domain.
+# Jeremy Kerr <jk@ozlabs.org>, 2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
+"Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
+"POT-Creation-Date: 2014-09-15 11:15+0800\n"
+"PO-Revision-Date: 2014-06-24 13:56+0800\n"
+"Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "running boot hooks"
+msgstr "ejecutando ganchos de arranque"
+
+#, c-format
+msgid "Couldn't load %s"
+msgstr "No se ha podido cargar %s"
+
+msgid "performing kexec_load"
+msgstr "realizando kexec_load"
+
+msgid "kexec load failed"
+msgstr "carga de kexec fallida"
+
+msgid "performing kexec reboot"
+msgstr "realizando rearranque de kexec"
+
+msgid "kexec reboot failed"
+msgstr "rearranque de kexec fallido"
+
+#, c-format
+msgid "Error loading %s"
+msgstr "Error al cargar %s"
+
+msgid "(unknown)"
+msgstr "(desconocido)"
+
+#, c-format
+msgid "Booting %s."
+msgstr "Arrancando %s."
+
+msgid "Boot failed: no image specified"
+msgstr "Arranque fallido: ninguna imagen especificada"
+
+msgid "Boot cancelled"
+msgstr "Arranque cancelado"
+
+#, c-format
+msgid "Booting in %d sec: %s"
+msgstr "Arrancando en %d seg: %s"
+
+msgid "Default boot cancelled"
+msgstr "Arranque predeterminado cancelado"
+
+#, c-format
+msgid "Received config URL %s"
+msgstr "URL de configuración recibida %s"
+
+msgid "No network configured"
+msgstr "No hay ninguna red configurada"
+
+msgid "Invalid config URL!"
+msgstr "URL de configuración no válido"
+
+#, c-format
+msgid "Unable to route to host %s"
+msgstr "No se puede direccionar a host %s"
+
+#, c-format
+msgid "Config file %s parsed"
+msgstr "Archivo de configuración %s analizado"
+
+msgid "Retrieve Config"
+msgstr "Recuperar configuración"
+
+msgid "Configuration URL:"
+msgstr "URL de configuración: "
+
+msgid "OK"
+msgstr "Aceptar"
+
+msgid "Help"
+msgstr "Ayuda"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Petitboot Config Retrieval"
+msgstr "Recuperación de configuración de Petitboot"
+
+msgid "tab=next, shift+tab=previous, x=exit, h=help"
+msgstr "tab=siguiente, shift+tab=anterior, x=salida, h=ayuda"
+
+msgid "Boot Option Editor"
+msgstr "Editor de opciones de arranque"
+
+msgid "Specify paths/URLs manually"
+msgstr "Especifique vías de acceso/URL manualmente"
+
+msgid "Device:"
+msgstr "Dispositivo: "
+
+msgid "Kernel:"
+msgstr "Kernel:"
+
+msgid "Initrd:"
+msgstr "Initrd:"
+
+msgid "Device tree:"
+msgstr "Árbol de dispositivos:"
+
+msgid "Boot arguments:"
+msgstr "Argumentos de arranque:"
+
+msgid "Petitboot Option Editor"
+msgstr "Editor de opciones de Petitboot"
+
+msgid "System Configuration"
+msgstr "Configuración del sistema"
+
+msgid "No IP / mask values are set"
+msgstr "No se han establecido valores IP / máscara"
+
+msgid "Waiting for configuration data..."
+msgstr "Esperando datos de configuración..."
+
+msgid "Autoboot:"
+msgstr "Arranque automático:"
+
+msgid "Don't autoboot"
+msgstr "No arrancar automáticamente"
+
+msgid "Autoboot from any disk/network device"
+msgstr "Arranque automático desde cualquier dispositivo de disco/red"
+
+msgid "Only autoboot from a specific disk/network device"
+msgstr "Arranque automático sólo desde un dispositivo de disco/red"
+
+#, c-format
+msgid "disk: %s [uuid: %s]"
+msgstr "disco: %s [uuid: %s]"
+
+#, c-format
+msgid "net:  %s [mac: %s]"
+msgstr "red:  %s [mac: %s]"
+
+#, c-format
+msgid "Unknown UUID: %s"
+msgstr "UUID desconocido: %s"
+
+msgid "Timeout:"
+msgstr "Tiempo de espera:"
+
+msgid "seconds"
+msgstr "segundos"
+
+msgid "Network:"
+msgstr "Red:"
+
+msgid "DHCP on all active interfaces"
+msgstr "DHCP en todas las interfaces activas"
+
+msgid "DHCP on a specific interface"
+msgstr "DHCP en una interfaz específica"
+
+msgid "Static IP configuration"
+msgstr "Configuración IP estática"
+
+msgid "link up"
+msgstr "enlace ascendente"
+
+msgid "link down"
+msgstr "enlace descendente"
+
+msgid "IP/mask:"
+msgstr "IP/máscara:"
+
+msgid "(eg. 192.168.0.10 / 24)"
+msgstr "(por ej. 192.168.0.10 / 24)"
+
+msgid "Gateway:"
+msgstr "Pasarela: "
+
+msgid "(eg. 192.168.0.1)"
+msgstr "(por ej. 192.168.0.1)"
+
+msgid "DNS Server(s):"
+msgstr "Servidores DNS:"
+
+msgid "(eg. 192.168.0.2)"
+msgstr "(por ej. 192.168.0.2)"
+
+msgid "(if not provided by DHCP server)"
+msgstr "(si no se proporciona por servidor DHCP)"
+
+msgid "Selecting 'OK' will exit safe mode"
+msgstr "Si selecciona 'Aceptar' saldrá de la modalidad segura"
+
+msgid "Petitboot System Configuration"
+msgstr "Configuración del sistema de Petitboot"
+
+#, c-format
+msgid "Running %s..."
+msgstr "Ejecutando %s..."
+
+#, c-format
+msgid "Failed: %s"
+msgstr "Fallido: %s"
+
+#, c-format
+msgid "Booting %s..."
+msgstr "Arrancando %s..."
+
+#, c-format
+msgid "Failed: boot %s"
+msgstr "Fallido: arrancar %s"
+
+#, c-format
+msgid "User item %u"
+msgstr "Elemento de usuario %u"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Info"
+msgstr "Información"
+
+#, c-format
+msgid "SAFE MODE: select '%s' to continue"
+msgstr "MODALIDAD SEGURA: seleccione '%s' para continuar"
+
+msgid "Rescan devices"
+msgstr "Volver a escanear dispositivos"
+
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
+msgstr "Intro=aceptar, e=editar, n=nuevo, x=salir, l=idioma, h=ayuda"
+
+msgid "Welcome to Petitboot"
+msgstr "Bienvenido a Petitboot"
+
+msgid "System information"
+msgstr "Información del sistema"
+
+msgid "System configuration"
+msgstr "Configuración del sistema"
+
+msgid "Retrieve config from URL"
+msgstr "Recuperar configuración de URL"
+
+msgid "Exit to shell"
+msgstr "Salir a shell"
+
+msgid "main menu"
+msgstr "menú principal"
+
+#, c-format
+msgid "%s: alloc cui failed.\n"
+msgstr "%s: error en cui asign.\n"
+
+#, c-format
+msgid "%s: error: discover_client_init failed.\n"
+msgstr "%s: error: discover_client_init ha fallado.\n"
+
+#, c-format
+msgid "could not start pb-discover, the petitboot daemon.\n"
+msgstr "no se ha podido iniciar pb-discover, el daemon de petitboot.\n"
+
+#, c-format
+msgid "check that pb-discover, the petitboot daemon is running.\n"
+msgstr "compruebe que pb-discover, el daemon de petitboot esté en ejecución.\n"
+
+msgid "Petitboot help"
+msgstr "Ayuda de Petitboot"
+
+#, c-format
+msgid "Petitboot help: %s"
+msgstr "Ayuda de Petitboot: %s"
+
+msgid "Language"
+msgstr "Idioma"
+
+#, c-format
+msgid "Unknown language '%s'"
+msgstr "Idioma desconocido '%s'"
+
+msgid "Petitboot Language Selection"
+msgstr "Selección de idioma de Petitboot"
+
+#, c-format
+msgid "!Invalid option %d"
+msgstr "Opción no válida %d"
+
+msgid "Disk"
+msgstr "Disco"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Network"
+msgstr "Red"
+
+msgid "Unknown Device"
+msgstr "Dispositivo desconocido"
+
+msgid "Waiting for system information..."
+msgstr "Esperando información del sistema..."
+
+msgid "System type:"
+msgstr "Tipo de sistema:"
+
+msgid "System id:"
+msgstr "ID de sistema:"
+
+msgid "Storage devices"
+msgstr "Dispositivos de almacenamiento"
+
+#, c-format
+msgid " UUID:       %s"
+msgstr " UUID:       %s"
+
+#, c-format
+msgid " mounted at: %s"
+msgstr " montado en: %s"
+
+#, c-format
+msgid " MAC:  %s"
+msgstr " MAC:  %s"
+
+#, c-format
+msgid " link: %s"
+msgstr " enlace: %s"
+
+msgid "Petitboot System Information"
+msgstr "Información del sistema de Petitboot"
+
+msgid "System Information"
+msgstr "Información del sistema"
+
+msgid "x=exit, h=help"
+msgstr "x=salir, h=ayuda"
+
+msgid "x=exit"
+msgstr "x=salir"
+
+msgid ""
+"From the main menu screen, select a boot option. The options displayed are "
+"available on the system and the network.\n"
+"\n"
+"To select a boot option, press Enter.\n"
+"\n"
+"To make changes to an existing option, type E (edit).\n"
+"\n"
+"To add a new boot option, type N (new).\n"
+"\n"
+"To display information about the system, including the MAC addresses of each "
+"network interface, type I (information).\n"
+"\n"
+"To make changes to the system configuration, type C (configure).\n"
+"\n"
+"To set the language for the petitboot interface, type L (language).\n"
+"\n"
+"To find new or updated boot options on the system, select the 'Rescan "
+"devices' option.\n"
+"\n"
+"To retreive new boot options from a remote configuration file, select the "
+"'Retrieve config from URL' option.\n"
+"\n"
+"To close the Petitboot interface, type X (exit).\n"
+msgstr ""
+"En la pantalla de menú principal, seleccione una opción de arranque. Las "
+"opciones aquí mostradas están disponibles en el sistema y la red.\n"
+"\n"
+"Para seleccionar una opción de arranque, pulse Intro.\n"
+"\n"
+"Para realizar cambios en una opción existente, escriba E (editar).\n"
+"\n"
+"Para añadir una nueva opción de arranque, escriba N (nueva).\n"
+"\n"
+"Para visualizar información sobre el sistema, incluidas las direcciones MAC "
+"de cada interfaz de red, escriba I (información).\n"
+"\n"
+"Para realizar cambios en la configuración del sistema, escriba C "
+"(configurar).\n"
+"\n"
+"Para establecer el idioma para la interfaz de petitboot, escriba L "
+"(idioma).\n"
+"\n"
+"Para encontrar opciones de arranque nuevas o actualizadas en el sistema,"
+"seleccione la opción 'Volver a escanear dispositivos'.\n"
+"\n"
+"Para recuperar nuevas opciones de arranque de un archivo de configuración "
+"remoto, seleccione la opción 'Recuperar configuración de URL'.\n"
+"\n"
+"Para cerrar la interfaz de Petitboot, escriba X (salir).\n"
+
+msgid ""
+"Supply a valid URL here to retrieve a remote pxe-boot config file and parse "
+"it.\n"
+"\n"
+"URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
+"host/pxeconffile or http://host/pxeconffile"
+msgstr ""
+"Indique aquí un URL válido para recuperar un archivo de configuración pxe-"
+"boot remoto y analizarlo.\n"
+"\n"
+"Los URL tienen el formato 'scheme://host/path/to/pxeconffile', como por "
+"ejemplo tftp://host/pxeconffile o http://host/pxeconffile"
+
+msgid ""
+"This screen allows you to edit or create boot options.\n"
+"\n"
+"Device: This is a list of block devices available on the system. Select the "
+"device which contains your boot resources (kernel, initrd and device tree), "
+"or \"Specify paths/URLs manually\" to use full URLs to the boot resources.\n"
+"\n"
+"Kernel: enter the path to the kernel to boot. This field is mandatory. This "
+"should be a kernel image that the kexec utility can handle. Generally, this "
+"will be a 'vmlinux'-type image.\n"
+"Example: /boot/vmlinux\n"
+"\n"
+"Initrd: enter the path to the initial RAM disk image. This is optional.\n"
+"Example: /boot/initrd.img\n"
+"\n"
+"Device tree: enter the path to the device tree blob file (.dtb). This is "
+"optional; if not specified, and your platform currently provides a device "
+"tree, the current one will be used.\n"
+"Example: /boot/device-tree.dtb\n"
+"\n"
+"Boot arguments: enter the kernel command-line arguments. This is optional.\n"
+"Example: root=/dev/sda1 console=hvc0\n"
+"\n"
+msgstr ""
+"Esta pantalla le permite editar o crear opciones de arranque.\n"
+"\n"
+"Dispositivo: es una lista de dispositivos de bloque disponibles en el "
+"sistema. Seleccione el dispositivo que contiene los recursos de arranque "
+"(kernel, initrd y árbol de dispositivos), o \"Especifique manualmente vías "
+"de acceso/URL\" para utilizar URL completas a los recursos de arranque.\n"
+"\n"
+"Kernel: escriba la vía de acceso al kernel que desea arrancar. Este campo es "
+"obligatorio. Esto debe ser una imagen de kernel que el programa de utilidad "
+"kexec puede manejar. Normalmente esto será una imagen de tipo 'vmlinux'.\n"
+"Ejemplo: /boot/vmlinux\n"
+"\n"
+"Initrd: escriba la vía de acceso a la imagen de disco RAM. Esto es "
+"opcional.\n"
+"Ejemplo: /boot/initrd.img\n"
+"\n"
+"Árbol de dispositivos: escriba la vía de acceso al archivo blob del árbol de "
+"dispositivos (.dtb). Esto esopcional; si no se especifica y la plataforma "
+"proporciona actualmente un árbol de dispositivos, se actualizará el actual.\n"
+"Ejemplo: /boot/device-tree.dtb\n"
+"\n"
+"Argumentos de arranque: escriba los argumentos de línea de mandatos de "
+"kernel. Esto es opcional.\n"
+"Ejemplo: root=/dev/sda1 console=hvc0\n"
+"\n"
+
+msgid ""
+"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"\n"
+"Don't autoboot: boot options will be listed in the petitboot menu, but none "
+"will be booted automatically. User interaction will be required to continue "
+"past the petitboot menu. Use this option if you want the machine to wait for "
+"an explicit boot selection, or want to interact with petitboot before "
+"booting the system\n"
+"\n"
+"Autoboot from any disk/network device: any boot option that is marked as a "
+"default (by bootloader configuration) will be booted automatically after a "
+"timeout. Use this option if you want to quickly boot your system without "
+"changing any boot option settings. This is the typical configuration.\n"
+"\n"
+"Only autoboot from a specific disk/network device: only boot options from a "
+"single device (specifed here) will be booted automatically after a timeout. "
+"Use this option if you have multiple operating system images installed.\n"
+"\n"
+"Timeout: Specify the length of time, in seconds, that the main menu will be "
+"displayed before the default boot option is started. This option is only "
+"displayed if autoboot is enabled.\n"
+"\n"
+"Network options:\n"
+"\n"
+"DHCP on all active interfaces: Automatically assigns IP addresses to each "
+"network interface. Use this option if you have a DHCP server on your "
+"network.\n"
+"\n"
+"DHCP on a specific interface: Automatically assigns IP addresses to the "
+"selected network interface. The other interfaces are not configured. Select "
+"this option if you have multiple DHCP servers on different interfaces, but "
+"only want to configure a single interface during boot.\n"
+"\n"
+"Static IP configuration: Allows you to specify an IPv4 address and network "
+"mask, gateway, and a DNS server or servers for a network interface. Select "
+"this option if you do not have a DHCP server, or want explicit control of "
+"network settings."
+msgstr ""
+"Arranque automático: hay tres opciones posibles para el comportamiento de "
+"arranque automático:\n"
+"\n"
+"No arrancar automáticamente: las opciones de arranque se listarán en el menú "
+"de petitboot, pero ninguna se arrancará automáticamente. Será necesario la "
+"interacción del usuario para continuar hasta pasar el menú de petitboot. "
+"Utilice esta opción si desea que la máquina espere una selección de arranque "
+"explícita, o desea interactuar con petitboot antes de arrancar el sistema\n"
+"\n"
+"Arranque automático desde cualquier dispositivo de disco/red: cualquier "
+"opción de arranque que se marca como un valor predeterminado (mediante la "
+"configuración de gestor de arranque) se arrancará automáticamente después de "
+"un tiempo de espera. Utilice esta opción si desea arrancar rápidamente el "
+"sistema sin cambiar ningún valor de opción de arranque. Esta es la "
+"configuración típica.\n"
+"\n"
+"Arranque automático sólo desde un dispositivo de disco/red: sólo opciones de "
+"arranque de un único dispositivo (especificado aquí) se cargarán "
+"automáticamente después de un tiempo de espera. Utilice esta opción si tiene "
+"varias imágenes de sistemas operativos instaladas.\n"
+"\n"
+"Tiempo de espera: especifique la duración de tiempo, en segundos, que el "
+"menú principal se visualizará antes de iniciar la opción de arranque "
+"predeterminada. Esta opción sólo se visualiza si el arranque automático está "
+"habilitado.\n"
+"\n"
+"Opciones de red:\n"
+"\n"
+"DHCP en todas las interfaces activas: asigna automáticamente direcciones IP "
+"a cada interfaz de red. Utilice esta opción si tiene un servidor DHCP en la "
+"red.\n"
+"\n"
+"DHCP en una interfaz específica: asigna automáticamente direcciones IP a la "
+"interfaz de red seleccionada. Las demás interfaces no se configuran. "
+"Seleccione esta opción si tiene varios servidores DHCP en distintas "
+"interfaces, pero sólo desea configurar una interfaz durante el arranque.\n"
+"\n"
+"Configuración IP estática: le permite especificar una dirección IPv4 y una "
+"máscara de red, pasarela y un servidor o servidores DNS para una interfaz de "
+"red. Seleccione esta opción si no tiene un servidor DHCP, o desea el control "
+"explícito de los valores de red"
+
+msgid "Usage"
+msgstr "Uso"

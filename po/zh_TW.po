@@ -9,345 +9,345 @@ msgstr ""
 "POT-Creation-Date: 2014-09-15 11:15+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
-"Language-Team: English\n"
-"Language: en\n"
+"Language-Team: Traditional Chinese\n"
+"Language: zh_TW\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "running boot hooks"
-msgstr "running boot hooks"
+msgstr "正在執行啟動連結鉤"
 
 #, c-format
 msgid "Couldn't load %s"
-msgstr "Couldn't load %s"
+msgstr "無法載入 %s"
 
 msgid "performing kexec_load"
-msgstr "performing kexec_load"
+msgstr "正在執行 kexec_load"
 
 msgid "kexec load failed"
-msgstr "kexec load failed"
+msgstr "kexec 載入失敗"
 
 msgid "performing kexec reboot"
-msgstr "performing kexec reboot"
+msgstr "正在執行 kexec 重新啟動"
 
 msgid "kexec reboot failed"
-msgstr "kexec reboot failed"
+msgstr "kexec 重新啟動失敗"
 
 #, c-format
 msgid "Error loading %s"
-msgstr "Error loading %s"
+msgstr "載入 %s 時發生錯誤"
 
 msgid "(unknown)"
-msgstr "(unknown)"
+msgstr "（不明）"
 
 #, c-format
 msgid "Booting %s."
-msgstr "Booting %s."
+msgstr "正在啟動 %s。"
 
 msgid "Boot failed: no image specified"
-msgstr "Boot failed: no image specified"
+msgstr "啟動失敗：未指定任何映像檔"
 
 msgid "Boot cancelled"
-msgstr "Boot cancelled"
+msgstr "已取消啟動"
 
 #, c-format
 msgid "Booting in %d sec: %s"
-msgstr "Booting in %d sec: %s"
+msgstr "將於 %d 秒後啟動：%s"
 
 msgid "Default boot cancelled"
-msgstr "Default boot cancelled"
+msgstr "已取消預設啟動"
 
 #, c-format
 msgid "Received config URL %s"
-msgstr "Received config URL %s"
+msgstr "接收到配置 URL %s"
 
 msgid "No network configured"
-msgstr "No network configured"
+msgstr "沒有配置網路"
 
 msgid "Invalid config URL!"
-msgstr "Invalid config URL!"
+msgstr "配置 URL 無效！"
 
 #, c-format
 msgid "Unable to route to host %s"
-msgstr "Unable to route to host %s"
+msgstr "無法遞送至主機 %s"
 
 #, c-format
 msgid "Config file %s parsed"
-msgstr "Config file %s parsed"
+msgstr "已剖析配置檔 %s"
 
 msgid "Retrieve Config"
-msgstr "Retrieve Config"
+msgstr "擷取配置"
 
 msgid "Configuration URL:"
-msgstr "Configuration URL:"
+msgstr "配置 URL："
 
 msgid "OK"
-msgstr "OK"
+msgstr "確定"
 
 msgid "Help"
-msgstr "Help"
+msgstr "說明"
 
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "取消 "
 
 msgid "Petitboot Config Retrieval"
-msgstr "Petitboot Config Retrieval"
+msgstr "Petitboot 配置擷取"
 
 msgid "tab=next, shift+tab=previous, x=exit, h=help"
-msgstr "tab=next, shift+tab=previous, x=exit, h=help"
+msgstr "tab = 下一個，shift+tab = 前一個，x = 結束，h = 說明"
 
 msgid "Boot Option Editor"
-msgstr "Boot Option Editor"
+msgstr "啟動選項編輯器"
 
 msgid "Specify paths/URLs manually"
-msgstr "Specify paths/URLs manually"
+msgstr "手動指定路徑/URL"
 
 msgid "Device:"
-msgstr "Device:"
+msgstr "裝置："
 
 msgid "Kernel:"
-msgstr "Kernel:"
+msgstr "核心："
 
 msgid "Initrd:"
-msgstr "Initrd:"
+msgstr "Initrd："
 
 msgid "Device tree:"
-msgstr "Device tree:"
+msgstr "裝置樹狀結構："
 
 msgid "Boot arguments:"
-msgstr "Boot arguments:"
+msgstr "啟動引數："
 
 msgid "Petitboot Option Editor"
-msgstr "Petitboot Option Editor"
+msgstr "Petitboot 選項編輯器"
 
 msgid "System Configuration"
-msgstr "System Configuration"
+msgstr "系統配置"
 
 msgid "No IP / mask values are set"
-msgstr "No IP / mask values are set"
+msgstr "未設定任何 IP/遮罩值"
 
 msgid "Waiting for configuration data..."
-msgstr "Waiting for configuration data..."
+msgstr "正在等待配置資料..."
 
 msgid "Autoboot:"
-msgstr "Autoboot:"
+msgstr "自動啟動："
 
 msgid "Don't autoboot"
-msgstr "Don't autoboot"
+msgstr "不自動啟動"
 
 msgid "Autoboot from any disk/network device"
-msgstr "Autoboot from any disk/network device"
+msgstr "從任何磁碟/網路裝置自動啟動"
 
 msgid "Only autoboot from a specific disk/network device"
-msgstr "Only autoboot from a specific disk/network device"
+msgstr "僅從特定的磁碟/網路裝置自動啟動"
 
 #, c-format
 msgid "disk: %s [uuid: %s]"
-msgstr "disk: %s [uuid: %s]"
+msgstr "磁碟：%s [UUID：%s]"
 
 #, c-format
 msgid "net:  %s [mac: %s]"
-msgstr "net:  %s [mac: %s]"
+msgstr "網路：%s [MAC：%s]"
 
 #, c-format
 msgid "Unknown UUID: %s"
-msgstr "Unknown UUID: %s"
+msgstr "不明 UUID：%s"
 
 msgid "Timeout:"
-msgstr "Timeout:"
+msgstr "逾時："
 
 msgid "seconds"
-msgstr "seconds"
+msgstr "秒"
 
 msgid "Network:"
-msgstr "Network:"
+msgstr "網路："
 
 msgid "DHCP on all active interfaces"
-msgstr "DHCP on all active interfaces"
+msgstr "對所有作用中介面使用 DHCP"
 
 msgid "DHCP on a specific interface"
-msgstr "DHCP on a specific interface"
+msgstr "對特定介面使用 DHCP"
 
 msgid "Static IP configuration"
-msgstr "Static IP configuration"
+msgstr "靜態 IP 配置"
 
 msgid "link up"
-msgstr "link up"
+msgstr "向上鏈結"
 
 msgid "link down"
-msgstr "link down"
+msgstr "向下鏈結"
 
 msgid "IP/mask:"
-msgstr "IP/mask:"
+msgstr "IP/遮罩："
 
 msgid "(eg. 192.168.0.10 / 24)"
-msgstr "(eg. 192.168.0.10 / 24)"
+msgstr "（例如：192.168.0.10 / 24）"
 
 msgid "Gateway:"
-msgstr "Gateway:"
+msgstr "閘道："
 
 msgid "(eg. 192.168.0.1)"
-msgstr "(eg. 192.168.0.1)"
+msgstr "（例如：192.168.0.1）"
 
 msgid "DNS Server(s):"
-msgstr "DNS Server(s):"
+msgstr "DNS 伺服器："
 
 msgid "(eg. 192.168.0.2)"
-msgstr "(eg. 192.168.0.2)"
+msgstr "（例如：192.168.0.2）"
 
 msgid "(if not provided by DHCP server)"
-msgstr "(if not provided by DHCP server)"
+msgstr "（如果 DHCP 伺服器未提供的話）"
 
 msgid "Selecting 'OK' will exit safe mode"
-msgstr "Selecting 'OK' will exit safe mode"
+msgstr "選取「確定」將會結束安全模式"
 
 msgid "Petitboot System Configuration"
-msgstr "Petitboot System Configuration"
+msgstr "Petitboot 系統配置"
 
 #, c-format
 msgid "Running %s..."
-msgstr "Running %s..."
+msgstr "正在執行 %s..."
 
 #, c-format
 msgid "Failed: %s"
-msgstr "Failed: %s"
+msgstr "失敗：%s"
 
 #, c-format
 msgid "Booting %s..."
-msgstr "Booting %s..."
+msgstr "正在啟動 %s..."
 
 #, c-format
 msgid "Failed: boot %s"
-msgstr "Failed: boot %s"
+msgstr "失敗：啟動 %s"
 
 #, c-format
 msgid "User item %u"
-msgstr "User item %u"
+msgstr "使用者項目 %u"
 
 msgid "Error"
-msgstr "Error"
+msgstr "錯誤"
 
 msgid "Info"
-msgstr "Info"
+msgstr "資訊"
 
 #, c-format
 msgid "SAFE MODE: select '%s' to continue"
-msgstr "SAFE MODE: select '%s' to continue"
+msgstr "安全模式：選取 '%s' 以繼續"
 
 msgid "Rescan devices"
-msgstr "Rescan devices"
+msgstr "重新掃描裝置"
 
 msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
-msgstr "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
+msgstr "Enter = 接受，e = 編輯，n = 新建，x = 結束，l = 語言，h = 說明"
 
 msgid "Welcome to Petitboot"
-msgstr "Welcome to Petitboot"
+msgstr "歡迎使用 Petitboot"
 
 msgid "System information"
-msgstr "System information"
+msgstr "系統資訊"
 
 msgid "System configuration"
-msgstr "System configuration"
+msgstr "系統配置"
 
 msgid "Retrieve config from URL"
-msgstr "Retrieve config from URL"
+msgstr "從 URL 擷取配置"
 
 msgid "Exit to shell"
-msgstr "Exit to shell"
+msgstr "結束至 Shell"
 
 msgid "main menu"
-msgstr "main menu"
+msgstr "主功能表"
 
 #, c-format
 msgid "%s: alloc cui failed.\n"
-msgstr "%s: alloc cui failed.\n"
+msgstr "%s：alloc cui 失敗。\n"
 
 #, c-format
 msgid "%s: error: discover_client_init failed.\n"
-msgstr "%s: error: discover_client_init failed.\n"
+msgstr "%s：錯誤：discover_client_init 失敗。\n"
 
 #, c-format
 msgid "could not start pb-discover, the petitboot daemon.\n"
-msgstr "could not start pb-discover, the petitboot daemon.\n"
+msgstr "無法啟動 pb-discover（Petitboot 常駐程式）。\n"
 
 #, c-format
 msgid "check that pb-discover, the petitboot daemon is running.\n"
-msgstr "check that pb-discover, the petitboot daemon is running.\n"
+msgstr "請檢查 pb-discover（Petitboot 常駐程式）是否在執行中。\n"
 
 msgid "Petitboot help"
-msgstr "Petitboot help"
+msgstr "Petitboot 說明"
 
 #, c-format
 msgid "Petitboot help: %s"
-msgstr "Petitboot help: %s"
+msgstr "Petitboot 說明：%s"
 
 msgid "Language"
-msgstr "Language"
+msgstr "語言"
 
 #, c-format
 msgid "Unknown language '%s'"
-msgstr "Unknown language '%s'"
+msgstr "不明語言 '%s'"
 
 msgid "Petitboot Language Selection"
-msgstr "Petitboot Language Selection"
+msgstr "選取 Petitboot 語言"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "!Invalid option %d"
+msgstr "選項 %d 無效！"
 
 msgid "Disk"
-msgstr "Disk"
+msgstr "磁碟"
 
 msgid "CD/DVD"
 msgstr "CD/DVD"
 
 msgid "Network"
-msgstr "Network"
+msgstr "網路"
 
 msgid "Unknown Device"
-msgstr "Unknown Device"
+msgstr "不明裝置"
 
 msgid "Waiting for system information..."
-msgstr "Waiting for system information..."
+msgstr "正在等待系統資訊..."
 
 msgid "System type:"
-msgstr "System type:"
+msgstr "系統類型："
 
 msgid "System id:"
-msgstr "System id:"
+msgstr "系統 ID："
 
 msgid "Storage devices"
-msgstr "Storage devices"
+msgstr "儲存裝置"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID:       %s"
+msgstr " UUID：      %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " mounted at: %s"
+msgstr " 裝載位置：%s"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr " MAC:  %s"
+msgstr " MAC：%s"
 
 #, c-format
 msgid " link: %s"
-msgstr " link: %s"
+msgstr " 鏈結：%s"
 
 msgid "Petitboot System Information"
-msgstr "Petitboot System Information"
+msgstr "Petitboot 系統資訊"
 
 msgid "System Information"
-msgstr "System Information"
+msgstr "系統資訊"
 
 msgid "x=exit, h=help"
-msgstr "x=exit, h=help"
+msgstr "x = 結束，h = 說明"
 
 msgid "x=exit"
-msgstr "x=exit"
+msgstr "x = 結束"
 
 msgid ""
 "From the main menu screen, select a boot option. The options displayed are "
@@ -374,29 +374,27 @@ msgid ""
 "\n"
 "To close the Petitboot interface, type X (exit).\n"
 msgstr ""
-"From the main menu screen, select a boot option. The options displayed are "
-"available on the system and the network.\n"
+"從主功能表畫面中，選取啟動選項。所顯示的選項在系統及網路上均可用。\n"
 "\n"
-"To select a boot option, press Enter.\n"
+"如果要選取某個啟動選項，請按 Enter 鍵。\n"
 "\n"
-"To make changes to an existing option, type E (edit).\n"
+"如果要變更現有選項，請鍵入 E（編輯）。\n"
 "\n"
-"To add a new boot option, type N (new).\n"
+"如果要新增啟動選項，請鍵入 N（新建）。\n"
 "\n"
-"To display information about the system, including the MAC addresses of each "
-"network interface, type I (information).\n"
+"如果要顯示系統的相關資訊（包括每一個網路介面的 MAC 位址），請鍵入 I（資"
+"訊）。\n"
 "\n"
-"To make changes to the system configuration, type C (configure).\n"
+"如果要變更系統配置，請鍵入 C（配置）。\n"
 "\n"
-"To set the language for the petitboot interface, type L (language).\n"
+"如果要設定 Petitboot 介面的語言，請鍵入 L（語言）。\n"
 "\n"
-"To find new or updated boot options on the system, select the 'Rescan "
-"devices' option.\n"
+"如果要在系統上尋找新的啟動選項或已更新的啟動選項，請選取「重新掃描裝置」選"
+"項。\n"
 "\n"
-"To retreive new boot options from a remote configuration file, select the "
-"'Retrieve config from URL' option.\n"
+"如果要從遠端配置檔擷取新的啟動選項，請選取「從 URL 擷取配置」選項。\n"
 "\n"
-"To close the Petitboot interface, type X (exit).\n"
+"如果要關閉 Petitboot 介面，請鍵入 X（結束）。\n"
 
 msgid ""
 "Supply a valid URL here to retrieve a remote pxe-boot config file and parse "
@@ -405,11 +403,10 @@ msgid ""
 "URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
 "host/pxeconffile or http://host/pxeconffile"
 msgstr ""
-"Supply a valid URL here to retrieve a remote pxe-boot config file and parse "
-"it.\n"
+"請在這裡提供有效的 URL，以擷取遠端 PXE 啟動配置檔，並對其進行剖析。\n"
 "\n"
-"URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
-"host/pxeconffile or http://host/pxeconffile"
+"URL 的形式為 'scheme://host/path/to/pxeconffile'，例如 tftp://host/"
+"pxeconffile 或 http://host/pxeconffile"
 
 msgid ""
 "This screen allows you to edit or create boot options.\n"
@@ -435,27 +432,25 @@ msgid ""
 "Example: root=/dev/sda1 console=hvc0\n"
 "\n"
 msgstr ""
-"This screen allows you to edit or create boot options.\n"
+"這個畫面容許您編輯或建立啟動選項。\n"
 "\n"
-"Device: This is a list of block devices available on the system. Select the "
-"device which contains your boot resources (kernel, initrd and device tree), "
-"or \"Specify paths/URLs manually\" to use full URLs to the boot resources.\n"
+"裝置：這是系統上可用的區塊裝置清單。請選取包含啟動資源（核心、initrd 及裝置樹"
+"狀結構）的裝置，或者選取「手動指定路徑/URL」以使用啟動資源的完整 URL。\n"
 "\n"
-"Kernel: enter the path to the kernel to boot. This field is mandatory. This "
-"should be a kernel image that the kexec utility can handle. Generally, this "
-"will be a 'vmlinux'-type image.\n"
-"Example: /boot/vmlinux\n"
+"核心：輸入要啟動之核心的路徑。此欄位是必要欄位。這應該是kexec 公用程式可以處"
+"理的核心映像檔。通常，這將是一個'vmlinux' 類型的映像檔。\n"
+"範例：/boot/vmlinux\n"
 "\n"
-"Initrd: enter the path to the initial RAM disk image. This is optional.\n"
-"Example: /boot/initrd.img\n"
+"Initrd：輸入起始 RAM 磁碟映像檔的路徑。這是選用欄位。\n"
+"範例：/boot/initrd.img\n"
 "\n"
-"Device tree: enter the path to the device tree blob file (.dtb). This is "
-"optional; if not specified, and your platform currently provides a device "
-"tree, the current one will be used.\n"
-"Example: /boot/device-tree.dtb\n"
+"裝置樹狀結構：輸入裝置樹狀結構 BOLB 檔 (.dtb) 的路徑。這是選用欄位；如果未指"
+"定此欄位，並且您的平台目前提供了裝置樹狀結構，則將使用現行裝置樹狀結構 BOLB "
+"檔。\n"
+"範例：/boot/device-tree.dtb\n"
 "\n"
-"Boot arguments: enter the kernel command-line arguments. This is optional.\n"
-"Example: root=/dev/sda1 console=hvc0\n"
+"啟動引數：輸入核心指令行引數。這是選用欄位。\n"
+"範例：root=/dev/sda1 console=hvc0\n"
 "\n"
 
 msgid ""
@@ -496,42 +491,33 @@ msgid ""
 "this option if you do not have a DHCP server, or want explicit control of "
 "network settings."
 msgstr ""
-"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"自動啟動：有 3 個可能的選項適用於自動啟動行為：\n"
 "\n"
-"Don't autoboot: boot options will be listed in the petitboot menu, but none "
-"will be booted automatically. User interaction will be required to continue "
-"past the petitboot menu. Use this option if you want the machine to wait for "
-"an explicit boot selection, or want to interact with petitboot before "
-"booting the system\n"
+"不自動啟動：啟動選項將列在 Petitboot 功能表中，但任何一個均不自動啟動。將需要"
+"使用者互動才能繼續先前的 Petitboot 功能表。如果您要讓機器等待明確的啟動選項，"
+"或者要在啟動系統之前先與 Petitboot 互動，請使用此選項\n"
 "\n"
-"Autoboot from any disk/network device: any boot option that is marked as a "
-"default (by bootloader configuration) will be booted automatically after a "
-"timeout. Use this option if you want to quickly boot your system without "
-"changing any boot option settings. This is the typical configuration.\n"
+"從任何磁碟/網路裝置自動啟動：逾時之後，已標示為預設（透過啟動載入器配置）的任"
+"何啟動選項都將自動啟動。如果要在不變更任何啟動選項設定的情況下快速啟動系統，"
+"請使用此選項。這是一般配置。\n"
 "\n"
-"Only autoboot from a specific disk/network device: only boot options from a "
-"single device (specifed here) will be booted automatically after a timeout. "
-"Use this option if you have multiple operating system images installed.\n"
+"僅從特定的磁碟/網路裝置自動啟動：逾時之後，只有單一裝置（在這裡指定）中的啟動"
+"選項才自動啟動。如果已安裝了多個作業系統映像檔，請使用此選項。\n"
 "\n"
-"Timeout: Specify the length of time, in seconds, that the main menu will be "
-"displayed before the default boot option is started. This option is only "
-"displayed if autoboot is enabled.\n"
+"逾時：指定時間長度（以秒為單位），該時間長度是主功能表在預設啟動選項啟動之"
+"前，將顯示的時間長度。僅當已啟用自動啟動時，才顯示此選項。\n"
 "\n"
-"Network options:\n"
+"網路選項：\n"
 "\n"
-"DHCP on all active interfaces: Automatically assigns IP addresses to each "
-"network interface. Use this option if you have a DHCP server on your "
-"network.\n"
+"對所有作用中介面使用 DHCP：自動將 IP 位址指派給每一個網路介面。如果您的網路中"
+"有 DHCP 伺服器，請使用此選項。\n"
 "\n"
-"DHCP on a specific interface: Automatically assigns IP addresses to the "
-"selected network interface. The other interfaces are not configured. Select "
-"this option if you have multiple DHCP servers on different interfaces, but "
-"only want to configure a single interface during boot.\n"
+"對特定介面使用 DHCP：自動將 IP 位址指派給選定的網路介面。不配置其他介面。如果"
+"您在不同的介面上具有多個 DHCP 伺服器，但在啟動期間只想配置單一介面，請選取此"
+"選項。\n"
 "\n"
-"Static IP configuration: Allows you to specify an IPv4 address and network "
-"mask, gateway, and a DNS server or servers for a network interface. Select "
-"this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
+"靜態 IP 配置：容許您指定網路介面的 IPv4 位址和網路遮罩、閘道以及 DNS 伺服器。"
+"如果您沒有 DHCP 伺服器，或者您要明確控制網路設定，請選取此選項。"
 
 msgid "Usage"
-msgstr "Usage"
+msgstr "用法"

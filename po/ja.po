@@ -1,0 +1,545 @@
+# English translations for petitboot package.
+# This file is put in the public domain.
+# Jeremy Kerr <jk@ozlabs.org>, 2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
+"Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
+"POT-Creation-Date: 2014-09-15 11:15+0800\n"
+"PO-Revision-Date: 2014-06-24 13:56+0800\n"
+"Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "running boot hooks"
+msgstr "ブート・フックを実行しています"
+
+#, c-format
+msgid "Couldn't load %s"
+msgstr "%s をロードできませんでした"
+
+msgid "performing kexec_load"
+msgstr "kexec_load を実行しています"
+
+msgid "kexec load failed"
+msgstr "kexec をロードできませんでした"
+
+msgid "performing kexec reboot"
+msgstr "kexec リブートを実行しています"
+
+msgid "kexec reboot failed"
+msgstr "kexec をリブートできませんでした"
+
+#, c-format
+msgid "Error loading %s"
+msgstr "%s をロードするときにエラーが発生しました"
+
+msgid "(unknown)"
+msgstr "(不明)"
+
+#, c-format
+msgid "Booting %s."
+msgstr "%s をブートしています。"
+
+msgid "Boot failed: no image specified"
+msgstr "ブートできませんでした: イメージが指定されていません"
+
+msgid "Boot cancelled"
+msgstr "ブートが取り消されました"
+
+#, c-format
+msgid "Booting in %d sec: %s"
+msgstr "%d 秒でブートします: %s"
+
+msgid "Default boot cancelled"
+msgstr "デフォルトのブートが取り消されました"
+
+#, c-format
+msgid "Received config URL %s"
+msgstr "構成 URL %s を受け取りました"
+
+msgid "No network configured"
+msgstr "ネットワークが構成されていません"
+
+msgid "Invalid config URL!"
+msgstr "構成 URL が無効です!"
+
+#, c-format
+msgid "Unable to route to host %s"
+msgstr "ホスト %s に経路指定できません"
+
+#, c-format
+msgid "Config file %s parsed"
+msgstr "構成ファイル %s が解析されました"
+
+msgid "Retrieve Config"
+msgstr "構成を取得してください"
+
+msgid "Configuration URL:"
+msgstr "構成 URL:"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Help"
+msgstr "ヘルプ"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Petitboot Config Retrieval"
+msgstr "Petitboot 構成取得"
+
+msgid "tab=next, shift+tab=previous, x=exit, h=help"
+msgstr "tab=次へ、shift+tab=前へ、x=終了、h=ヘルプ"
+
+msgid "Boot Option Editor"
+msgstr "ブート・オプション・エディター"
+
+msgid "Specify paths/URLs manually"
+msgstr "パス/URL を手動で指定"
+
+msgid "Device:"
+msgstr "デバイス: "
+
+msgid "Kernel:"
+msgstr "カーネル:"
+
+msgid "Initrd:"
+msgstr "Initrd:"
+
+msgid "Device tree:"
+msgstr "デバイス・ツリー:"
+
+msgid "Boot arguments:"
+msgstr "ブート引数:"
+
+msgid "Petitboot Option Editor"
+msgstr "Petitboot オプション・エディター"
+
+msgid "System Configuration"
+msgstr "システム構成"
+
+msgid "No IP / mask values are set"
+msgstr "IP/マスク値が設定されていません"
+
+msgid "Waiting for configuration data..."
+msgstr "構成データを待っています..."
+
+msgid "Autoboot:"
+msgstr "自動ブート:"
+
+msgid "Don't autoboot"
+msgstr "自動ブートしない"
+
+msgid "Autoboot from any disk/network device"
+msgstr "任意のディスク/ネットワーク・デバイスから自動ブートする"
+
+msgid "Only autoboot from a specific disk/network device"
+msgstr "特定のディスク/ネットワーク・デバイスからのみ自動ブートする"
+
+#, c-format
+msgid "disk: %s [uuid: %s]"
+msgstr "ディスク: %s [uuid: %s]"
+
+#, c-format
+msgid "net:  %s [mac: %s]"
+msgstr "net:  %s [mac: %s]"
+
+#, c-format
+msgid "Unknown UUID: %s"
+msgstr "不明 UUID: %s"
+
+msgid "Timeout:"
+msgstr "タイムアウト:"
+
+msgid "seconds"
+msgstr "秒"
+
+msgid "Network:"
+msgstr "ネットワーク:"
+
+msgid "DHCP on all active interfaces"
+msgstr "すべてのアクティブ・インターフェースに対して DHCP"
+
+msgid "DHCP on a specific interface"
+msgstr "特定のインターフェースに対して DHCP"
+
+msgid "Static IP configuration"
+msgstr "静的 IP 構成"
+
+msgid "link up"
+msgstr "リンクアップ"
+
+msgid "link down"
+msgstr "リンクダウン"
+
+msgid "IP/mask:"
+msgstr "IP/マスク:"
+
+msgid "(eg. 192.168.0.10 / 24)"
+msgstr "(例: 192.168.0.10 / 24)"
+
+msgid "Gateway:"
+msgstr "ゲートウェイ: "
+
+msgid "(eg. 192.168.0.1)"
+msgstr "(例: 192.168.0.1)"
+
+msgid "DNS Server(s):"
+msgstr "DNS サーバー:"
+
+msgid "(eg. 192.168.0.2)"
+msgstr "(例: 192.168.0.2)"
+
+msgid "(if not provided by DHCP server)"
+msgstr "(DHCP サーバーから提供されない場合)"
+
+msgid "Selecting 'OK' will exit safe mode"
+msgstr "「OK」を選択するとセーフ・モードが終了します"
+
+msgid "Petitboot System Configuration"
+msgstr "Petitboot システム構成"
+
+#, c-format
+msgid "Running %s..."
+msgstr "%s を実行しています..."
+
+#, c-format
+msgid "Failed: %s"
+msgstr "失敗: %s"
+
+#, c-format
+msgid "Booting %s..."
+msgstr "%s をブートしています..."
+
+#, c-format
+msgid "Failed: boot %s"
+msgstr "失敗: %s のブート"
+
+#, c-format
+msgid "User item %u"
+msgstr "ユーザー項目 %u"
+
+msgid "Error"
+msgstr "エラー"
+
+msgid "Info"
+msgstr "通知"
+
+#, c-format
+msgid "SAFE MODE: select '%s' to continue"
+msgstr "セーフ・モード: 続行するには「%s」を選択してください"
+
+msgid "Rescan devices"
+msgstr "デバイスの再スキャン"
+
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
+msgstr "Enter=受け入れ、e=編集、n=新規、x=終了、l=言語、h=ヘルプ"
+
+msgid "Welcome to Petitboot"
+msgstr "Petitboot へようこそ"
+
+msgid "System information"
+msgstr "システム情報"
+
+msgid "System configuration"
+msgstr "システム構成"
+
+msgid "Retrieve config from URL"
+msgstr "URL から構成を取得"
+
+msgid "Exit to shell"
+msgstr "終了してシェルに戻ってください"
+
+msgid "main menu"
+msgstr "メインメニュー"
+
+#, c-format
+msgid "%s: alloc cui failed.\n"
+msgstr "%s: cui を割り振ることができませんでした。\n"
+
+#, c-format
+msgid "%s: error: discover_client_init failed.\n"
+msgstr "%s: エラー: discover_client_init が失敗しました。\n"
+
+#, c-format
+msgid "could not start pb-discover, the petitboot daemon.\n"
+msgstr "pb-discover (petitboot デーモン) を開始できませんでした。\n"
+
+#, c-format
+msgid "check that pb-discover, the petitboot daemon is running.\n"
+msgstr ""
+"pb-discover (petitboot デーモン) が実行されていることを確認してください。\n"
+
+msgid "Petitboot help"
+msgstr "Petitboot のヘルプ"
+
+#, c-format
+msgid "Petitboot help: %s"
+msgstr "Petitboot のヘルプ: %s"
+
+msgid "Language"
+msgstr "言語"
+
+#, c-format
+msgid "Unknown language '%s'"
+msgstr "「%s」は不明な言語です"
+
+msgid "Petitboot Language Selection"
+msgstr "Petitboot 言語選択"
+
+#, c-format
+msgid "!Invalid option %d"
+msgstr "!オプション %d は無効です"
+
+msgid "Disk"
+msgstr "ディスク"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Network"
+msgstr " ネットワーク"
+
+msgid "Unknown Device"
+msgstr "不明なデバイスです"
+
+msgid "Waiting for system information..."
+msgstr "システム情報を待っています..."
+
+msgid "System type:"
+msgstr "システム・タイプ:"
+
+msgid "System id:"
+msgstr "システム ID:"
+
+msgid "Storage devices"
+msgstr "ストレージ・デバイス"
+
+#, c-format
+msgid " UUID:       %s"
+msgstr " UUID:       %s"
+
+#, c-format
+msgid " mounted at: %s"
+msgstr " マウント位置: %s"
+
+#, c-format
+msgid " MAC:  %s"
+msgstr " MAC:  %s"
+
+#, c-format
+msgid " link: %s"
+msgstr " リンク: %s"
+
+msgid "Petitboot System Information"
+msgstr "Petitboot システム情報"
+
+msgid "System Information"
+msgstr "システム情報"
+
+msgid "x=exit, h=help"
+msgstr "x=終了、h=ヘルプ"
+
+msgid "x=exit"
+msgstr "x=終了"
+
+msgid ""
+"From the main menu screen, select a boot option. The options displayed are "
+"available on the system and the network.\n"
+"\n"
+"To select a boot option, press Enter.\n"
+"\n"
+"To make changes to an existing option, type E (edit).\n"
+"\n"
+"To add a new boot option, type N (new).\n"
+"\n"
+"To display information about the system, including the MAC addresses of each "
+"network interface, type I (information).\n"
+"\n"
+"To make changes to the system configuration, type C (configure).\n"
+"\n"
+"To set the language for the petitboot interface, type L (language).\n"
+"\n"
+"To find new or updated boot options on the system, select the 'Rescan "
+"devices' option.\n"
+"\n"
+"To retreive new boot options from a remote configuration file, select the "
+"'Retrieve config from URL' option.\n"
+"\n"
+"To close the Petitboot interface, type X (exit).\n"
+msgstr ""
+"メインメニュー画面からブート・オプションを選択してください。表示されているオ"
+"プションがシステムおよびネットワークで使用できるオプションです。\n"
+"\n"
+"ブート・オプションを選択するには、Enter キーを押します。\n"
+"\n"
+"既存のオプションを変更するには、E (編集) を入力します。\n"
+"\n"
+"新規ブート・オプションを追加するには、N (新規) を入力します。\n"
+"\n"
+"システムに関する情報 (各ネットワーク・インターフェースの MAC アドレスなど) を"
+"表示するには、I (情報) を入力します。\n"
+"\n"
+"システム構成を変更するには、C (構成) を入力します。\n"
+"\n"
+"petitboot インターフェースの言語を設定するには、L (言語) を入力します。\n"
+"\n"
+"システムで新規ブート・オプションや更新されたブート・オプションを検索するに"
+"は、「デバイスの再スキャン」オプションを選択します。\n"
+"\n"
+"リモート構成ファイルから新規ブート・オプションを取得するには、「URL から構成"
+"を取得」オプションを選択します。\n"
+"\n"
+"Petitboot インターフェースを閉じるには、X (終了) を入力します。\n"
+
+msgid ""
+"Supply a valid URL here to retrieve a remote pxe-boot config file and parse "
+"it.\n"
+"\n"
+"URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
+"host/pxeconffile or http://host/pxeconffile"
+msgstr ""
+"リモート・プリブート構成ファイルを取得して解析するには、有効な URL をここに指"
+"定してください。\n"
+"\n"
+"URL の形式は「scheme://host/path/to/pxeconffile」です。例えば、tftp://host/"
+"pxeconffile or http://host/pxeconffile などにします。"
+
+msgid ""
+"This screen allows you to edit or create boot options.\n"
+"\n"
+"Device: This is a list of block devices available on the system. Select the "
+"device which contains your boot resources (kernel, initrd and device tree), "
+"or \"Specify paths/URLs manually\" to use full URLs to the boot resources.\n"
+"\n"
+"Kernel: enter the path to the kernel to boot. This field is mandatory. This "
+"should be a kernel image that the kexec utility can handle. Generally, this "
+"will be a 'vmlinux'-type image.\n"
+"Example: /boot/vmlinux\n"
+"\n"
+"Initrd: enter the path to the initial RAM disk image. This is optional.\n"
+"Example: /boot/initrd.img\n"
+"\n"
+"Device tree: enter the path to the device tree blob file (.dtb). This is "
+"optional; if not specified, and your platform currently provides a device "
+"tree, the current one will be used.\n"
+"Example: /boot/device-tree.dtb\n"
+"\n"
+"Boot arguments: enter the kernel command-line arguments. This is optional.\n"
+"Example: root=/dev/sda1 console=hvc0\n"
+"\n"
+msgstr ""
+"この画面では、ブート・オプションを編集したり作成したりできます。\n"
+"\n"
+"デバイス: これは、システムで使用できるブロック・デバイスのリストです。ブー"
+"ト・リソース (カーネル、initrd、およびデバイス・ツリー) が含まれるデバイスを"
+"選択します。または、ブート・リソースへの完全な URL を使用する\n"
+"場合は、「パス/URL を手動で指定」を選択します。\n"
+"\n"
+"カーネル: ブートするカーネルへのパスを入力します。このフィールドは必須フィー"
+"ルドです。これは、kexec ユーティリティーで処理できるカーネル・イメージでなけ"
+"ればなりません。通常、これは「vmlinux」タイプのイメージです。\n"
+"例えば、/boot/vmlinux のように入力します。\n"
+"\n"
+"Initrd: 初期 RAM ディスク・イメージへのパスを入力します。これはオプション\n"
+"です。\n"
+"例えば、/boot/initrd.img のように入力します。\n"
+"\n"
+"デバイス・ツリー: デバイス・ツリー blob ファイル (.dtb) へのパスを入力しま"
+"す。これはオプションです。これが指定されない場合に、現在、ご使用のプラット"
+"フォームでデバイス・ツリーが提供されているのであれば、その現行\n"
+"デバイス・ツリーが使用されます。\n"
+"例えば、/boot/device-tree.dtb のように入力します。\n"
+"\n"
+"ブート引数: カーネル・コマンド・ライン引数を入力します。これはオプションで"
+"す。\n"
+"例えば、root=/dev/sda1 console=hvc0 のように入力します。\n"
+"\n"
+
+msgid ""
+"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"\n"
+"Don't autoboot: boot options will be listed in the petitboot menu, but none "
+"will be booted automatically. User interaction will be required to continue "
+"past the petitboot menu. Use this option if you want the machine to wait for "
+"an explicit boot selection, or want to interact with petitboot before "
+"booting the system\n"
+"\n"
+"Autoboot from any disk/network device: any boot option that is marked as a "
+"default (by bootloader configuration) will be booted automatically after a "
+"timeout. Use this option if you want to quickly boot your system without "
+"changing any boot option settings. This is the typical configuration.\n"
+"\n"
+"Only autoboot from a specific disk/network device: only boot options from a "
+"single device (specifed here) will be booted automatically after a timeout. "
+"Use this option if you have multiple operating system images installed.\n"
+"\n"
+"Timeout: Specify the length of time, in seconds, that the main menu will be "
+"displayed before the default boot option is started. This option is only "
+"displayed if autoboot is enabled.\n"
+"\n"
+"Network options:\n"
+"\n"
+"DHCP on all active interfaces: Automatically assigns IP addresses to each "
+"network interface. Use this option if you have a DHCP server on your "
+"network.\n"
+"\n"
+"DHCP on a specific interface: Automatically assigns IP addresses to the "
+"selected network interface. The other interfaces are not configured. Select "
+"this option if you have multiple DHCP servers on different interfaces, but "
+"only want to configure a single interface during boot.\n"
+"\n"
+"Static IP configuration: Allows you to specify an IPv4 address and network "
+"mask, gateway, and a DNS server or servers for a network interface. Select "
+"this option if you do not have a DHCP server, or want explicit control of "
+"network settings."
+msgstr ""
+"自動ブート: 自動ブートの動作に関して選択できるオプションは 3 つあります。\n"
+"\n"
+"自動ブートしない: petitboot のメニューにブート・オプションがリストされます"
+"が、自動的にブートされるものはありません。petitboot のメニューより先に進むに"
+"は、ユーザーによる対話が必要になります。明示的なブート選択をマシンが待つよう"
+"にしたい場合、またはシステムのブート前に petitboot と対話したい場合は、このオ"
+"プションを使用します。\n"
+"\n"
+"任意のディスク/ネットワーク・デバイスから自動ブートする: (ブート・ローダー構"
+"成により) デフォルトとしてマークされているブート・オプションはすべてタイムア"
+"ウト後に自動的にブートされます。ブート・オプション設定を変更せずにシステムを"
+"素早くブートしたい場合は、このオプションを使用します。これは標準の\n"
+"構成です。\n"
+"\n"
+"特定のディスク/ネットワーク・デバイスからのみ自動ブートする: 単一のデバイス "
+"(ここに指定されたもの) からのブート・オプションのみがタイムアウト後に自動的に"
+"ブートされます。複数のオペレーティング・システム・イメージが\n"
+"インストールされている場合に、このオプションを使用します。\n"
+"\n"
+"タイムアウト: デフォルト・ブート・オプションが開始される前にメインメニューが"
+"表示される期間 (秒) を指定します。このオプションが表示されるのは、自動ブート"
+"が有効になっている場合に限られます。\n"
+"\n"
+"ネットワーク・オプション:\n"
+"\n"
+"すべてのアクティブ・インターフェースに対して DHCP: IP アドレスが各ネットワー"
+"ク・インターフェースに自動的に割り当てられます。ご使用のネットワーク上に "
+"DHCP サーバーがある場合に、このオプションを使用します。\n"
+"\n"
+"特定のインターフェースに対して DHCP: 選択されたネットワーク・インターフェース"
+"に IP アドレスが自動的に割り当てられます。その他のインターフェースは構成され"
+"ません。さまざまなインターフェースに対して複数の DHCP サーバーがあるが、ブー"
+"ト時には単一のインターフェースのみを構成したい\n"
+"場合に、このオプションを選択します。\n"
+"\n"
+"静的 IP 構成: ネットワーク・インターフェースの IPv4 アドレスとネットワーク・"
+"マスク、ゲートウェイ、および DNS サーバーを指定できます。DHCP サーバーがない"
+"場合や、ネットワーク設定を明示的に制御したい場合に、このオプションを選択しま"
+"す。"
+
+msgid "Usage"
+msgstr "使用法"
