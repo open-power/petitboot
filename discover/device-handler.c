@@ -923,6 +923,12 @@ void device_handler_process_url(struct device_handler *handler,
 	status->detail = talloc_asprintf(status,
 			_("Received config URL %s"), url);
 
+	if (!handler->network) {
+		status->message = talloc_asprintf(handler,
+					_("No network configured"));
+		goto msg;
+	}
+
 	event = talloc(handler, struct event);
 	event->type = EVENT_TYPE_USER;
 	event->action = EVENT_ACTION_CONF;
