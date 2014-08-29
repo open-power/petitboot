@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	25
+#define N_FIELDS	26
 
 extern struct help_text config_help_text;
 
@@ -94,6 +94,7 @@ struct config_screen {
 		struct nc_widget_label		*dns_dhcp_help_l;
 		struct nc_widget_label		*dns_help_l;
 
+		struct nc_widget_label		*safe_mode;
 		struct nc_widget_button		*ok_b;
 		struct nc_widget_button		*help_b;
 		struct nc_widget_button		*cancel_b;
@@ -307,6 +308,7 @@ static int screen_process_form(struct config_screen *screen)
 		}
 	}
 
+	config->safe_mode = false;
 	rc = cui_send_config(screen->cui, config);
 	talloc_free(config);
 
@@ -469,6 +471,13 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	}
 
 	y += 1;
+
+	show = screen->cui->config->safe_mode;
+	if (show) {
+		widget_move(widget_label_base(screen->widgets.safe_mode),
+			y, screen->field_x);
+		y += 1;
+	}
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
@@ -729,6 +738,10 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	screen->widgets.dns_dhcp_help_l = widget_new_label(set, 0, 0,
 			_("(if not provided by DHCP server)"));
+
+	if (config->safe_mode)
+		screen->widgets.safe_mode = widget_new_label(set, 0, 0,
+			 _("Selecting 'OK' will exit safe mode"));
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
 			ok_click, screen);

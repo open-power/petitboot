@@ -32,7 +32,7 @@
 #include "nc-lang.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	4
+#define N_FIELDS	5
 
 static struct lang {
 	const char	*name;
@@ -59,6 +59,7 @@ struct lang_screen {
 		struct nc_widget_select		*lang_f;
 		struct nc_widget_label		*lang_l;
 
+		struct nc_widget_label		*safe_mode;
 		struct nc_widget_button		*ok_b;
 		struct nc_widget_button		*cancel_b;
 	} widgets;
@@ -160,6 +161,7 @@ static int lang_process_form(struct lang_screen *screen)
 
 	config->lang = talloc_strdup(screen, lang->name);
 
+	config->safe_mode = false;
 	rc = cui_send_config(screen->cui, config);
 	talloc_free(config);
 
@@ -208,6 +210,12 @@ static void lang_screen_layout_widgets(struct lang_screen *screen)
 			widget_select_base(screen->widgets.lang_f));
 
 	y += 1;
+
+	if (screen->cui->config->safe_mode) {
+		widget_move(widget_label_base(screen->widgets.safe_mode),
+			y, screen->field_x);
+		y += 1;
+	}
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
@@ -264,6 +272,10 @@ static void lang_screen_setup_widgets(struct lang_screen *screen,
 		widget_select_add_option(screen->widgets.lang_f, -1,
 					label, true);
 	}
+
+	if (config->safe_mode)
+		screen->widgets.safe_mode = widget_new_label(set, 0, 0,
+			 _("Selecting 'OK' will exit safe mode"));
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
 			ok_click, screen);
