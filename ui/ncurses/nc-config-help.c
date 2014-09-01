@@ -14,7 +14,7 @@ default (by bootloader configuration) will be booted automatically after a \
 timeout. Use this option if you want to quickly boot your system without \
 changing any boot option settings. This is the typical configuration.\n"
 "\n"
-"Autoboot from a specific disk/network device: only boot options \
+"Only autoboot from a specific disk/network device: only boot options \
 from a single device (specifed here) will be booted automatically after a \
 timeout. Use this option if you have multiple operating system images \
 installed.\n"
