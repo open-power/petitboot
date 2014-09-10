@@ -781,13 +781,18 @@ static void config_screen_draw(struct config_screen *screen,
 	/* The size of the pad we'll need depends on the number of interfaces.
 	 *
 	 * We use N_FIELDS (which is quite conservative, as some fields share
-	 * a line) as a base, then add 3 (as the network select field is
-	 * takes 3 lines), and n_interfaces (as the network interface field
-	 * has n_interfaces lines).
+	 * a line) as a base, then:
+	 * - add 6 (as the network select & boot device select fields take 3
+	 *   lines each),
+	 * - add n_interfaces for every field in the network select field, and
+	 * - add (n_blockdevs + n_interfaces) for every field in the boot device
+	 *   select field
 	 */
-	height = N_FIELDS + 3;
-	if (sysinfo)
+	height = N_FIELDS + 6;
+	if (sysinfo) {
 		height += sysinfo->n_interfaces;
+		height += (sysinfo->n_blockdevs + sysinfo->n_interfaces);
+	}
 	if (!screen->pad || getmaxy(screen->pad) < height) {
 		if (screen->pad)
 			delwin(screen->pad);
