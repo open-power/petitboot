@@ -188,8 +188,8 @@ static int screen_process_form(struct config_screen *screen)
 	const struct system_info *sysinfo = screen->cui->sysinfo;
 	enum net_conf_type net_conf_type;
 	struct interface_config *iface;
+	char *str, *end, *uuid;
 	struct config *config;
-	char *str, *end;
 	int rc, idx;
 
 	config = config_copy(screen, screen->cui->config);
@@ -199,8 +199,9 @@ static int screen_process_form(struct config_screen *screen)
 
 	config->autoboot_enabled = screen->autoboot_type != AUTOBOOT_DISABLED;
 
+	uuid = NULL;
 	if (screen->autoboot_type == AUTOBOOT_ONE) {
-		char mac[20], *uuid = NULL;
+		char mac[20];
 
 		/* if idx is -1 here, we have an unknown UUID selected.
 		 * Otherwise, it's a blockdev index (idx <= n_blockdevs) or an
@@ -216,12 +217,10 @@ static int screen_process_form(struct config_screen *screen)
 		} else if (idx != -1) {
 			uuid = sysinfo->blockdevs[idx]->uuid;
 		}
-
-		if (uuid) {
-			talloc_free(config->boot_device);
-			config->boot_device = talloc_strdup(config, uuid);
-		}
 	}
+
+	talloc_free(config->boot_device);
+	config->boot_device = uuid ? talloc_strdup(config, uuid) : NULL;
 
 	str = widget_textbox_get_value(screen->widgets.timeout_f);
 	if (str) {
