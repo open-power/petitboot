@@ -79,6 +79,9 @@ static void dump_config(struct config *config)
 	for (i = 0; i < config->network.n_dns_servers; i++)
 		pb_log("  dns server %s\n", config->network.dns_servers[i]);
 
+	if (config->boot_device)
+		pb_log("  boot device %s\n", config->boot_device);
+
 	if (config->n_boot_priorities)
 		pb_log(" boot priority order:\n");
 
