@@ -37,6 +37,7 @@ static const char *known_params[] = {
 	"petitboot,network",
 	"petitboot,timeout",
 	"petitboot,bootdev",
+	"petitboot,language",
 	"petitboot,debug?",
 	NULL,
 };
@@ -423,6 +424,9 @@ static void populate_config(struct platform_powerpc *platform,
 		}
 	}
 
+	val = get_param(platform, "petitboot,language");
+	config->lang = val ? talloc_strdup(config, val) : NULL;
+
 	populate_network_config(platform, config);
 
 	populate_bootdev_config(platform, config);
@@ -554,6 +558,9 @@ static int update_config(struct platform_powerpc *platform,
 	update_string_config(platform, "petitboot,timeout", val);
 	if (tmp)
 		talloc_free(tmp);
+
+	val = config->lang ?: "";
+	update_string_config(platform, "petitboot,language", val);
 
 	update_network_config(platform, config);
 
