@@ -80,7 +80,7 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 
 	if (sysinfo->n_interfaces) {
 		line(NULL);
-		line("Network interfaces");
+		line(_("Network interfaces"));
 	}
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
@@ -91,7 +91,9 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 
 		line("%s:", info->name);
 		line(_(" MAC:  %s"), macbuf);
-		line(_(" link: %s"), info->link ? "up" : "down");
+		/* TRANSLATORS: these "up" / "down" strings refer to the
+		 * link status for a network connection. */
+		line(_(" link: %s"), info->link ? _("up") : _("down"));
 		line(NULL);
 	}
 
