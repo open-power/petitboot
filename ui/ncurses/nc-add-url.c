@@ -223,7 +223,7 @@ struct add_url_screen *add_url_screen_init(struct cui *cui,
 	screen->cui = cui;
 	screen->on_exit = on_exit;
 	screen->label_x = 2;
-	screen->field_x = 22;
+	screen->field_x = 25;
 
 	nc_scr_init(&screen->scr, pb_add_url_screen_sig, 0,
 		cui, add_url_screen_process_key,
