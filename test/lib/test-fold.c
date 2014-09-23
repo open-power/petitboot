@@ -1,7 +1,12 @@
 
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <locale.h>
+#include <wchar.h>
+#include <langinfo.h>
 
 #include <fold/fold.h>
 #include <list/list.h>
@@ -72,8 +77,19 @@ struct test test_break = {
 	},
 };
 
+struct test test_mbs = {
+	.in = "從主功能表畫面中，選取啟動選項。",
+	.linelen = 15,
+	.out = {
+		"從主功能表畫面",
+		"中，選取啟動選",
+		"項。",
+		NULL,
+	},
+};
+
 static struct test *tests[] = {
-	&test_split, &test_fold_line, &test_break,
+	&test_split, &test_fold_line, &test_break, &test_mbs,
 };
 
 static void __attribute__((noreturn)) fail(struct ctx *ctx,
@@ -83,7 +99,7 @@ static void __attribute__((noreturn)) fail(struct ctx *ctx,
 	int i;
 
 	fprintf(stderr, "%s\n", msg);
-	fprintf(stderr, "input:\n%s\n", test->in);
+	fprintf(stderr, "input, split at %d:\n%s\n", test->linelen, test->in);
 
 	fprintf(stderr, "expected:\n");
 	for (i = 0; test->out[i]; i++)
@@ -116,19 +132,39 @@ static void run_test(struct test *test)
 {
 	struct line *line;
 	struct ctx *ctx;
-	int i;
+	wchar_t *wcs;
+	int i, n;
 
 	ctx = talloc(NULL, struct ctx);
+	n = strlen(test->in) + 1;
 	list_init(&ctx->lines);
 	fold_text(test->in, test->linelen, fold_line_cb, ctx);
 
+
 	i = 0;
 	list_for_each_entry(&ctx->lines, line, list) {
+		size_t wcslen;
+		char *buf;
+		int width;
+
 		if (!test->out[i])
 			fail(ctx, test,
 				"fold_text returned more lines than expected");
 
-		if (line->len > test->linelen)
+		buf = talloc_strndup(ctx, line->buf, line->len);
+		wcslen = mbstowcs(NULL, buf, 0);
+
+		if (wcslen == (size_t)-1)
+			fail(ctx, test, "invalid mutlibyte sequence");
+
+		wcs = talloc_array(ctx, wchar_t, wcslen + 1);
+		wcslen = mbstowcs(wcs, buf, n);
+
+		width = wcswidth(wcs, wcslen);
+		if (width == -1)
+			fail(ctx, test, "nonprintable characters present");
+
+		if (width > (signed int)test->linelen)
 			fail(ctx, test, "line too long");
 
 		if (line->len != strlen(test->out[i]))
@@ -149,6 +185,16 @@ static void run_test(struct test *test)
 int main(void)
 {
 	unsigned int i;
+	char *charset;
+
+	setlocale(LC_CTYPE, "");
+
+	charset = nl_langinfo(CODESET);
+	if (strcmp(charset, "UTF-8")) {
+		fprintf(stderr, "Current charset is %s, tests require UTF-8\n",
+				charset);
+		return EXIT_FAILURE;
+	}
 
 	for (i = 0; i < ARRAY_SIZE(tests); i++)
 		run_test(tests[i]);
