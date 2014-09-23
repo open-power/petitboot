@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-09-15 11:15+0800\n"
+"POT-Creation-Date: 2014-09-23 17:20+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Portugese (Brazil)\n"
@@ -336,13 +336,25 @@ msgstr " UUID:       %s"
 msgid " mounted at: %s"
 msgstr " montado em: %s"
 
+msgid "Network interfaces"
+msgstr ""
+
 #, c-format
 msgid " MAC:  %s"
 msgstr " MAC:  %s"
 
+#. TRANSLATORS: these "up" / "down" strings refer to the
+#. * link status for a network connection.
 #, c-format
 msgid " link: %s"
 msgstr " link: %s"
+
+msgid "up"
+msgstr ""
+
+#, fuzzy
+msgid "down"
+msgstr "link inativo"
 
 msgid "Petitboot System Information"
 msgstr "Informações do Sistema Petitboot"

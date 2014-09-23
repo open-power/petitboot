@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-09-15 11:15+0800\n"
+"POT-Creation-Date: 2014-09-23 17:20+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: German\n"
@@ -134,7 +134,7 @@ msgid "Waiting for configuration data..."
 msgstr "Warten auf Konfigurationsdaten..."
 
 msgid "Autoboot:"
-msgstr "Automatisches Booten:"
+msgstr "Autom. Booten:"
 
 msgid "Don't autoboot"
 msgstr "Kein automatisches Booten"
@@ -143,19 +143,19 @@ msgid "Autoboot from any disk/network device"
 msgstr "Von jeder Platte/Netzeinheit automatisch booten"
 
 msgid "Only autoboot from a specific disk/network device"
-msgstr "Nur von einer bestimmten Platte/Netzeinheit automatisch booten"
+msgstr "Nur von bestimmter Platte/Netzeinheit autom. booten"
 
 #, c-format
 msgid "disk: %s [uuid: %s]"
-msgstr "Platte: %s [Universally Unique Identifier: %s]"
+msgstr "Platte: %s [UUID: %s]"
 
 #, c-format
 msgid "net:  %s [mac: %s]"
-msgstr "Netz:  %s [Media Access Control: %s]"
+msgstr "Netz:  %s [MAC: %s]"
 
 #, c-format
 msgid "Unknown UUID: %s"
-msgstr "Unbekannter Universally Unique Identifier: %s"
+msgstr "Unbekannte UUID: %s"
 
 msgid "Timeout:"
 msgstr "Zeitlimit:"
@@ -167,19 +167,19 @@ msgid "Network:"
 msgstr "Netz:"
 
 msgid "DHCP on all active interfaces"
-msgstr "DHCP in allen aktiven Schnittstellen"
+msgstr "DHCP für alle aktiven Schnittstellen"
 
 msgid "DHCP on a specific interface"
-msgstr "DHCP in einer bestimmten Schnittstelle"
+msgstr "DHCP für eine bestimmte Schnittstelle"
 
 msgid "Static IP configuration"
-msgstr "Konfiguration von statischem IP"
+msgstr "Statische IP-Konfiguration"
 
 msgid "link up"
-msgstr "Nach oben verknüpfen"
+msgstr "Verbindung aktiv"
 
 msgid "link down"
-msgstr "Nach unten verknüpfen"
+msgstr "Verbindung inaktiv"
 
 msgid "IP/mask:"
 msgstr "IP/Maske:"
@@ -326,19 +326,31 @@ msgstr "Speichereinheiten"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " Universally Unique Identifier:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
 msgstr " angehängt bei: %s"
 
-#, c-format
-msgid " MAC:  %s"
-msgstr " Media Access Control:  %s"
+msgid "Network interfaces"
+msgstr ""
 
 #, c-format
+msgid " MAC:  %s"
+msgstr " MAC:  %s"
+
+#. TRANSLATORS: these "up" / "down" strings refer to the
+#. * link status for a network connection.
+#, c-format
 msgid " link: %s"
-msgstr " Verknüpfung: %s"
+msgstr " Verbindung: %s"
+
+msgid "up"
+msgstr ""
+
+#, fuzzy
+msgid "down"
+msgstr "Verbindung inaktiv"
 
 msgid "Petitboot System Information"
 msgstr "Petitboot-Systeminformationen"
