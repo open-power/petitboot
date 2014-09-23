@@ -88,8 +88,19 @@ struct test test_mbs = {
 	},
 };
 
+struct test test_mbs_sep = {
+	.in = "從主功 能表 畫面中，選 取啟 動選項。",
+	.linelen = 15,
+	.out = {
+		"從主功 能表",
+		"畫面中，選",
+		"取啟 動選項。",
+		NULL,
+	},
+};
+
 static struct test *tests[] = {
-	&test_split, &test_fold_line, &test_break, &test_mbs,
+	&test_split, &test_fold_line, &test_break, &test_mbs, &test_mbs_sep,
 };
 
 static void __attribute__((noreturn)) fail(struct ctx *ctx,
