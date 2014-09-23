@@ -305,7 +305,7 @@ static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 	y++;
 	widget_move(widget_button_base(boot_editor->widgets.ok_b), y, 9);
 	widget_move(widget_button_base(boot_editor->widgets.help_b), y, 19);
-	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 29);
+	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 32);
 }
 
 static void boot_editor_widget_focus(struct nc_widget *widget, void *arg)
@@ -478,9 +478,9 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 
 	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 6,
 					_("OK"), ok_click, boot_editor);
-	boot_editor->widgets.help_b = widget_new_button(set, 0, 0, 6,
+	boot_editor->widgets.help_b = widget_new_button(set, 0, 0, 9,
 					_("Help"), help_click, boot_editor);
-	boot_editor->widgets.cancel_b = widget_new_button(set, 0, 0, 6,
+	boot_editor->widgets.cancel_b = widget_new_button(set, 0, 0, 9,
 					_("Cancel"), cancel_click, boot_editor);
 }
 
