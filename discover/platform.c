@@ -173,6 +173,12 @@ const struct platform *platform_get(void)
 	return platform;
 }
 
+void platform_finalise_config(void)
+{
+	if (platform && platform->finalise_config)
+		platform->finalise_config(platform);
+}
+
 int platform_get_sysinfo(struct system_info *info)
 {
 	if (platform && platform->get_sysinfo)

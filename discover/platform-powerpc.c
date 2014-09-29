@@ -693,12 +693,8 @@ static void parse_opal_sysparams(struct config *config)
 	if (!next_valid && !default_valid)
 		return;
 
-	if (next_valid) {
-		/* invalidate next-boot-device setting */
-		write_bootdev_sysparam("next-boot-device", 0xff);
-	} else {
+	if (!next_valid)
 		next_bootdev = default_bootdev;
-	}
 
 	switch (next_bootdev) {
 	case IPMI_BOOTDEV_NONE:
@@ -753,6 +749,12 @@ static int save_config(struct platform *p, struct config *config)
 	return rc;
 }
 
+static void finalise_config(struct platform *platform __attribute__((unused)))
+{
+	/* invalidate next-boot-device setting */
+	write_bootdev_sysparam("next-boot-device", 0xff);
+}
+
 static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 {
 	struct platform_powerpc *platform = p->platform_data;
@@ -797,12 +799,13 @@ static bool probe(struct platform *p, void *ctx)
 
 
 static struct platform platform_powerpc = {
-	.name		= "powerpc",
-	.dhcp_arch_id	= 0x000e,
-	.probe		= probe,
-	.load_config	= load_config,
-	.save_config	= save_config,
-	.get_sysinfo	= get_sysinfo,
+	.name			= "powerpc",
+	.dhcp_arch_id		= 0x000e,
+	.probe			= probe,
+	.load_config		= load_config,
+	.save_config		= save_config,
+	.finalise_config	= finalise_config,
+	.get_sysinfo		= get_sysinfo,
 };
 
 register_platform(platform_powerpc);

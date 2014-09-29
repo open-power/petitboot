@@ -8,6 +8,7 @@ struct platform {
 	bool		(*probe)(struct platform *, void *);
 	int		(*load_config)(struct platform *, struct config *);
 	int		(*save_config)(struct platform *, struct config *);
+	void		(*finalise_config)(struct platform *);
 	int		(*get_sysinfo)(struct platform *, struct system_info *);
 	uint16_t	dhcp_arch_id;
 	void		*platform_data;
@@ -17,6 +18,7 @@ int platform_init(void *ctx);
 int platform_fini(void);
 const struct platform *platform_get(void);
 int platform_get_sysinfo(struct system_info *info);
+void platform_finalise_config(void);
 
 /* configuration interface */
 const struct config *config_get(void);
