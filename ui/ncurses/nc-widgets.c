@@ -877,6 +877,10 @@ void widget_move(struct nc_widget *widget, int y, int x)
 
 	widget->x = x;
 	widget->y = y;
+
+	if (x + widget->width > COLS)
+		pb_debug("%s: Widget at %d,%d runs over pad! (%d)", __func__,
+		       y, x, x + widget->width);
 }
 
 int widget_height(struct nc_widget *widget)
