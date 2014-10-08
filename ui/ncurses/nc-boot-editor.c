@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -509,6 +510,36 @@ void boot_editor_update(struct boot_editor *boot_editor,
 	pad_refresh(boot_editor);
 }
 
+/* Return the number of columns required to display a localised string */
+static int strncols(const char *str)
+{
+	int i, wlen, ncols = 0;
+	wchar_t *wstr;
+
+	wlen = mbstowcs(NULL, str, 0);
+	if (wlen <= 0)
+		return wlen;
+
+	wstr = malloc(sizeof(wchar_t) * wlen + 1);
+	if (!wstr)
+		return -1;
+
+	wlen = mbstowcs(wstr, str, wlen);
+	if (wlen <= 0) {
+		free(wstr);
+		return wlen;
+	}
+
+	/* Processing each character individually lets us use the same
+	 * check for all languages */
+	for (i = 0; i < wlen; i++) {
+		ncols += wcwidth(wstr[i]);
+	}
+
+	free(wstr);
+	return ncols;
+}
+
 struct boot_editor *boot_editor_init(struct cui *cui,
 		struct pmenu_item *item,
 		const struct system_info *sysinfo,
@@ -529,8 +560,11 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->on_exit = on_exit;
 	boot_editor->state = STATE_EDIT;
 
+	int ncols1 = strncols(_("Device tree:"));
+	int ncols2 = strncols(_("Boot arguments:"));
+
 	boot_editor->label_x = 1;
-	boot_editor->field_x = 17;
+	boot_editor->field_x = 2 + max(ncols1, ncols2);
 
 	nc_scr_init(&boot_editor->scr, pb_boot_editor_sig, 0,
 			cui, boot_editor_process_key,
