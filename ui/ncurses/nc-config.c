@@ -795,7 +795,7 @@ static void config_screen_draw(struct config_screen *screen,
 	if (!screen->pad || getmaxy(screen->pad) < height) {
 		if (screen->pad)
 			delwin(screen->pad);
-		screen->pad = newpad(height, COLS);
+		screen->pad = newpad(height, COLS + 10);
 	}
 
 	if (screen->widgetset) {
