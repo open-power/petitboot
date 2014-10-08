@@ -289,7 +289,7 @@ static void lang_screen_setup_widgets(struct lang_screen *screen,
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
 			ok_click, screen);
-	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 9, _("Cancel"),
+	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 10, _("Cancel"),
 			cancel_click, screen);
 }
 

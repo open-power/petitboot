@@ -483,7 +483,7 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	widget_move(widget_button_base(screen->widgets.help_b),
 			y, screen->field_x + 10);
 	widget_move(widget_button_base(screen->widgets.cancel_b),
-			y, screen->field_x + 23);
+			y, screen->field_x + 24);
 }
 
 static void config_screen_network_change(void *arg, int value)
@@ -744,9 +744,9 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
 			ok_click, screen);
-	screen->widgets.help_b = widget_new_button(set, 0, 0, 9, _("Help"),
+	screen->widgets.help_b = widget_new_button(set, 0, 0, 10, _("Help"),
 			help_click, screen);
-	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 9, _("Cancel"),
+	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 10, _("Cancel"),
 			cancel_click, screen);
 }
 
