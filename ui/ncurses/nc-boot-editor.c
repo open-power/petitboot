@@ -22,7 +22,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -522,36 +521,6 @@ void boot_editor_update(struct boot_editor *boot_editor,
 	widgetset_post(boot_editor->widgetset);
 
 	pad_refresh(boot_editor);
-}
-
-/* Return the number of columns required to display a localised string */
-static int strncols(const char *str)
-{
-	int i, wlen, ncols = 0;
-	wchar_t *wstr;
-
-	wlen = mbstowcs(NULL, str, 0);
-	if (wlen <= 0)
-		return wlen;
-
-	wstr = malloc(sizeof(wchar_t) * wlen + 1);
-	if (!wstr)
-		return -1;
-
-	wlen = mbstowcs(wstr, str, wlen);
-	if (wlen <= 0) {
-		free(wstr);
-		return wlen;
-	}
-
-	/* Processing each character individually lets us use the same
-	 * check for all languages */
-	for (i = 0; i < wlen; i++) {
-		ncols += wcwidth(wstr[i]);
-	}
-
-	free(wstr);
-	return ncols;
 }
 
 struct boot_editor *boot_editor_init(struct cui *cui,

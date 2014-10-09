@@ -15,14 +15,36 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef I18N_H
-#define I18N_H
+#define _XOPEN_SOURCE
 
-#include <libintl.h>
+#include <string.h>
+#include <stdlib.h>
+#include <wchar.h>
 
-#define _(x) gettext(x)
+#include <i18n/i18n.h>
 
-int strncols(const char *str);
+/* Return the number of columns required to display a localised string */
+int strncols(const char *str)
+{
+	int wlen, ncols;
+	wchar_t *wstr;
 
-#endif /* I18N_H */
+	wlen = mbstowcs(NULL, str, 0);
+	if (wlen <= 0)
+		return wlen;
 
+	wstr = malloc(sizeof(wchar_t) * wlen + 1);
+	if (!wstr)
+		return -1;
+
+	wlen = mbstowcs(wstr, str, wlen);
+	if (wlen <= 0) {
+		free(wstr);
+		return wlen;
+	}
+
+	ncols = wcswidth(wstr, wlen);
+
+	free(wstr);
+	return ncols;
+}

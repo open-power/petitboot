@@ -26,6 +26,7 @@ lib_libpbcore_la_SOURCES = \
 	lib/fold/fold.h \
 	lib/fold/fold.c \
 	lib/i18n/i18n.h \
+	lib/i18n/i18n.c \
 	lib/log/log.h \
 	lib/log/log.c \
 	lib/list/list.c \
