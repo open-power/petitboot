@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-10-08 11:53+1100\n"
+"POT-Creation-Date: 2014-10-13 09:24+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Italian\n"
@@ -331,7 +331,7 @@ msgid " mounted at: %s"
 msgstr " montato in: %s"
 
 msgid "Network interfaces"
-msgstr ""
+msgstr "Interfacce di rete"
 
 #, c-format
 msgid " MAC:  %s"
@@ -344,7 +344,7 @@ msgid " link: %s"
 msgstr " link: %s"
 
 msgid "up"
-msgstr ""
+msgstr "up"
 
 #, fuzzy
 msgid "down"

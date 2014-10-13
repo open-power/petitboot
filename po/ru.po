@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-10-08 11:53+1100\n"
+"POT-Creation-Date: 2014-10-13 09:24+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Russian\n"
@@ -331,7 +331,7 @@ msgid " mounted at: %s"
 msgstr " установлено в: %s"
 
 msgid "Network interfaces"
-msgstr ""
+msgstr "Сетевые интерфейсы"
 
 #, c-format
 msgid " MAC:  %s"
@@ -341,14 +341,14 @@ msgstr " MAC:  %s"
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr " ссылка: %s"
+msgstr " связь: %s"
 
 msgid "up"
-msgstr ""
+msgstr "вкл"
 
 #, fuzzy
 msgid "down"
-msgstr "отключиться"
+msgstr "выкл"
 
 msgid "Petitboot System Information"
 msgstr "Информация о системе Petitboot"

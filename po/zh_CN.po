@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-10-08 11:53+1100\n"
+"POT-Creation-Date: 2014-10-13 09:24+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Simplified Chinese\n"
@@ -330,7 +330,7 @@ msgid " mounted at: %s"
 msgstr " 安装于：%s"
 
 msgid "Network interfaces"
-msgstr ""
+msgstr "网络接口"
 
 #, c-format
 msgid " MAC:  %s"
@@ -340,10 +340,10 @@ msgstr " MAC：  %s"
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr " 链接： %s"
+msgstr "链接： %s"
 
 msgid "up"
-msgstr ""
+msgstr "上行链路"
 
 #, fuzzy
 msgid "down"
@@ -413,9 +413,9 @@ msgid ""
 "URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
 "host/pxeconffile or http://host/pxeconffile"
 msgstr ""
-"请在此处提供有效的 URL，以检索远程 PXE 启动文件并对其进行解析。\n"
+"请在此处提供有效的 URL，以检索远程 PXE 启动文件和解析此文件。\n"
 "\n"
-"URL 的格式为：“scheme://host/path/to/pxeconffile”，例如 tftp://host/"
+"URL 的格式如下：“scheme://host/path/to/pxeconffile”，例如 tftp://host/"
 "pxeconffile 或 http://host/pxeconffile"
 
 msgid ""

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-10-08 11:53+1100\n"
+"POT-Creation-Date: 2014-10-13 09:24+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Spanish\n"
@@ -81,7 +81,7 @@ msgid "Retrieve Config"
 msgstr "Recuperar configuración"
 
 msgid "Configuration URL:"
-msgstr "URL de configuración: "
+msgstr "URL de configuración:"
 
 msgid "OK"
 msgstr "Aceptar"
@@ -105,7 +105,7 @@ msgid "Specify paths/URLs manually"
 msgstr "Especifique vías de acceso/URL manualmente"
 
 msgid "Device:"
-msgstr "Dispositivo: "
+msgstr "Dispositivo:"
 
 msgid "Kernel:"
 msgstr "Kernel:"
@@ -186,7 +186,7 @@ msgid "(eg. 192.168.0.10 / 24)"
 msgstr "(por ej. 192.168.0.10 / 24)"
 
 msgid "Gateway:"
-msgstr "Pasarela: "
+msgstr "Pasarela:"
 
 msgid "(eg. 192.168.0.1)"
 msgstr "(por ej. 192.168.0.1)"
@@ -330,7 +330,7 @@ msgid " mounted at: %s"
 msgstr " montado en: %s"
 
 msgid "Network interfaces"
-msgstr ""
+msgstr "Interfaces de red"
 
 #, c-format
 msgid " MAC:  %s"
@@ -343,7 +343,7 @@ msgid " link: %s"
 msgstr " enlace: %s"
 
 msgid "up"
-msgstr ""
+msgstr "activo"
 
 #, fuzzy
 msgid "down"
@@ -466,7 +466,7 @@ msgstr ""
 "Ejemplo: /boot/initrd.img\n"
 "\n"
 "Árbol de dispositivos: escriba la vía de acceso al archivo blob del árbol de "
-"dispositivos (.dtb). Esto esopcional; si no se especifica y la plataforma "
+"dispositivos (.dtb). Esto es opcional; si no se especifica y la plataforma "
 "proporciona actualmente un árbol de dispositivos, se actualizará el actual.\n"
 "Ejemplo: /boot/device-tree.dtb\n"
 "\n"
