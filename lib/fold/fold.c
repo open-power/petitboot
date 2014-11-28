@@ -34,7 +34,7 @@ void fold_text(const char *text,
 
 		bytes = mbrtowc(&wc, end, len - (end - text), &ps);
 
-		assert(bytes >= 0);
+		assert(bytes != (size_t)-1);
 
 		/* we'll get a zero size for the nul terminator */
 		if (!bytes) {
