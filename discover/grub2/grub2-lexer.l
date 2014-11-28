@@ -119,7 +119,8 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 #.*	;
 
 .	{
-		yyerror(yyget_extra(yyscanner), "unknown token '%s'\n", yytext);
+		yyerror(yyget_extra(yyscanner), yyscanner,
+				"unknown token '%s'\n", yytext);
 		yyterminate();
 	}
 

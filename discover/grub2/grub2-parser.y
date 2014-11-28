@@ -11,7 +11,7 @@
 
 #include "grub2.h"
 
-void yyerror(struct grub2_parser *parser, const char *fmt, ...);
+void yyerror(struct grub2_parser *parser, void *scanner, const char *fmt, ...);
 %}
 
 %union {
@@ -153,7 +153,7 @@ word:	TOKEN_WORD
 	}
 
 %%
-void yyerror(struct grub2_parser *parser, const char *fmt, ...)
+void yyerror(struct grub2_parser *parser, void *scanner, const char *fmt, ...)
 {
 	const char *str;
 	va_list ap;
@@ -162,8 +162,8 @@ void yyerror(struct grub2_parser *parser, const char *fmt, ...)
 	str = talloc_vasprintf(parser, fmt, ap);
 	va_end(ap);
 
-	pb_log("parse error: %d('%s'): %s\n", yyget_lineno(parser->scanner),
-					yyget_text(parser->scanner), str);
+	pb_log("parse error: %d('%s'): %s\n", yyget_lineno(scanner),
+					yyget_text(scanner), str);
 }
 
 struct grub2_statements *create_statements(struct grub2_parser *parser)
