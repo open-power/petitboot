@@ -77,7 +77,7 @@ $(parser_TESTS): AM_CPPFLAGS += \
 		-I$(top_srcdir)/discover \
 		-DLOCAL_STATE_DIR='"$(localstatedir)"'
 $(parser_TESTS): LDADD += $@.embedded-config.o test/parser/libtest.ro $(core_lib)
-$(parser_TESTS): %: %.embedded-config.o test/parser/libtest.ro
+$(parser_TESTS): %: %.embedded-config.o test/parser/libtest.ro $(core_lib)
 
 extract_config = $(srcdir)/test/parser/extract-config.awk
 
