@@ -31,6 +31,7 @@ parser_TESTS = \
 	test/parser/test-grub2-f18-ppc64 \
 	test/parser/test-grub2-f20-ppc64 \
 	test/parser/test-grub2-ubuntu-13_04-x86 \
+	test/parser/test-grub2-sles-btrfs-snapshot \
 	test/parser/test-grub2-lexer-error \
 	test/parser/test-grub2-parser-error \
 	test/parser/test-kboot-single \
