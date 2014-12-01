@@ -21,6 +21,11 @@ void yyerror(struct grub2_parser *parser, void *scanner, const char *fmt, ...);
 	struct grub2_statements	*statements;
 }
 
+%printer { fprintf(yyoutput, "%s%s:'%s'",
+		$$->type == GRUB2_WORD_VAR ? "var" : "text",
+		$$->type == GRUB2_WORD_VAR && !$$->split ? "[nosplit]" : "",
+		$$->name); } <word>
+
 /* reserved words */
 %token	TOKEN_LDSQBRACKET	"[["
 %token	TOKEN_RDSQBRACKET	"]]"
@@ -70,27 +75,21 @@ script:	statements {
 		parser->script->statements = $1;
 	}
 
-eol:	TOKEN_EOL | TOKEN_EOF;
-
-statements: /* empty */ {
+statements: statement {
 		$$ = create_statements(parser);
+		statement_append($$, $1);
 	}
-	| statements statement eol {
-		statement_append($1, $2);
+	| statements eol statement {
+		statement_append($1, $3);
 		$$ = $1;
 	}
-	| statements TOKEN_EOL {
-		$$ = $1;
+
+conditional: statement eol "then" statements {
+		$$ = create_statement_conditional(parser, $1, $4);
 	}
 
-sep:	TOKEN_DELIM | TOKEN_EOL;
-
-conditional: statement TOKEN_EOL "then" sep statements {
-		$$ = create_statement_conditional(parser, $1, $5);
-	}
-
-elif: "elif" TOKEN_DELIM conditional {
-		$$ = $3;
+elif: "elif" conditional {
+		$$ = $2;
       }
 
 elifs: /* empty */ {
@@ -101,47 +100,49 @@ elifs: /* empty */ {
 		$$ = $1;
 	}
 
-statement:
-	words {
+statement: {
+		   $$ = NULL;
+	}
+	| words delim0 {
 		   $$ = create_statement_simple(parser, $1);
 	}
 	| '{' statements '}' {
 		$$ = create_statement_block(parser, $2);
 	}
-	| "if" TOKEN_DELIM conditional elifs "fi" {
-		$$ = create_statement_if(parser, $3, $4, NULL);
+	| "if" conditional elifs "fi" {
+		$$ = create_statement_if(parser, $2, $3, NULL);
 	}
-	| "if" TOKEN_DELIM conditional
+	| "if" conditional
 		elifs
-		"else" sep
+		"else"
 		statements
 		"fi" {
-		$$ = create_statement_if(parser, $3, $4, $7);
+		$$ = create_statement_if(parser, $2, $3, $5);
 	}
-	| "function" TOKEN_DELIM word TOKEN_DELIM '{' statements '}' {
-		$$ = create_statement_function(parser, $3, $6);
+	| "function" word delim '{' statements '}' {
+		$$ = create_statement_function(parser, $2, $5);
 	}
-	| "menuentry" TOKEN_DELIM words TOKEN_DELIM
+	| "menuentry" words delim
 		'{' statements '}' {
-		$$ = create_statement_menuentry(parser, $3, $6);
+		$$ = create_statement_menuentry(parser, $2, $5);
 	}
-	| "submenu" TOKEN_DELIM words TOKEN_DELIM
+	| "submenu" words delim
 		'{' statements '}' {
 		/* we just flatten everything */
-		$$ = create_statement_block(parser, $6);
+		$$ = create_statement_block(parser, $5);
 	}
-	| "for" TOKEN_DELIM word TOKEN_DELIM "in" TOKEN_DELIM words TOKEN_EOL
-		"do" sep
+	| "for" word delim "in" delim words eol
+		"do"
 		statements
 		"done" {
-		$$ = create_statement_for(parser, $3, $7, $11);
+		$$ = create_statement_for(parser, $2, $6, $9);
 	}
 
 words:	word {
 		$$ = create_argv(parser);
 		argv_append($$, $1);
 	}
-	| words TOKEN_DELIM word {
+	| words delim word {
 		argv_append($1, $3);
 		$$ = $1;
 	}
@@ -152,6 +153,13 @@ word:	TOKEN_WORD
 		$$ = $1;
 	}
 
+delim0:	/* empty */ |
+	delim
+
+delim:	TOKEN_DELIM |
+	delim TOKEN_DELIM
+
+eol:	TOKEN_EOL;
 %%
 void yyerror(struct grub2_parser *parser, void *scanner, const char *fmt, ...)
 {
@@ -265,9 +273,8 @@ struct grub2_statement *create_statement_for(struct grub2_parser *parser,
 void statement_append(struct grub2_statements *stmts,
 		struct grub2_statement *stmt)
 {
-	if (!stmt)
-		return;
-	list_add_tail(&stmts->list, &stmt->list);
+	if (stmt)
+		list_add_tail(&stmts->list, &stmt->list);
 }
 
 struct grub2_word *create_word_text(struct grub2_parser *parser,
@@ -319,6 +326,7 @@ struct grub2_parser *grub2_parser_create(struct discover_context *ctx)
 	parser = talloc(ctx, struct grub2_parser);
 	yylex_init_extra(parser, &parser->scanner);
 	parser->script = create_script(parser, ctx);
+	parser->inter_word = false;
 
 	return parser;
 }

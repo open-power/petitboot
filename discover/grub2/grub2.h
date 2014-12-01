@@ -103,6 +103,7 @@ struct grub2_script {
 struct grub2_parser {
 	void			*scanner;
 	struct grub2_script	*script;
+	bool			inter_word;
 };
 
 /* type for builtin functions */

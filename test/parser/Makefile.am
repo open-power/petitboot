@@ -16,6 +16,9 @@ parser_TESTS = \
 	test/parser/test-grub2-single \
 	test/parser/test-grub2-default \
 	test/parser/test-grub2-empty \
+	test/parser/test-grub2-noeol \
+	test/parser/test-grub2-menuentry-formats \
+	test/parser/test-grub2-if-formats \
 	test/parser/test-grub2-default-index \
 	test/parser/test-grub2-default-multiword \
 	test/parser/test-grub2-multiple-resolve \

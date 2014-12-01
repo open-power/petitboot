@@ -22,14 +22,13 @@ void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 %x dqstring
 
 WORD	[^{}|&$;<> \t\n'"#]+
+DELIM	[ \t]+
 VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 
 %%
 
- /* discard leading & trailing whitespace, but keep inter-word delimeters */
-^[ \t]+	;
-[ \t]+$	;
-[ \t]+	return TOKEN_DELIM;
+ /* discard whitespace, unless we're looking for inter-word delimiters */
+{DELIM}	     { if (yyget_extra(yyscanner)->inter_word) return TOKEN_DELIM; }
 
  /* reserved words */
 "[["         return TOKEN_LDSQBRACKET;
@@ -56,6 +55,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
  /* anything that's not a metachar: return as a plain word */
 {WORD}	{
 		yylval->word = create_word_text(yyget_extra(yyscanner), yytext);
+		yyget_extra(yyscanner)->inter_word = true;
 		return TOKEN_WORD;
 	}
 
@@ -68,6 +68,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 		yytext++;
 		yylval->word = create_word_var(yyget_extra(yyscanner), yytext,
 						true);
+		yyget_extra(yyscanner)->inter_word = true;
 		return TOKEN_WORD;
 	}
 
@@ -80,6 +81,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 	}
 <sqstring>[^']+ {
 		yylval->word = create_word_text(yyget_extra(yyscanner), yytext);
+		yyget_extra(yyscanner)->inter_word = true;
 		return TOKEN_WORD;
 	}
 
@@ -92,6 +94,7 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 	}
 <dqstring>([^"\$]|\\\")+ {
 		yylval->word = create_word_text(yyget_extra(yyscanner), yytext);
+		yyget_extra(yyscanner)->inter_word = true;
 		return TOKEN_WORD;
 	}
 <dqstring>\${VARNAME} |
@@ -103,17 +106,21 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 		yytext++;
 		yylval->word = create_word_var(yyget_extra(yyscanner), yytext,
 						false);
+		yyget_extra(yyscanner)->inter_word = true;
 		return TOKEN_WORD;
 	}
 
 
 
  /* blocks */
-"{"	return '{';
-"}"	return '}';
+"{"	{ yyget_extra(yyscanner)->inter_word = false; return '{'; }
+"}"	{ yyget_extra(yyscanner)->inter_word = false; return '}'; }
 
  /* end-of-line */
-[ \t]*(;|\n)[ \t]*	return TOKEN_EOL;
+[ \t]*(;|\n)[ \t]*	{
+		yyget_extra(yyscanner)->inter_word = false;
+		return TOKEN_EOL;
+	}
 
  /* strip comments */
 #.*	;
