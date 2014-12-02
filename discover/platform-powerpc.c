@@ -583,6 +583,30 @@ static void set_exclusive_devtype(struct config *config,
 	config->boot_priorities[1].priority = -1;
 }
 
+static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev)
+{
+	switch (bootdev) {
+	case IPMI_BOOTDEV_NONE:
+		break;
+	case IPMI_BOOTDEV_DISK:
+		set_exclusive_devtype(config, DEVICE_TYPE_DISK);
+		break;
+	case IPMI_BOOTDEV_NETWORK:
+		set_exclusive_devtype(config, DEVICE_TYPE_NETWORK);
+		break;
+	case IPMI_BOOTDEV_CDROM:
+		set_exclusive_devtype(config, DEVICE_TYPE_OPTICAL);
+		break;
+	case IPMI_BOOTDEV_SETUP:
+		config->autoboot_enabled = false;
+		break;
+	case IPMI_BOOTDEV_SAFE:
+		config->autoboot_enabled = false;
+		config->safe_mode = true;
+		break;
+	}
+}
+
 static int read_bootdev_sysparam(const char *name, uint8_t *val)
 {
 	uint8_t buf[2];
@@ -613,18 +637,10 @@ static int read_bootdev_sysparam(const char *name, uint8_t *val)
 
 	pb_debug("powerpc: sysparam %s: 0x%02x\n", name, buf[0]);
 
-	switch (buf[0]) {
-	default:
+	if (!ipmi_bootdev_is_valid(buf[0]))
 		return -1;
-	case IPMI_BOOTDEV_NONE:
-	case IPMI_BOOTDEV_NETWORK:
-	case IPMI_BOOTDEV_DISK:
-	case IPMI_BOOTDEV_SAFE:
-	case IPMI_BOOTDEV_CDROM:
-	case IPMI_BOOTDEV_SETUP:
-		*val = buf[0];
-	}
 
+	*val = buf[0];
 	return 0;
 }
 
@@ -687,26 +703,7 @@ static void parse_opal_sysparams(struct config *config)
 	if (!next_valid)
 		next_bootdev = default_bootdev;
 
-	switch (next_bootdev) {
-	case IPMI_BOOTDEV_NONE:
-		return;
-	case IPMI_BOOTDEV_DISK:
-		set_exclusive_devtype(config, DEVICE_TYPE_DISK);
-		break;
-	case IPMI_BOOTDEV_NETWORK:
-		set_exclusive_devtype(config, DEVICE_TYPE_NETWORK);
-		break;
-	case IPMI_BOOTDEV_CDROM:
-		set_exclusive_devtype(config, DEVICE_TYPE_OPTICAL);
-		break;
-	case IPMI_BOOTDEV_SETUP:
-		config->autoboot_enabled = false;
-		break;
-	case IPMI_BOOTDEV_SAFE:
-		config->autoboot_enabled = false;
-		config->safe_mode = true;
-		break;
-	}
+	set_ipmi_bootdev(config, next_bootdev);
 }
 
 static int load_config(struct platform *p, struct config *config)

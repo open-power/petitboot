@@ -13,6 +13,7 @@ enum ipmi_bootdev {
 	IPMI_BOOTDEV_SETUP = 0x6,
 };
 
+bool ipmi_bootdev_is_valid(int x);
 bool ipmi_present(void);
 
 #endif /* _IPMI_H */
