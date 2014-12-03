@@ -40,6 +40,7 @@ void test_add_dir(struct parser_test *test, struct discover_device *dev,
 void test_set_event_source(struct parser_test *test);
 void test_set_event_param(struct event *event, const char *name,
 		const char *value);
+void test_set_event_device(struct event *event, const char *dev);
 
 #define test_add_file_string(test, dev, filename, str) \
 	test_add_file_data(test, dev, filename, str, sizeof(str) - 1)

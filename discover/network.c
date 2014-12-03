@@ -109,6 +109,19 @@ static struct interface *find_interface_by_name(struct network *network,
 	return NULL;
 }
 
+uint8_t *find_mac_by_name(void *ctx, struct network *network,
+		const char *name)
+{
+	struct interface *interface;
+
+	interface = find_interface_by_name(network, name);
+	if (!interface)
+		return NULL;
+
+	return talloc_memdup(ctx, &interface->hwaddr,
+			     sizeof(uint8_t) * HWADDR_SIZE);
+}
+
 static int network_init_netlink(struct network *network)
 {
 	struct sockaddr_nl addr;

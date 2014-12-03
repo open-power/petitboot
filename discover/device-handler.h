@@ -55,6 +55,7 @@ struct discover_context {
 	struct discover_device	*device;
 	struct list		boot_options;
 	struct pb_url		*conf_url;
+	struct network		*network;
 	void			*test_data;
 };
 

@@ -1,5 +1,6 @@
 
 #include "parser-test.h"
+#include "network.h"
 
 #if 0 /* PARSER_EMBEDDED_CONFIG */
 default linux
@@ -20,8 +21,7 @@ void run_test(struct parser_test *test)
 	test_set_event_source(test);
 	test_set_event_param(test->ctx->event, "pxeconffile",
 			"tftp://host/dir/conf.txt");
-	test_set_event_param(test->ctx->event, "mac",
-			"01:02:03:04:05:06");
+	test_set_event_device(test->ctx->event, "em1");
 
 	test_run_parser(test, "pxe");
 
@@ -31,5 +31,5 @@ void run_test(struct parser_test *test)
 	opt = get_boot_option(ctx, 0);
 
 	check_name(opt, "linux");
-	check_args(opt, "command line BOOTIF=01:02:03:04:05:06");
+	check_args(opt, "command line BOOTIF=01-01-02-03-04-05-06");
 }

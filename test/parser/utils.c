@@ -207,6 +207,11 @@ void test_set_event_param(struct event *event, const char *name,
         event_set_param(event, name, value);
 }
 
+void test_set_event_device(struct event *event, const char *dev)
+{
+	event->device = talloc_strdup(event, dev);
+}
+
 int parser_request_file(struct discover_context *ctx,
 		struct discover_device *dev, const char *filename,
 		char **buf, int *len)

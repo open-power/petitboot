@@ -16,6 +16,7 @@
 #include "paths.h"
 #include "event.h"
 #include "user-event.h"
+#include "network.h"
 
 static const char *pxelinux_prefix = "pxelinux.cfg/";
 
@@ -79,6 +80,16 @@ static void pxe_append_string(struct discover_boot_option *opt,
 		opt->option->boot_args = talloc_strdup(opt->option, str);
 }
 
+static char *pxe_sysappend_mac(void *ctx, uint8_t *mac)
+{
+	if (!mac)
+		return NULL;
+
+	return talloc_asprintf(ctx,
+		"BOOTIF=01-%02x-%02x-%02x-%02x-%02x-%02x",
+		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
 static void pxe_process_sysappend(struct discover_context *ctx,
 		struct discover_boot_option *opt,
 		unsigned long val)
@@ -90,9 +101,10 @@ static void pxe_process_sysappend(struct discover_context *ctx,
 		return;
 
 	if (val & 0x2) {
-		const char *mac = event_get_param(event, "mac");
-		if (mac) {
-			str = talloc_asprintf(ctx, "BOOTIF=%s", mac);
+		uint8_t *mac = find_mac_by_name(ctx, ctx->network,
+					event->device);
+		str = pxe_sysappend_mac(ctx, mac);
+		if (str) {
 			pxe_append_string(opt, str);
 			talloc_free(str);
 		}
