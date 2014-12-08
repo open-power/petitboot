@@ -16,6 +16,7 @@
 #include <process/process.h>
 
 #include "platform.h"
+#include "ipmi.h"
 
 static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
@@ -581,16 +582,6 @@ static void set_exclusive_devtype(struct config *config,
 	config->boot_priorities[1].type = DEVICE_TYPE_ANY;
 	config->boot_priorities[1].priority = -1;
 }
-
-/* bootdev options that we recognise */
-enum ipmi_bootdev {
-	IPMI_BOOTDEV_NONE = 0x00,
-	IPMI_BOOTDEV_NETWORK = 0x01,
-	IPMI_BOOTDEV_DISK = 0x2,
-	IPMI_BOOTDEV_SAFE = 0x3,
-	IPMI_BOOTDEV_CDROM = 0x5,
-	IPMI_BOOTDEV_SETUP = 0x6,
-};
 
 static int read_bootdev_sysparam(const char *name, uint8_t *val)
 {

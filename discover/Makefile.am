@@ -69,6 +69,8 @@ discover_pb_discover_CPPFLAGS = \
 discover_platform_ro_SOURCES = \
 	discover/platform.c \
 	discover/platform.h \
+	discover/ipmi.c \
+	discover/ipmi.h \
 	discover/platform-powerpc.c
 
 discover_platform_ro_LINK = \
