@@ -364,7 +364,7 @@ int statement_menuentry_execute(struct grub2_script *script,
 
 	opt->option->is_default = option_is_default(script, opt, id);
 
-	discover_context_add_boot_option(script->ctx, opt);
+	list_add_tail(&script->options, &opt->list);
 	script->n_options++;
 	script->opt = NULL;
 
@@ -463,11 +463,43 @@ void script_register_function(struct grub2_script *script,
 	list_add(&script->symtab, &entry->list);
 }
 
+static void set_fallback_default(struct grub2_script *script)
+{
+	struct discover_boot_option *opt, *first = NULL;
+	bool have_default = false;
+
+	list_for_each_entry(&script->options, opt, list) {
+		if (!first)
+			first = opt;
+		have_default = have_default || opt->option->is_default;
+	}
+
+	if (!have_default && first) {
+		const char *env = script_env_get(script, "default");
+
+		pb_log("grub: no explicit default (env default=%s), "
+				"falling back to first option (%s)\n",
+				env ?: "unset", first->option->name);
+
+		first->option->is_default = true;
+	}
+}
 
 void script_execute(struct grub2_script *script)
 {
+	struct discover_boot_option *opt, *tmp;
+
 	init_env(script);
 	statements_execute(script, script->statements);
+
+	set_fallback_default(script);
+
+	list_for_each_entry_safe(&script->options, opt, tmp, list)
+		discover_context_add_boot_option(script->ctx, opt);
+
+	/* Our option list will be invalid, as we've added all options to the
+	 * discover context */
+	list_init(&script->options);
 }
 
 struct grub2_script *create_script(struct grub2_parser *parser,
@@ -480,6 +512,7 @@ struct grub2_script *create_script(struct grub2_parser *parser,
 	script->ctx = ctx;
 
 	list_init(&script->symtab);
+	list_init(&script->options);
 	register_builtins(script);
 
 	return script;

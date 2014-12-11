@@ -98,6 +98,7 @@ struct grub2_script {
 	struct discover_boot_option	*opt;
 	const char			*filename;
 	unsigned int			n_options;
+	struct list			options;
 };
 
 struct grub2_parser {

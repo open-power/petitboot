@@ -21,6 +21,8 @@ parser_TESTS = \
 	test/parser/test-grub2-if-formats \
 	test/parser/test-grub2-default-index \
 	test/parser/test-grub2-default-multiword \
+	test/parser/test-grub2-implicit-default-unset \
+	test/parser/test-grub2-implicit-default-invalid \
 	test/parser/test-grub2-multiple-resolve \
 	test/parser/test-grub2-multiple-id \
 	test/parser/test-grub2-single-line-if \
