@@ -91,6 +91,10 @@ static void dump_config(struct config *config)
 					prio->priority);
 	}
 
+	pb_log("  IPMI boot device 0x%02x%s\n", config->ipmi_bootdev,
+			config->ipmi_bootdev_persistent ? " (persistent)" : "");
+
+
 	pb_log(" language: %s\n", config->lang ?: "");
 }
 
@@ -130,9 +134,12 @@ void config_set_defaults(struct config *config)
 	config->boot_priorities = talloc_array(config, struct boot_priority,
 						config->n_boot_priorities);
 	config->boot_priorities[0].type = DEVICE_TYPE_NETWORK;
-	config->boot_priorities[0].priority = 2;
-	config->boot_priorities[1].type = DEVICE_TYPE_DISK;
+	config->boot_priorities[0].priority = 0;
+	config->boot_priorities[1].type = DEVICE_TYPE_ANY;
 	config->boot_priorities[1].priority = 1;
+
+	config->ipmi_bootdev = 0;
+	config->ipmi_bootdev_persistent = false;
 
 	config->debug = config_debug_on_cmdline();
 }
@@ -175,8 +182,10 @@ const struct platform *platform_get(void)
 
 void platform_finalise_config(void)
 {
-	if (platform && platform->finalise_config)
-		platform->finalise_config(platform);
+	const struct config *config = config_get();
+
+	if (platform && config && platform->finalise_config)
+		platform->finalise_config(platform, config);
 }
 
 int platform_get_sysinfo(struct system_info *info)

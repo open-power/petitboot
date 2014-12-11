@@ -30,7 +30,12 @@ struct param {
 };
 
 struct platform_powerpc {
-	struct list		params;
+	struct list	params;
+	int		(*get_ipmi_bootdev)(
+				struct platform_powerpc *platform,
+				uint8_t *bootdev, bool *persistent);
+	int		(*clear_ipmi_bootdev)(
+				struct platform_powerpc *platform);
 };
 
 static const char *known_params[] = {
@@ -570,32 +575,17 @@ static int update_config(struct platform_powerpc *platform,
 	return write_nvram(platform);
 }
 
-static void set_exclusive_devtype(struct config *config,
-		enum device_type devtype)
+static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
+		bool persistent)
 {
-	config->n_boot_priorities = 2;
-	config->boot_priorities = talloc_realloc(config,
-			config->boot_priorities, struct boot_priority,
-			config->n_boot_priorities);
-	config->boot_priorities[0].type = devtype;
-	config->boot_priorities[0].priority = 0;
-	config->boot_priorities[1].type = DEVICE_TYPE_ANY;
-	config->boot_priorities[1].priority = -1;
-}
+	config->ipmi_bootdev = bootdev;
+	config->ipmi_bootdev_persistent = persistent;
 
-static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev)
-{
 	switch (bootdev) {
 	case IPMI_BOOTDEV_NONE:
-		break;
 	case IPMI_BOOTDEV_DISK:
-		set_exclusive_devtype(config, DEVICE_TYPE_DISK);
-		break;
 	case IPMI_BOOTDEV_NETWORK:
-		set_exclusive_devtype(config, DEVICE_TYPE_NETWORK);
-		break;
 	case IPMI_BOOTDEV_CDROM:
-		set_exclusive_devtype(config, DEVICE_TYPE_OPTICAL);
 		break;
 	case IPMI_BOOTDEV_SETUP:
 		config->autoboot_enabled = false;
@@ -684,7 +674,17 @@ static int write_bootdev_sysparam(const char *name, uint8_t val)
 	return rc;
 }
 
-static void parse_opal_sysparams(struct config *config)
+static int clear_ipmi_bootdev_sysparams(
+		struct platform_powerpc *platform __attribute__((unused)))
+{
+	/* invalidate next-boot-device setting */
+	write_bootdev_sysparam("next-boot-device", 0xff);
+	return 0;
+}
+
+static int get_ipmi_bootdev_sysparams(
+		struct platform_powerpc *platform __attribute__((unused)),
+		uint8_t *bootdev, bool *persistent)
 {
 	uint8_t next_bootdev, default_bootdev;
 	bool next_valid, default_valid;
@@ -698,12 +698,11 @@ static void parse_opal_sysparams(struct config *config)
 
 	/* nothing valid? no need to change the config */
 	if (!next_valid && !default_valid)
-		return;
+		return -1;
 
-	if (!next_valid)
-		next_bootdev = default_bootdev;
-
-	set_ipmi_bootdev(config, next_bootdev);
+	*persistent = !next_valid;
+	*bootdev = next_valid ? next_bootdev : default_bootdev;
+	return 0;
 }
 
 static int load_config(struct platform *p, struct config *config)
@@ -717,7 +716,15 @@ static int load_config(struct platform *p, struct config *config)
 
 	populate_config(platform, config);
 
-	parse_opal_sysparams(config);
+	if (platform->get_ipmi_bootdev) {
+		bool bootdev_persistent;
+		uint8_t bootdev;
+		rc = platform->get_ipmi_bootdev(platform, &bootdev,
+				&bootdev_persistent);
+		if (!rc && ipmi_bootdev_is_valid(bootdev)) {
+			set_ipmi_bootdev(config, bootdev, bootdev_persistent);
+		}
+	}
 
 	return 0;
 }
@@ -737,10 +744,12 @@ static int save_config(struct platform *p, struct config *config)
 	return rc;
 }
 
-static void finalise_config(struct platform *platform __attribute__((unused)))
+static void finalise_config(struct platform *p, const struct config *config)
 {
-	/* invalidate next-boot-device setting */
-	write_bootdev_sysparam("next-boot-device", 0xff);
+	struct platform_powerpc *platform = to_platform_powerpc(p);
+
+	if (config->ipmi_bootdev_persistent && platform->clear_ipmi_bootdev)
+		platform->clear_ipmi_bootdev(platform);
 }
 
 static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
@@ -782,6 +791,15 @@ static bool probe(struct platform *p, void *ctx)
 	list_init(&platform->params);
 
 	p->platform_data = platform;
+
+	if (!stat(sysparams_dir, &statbuf)) {
+		pb_debug("platform: using sysparams for IPMI paramters\n");
+		platform->get_ipmi_bootdev = get_ipmi_bootdev_sysparams;
+		platform->clear_ipmi_bootdev = clear_ipmi_bootdev_sysparams;
+
+	} else {
+		pb_log("platform: no IPMI parameter support\n");
+	}
 	return true;
 }
 

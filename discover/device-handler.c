@@ -36,6 +36,15 @@
 #include "boot.h"
 #include "udev.h"
 #include "network.h"
+#include "ipmi.h"
+
+enum default_priority {
+	DEFAULT_PRIORITY_REMOTE		= 1,
+	DEFAULT_PRIORITY_LOCAL_UUID	= 2,
+	DEFAULT_PRIORITY_LOCAL_FIRST	= 3,
+	DEFAULT_PRIORITY_LOCAL_LAST	= 0xfe,
+	DEFAULT_PRIORITY_DISABLED	= 0xff,
+};
 
 struct device_handler {
 	struct discover_server	*server;
@@ -54,6 +63,8 @@ struct device_handler {
 	unsigned int		sec_to_boot;
 
 	struct discover_boot_option *default_boot_option;
+	int			default_boot_option_priority;
+
 	struct list		unresolved_boot_options;
 
 	struct boot_task	*pending_boot;
@@ -429,75 +440,118 @@ static int default_timeout(void *arg)
 	return 0;
 }
 
-static bool priority_match(struct boot_priority *prio,
+struct {
+	enum ipmi_bootdev	ipmi_type;
+	enum device_type	device_type;
+} device_type_map[] = {
+	{ IPMI_BOOTDEV_NETWORK, DEVICE_TYPE_NETWORK },
+	{ IPMI_BOOTDEV_DISK, DEVICE_TYPE_DISK },
+	{ IPMI_BOOTDEV_CDROM, DEVICE_TYPE_OPTICAL },
+};
+
+static bool ipmi_device_type_matches(enum ipmi_bootdev ipmi_type,
+		enum device_type device_type)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(device_type_map); i++) {
+		if (device_type_map[i].device_type == device_type)
+			return device_type_map[i].ipmi_type == ipmi_type;
+	}
+
+	return false;
+}
+
+static bool priority_matches(struct boot_priority *prio,
 		struct discover_boot_option *opt)
 {
 	return prio->type == opt->device->device->type ||
 		prio->type == DEVICE_TYPE_ANY;
 }
 
-static int default_option_priority(struct discover_boot_option *opt)
+/*
+ * We have different priorities to resolve conflicts between boot options that
+ * report to be the default for their device. This function assigns a priority
+ * for these options.
+ */
+static enum default_priority default_option_priority(
+		struct discover_boot_option *opt)
 {
 	const struct config *config;
-	struct boot_priority *prio;
+	const char *dev_str;
 	unsigned int i;
 
 	config = config_get();
 
-	for (i = 0; i < config->n_boot_priorities; i++) {
-		prio = &config->boot_priorities[i];
-		if (priority_match(prio, opt))
-			return prio->priority;
+	/* We give highest priority to IPMI-configured boot options. If
+	 * we have an IPMI bootdev configuration set, then we don't allow
+	 * any other defaults */
+	if (config->ipmi_bootdev) {
+		bool ipmi_match = ipmi_device_type_matches(config->ipmi_bootdev,
+				opt->device->device->type);
+		if (ipmi_match)
+			return DEFAULT_PRIORITY_REMOTE;
+
+		pb_debug("handler: disabled default priority due to "
+				"non-matching IPMI type %x\n",
+				config->ipmi_bootdev);
+		return DEFAULT_PRIORITY_DISABLED;
 	}
 
-	return 0;
-}
+	/* Next, allow matching by device UUID. If we have one set but it
+	 * doesn't match, disallow the default entirely */
+	dev_str = config->boot_device;
+	if (dev_str && dev_str[0]) {
+		if (!strcmp(opt->device->uuid, dev_str))
+			return DEFAULT_PRIORITY_LOCAL_UUID;
 
-static bool device_allows_default(struct discover_device *dev)
-{
-	const char *dev_str;
+		pb_debug("handler: disabled default priority due to "
+				"non-matching UUID\n");
+		return DEFAULT_PRIORITY_DISABLED;
+	}
 
-	dev_str = config_get()->boot_device;
+	/* Lastly, use the local priorities */
+	for (i = 0; i < config->n_boot_priorities; i++) {
+		struct boot_priority *prio = &config->boot_priorities[i];
+		if (priority_matches(prio, opt))
+			return DEFAULT_PRIORITY_LOCAL_FIRST + prio->priority;
+	}
 
-	if (!dev_str || !strlen(dev_str))
-		return true;
-
-	/* default devices are specified by UUIDs at present */
-	if (strcmp(dev->uuid, dev_str))
-		return false;
-
-	return true;
+	return DEFAULT_PRIORITY_DISABLED;
 }
 
 static void set_default(struct device_handler *handler,
 		struct discover_boot_option *opt)
 {
-	int new_prio;
+	enum default_priority cur_prio, new_prio;
 
 	if (!handler->autoboot_enabled)
 		return;
 
-	/* do we allow default-booting from this device? */
-	if (!device_allows_default(opt->device))
-		return;
+	pb_debug("handler: new default option: %s\n", opt->option->id);
 
 	new_prio = default_option_priority(opt);
 
-	/* A negative priority indicates that we don't want to boot this device
-	 * by default */
-	if (new_prio < 0)
+	/* Anything outside our range prevents a default boot */
+	if (new_prio >= DEFAULT_PRIORITY_DISABLED)
 		return;
+
+	pb_debug("handler: calculated priority %d\n", new_prio);
 
 	/* Resolve any conflicts: if we have a new default option, it only
 	 * replaces the current if it has a higher priority. */
 	if (handler->default_boot_option) {
-		int cur_prio;
 
-		cur_prio = default_option_priority(
-					handler->default_boot_option);
+		cur_prio = handler->default_boot_option_priority;
 
-		if (new_prio > cur_prio) {
+		if (new_prio < cur_prio) {
+			pb_log("handler: new prio %d beats "
+					"old prio %d for %s\n",
+					new_prio, cur_prio,
+					handler->default_boot_option
+						->option->id);
 			handler->default_boot_option = opt;
+			handler->default_boot_option_priority = new_prio;
 			/* extend the timeout a little, so the user sees some
 			 * indication of the change */
 			handler->sec_to_boot += 2;
@@ -508,8 +562,9 @@ static void set_default(struct device_handler *handler,
 
 	handler->sec_to_boot = config_get()->autoboot_timeout_sec;
 	handler->default_boot_option = opt;
+	handler->default_boot_option_priority = new_prio;
 
-	pb_log("Boot option %s set as default, timeout %u sec.\n",
+	pb_log("handler: boot option %s set as default, timeout %u sec.\n",
 	       opt->option->id, handler->sec_to_boot);
 
 	default_timeout(handler);
