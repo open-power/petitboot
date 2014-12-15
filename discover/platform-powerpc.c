@@ -21,6 +21,7 @@
 static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
 static const char *devtree_dir = "/proc/device-tree/";
+static const int ipmi_timeout = 500; /* milliseconds */
 
 struct param {
 	char			*name;
@@ -31,6 +32,8 @@ struct param {
 
 struct platform_powerpc {
 	struct list	params;
+	struct ipmi	*ipmi;
+	bool		ipmi_bootdev_persistent;
 	int		(*get_ipmi_bootdev)(
 				struct platform_powerpc *platform,
 				uint8_t *bootdev, bool *persistent);
@@ -705,6 +708,91 @@ static int get_ipmi_bootdev_sysparams(
 	return 0;
 }
 
+static int clear_ipmi_bootdev_ipmi(struct platform_powerpc *platform)
+{
+	uint16_t resp_len;
+	uint8_t resp[1];
+	uint8_t req[] = {
+		0x05, /* parameter selector: boot flags */
+		0x80, /* data 1: valid */
+		0x00, /* data 2: bootdev: no override */
+		0x00, /* data 3: system defaults */
+		0x00, /* data 4: no request for shared mode, mux defaults */
+		0x00, /* data 5: no instance request */
+	};
+
+	resp_len = sizeof(resp);
+
+	ipmi_transaction(platform->ipmi, IPMI_NETFN_CHASSIS,
+			IPMI_CMD_CHASSIS_SET_SYSTEM_BOOT_OPTIONS,
+			req, sizeof(req),
+			resp, &resp_len,
+			ipmi_timeout);
+	return 0;
+}
+
+static int get_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
+		uint8_t *bootdev, bool *persistent)
+{
+	uint16_t resp_len;
+	uint8_t resp[8];
+	int rc;
+	uint8_t req[] = {
+		0x05, /* parameter selector: boot flags */
+		0x00, /* no set selector */
+		0x00, /* no block selector */
+	};
+
+	resp_len = sizeof(resp);
+	rc = ipmi_transaction(platform->ipmi, IPMI_NETFN_CHASSIS,
+			IPMI_CMD_CHASSIS_GET_SYSTEM_BOOT_OPTIONS,
+			req, sizeof(req),
+			resp, &resp_len,
+			ipmi_timeout);
+	if (rc) {
+		pb_log("platform: error reading IPMI boot options\n");
+		return -1;
+	}
+
+	if (resp_len != sizeof(resp)) {
+		pb_log("platform: unexpected length (%d) in "
+				"boot options response\n", resp_len);
+		return -1;
+	}
+
+	if (resp[0] != 0) {
+		pb_log("platform: non-zero completion code %d from IPMI req\n",
+				resp[0]);
+		return -1;
+	}
+
+	/* check for correct parameter version */
+	if ((resp[1] & 0xf) != 0x1) {
+		pb_log("platform: unexpected version (0x%x) in "
+				"boot options response\n", resp[0]);
+		return -1;
+	}
+
+	/* check for valid paramters */
+	if (resp[2] & 0x80) {
+		pb_debug("platform: boot options are invalid/locked\n");
+		return -1;
+	}
+
+	*persistent = false;
+
+	/* check for valid flags */
+	if (!(resp[3] & 0x80)) {
+		pb_debug("platform: boot flags are invalid, ignoring\n");
+		return 0;
+	}
+
+	*persistent = resp[3] & 0x40;
+	*bootdev = (resp[4] >> 2) & 0x0f;
+	return 0;
+}
+
+
 static int load_config(struct platform *p, struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
@@ -792,7 +880,13 @@ static bool probe(struct platform *p, void *ctx)
 
 	p->platform_data = platform;
 
-	if (!stat(sysparams_dir, &statbuf)) {
+	if (ipmi_present()) {
+		pb_debug("platform: using direct IPMI for IPMI paramters\n");
+		platform->ipmi = ipmi_open(platform);
+		platform->get_ipmi_bootdev = get_ipmi_bootdev_ipmi;
+		platform->clear_ipmi_bootdev = clear_ipmi_bootdev_ipmi;
+
+	} else if (!stat(sysparams_dir, &statbuf)) {
 		pb_debug("platform: using sysparams for IPMI paramters\n");
 		platform->get_ipmi_bootdev = get_ipmi_bootdev_sysparams;
 		platform->clear_ipmi_bootdev = clear_ipmi_bootdev_sysparams;
@@ -800,6 +894,7 @@ static bool probe(struct platform *p, void *ctx)
 	} else {
 		pb_log("platform: no IPMI parameter support\n");
 	}
+
 	return true;
 }
 
