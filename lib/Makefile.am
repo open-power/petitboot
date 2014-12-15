@@ -38,6 +38,7 @@ lib_libpbcore_la_SOURCES = \
 	lib/pb-config/pb-config.h \
 	lib/process/process.c \
 	lib/process/process.h \
+	lib/types/types.c \
 	lib/types/types.h \
 	lib/talloc/talloc.c \
 	lib/talloc/talloc.h \

@@ -13,6 +13,10 @@ enum device_type {
 	DEVICE_TYPE_UNKNOWN,
 };
 
+const char *device_type_display_name(enum device_type type);
+const char *device_type_name(enum device_type type);
+enum device_type find_device_type(const char *str);
+
 struct device {
 	char		*id;
 	enum device_type type;
@@ -116,6 +120,17 @@ struct boot_priority {
 	 */
 	int			priority;
 	enum device_type	type;
+};
+
+struct autoboot_option {
+	enum {
+		BOOT_DEVICE_TYPE,
+		BOOT_DEVICE_UUID
+	} boot_type;
+	union {
+		enum device_type	type;
+		char			*uuid;
+	};
 };
 
 struct config {

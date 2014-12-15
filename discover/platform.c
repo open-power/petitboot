@@ -17,23 +17,6 @@ static struct config	*config;
 
 static const char *kernel_cmdline_debug = "petitboot.debug";
 
-static const char *device_type_name(enum device_type type)
-{
-	switch (type) {
-	case DEVICE_TYPE_DISK:
-		return "disk";
-	case DEVICE_TYPE_OPTICAL:
-		return "optical";
-	case DEVICE_TYPE_NETWORK:
-		return "network";
-	case DEVICE_TYPE_ANY:
-		return "any";
-	case DEVICE_TYPE_UNKNOWN:
-	default:
-		return "unknown";
-	}
-}
-
 static void dump_config(struct config *config)
 {
 	unsigned int i;
