@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	29
+#define N_FIELDS	32
 
 extern struct help_text config_help_text;
 
@@ -65,6 +65,7 @@ struct config_screen {
 	enum net_conf_type	net_conf_type;
 
 	bool			autoboot_enabled;
+	bool			ipmi_override;
 
 	struct {
 		struct nc_widget_label		*boot_order_l;
@@ -76,6 +77,10 @@ struct config_screen {
 		struct nc_widget_textbox	*timeout_f;
 		struct nc_widget_label		*timeout_l;
 		struct nc_widget_label		*timeout_help_l;
+
+		struct nc_widget_label		*ipmi_type_l;
+		struct nc_widget_label		*ipmi_clear_l;
+		struct nc_widget_checkbox	*ipmi_clear_cb;
 
 		struct nc_widget_label		*network_l;
 		struct nc_widget_select		*network_f;
@@ -244,6 +249,11 @@ static int screen_process_form(struct config_screen *screen)
 		if (!errno && end != str)
 			config->autoboot_timeout_sec = x;
 	}
+
+	if (screen->ipmi_override)
+		if (widget_checkbox_get_value(screen->widgets.ipmi_clear_cb))
+			config->ipmi_bootdev = IPMI_BOOTDEV_INVALID;
+
 
 	net_conf_type = widget_select_get_value(screen->widgets.network_f);
 
@@ -426,6 +436,23 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		widget_move(wh, y, screen->field_x + widget_width(wf) + 1);
 		y += 2;
 	}
+
+	if (screen->ipmi_override) {
+		wl = widget_label_base(screen->widgets.ipmi_type_l);
+		widget_set_visible(wl, true);
+		widget_move(wl, y, screen->label_x);
+		y += 1;
+
+		wl = widget_label_base(screen->widgets.ipmi_clear_l);
+		wf = widget_checkbox_base(screen->widgets.ipmi_clear_cb);
+		widget_set_visible(wl, true);
+		widget_set_visible(wf, true);
+		widget_move(wl, y, screen->label_x);
+		widget_move(wf, y, screen->field_x);
+		y += 1;
+	}
+
+	y += 2;
 
 	y += layout_pair(screen, y, screen->widgets.network_l,
 			widget_select_base(screen->widgets.network_f));
@@ -762,6 +789,21 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	widget_textbox_set_fixed_size(screen->widgets.timeout_f);
 	widget_textbox_set_validator_integer(screen->widgets.timeout_f, 0, 999);
 
+	if (config->ipmi_bootdev) {
+		char *label = talloc_asprintf(screen,
+				_("%s IPMI boot option: %s"),
+				config->ipmi_bootdev_persistent ?
+				"Persistent" : "Temporary",
+				ipmi_bootdev_display_name(config->ipmi_bootdev));
+		screen->widgets.ipmi_type_l = widget_new_label(set, 0, 0,
+							label);
+		screen->widgets.ipmi_clear_l = widget_new_label(set, 0, 0,
+							_("Clear option:"));
+		screen->widgets.ipmi_clear_cb = widget_new_checkbox(set, 0, 0,
+							false);
+		screen->ipmi_override = true;
+	}
+
 	screen->widgets.network_l = widget_new_label(set, 0, 0, _("Network:"));
 	screen->widgets.network_f = widget_new_select(set, 0, 0, 50);
 
@@ -972,6 +1014,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 	screen->label_x = 2;
 	screen->field_x = 17;
 
+	screen->ipmi_override = false;
 	screen->show_subset = false;
 
 	screen->scr.frame.ltitle = talloc_strdup(screen,
