@@ -63,6 +63,7 @@ struct cui {
 	struct boot_editor *boot_editor;
 	struct lang_screen *lang_screen;
 	struct help_screen *help_screen;
+	struct subset_screen *subset_screen;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
@@ -81,6 +82,8 @@ void cui_show_config(struct cui *cui);
 void cui_show_lang(struct cui *cui);
 void cui_show_help(struct cui *cui, const char *title,
 		const struct help_text *text);
+void cui_show_subset(struct cui *cui, const char *title,
+		void *arg);
 void cui_show_add_url(struct cui *cui);
 int cui_send_config(struct cui *cui, struct config *config);
 int cui_send_url(struct cui *cui, char *url);

@@ -48,6 +48,7 @@ enum pb_nc_sig {
 	pb_config_screen_sig	= 666,
 	pb_lang_screen_sig	= 777,
 	pb_add_url_screen_sig	= 888,
+	pb_subset_screen_sig	= 101,
 	pb_removed_sig		= -999,
 };
 

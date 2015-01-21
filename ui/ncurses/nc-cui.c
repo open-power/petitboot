@@ -41,6 +41,7 @@
 #include "nc-sysinfo.h"
 #include "nc-lang.h"
 #include "nc-helpscreen.h"
+#include "nc-subset.h"
 
 extern const struct help_text main_menu_help_text;
 
@@ -326,6 +327,29 @@ void cui_show_help(struct cui *cui, const char *title,
 
 	if (cui->help_screen)
 		cui_set_current(cui, help_screen_scr(cui->help_screen));
+}
+
+static void cui_subset_exit(struct cui *cui)
+{
+	cui_set_current(cui, subset_screen_return_scr(cui->subset_screen));
+	talloc_free(cui->subset_screen);
+	cui->subset_screen = NULL;
+}
+
+void cui_show_subset(struct cui *cui, const char *title,
+		     void *arg)
+{
+	if (!cui->current)
+		return;
+
+	if (cui->subset_screen)
+		return;
+
+	cui->subset_screen = subset_screen_init(cui, cui->current,
+			title, arg, cui_subset_exit);
+
+	if (cui->subset_screen)
+		cui_set_current(cui, subset_screen_scr(cui->subset_screen));
 }
 
 /**
