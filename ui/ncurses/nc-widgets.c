@@ -1066,19 +1066,19 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 		tab = true;
 		/* fall through */
 	case KEY_UP:
-		req = REQ_PREV_FIELD;
+		req = REQ_SPREV_FIELD;
 		break;
 	case '\t':
 		tab = true;
 		/* fall through */
 	case KEY_DOWN:
-		req = REQ_NEXT_FIELD;
+		req = REQ_SNEXT_FIELD;
 		break;
 	case KEY_PPAGE:
-		req = REQ_FIRST_FIELD;
+		req = REQ_SFIRST_FIELD;
 		break;
 	case KEY_NPAGE:
-		req = REQ_LAST_FIELD;
+		req = REQ_SLAST_FIELD;
 		break;
 	}
 
