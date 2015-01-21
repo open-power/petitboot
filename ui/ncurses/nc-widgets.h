@@ -29,6 +29,8 @@ struct nc_widget_checkbox *widget_new_checkbox(struct nc_widgetset *set,
 		int y, int x, bool checked);
 struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
 		int y, int x, int len, char *str);
+struct nc_widget_subset *widget_new_subset(struct nc_widgetset *set,
+		int y, int x, int len, void *screen_cb);
 struct nc_widget_select *widget_new_select(struct nc_widgetset *set,
 		int y, int x, int len);
 struct nc_widget_button *widget_new_button(struct nc_widgetset *set,
@@ -41,6 +43,12 @@ void widget_textbox_set_validator_integer(struct nc_widget_textbox *textbox,
 void widget_textbox_set_validator_ipv4(struct nc_widget_textbox *textbox);
 void widget_textbox_set_validator_ipv4_multi(struct nc_widget_textbox *textbox);
 
+void widget_subset_add_option(struct nc_widget_subset *subset, const char *text);
+void widget_subset_make_active(struct nc_widget_subset *subset, int idx);
+
+void widget_subset_on_change(struct nc_widget_subset *subset,
+		void (*on_change)(void *arg, int value), void *arg);
+
 void widget_select_add_option(struct nc_widget_select *select, int value,
 		const char *text, bool selected);
 
@@ -49,6 +57,16 @@ void widget_select_on_change(struct nc_widget_select *select,
 
 char *widget_textbox_get_value(struct nc_widget_textbox *textbox);
 bool widget_checkbox_get_value(struct nc_widget_checkbox *checkbox);
+int widget_subset_get_order(void *ctx, unsigned int **order,
+		struct nc_widget_subset *subset);
+void widget_subset_show_inactive(struct nc_widget_subset *subset,
+		struct nc_widget_select *select);
+int widget_subset_n_inactive(struct nc_widget_subset *subset);
+int widget_subset_height(struct nc_widget_subset *subset);
+void widget_subset_drop_options(struct nc_widget_subset *subset);
+void widget_subset_clear_active(struct nc_widget_subset *subset);
+void widget_subset_callback(void *arg,
+		struct nc_widget_subset *subset, int idx);
 int widget_select_get_value(struct nc_widget_select *select);
 int widget_select_height(struct nc_widget_select *select);
 void widget_select_drop_options(struct nc_widget_select *select);
@@ -56,6 +74,7 @@ void widget_select_drop_options(struct nc_widget_select *select);
 /* generic widget API */
 struct nc_widget *widget_textbox_base(struct nc_widget_textbox *textbox);
 struct nc_widget *widget_checkbox_base(struct nc_widget_checkbox *checkbox);
+struct nc_widget *widget_subset_base(struct nc_widget_subset *subset);
 struct nc_widget *widget_select_base(struct nc_widget_select *select);
 struct nc_widget *widget_label_base(struct nc_widget_label *label);
 struct nc_widget *widget_button_base(struct nc_widget_button *button);
