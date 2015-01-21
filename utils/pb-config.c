@@ -61,7 +61,16 @@ static void print_one_config(void *ctx, const char *req, const char *name,
 
 static void print_config(void *ctx, struct config *config, const char *var)
 {
-	print_one_config(ctx, var, "bootdev", "%s", config->boot_device);
+	unsigned int i;
+
+	for (i = 0; i < config->n_autoboot_opts; i++) {
+		if (config->autoboot_opts[i].boot_type == BOOT_DEVICE_TYPE)
+			print_one_config(ctx, var, "bootdev", "%s",
+			 device_type_name(config->autoboot_opts[i].type));
+		else
+			print_one_config(ctx, var, "bootdev", "%s",
+					 config->autoboot_opts[i].uuid);
+	}
 	print_one_config(ctx, var, "autoboot", "%s",
 			config->autoboot_enabled ? "enabled" : "disabled");
 	print_one_config(ctx, var, "timeout", "%d",

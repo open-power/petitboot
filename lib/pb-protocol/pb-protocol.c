@@ -280,9 +280,13 @@ int pb_protocol_config_len(const struct config *config)
 		len += 4 + optional_strlen(config->network.dns_servers[i]);
 
 	len += 4;
-	len += config->n_boot_priorities * 8;
-
-	len += 4 + optional_strlen(config->boot_device);
+	for (i = 0; i < config->n_autoboot_opts; i++) {
+		if (config->autoboot_opts[i].boot_type == BOOT_DEVICE_TYPE)
+			len += 4 + 4;
+		else
+			len += 4 + 4 +
+				optional_strlen(config->autoboot_opts[i].uuid);
+	}
 
 	len += 4 + 4; /* ipmi_bootdev, ipmi_bootdev_persistent */
 
@@ -477,18 +481,21 @@ int pb_protocol_serialise_config(const struct config *config,
 				config->network.dns_servers[i]);
 	}
 
-	*(uint32_t *)pos = __cpu_to_be32(config->n_boot_priorities);
+	*(uint32_t *)pos = __cpu_to_be32(config->n_autoboot_opts);
 	pos += 4;
-	for (i = 0; i < config->n_boot_priorities; i++) {
+	for (i = 0; i < config->n_autoboot_opts; i++) {
 		*(uint32_t *)pos =
-			__cpu_to_be32(config->boot_priorities[i].type);
+			__cpu_to_be32(config->autoboot_opts[i].boot_type);
 		pos += 4;
-		*(uint32_t *)pos =
-			__cpu_to_be32(config->boot_priorities[i].priority);
-		pos += 4;
+		if (config->autoboot_opts[i].boot_type == BOOT_DEVICE_TYPE) {
+			*(uint32_t *)pos =
+				__cpu_to_be32(config->autoboot_opts[i].type);
+			pos += 4;
+		} else {
+			pos += pb_protocol_serialise_string(pos,
+						config->autoboot_opts[i].uuid);
+		}
 	}
-
-	pos += pb_protocol_serialise_string(pos, config->boot_device);
 
 	*(uint32_t *)pos = __cpu_to_be32(config->ipmi_bootdev);
 	pos += 4;
@@ -925,23 +932,25 @@ int pb_protocol_deserialise_config(struct config *config,
 		config->network.dns_servers[i] = str;
 	}
 
-	if (read_u32(&pos, &len, &config->n_boot_priorities))
+	if (read_u32(&pos, &len, &config->n_autoboot_opts))
 		goto out;
-	config->boot_priorities = talloc_array(config, struct boot_priority,
-			config->n_boot_priorities);
+	config->autoboot_opts = talloc_array(config, struct autoboot_option,
+			config->n_autoboot_opts);
 
-	for (i = 0; i < config->n_boot_priorities; i++) {
+	for (i = 0; i < config->n_autoboot_opts; i++) {
 		if (read_u32(&pos, &len, &tmp))
 			goto out;
-		config->boot_priorities[i].priority = (int)tmp;
-		if (read_u32(&pos, &len, &tmp))
-			goto out;
-		config->boot_priorities[i].type = tmp;
+		config->autoboot_opts[i].boot_type = (int)tmp;
+		if (config->autoboot_opts[i].boot_type == BOOT_DEVICE_TYPE) {
+			if (read_u32(&pos, &len, &tmp))
+				goto out;
+			config->autoboot_opts[i].type = tmp;
+		} else {
+			if (read_string(config, &pos, &len, &str))
+				goto out;
+			config->autoboot_opts[i].uuid = str;
+		}
 	}
-
-	if (read_string(config, &pos, &len, &str))
-		goto out;
-	config->boot_device = str;
 
 	if (read_u32(&pos, &len, &config->ipmi_bootdev))
 		goto out;

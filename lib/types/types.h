@@ -113,15 +113,6 @@ struct network_config {
 	unsigned int		n_dns_servers;
 };
 
-struct boot_priority {
-	/* Boot options with higher priority values will take precedence over
-	 * lower values. Negative priorities signify "don't boot this by
-	 * default".
-	 */
-	int			priority;
-	enum device_type	type;
-};
-
 struct autoboot_option {
 	enum {
 		BOOT_DEVICE_TYPE,
@@ -138,10 +129,8 @@ struct config {
 	unsigned int		autoboot_timeout_sec;
 	struct network_config	network;
 
-	struct boot_priority	*boot_priorities;
-	unsigned int		n_boot_priorities;
-
-	char			*boot_device;
+	struct autoboot_option	*autoboot_opts;
+	unsigned int		n_autoboot_opts;
 
 	unsigned int		ipmi_bootdev;
 	bool			ipmi_bootdev_persistent;

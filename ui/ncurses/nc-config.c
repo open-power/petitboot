@@ -33,15 +33,9 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	26
+#define N_FIELDS	29
 
 extern struct help_text config_help_text;
-
-enum autoboot_type {
-	AUTOBOOT_ANY,
-	AUTOBOOT_ONE,
-	AUTOBOOT_DISABLED,
-};
 
 enum net_conf_type {
 	NET_CONF_TYPE_DHCP_ALL,
@@ -57,7 +51,9 @@ struct config_screen {
 
 	bool			exit;
 	bool			show_help;
+	bool			show_subset;
 	bool			need_redraw;
+
 	void			(*on_exit)(struct cui *);
 
 	int			scroll_y;
@@ -67,12 +63,16 @@ struct config_screen {
 	int			network_config_y;
 
 	enum net_conf_type	net_conf_type;
-	enum autoboot_type	autoboot_type;
+
+	bool			autoboot_enabled;
 
 	struct {
-		struct nc_widget_select		*autoboot_f;
-		struct nc_widget_label		*autoboot_l;
-		struct nc_widget_select		*boot_device_f;
+		struct nc_widget_label		*boot_order_l;
+		struct nc_widget_subset		*boot_order_f;
+		struct nc_widget_label		*boot_empty_l;
+		struct nc_widget_button		*boot_add_b;
+		struct nc_widget_button		*boot_none_b;
+		struct nc_widget_button		*boot_any_b;
 		struct nc_widget_textbox	*timeout_f;
 		struct nc_widget_label		*timeout_l;
 		struct nc_widget_label		*timeout_help_l;
@@ -151,7 +151,7 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 		cui_show_help(screen->cui, _("System Configuration"),
 				&config_help_text);
 
-	} else if (handled) {
+	} else if (handled && !screen->show_subset) {
 		pad_refresh(screen);
 	}
 }
@@ -165,6 +165,7 @@ static void config_screen_resize(struct nc_scr *scr)
 static int config_screen_post(struct nc_scr *scr)
 {
 	struct config_screen *screen = config_screen_from_scr(scr);
+	screen->show_subset = false;
 	widgetset_post(screen->widgetset);
 	nc_scr_frame_draw(scr);
 	if (screen->need_redraw) {
@@ -193,39 +194,47 @@ static int screen_process_form(struct config_screen *screen)
 	const struct system_info *sysinfo = screen->cui->sysinfo;
 	enum net_conf_type net_conf_type;
 	struct interface_config *iface;
-	char *str, *end, *uuid;
+	char *str, *end;
 	struct config *config;
-	int rc, idx;
+	int i, n_boot_opts, rc, idx;
+	unsigned int *order;
+	char mac[20];
 
 	config = config_copy(screen, screen->cui->config);
 
-	screen->autoboot_type =
-		widget_select_get_value(screen->widgets.autoboot_f);
+	talloc_free(config->autoboot_opts);
+	config->n_autoboot_opts = 0;
 
-	config->autoboot_enabled = screen->autoboot_type != AUTOBOOT_DISABLED;
+	n_boot_opts = widget_subset_get_order(config, &order,
+					      screen->widgets.boot_order_f);
 
-	uuid = NULL;
-	if (screen->autoboot_type == AUTOBOOT_ONE) {
-		char mac[20];
+	config->autoboot_enabled = n_boot_opts > 0;
 
-		/* if idx is -1 here, we have an unknown UUID selected.
-		 * Otherwise, it's a blockdev index (idx <= n_blockdevs) or an
-		 * interface index.
-		 */
-		idx = widget_select_get_value(screen->widgets.boot_device_f);
-		if (idx >= (int)sysinfo->n_blockdevs) {
-			struct interface_info *info = sysinfo->
-				interfaces[idx - sysinfo->n_blockdevs];
-			mac_str(info->hwaddr, info->hwaddr_size,
-					mac, sizeof(mac));
-			uuid = mac;
-		} else if (idx != -1) {
-			uuid = sysinfo->blockdevs[idx]->uuid;
+	config->n_autoboot_opts = n_boot_opts;
+	config->autoboot_opts = talloc_array(config, struct autoboot_option,
+					     n_boot_opts);
+
+	for (i = 0; i < n_boot_opts; i++) {
+		if (order[i] < sysinfo->n_blockdevs) {
+			/* disk uuid */
+			config->autoboot_opts[i].boot_type = BOOT_DEVICE_UUID;
+			config->autoboot_opts[i].uuid = talloc_strdup(config,
+							sysinfo->blockdevs[order[i]]->uuid);
+		} else if(order[i] < (sysinfo->n_blockdevs + sysinfo->n_interfaces)) {
+			/* net uuid */
+			order[i] -= sysinfo->n_blockdevs;
+			config->autoboot_opts[i].boot_type = BOOT_DEVICE_UUID;
+			mac_str(sysinfo->interfaces[order[i]]->hwaddr,
+				sysinfo->interfaces[order[i]]->hwaddr_size,
+				mac, sizeof(mac));
+			config->autoboot_opts[i].uuid = talloc_strdup(config, mac);
+		} else {
+			/* device type */
+			order[i] -= (sysinfo->n_blockdevs + sysinfo->n_interfaces);
+			config->autoboot_opts[i].boot_type = BOOT_DEVICE_TYPE;
+			config->autoboot_opts[i].type = order[i];
 		}
 	}
-
-	talloc_free(config->boot_device);
-	config->boot_device = uuid ? talloc_strdup(config, uuid) : NULL;
 
 	str = widget_textbox_get_value(screen->widgets.timeout_f);
 	if (str) {
@@ -367,35 +376,55 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	help_x = screen->field_x + 2 +
 		widget_width(widget_textbox_base(screen->widgets.dns_f));
 
-	y += layout_pair(screen, y, screen->widgets.autoboot_l,
-			widget_select_base(screen->widgets.autoboot_f));
+	y += 1;
 
-	wf = widget_select_base(screen->widgets.boot_device_f);
-	if (screen->autoboot_type == AUTOBOOT_ONE) {
+	wl = widget_label_base(screen->widgets.boot_order_l);
+	widget_set_visible(wl, true);
+	widget_move(wl, y, screen->label_x);
+
+	wf = widget_subset_base(screen->widgets.boot_order_f);
+	widget_move(wf, y, screen->field_x);
+	wl = widget_label_base(screen->widgets.boot_empty_l);
+	widget_move(wl, y, screen->field_x);
+
+	if (widget_subset_height(screen->widgets.boot_order_f)) {
 		widget_set_visible(wf, true);
-		widget_move(wf, y, screen->field_x + 3);
+		widget_set_visible(wl, false);
 		y += widget_height(wf);
 	} else {
+		widget_set_visible(wl, true);
 		widget_set_visible(wf, false);
+		y += 1;
 	}
 
 	y += 1;
 
+	widget_move(widget_button_base(screen->widgets.boot_add_b),
+			y, screen->field_x);
+	widget_move(widget_button_base(screen->widgets.boot_any_b),
+			y, screen->field_x + 12);
+	widget_move(widget_button_base(screen->widgets.boot_none_b),
+			y, screen->field_x + 30);
+
+	wf = widget_button_base(screen->widgets.boot_add_b);
+	if (widget_subset_n_inactive(screen->widgets.boot_order_f))
+		widget_set_visible(wf, true);
+	else
+		widget_set_visible(wf, false);
+
+	y += 2;
+
 	wf = widget_textbox_base(screen->widgets.timeout_f);
 	wl = widget_label_base(screen->widgets.timeout_l);
 	wh = widget_label_base(screen->widgets.timeout_help_l);
-	if (screen->autoboot_type != AUTOBOOT_DISABLED) {
-		widget_set_visible(wl, true);
-		widget_set_visible(wf, true);
-		widget_set_visible(wh, true);
+	widget_set_visible(wl, screen->autoboot_enabled);
+	widget_set_visible(wf, screen->autoboot_enabled);
+	if (screen->autoboot_enabled) {
+		widget_set_visible(wh, screen->autoboot_enabled);
 		widget_move(wl, y, screen->label_x);
 		widget_move(wf, y, screen->field_x);
 		widget_move(wh, y, screen->field_x + widget_width(wf) + 1);
 		y += 2;
-	} else {
-		widget_set_visible(wl, false);
-		widget_set_visible(wf, false);
-		widget_set_visible(wh, false);
 	}
 
 	y += layout_pair(screen, y, screen->widgets.network_l,
@@ -500,13 +529,67 @@ static void config_screen_network_change(void *arg, int value)
 	widgetset_post(screen->widgetset);
 }
 
-static void config_screen_autoboot_change(void *arg, int value)
+static void config_screen_boot_order_change(void *arg, int value)
 {
+	(void)value;
 	struct config_screen *screen = arg;
-	screen->autoboot_type = value;
 	widgetset_unpost(screen->widgetset);
 	config_screen_layout_widgets(screen);
 	widgetset_post(screen->widgetset);
+}
+
+static void config_screen_add_device(void *arg)
+{
+	struct config_screen *screen = arg;
+
+	screen->show_subset = true;
+	cui_show_subset(screen->cui, _("Select an option"),
+			screen->widgets.boot_order_f);
+}
+
+static void config_screen_autoboot_none(void *arg)
+{
+	struct config_screen *screen = arg;
+	struct nc_widget_subset *subset = screen->widgets.boot_order_f;
+
+	widget_subset_clear_active(subset);
+	screen->autoboot_enabled = false;
+
+	widgetset_unpost(screen->widgetset);
+	config_screen_layout_widgets(screen);
+	widgetset_post(screen->widgetset);
+}
+
+static void config_screen_autoboot_any(void *arg)
+{
+	struct config_screen *screen = arg;
+	const struct system_info *sysinfo = screen->cui->sysinfo;
+	struct nc_widget_subset *subset = screen->widgets.boot_order_f;
+	int idx;
+
+	widget_subset_clear_active(subset);
+
+	idx = sysinfo->n_blockdevs + sysinfo->n_interfaces + DEVICE_TYPE_ANY;
+
+	widget_subset_make_active(screen->widgets.boot_order_f, idx);
+
+	screen->autoboot_enabled = true;
+
+	widgetset_unpost(screen->widgetset);
+	config_screen_layout_widgets(screen);
+	widgetset_post(screen->widgetset);
+}
+
+static void config_screen_update_subset(void *arg,
+			struct nc_widget_subset *subset, int idx)
+{
+	struct config_screen *screen = arg;
+
+	if (idx >= 0)
+		widget_subset_make_active(subset, idx);
+	if (!screen->autoboot_enabled)
+		screen->autoboot_enabled = true;
+	config_screen_layout_widgets(screen);
 }
 
 static struct interface_config *first_active_interface(
@@ -550,6 +633,31 @@ static void config_screen_setup_empty(struct config_screen *screen)
 			cancel_click, screen);
 }
 
+static int find_autoboot_idx(const struct system_info *sysinfo,
+		struct autoboot_option *opt)
+{
+	unsigned int i;
+
+	if (opt->boot_type == BOOT_DEVICE_TYPE)
+		return sysinfo->n_blockdevs + sysinfo->n_interfaces + opt->type;
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++) {
+		if (!strcmp(sysinfo->blockdevs[i]->uuid, opt->uuid))
+			return i;
+	}
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		struct interface_info *info = sysinfo->interfaces[i];
+		char mac[20];
+
+		mac_str(info->hwaddr, info->hwaddr_size, mac, sizeof(mac));
+
+		if (!strcmp(mac, opt->uuid))
+			return sysinfo->n_blockdevs + i;
+	}
+
+	return -1;
+}
 
 static void config_screen_setup_widgets(struct config_screen *screen,
 		const struct config *config,
@@ -560,7 +668,6 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	char *str, *ip, *mask, *gw;
 	enum net_conf_type type;
 	unsigned int i;
-	bool found;
 
 	build_assert(sizeof(screen->widgets) / sizeof(struct widget *)
 			== N_FIELDS);
@@ -568,80 +675,83 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	type = screen->net_conf_type;
 	ifcfg = first_active_interface(config);
 
-	screen->widgets.autoboot_l = widget_new_label(set, 0, 0,
-					_("Autoboot:"));
-	screen->widgets.autoboot_f = widget_new_select(set, 0, 0, 55);
+	screen->widgets.boot_add_b = widget_new_button(set, 0, 0, 10,
+					_("Add Device"), config_screen_add_device,
+					screen);
 
-	widget_select_on_change(screen->widgets.autoboot_f,
-			config_screen_autoboot_change, screen);
+	screen->widgets.boot_none_b = widget_new_button(set, 0, 0, 10,
+					_("Clear"),
+					config_screen_autoboot_none, screen);
 
-	screen->widgets.boot_device_f = widget_new_select(set, 0, 0, 55);
+	screen->widgets.boot_any_b = widget_new_button(set, 0, 0, 16,
+					_("Clear & Boot Any"), config_screen_autoboot_any,
+					screen);
 
-	widget_select_add_option(screen->widgets.autoboot_f,
-					AUTOBOOT_DISABLED,
-					_("Don't autoboot"),
-					screen->autoboot_type ==
-						AUTOBOOT_DISABLED);
-	widget_select_add_option(screen->widgets.autoboot_f,
-					AUTOBOOT_ANY,
-					_("Autoboot from any "
-						"disk/network device"),
-					screen->autoboot_type ==
-						AUTOBOOT_ANY);
-	widget_select_add_option(screen->widgets.autoboot_f,
-					AUTOBOOT_ONE,
-					_("Only autoboot from a specific "
-						"disk/network device"),
-					screen->autoboot_type ==
-						AUTOBOOT_ONE);
+	screen->widgets.boot_order_l = widget_new_label(set, 0, 0,
+					_("Boot order:"));
+	screen->widgets.boot_order_f = widget_new_subset(set, 0, 0,
+					COLS - screen->field_x,
+					config_screen_update_subset);
+	screen->widgets.boot_empty_l = widget_new_label(set, 0, 0,
+					_("(None)"));
 
-	found = false;
+	widget_subset_on_change(screen->widgets.boot_order_f,
+			config_screen_boot_order_change, screen);
 
 	for (i = 0; i < sysinfo->n_blockdevs; i++) {
 		struct blockdev_info *bd = sysinfo->blockdevs[i];
-		bool selected;
 		char *label;
-
-		selected = config->boot_device &&
-				!strcmp(config->boot_device, bd->uuid);
-		if (selected)
-			found = true;
 
 		label = talloc_asprintf(screen, _("disk: %s [uuid: %s]"),
 				bd->name, bd->uuid);
 
-		widget_select_add_option(screen->widgets.boot_device_f, i,
-					label, selected);
+		widget_subset_add_option(screen->widgets.boot_order_f, label);
 	}
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *info = sysinfo->interfaces[i];
 		char *label, mac[20];
-		bool selected;
 
 		mac_str(info->hwaddr, info->hwaddr_size, mac, sizeof(mac));
-		selected = config->boot_device &&
-				!strcmp(config->boot_device, mac);
-		if (selected)
-			found = true;
 
 		label = talloc_asprintf(screen, _("net:  %s [mac: %s]"),
 				info->name, mac);
 
-		widget_select_add_option(screen->widgets.boot_device_f,
-						i + sysinfo->n_blockdevs,
-						label, selected);
+		widget_subset_add_option(screen->widgets.boot_order_f, label);
 	}
 
-	if (screen->autoboot_type == AUTOBOOT_ONE && !found) {
+	for (i = DEVICE_TYPE_NETWORK; i < DEVICE_TYPE_NETWORK + 4; i++) {
 		char *label;
 
-		label = talloc_asprintf(screen, _("Unknown UUID: %s"),
-				config->boot_device);
+		if (i == DEVICE_TYPE_ANY)
+			label = talloc_asprintf(screen, _("Any Device"));
+		else
+			label = talloc_asprintf(screen, _("Any %s device"),
+						device_type_display_name(i));
 
-		widget_select_add_option(screen->widgets.boot_device_f, -1,
-						label, true);
+		widget_subset_add_option(screen->widgets.boot_order_f, label);
 	}
+
+	screen->autoboot_enabled = config->n_autoboot_opts;
+	for (i = 0; i < config->n_autoboot_opts; i++) {
+		struct autoboot_option *opt = &config->autoboot_opts[i];
+		int idx;
+
+		idx = find_autoboot_idx(sysinfo, opt);
+
+		if (idx >= 0) {
+			widget_subset_make_active(screen->widgets.boot_order_f,
+						  idx);
+		} else {
+			if (opt->boot_type == BOOT_DEVICE_TYPE)
+				pb_log("%s: Unknown autoboot option: %d\n",
+				       __func__, opt->type);
+			else
+				pb_log("%s: Unknown autoboot UUID: %s\n",
+				       __func__, opt->uuid);
+		}
+	}
+
 
 	str = talloc_asprintf(screen, "%d", config->autoboot_timeout_sec);
 	screen->widgets.timeout_l = widget_new_label(set, 0, 0, _("Timeout:"));
@@ -818,12 +928,6 @@ static void config_screen_draw(struct config_screen *screen,
 		config_screen_setup_empty(screen);
 	} else {
 		screen->net_conf_type = find_net_conf_type(config);
-		if (!config->autoboot_enabled)
-			screen->autoboot_type = AUTOBOOT_DISABLED;
-		else
-			screen->autoboot_type = config->boot_device ?
-					AUTOBOOT_ONE : AUTOBOOT_ANY;
-
 		config_screen_setup_widgets(screen, config, sysinfo);
 		config_screen_layout_widgets(screen);
 	}
@@ -867,6 +971,8 @@ struct config_screen *config_screen_init(struct cui *cui,
 	screen->need_redraw = false;
 	screen->label_x = 2;
 	screen->field_x = 17;
+
+	screen->show_subset = false;
 
 	screen->scr.frame.ltitle = talloc_strdup(screen,
 			_("Petitboot System Configuration"));
