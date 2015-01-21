@@ -388,6 +388,47 @@ static void populate_network_config(struct platform_powerpc *platform,
 	talloc_free(val);
 }
 
+static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
+{
+	char *delim = strchr(*pos, ' ');
+	int len, prefix = 0, rc = -1;
+	enum device_type type;
+
+	if (!strncmp(*pos, "uuid:", strlen("uuid:"))) {
+		prefix = strlen("uuid:");
+		opt->boot_type = BOOT_DEVICE_UUID;
+		rc = 0;
+	} else if (!strncmp(*pos, "mac:", strlen("mac:"))) {
+		prefix = strlen("mac:");
+		opt->boot_type = BOOT_DEVICE_UUID;
+		rc = 0;
+	} else {
+		type = find_device_type(*pos);
+		if (type != DEVICE_TYPE_UNKNOWN) {
+			opt->type = type;
+			opt->boot_type = BOOT_DEVICE_TYPE;
+			rc = 0;
+		}
+	}
+
+	if (opt->boot_type == BOOT_DEVICE_UUID) {
+		if (delim)
+			len = (int)(delim - *pos) - prefix;
+		else
+			len = strlen(*pos);
+
+		opt->uuid = talloc_strndup(ctx, *pos + prefix, len);
+	}
+
+	/* Always advance pointer to next option or end */
+	if (delim)
+		*pos = delim + 1;
+	else
+		*pos += strlen(*pos);
+
+	return rc;
+}
+
 static void populate_bootdev_config(struct platform_powerpc *platform,
 		struct config *config)
 
