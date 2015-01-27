@@ -832,7 +832,7 @@ static int save_config(struct platform *p, struct config *config)
 	return rc;
 }
 
-static void finalise_config(struct platform *p, const struct config *config)
+static void pre_boot(struct platform *p, const struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
 
@@ -905,7 +905,7 @@ static struct platform platform_powerpc = {
 	.probe			= probe,
 	.load_config		= load_config,
 	.save_config		= save_config,
-	.finalise_config	= finalise_config,
+	.pre_boot		= pre_boot,
 	.get_sysinfo		= get_sysinfo,
 };
 

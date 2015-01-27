@@ -843,7 +843,7 @@ void device_handler_boot(struct device_handler *handler,
 	if (handler->pending_boot)
 		boot_cancel(handler->pending_boot);
 
-	platform_finalise_config();
+	platform_pre_boot();
 
 	handler->pending_boot = boot(handler, opt, cmd, handler->dry_run,
 			boot_status, handler);

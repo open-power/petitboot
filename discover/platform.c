@@ -180,12 +180,12 @@ const struct platform *platform_get(void)
 	return platform;
 }
 
-void platform_finalise_config(void)
+void platform_pre_boot(void)
 {
 	const struct config *config = config_get();
 
-	if (platform && config && platform->finalise_config)
-		platform->finalise_config(platform, config);
+	if (platform && config && platform->pre_boot)
+		platform->pre_boot(platform, config);
 }
 
 int platform_get_sysinfo(struct system_info *info)
