@@ -173,6 +173,10 @@ static struct pb_boot_data *boot_editor_prepare_data(
 
 	s = widget_textbox_get_value(boot_editor->widgets.image_f);
 	bd->image = conditional_prefix(bd, prefix, s);
+	if (!bd->image) {
+		talloc_free(bd);
+		return NULL;
+	}
 
 	s = widget_textbox_get_value(boot_editor->widgets.initrd_f);
 	bd->initrd = conditional_prefix(bd, prefix, s);
@@ -216,6 +220,11 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 	case STATE_SAVE:
 		item = boot_editor->item;
 		bd = boot_editor_prepare_data(boot_editor);
+		if (!bd) {
+			/* Incomplete entry */
+			boot_editor->state = STATE_EDIT;
+			break;
+		}
 		/* fall through */
 	case STATE_CANCEL:
 		boot_editor->on_exit(boot_editor->cui, item, bd);
