@@ -510,6 +510,15 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		add_interface(network, interface);
 	}
 
+	/* A repeated RTM_NEWLINK can represent an interface name change */
+	if (strncmp(interface->name, ifname, IFNAMSIZ)) {
+		pb_debug("ifname update: %s -> %s\n", interface->name, ifname);
+		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
+		talloc_free(interface->dev->device->id);
+		interface->dev->device->id =
+			talloc_strdup(interface->dev->device, ifname);
+	}
+
 	/* notify the sysinfo code about changes to this interface */
 	if (strcmp(interface->name, "lo"))
 		system_info_register_interface(
