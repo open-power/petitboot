@@ -1082,6 +1082,20 @@ static void device_handler_reinit_sources(struct device_handler *handler)
 			handler->dry_run);
 }
 
+static const char *fs_parameters(unsigned int rw_flags, const char *fstype)
+{
+	if ((rw_flags | MS_RDONLY) != MS_RDONLY)
+		return "";
+
+	/* Avoid writing back to the disk on journaled filesystems */
+	if (!strncmp(fstype, "ext4", strlen("ext4")))
+		return "norecovery";
+	if (!strncmp(fstype, "xfs", strlen("xfs")))
+		return "norecovery";
+
+	return "";
+}
+
 static bool check_existing_mount(struct discover_device *dev)
 {
 	struct stat devstat, mntstat;
@@ -1155,6 +1169,13 @@ static int mount_device(struct discover_device *dev)
 	if (!fstype)
 		return 0;
 
+	/* ext3 treats the norecovery option as an error, so mount the device
+	 * as an ext4 filesystem instead */
+	if (!strncmp(fstype, "ext3", strlen("ext3"))) {
+		pb_debug("Mounting ext3 filesystem as ext4\n");
+		fstype = talloc_asprintf(dev, "ext4");
+	}
+
 	dev->mount_path = join_paths(dev, mount_base(),
 					dev->device_path);
 
@@ -1167,7 +1188,8 @@ static int mount_device(struct discover_device *dev)
 	pb_log("mounting device %s read-only\n", dev->device_path);
 	errno = 0;
 	rc = mount(dev->device_path, dev->mount_path, fstype,
-			MS_RDONLY | MS_SILENT, "");
+			MS_RDONLY | MS_SILENT,
+			fs_parameters(MS_RDONLY, fstype));
 	if (!rc) {
 		dev->mounted = true;
 		dev->mounted_rw = false;
@@ -1209,6 +1231,7 @@ static int umount_device(struct discover_device *dev)
 
 int device_request_write(struct discover_device *dev, bool *release)
 {
+	const char *fstype;
 	int rc;
 
 	*release = false;
@@ -1219,25 +1242,48 @@ int device_request_write(struct discover_device *dev, bool *release)
 	if (dev->mounted_rw)
 		return 0;
 
+	fstype = discover_device_get_param(dev, "ID_FS_TYPE");
+
 	pb_log("remounting device %s read-write\n", dev->device_path);
-	rc = mount(dev->device_path, dev->mount_path, "",
-			MS_REMOUNT | MS_SILENT, "");
-	if (rc)
+
+	rc = umount(dev->mount_path);
+	if (rc) {
+		pb_log("Failed to unmount %s\n", dev->mount_path);
 		return -1;
+	}
+	rc = mount(dev->device_path, dev->mount_path, fstype,
+			MS_SILENT,
+			fs_parameters(MS_REMOUNT, fstype));
+	if (rc)
+		goto mount_ro;
 
 	dev->mounted_rw = true;
 	*release = true;
 	return 0;
+
+mount_ro:
+	pb_log("Unable to remount device %s read-write\n", dev->device_path);
+	rc = mount(dev->device_path, dev->mount_path, fstype,
+			MS_RDONLY | MS_SILENT,
+			fs_parameters(MS_RDONLY, fstype));
+	if (rc)
+		pb_log("Unable to recover mount for %s\n", dev->device_path);
+	return -1;
 }
 
 void device_release_write(struct discover_device *dev, bool release)
 {
+	const char *fstype;
+
 	if (!release)
 		return;
 
+	fstype = discover_device_get_param(dev, "ID_FS_TYPE");
+
 	pb_log("remounting device %s read-only\n", dev->device_path);
 	mount(dev->device_path, dev->mount_path, "",
-			MS_REMOUNT | MS_RDONLY | MS_SILENT, "");
+			MS_REMOUNT | MS_RDONLY | MS_SILENT,
+			fs_parameters(MS_RDONLY, fstype));
 	dev->mounted_rw = false;
 }
 
