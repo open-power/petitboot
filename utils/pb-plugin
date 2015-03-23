@@ -1,0 +1,513 @@
+#!/bin/sh
+
+__dest=/
+__pb_mount_dir=/var/petitboot/mnt/dev/
+plugin_dev_meta=pb-plugin.conf
+plugin_installed_meta_dir=/etc/preboot-plugins/
+
+usage()
+{
+	cat <<EOF
+Usage: $0 <command>
+
+Where <command> is one of:
+  install <FILE|URL>  - install plugin from FILE/URL
+  scan                - look for available plugins on attached devices
+  list                - list currently-installed plugins
+  create <DIR>        - create a new plugin archive from DIR
+EOF
+}
+
+is_url()
+{
+	local url tmp
+	url=$1
+	tmp=${url#*://}
+	[ "$url" != "$tmp" ]
+}
+
+download()
+{
+	local url file proto
+	url=$1
+	file=$2
+	proto=${url%://*}
+
+	case "$proto" in
+	http)
+		wget -O - "$url" > $file
+		;;
+	ftp)
+		ncftpget -c "$url" > $file
+		;;
+	*)
+		echo "error: Unsuported protocol $proto" >&2
+		false
+	esac
+}
+
+plugin_info()
+{
+	local title
+	if [ "$PLUGIN_VENDOR" ]
+	then
+		title="$PLUGIN_VENDOR: $PLUGIN_NAME"
+	else
+		title="$PLUGIN_NAME"
+	fi
+
+	echo "$title"
+	echo "  (version $PLUGIN_VERSION)"
+}
+
+do_install()
+{
+	local url
+
+	url=$1
+
+	if [ -z "$url" ]
+	then
+		echo "error: install requires a file/URL argument." >&2
+		exit 1
+	fi
+
+	if [ ! -d "$__dest" ]
+	then
+		echo "error: destination directory '$__dest' doesn't exist" >&2
+		exit 1
+	fi
+
+	if [ ! -w "$__dest" ]
+	then
+		echo "error: destination directory isn't writeable" >&2
+		exit 1
+	fi
+
+	name=${url##*/}
+
+	if is_url "$url"
+	then
+		file=$(mktemp)
+		trap "rm '$file'" EXIT
+		download "$url" "$file"
+		if [ $? -ne 0 ]
+		then
+			echo "error: failed to download $url" >&2
+			exit 1
+		fi
+	else
+		file=$url
+		if [ ! -r "$file" ]
+		then
+			echo "error: $file doesn't exist or is not readable" >&2
+			exit 1
+		fi
+	fi
+
+        echo "File '$name' has the following sha256 checksum:"
+	echo
+	sha256sum "$file" | cut -f1 -d' '
+	echo
+	echo "Do you want to install into the pre-boot environment? (y/N)"
+	read resp
+
+	case $resp in
+	[yY]|[yY][eE][sS])
+		;;
+	*)
+		echo "Cancelled"
+		exit 0
+		;;
+	esac
+
+	gunzip -c "$file" | ( cd $__dest && cpio -i -d)
+
+	if [ $? -ne 0 ]
+	then
+		echo "error: Failed to extract archive $url, exiting"
+		exit 1
+	fi
+}
+
+do_scan()
+{
+	local found
+	found=0
+	for mnt in $__pb_mount_dir/*
+	do
+		dev=$(basename $mnt)
+		metafile="$mnt/$plugin_dev_meta"
+		[ -e "$metafile" ] || continue
+		(
+			. $metafile
+			printf "Plugin found on %s:\n" $dev
+			plugin_info
+			printf "\n"
+			printf "To install this plugin, run:\n"
+			printf "  $0 install $mnt/$PLUGIN_FILE\n"
+			printf "\n"
+		)
+		found=1
+	done
+
+	if [ "$found" = 0 ]
+	then
+		echo "No plugins found"
+	fi
+}
+
+do_list()
+{
+	local found
+	found=0
+	for meta in $plugin_installed_meta_dir/*
+	do
+		[ -e "$meta" ] || continue
+		[ $found = 0 ] && printf "Installed plugins:\n"
+		found=1
+		(
+			. $meta
+			plugin_info
+			echo
+		)
+	done
+
+	if [ "$found" = 0 ]
+	then
+		echo "No plugins installed"
+	fi
+}
+
+guided_meta()
+{
+	local vendorname vendorshortname
+	local pluginname pluginnhortname
+	local version date
+	local dir
+
+	dir=$1
+
+cat <<EOF
+
+Enter the vendor company / author name. This can contain spaces.
+(eg. 'Example Corporation')
+EOF
+	read vendorname
+cat <<EOF
+
+Enter the vendor shortname. This should be a single-word abbreviation, in all
+lower-case. This is only used in internal filenames.
+
+Typically, a stock-ticker name is used for this (eg 'exco')
+EOF
+	read vendorshortname
+
+cat <<EOF
+
+Enter the descriptive plugin name. This can contain spaces, but should only be
+a few words in length (eg 'RAID configuration utility')
+EOF
+	read pluginname
+
+cat <<EOF
+
+Enter the plugin shortname. This should not contain spaces, but hyphens are
+fine (eg 'raid-config'). This is only used in internal filnames.
+EOF
+	read pluginshortname
+
+
+cat <<EOF
+
+Enter the plugin version. This should not contain spaces (eg 1.2):
+EOF
+	read version
+
+	date=$(date +%Y-%m-%d)
+
+	mkdir -p $dir
+
+	cat <<EOF > $dir/$vendorshortname-$pluginshortname
+PLUGIN_VENDOR='$vendorname'
+PLUGIN_NAME='$pluginname'
+PLUGIN_VERSION='$version'
+PLUGIN_DATE='$date'
+EOF
+
+}
+
+do_create()
+{
+	local src found meta_dir_abs meta_file
+	src=$1
+
+	if [ -z "$src" ]
+	then
+		echo "error: missing source directory" >&2
+		usage
+		exit 1
+	fi
+
+	if [ ! -d "$src" ]
+	then
+		echo "error: source directory missing" >&2
+		exit 1
+	fi
+
+	meta_dir_abs="$src/$plugin_installed_meta_dir"
+	found=0
+	for meta in $meta_dir_abs/*
+	do
+		[ -e "$meta" ] || continue
+		found=$(($found+1))
+		meta_file=$meta
+	done
+
+	if [ $found = 0 ]
+	then
+		echo "No plugin metadata file found. " \
+			"Would you like to create one? (Y/n)"
+		read resp
+		case "$resp" in
+		[nN]|[nN][oO])
+			echo "Cancelled, exiting"
+			exit 1
+			;;
+		esac
+		guided_meta $meta_dir_abs || exit
+		meta_file=$meta_dir_abs/*
+	fi
+
+	if [ $found -gt 1 ]
+	then
+		echo "error: Multiple metadata files found in $meta_dir_abs" >&2
+		exit 1
+	fi
+
+	# Sanity check metadata file
+	(
+		. $meta_file
+		if [ ! -n "$PLUGIN_VENDOR" ]
+		then
+			echo "error: no PLUGIN_VENDOR defined in metadata" &>2
+			exit 1
+		fi
+		if [ ! -n "$PLUGIN_NAME" ]
+		then
+			echo "error: no PLUGIN_NAME defined in metadata" &>2
+			exit 1
+		fi
+		if [ ! -n "$PLUGIN_VERSION" ]
+		then
+			echo "error: no PLUGIN_VERSION defined in metadata" &>2
+			exit 1
+		fi
+		if [ ! -n "$PLUGIN_DATE" ]
+		then
+			echo "error: no PLUGIN_DATE defined in metadata" &>2
+			exit 1
+		fi
+
+	) || exit 1
+
+	outfile=pb-plugin.cpio.gz
+
+	(
+		cd $src
+		find -mindepth 1 | cpio -o -Hnewc -v
+	) | gzip -c > pb-plugin.cpio.gz
+
+	cp $meta_file $plugin_dev_meta
+	echo "PLUGIN_FILE='$outfile'" >> $plugin_dev_meta
+
+	echo
+	echo "Plugin metadata:"
+	sed -e 's/^/  /' $meta_file
+	echo
+
+	echo "User-visible metadata:"
+
+	(
+		. $meta_file
+		plugin_info | sed -e 's/^/  /'
+	)
+
+	echo
+
+
+cat <<EOF
+Plugin created in:
+  $outfile
+  
+Metadata in:
+  $plugin_dev_meta
+
+If you rename $outfile (or distribute it in a non-root directory), then
+also update the PLUGIN_FILE variable in $plugin_dev_meta.
+EOF
+}
+
+test_http_download()
+{
+	local tmp ref
+
+	tmp=$(mktemp -p $test_tmpdir)
+	ref=$(mktemp -p $test_tmpdir)
+
+	echo $RANDOM > $ref
+
+	wget()
+	{
+		cat $ref
+	}
+
+	download http://example.com/test $tmp
+	cmp -s "$ref" "$tmp"
+}
+
+test_ftp_download()
+{
+	local tmp ref
+
+	tmp=$(mktemp -p $test_tmpdir)
+	ref=$(mktemp -p $test_tmpdir)
+
+	echo $RANDOM > $ref
+
+	ncftpget()
+	{
+		cat $ref
+	}
+
+	download ftp://example.com/test $tmp
+	cmp -s "$ref" "$tmp"
+}
+
+test_scan()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	mkdir -p $mnt_dir
+	(
+		echo "PLUGIN_NAME=test"
+		echo "PLUGIN_VERSION=1"
+		echo "PLUGIN_FILE=data/pb-plugin.cpio.gz"
+	) > $mnt_dir/$plugin_dev_meta
+
+	do_scan | grep -q 'test 1'
+	rc=$?
+}
+
+test_empty_scan()
+{
+	do_scan | grep -q "No plugins"
+}
+
+test_setup()
+{
+	n=$(($n+1))
+
+	test_tmpdir="$tests_tmpdir/$n"
+	mkdir "$test_tmpdir"
+	__test_dest="$test_tmpdir/base"
+	mkdir "$__test_dest"
+	[ -d "$__test_dest" ] || exit 1
+	__dest=$__test_dest
+}
+
+test_teardown()
+{
+	true
+}
+
+test_failed=0
+do_test()
+{
+	local tstr op
+
+	tstr="$@"
+	op=-eq
+
+	if [ "x$1" = "x!" ]
+	then
+		op=-ne
+		shift
+	fi
+
+	test_setup
+	( $@ )
+	local rc=$?
+	test_teardown
+
+	if [ $rc $op 0 ]
+	then
+		echo PASS: "$tstr"
+	else
+		echo FAIL: "$tstr"
+		test_failed=1
+		false
+	fi
+}
+
+do_tests()
+{
+	local tests_tmpdir n
+
+	tests_tmpdir=$(mktemp -d)
+	n=0
+
+	do_test ! is_url "/test"
+	do_test ! is_url "./test"
+	do_test ! is_url "../test"
+	do_test ! is_url "test"
+	do_test is_url "http://example.com/path"
+	do_test is_url "git+ssh://example.com/path"
+	do_test test_http_download
+	do_test test_ftp_download
+	do_test test_scan
+	do_test test_empty_scan
+
+	if [ $test_failed = 0 ]
+	then
+		echo "$n tests passed"
+	else
+		echo "Tests failed"
+		false
+	fi
+	rm -rf "$tests_tmpdir"
+}
+
+case "$1" in
+install)
+	shift
+	do_install $@
+	;;
+scan)
+	shift
+	do_scan $@
+	;;
+list)
+	shift
+	do_list $@
+	;;
+create)
+	shift
+	do_create $@
+	;;
+__test)
+	shift
+	do_tests $@
+	;;
+"")
+	echo "error: Missing command" >&2
+	usage
+	exit 1
+	;;
+*)
+	echo "Invalid command: $s" >&2
+	usage
+	exit 1
+esac
+
+
