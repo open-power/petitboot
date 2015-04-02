@@ -836,7 +836,7 @@ static void pre_boot(struct platform *p, const struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
 
-	if (config->ipmi_bootdev_persistent && platform->clear_ipmi_bootdev)
+	if (!config->ipmi_bootdev_persistent && platform->clear_ipmi_bootdev)
 		platform->clear_ipmi_bootdev(platform);
 }
 
