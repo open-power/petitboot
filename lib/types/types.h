@@ -13,6 +13,17 @@ enum device_type {
 	DEVICE_TYPE_UNKNOWN,
 };
 
+enum ipmi_bootdev {
+	IPMI_BOOTDEV_NONE = 0x00,
+	IPMI_BOOTDEV_NETWORK = 0x01,
+	IPMI_BOOTDEV_DISK = 0x2,
+	IPMI_BOOTDEV_SAFE = 0x3,
+	IPMI_BOOTDEV_CDROM = 0x5,
+	IPMI_BOOTDEV_SETUP = 0x6,
+	IPMI_BOOTDEV_INVALID = 0xff,
+};
+
+const char *ipmi_bootdev_display_name(enum ipmi_bootdev bootdev);
 const char *device_type_display_name(enum device_type type);
 const char *device_type_name(enum device_type type);
 enum device_type find_device_type(const char *str);

@@ -716,6 +716,7 @@ static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
 	case IPMI_BOOTDEV_DISK:
 	case IPMI_BOOTDEV_NETWORK:
 	case IPMI_BOOTDEV_CDROM:
+	default:
 		break;
 	case IPMI_BOOTDEV_SETUP:
 		config->autoboot_enabled = false;

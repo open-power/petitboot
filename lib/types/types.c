@@ -2,6 +2,26 @@
 #include <types/types.h>
 #include <i18n/i18n.h>
 
+const char *ipmi_bootdev_display_name(enum ipmi_bootdev bootdev)
+{
+	switch (bootdev) {
+	case IPMI_BOOTDEV_NONE:
+		return _("None");
+	case IPMI_BOOTDEV_NETWORK:
+		return _("Network");
+	case IPMI_BOOTDEV_DISK:
+		return _("Disk");
+	case IPMI_BOOTDEV_SAFE:
+		return _("Safe Mode");
+	case IPMI_BOOTDEV_CDROM:
+		return _("Optical");
+	case IPMI_BOOTDEV_SETUP:
+		return _("Setup Mode");
+	default:
+		return _("Unknown");
+	}
+}
+
 const char *device_type_display_name(enum device_type type)
 {
 	switch (type) {
