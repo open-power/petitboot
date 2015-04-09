@@ -39,7 +39,8 @@ struct platform_powerpc {
 				struct platform_powerpc *platform,
 				uint8_t *bootdev, bool *persistent);
 	int		(*clear_ipmi_bootdev)(
-				struct platform_powerpc *platform);
+				struct platform_powerpc *platform,
+				bool persistent);
 	int 		(*set_os_boot_sensor)(
 				struct platform_powerpc *platform);
 };
@@ -691,6 +692,14 @@ static int update_config(struct platform_powerpc *platform,
 		val = tmp = talloc_asprintf(platform, "%d",
 				config->autoboot_timeout_sec);
 
+	if (config->ipmi_bootdev == IPMI_BOOTDEV_INVALID &&
+	    platform->clear_ipmi_bootdev) {
+		platform->clear_ipmi_bootdev(platform,
+				config->ipmi_bootdev_persistent);
+		config->ipmi_bootdev = IPMI_BOOTDEV_NONE;
+		config->ipmi_bootdev_persistent = false;
+	}
+
 	update_string_config(platform, "petitboot,timeout", val);
 	if (tmp)
 		talloc_free(tmp);
@@ -806,10 +815,16 @@ static int write_bootdev_sysparam(const char *name, uint8_t val)
 }
 
 static int clear_ipmi_bootdev_sysparams(
-		struct platform_powerpc *platform __attribute__((unused)))
+		struct platform_powerpc *platform __attribute__((unused)),
+		bool persistent)
 {
-	/* invalidate next-boot-device setting */
-	write_bootdev_sysparam("next-boot-device", 0xff);
+	if (persistent) {
+		/* invalidate default-boot-device setting */
+		write_bootdev_sysparam("default-boot-device", 0xff);
+	} else {
+		/* invalidate next-boot-device setting */
+		write_bootdev_sysparam("next-boot-device", 0xff);
+	}
 	return 0;
 }
 
@@ -836,7 +851,8 @@ static int get_ipmi_bootdev_sysparams(
 	return 0;
 }
 
-static int clear_ipmi_bootdev_ipmi(struct platform_powerpc *platform)
+static int clear_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
+				   bool persistent __attribute__((unused)))
 {
 	uint16_t resp_len;
 	uint8_t resp[1];
@@ -1001,7 +1017,7 @@ static void pre_boot(struct platform *p, const struct config *config)
 	struct platform_powerpc *platform = to_platform_powerpc(p);
 
 	if (!config->ipmi_bootdev_persistent && platform->clear_ipmi_bootdev)
-		platform->clear_ipmi_bootdev(platform);
+		platform->clear_ipmi_bootdev(platform, false);
 
 	if (platform->set_os_boot_sensor)
 		platform->set_os_boot_sensor(platform);
