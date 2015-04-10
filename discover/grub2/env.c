@@ -17,7 +17,7 @@ static const char *signature = "# GRUB Environment Block\n";
 
 static int parse_buf_to_env(struct grub2_script *script, void *buf, int len)
 {
-	char *tmp, *line, *sep;
+	char *tmp = NULL, *line, *sep;
 	int siglen;
 
 	siglen = strlen(signature);

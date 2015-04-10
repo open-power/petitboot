@@ -177,7 +177,7 @@ static void boot_hook_update(struct boot_task *task, const char *hookname,
 		char *buf)
 {
 	char *line, *name, *val, *sep;
-	char *saveptr;
+	char *saveptr = NULL;
 
 	for (;; buf = NULL) {
 

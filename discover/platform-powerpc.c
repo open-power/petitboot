@@ -337,7 +337,7 @@ out_err:
 static int parse_one_dns_config(struct config *config,
 		char *confstr)
 {
-	char *tok, *saveptr;
+	char *tok, *saveptr = NULL;
 
 	for (tok = strtok_r(confstr, ",", &saveptr); tok;
 			tok = strtok_r(NULL, ",", &saveptr)) {
