@@ -62,7 +62,6 @@ static int pmenu_post(struct nc_scr *scr)
 	result = post_menu(menu->ncm);
 
 	nc_scr_frame_draw(scr);
-	redrawwin(menu->scr.main_ncw);
 	wrefresh(menu->scr.main_ncw);
 
 	return result;

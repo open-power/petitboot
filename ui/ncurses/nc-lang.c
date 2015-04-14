@@ -131,7 +131,6 @@ static int lang_screen_post(struct nc_scr *scr)
 	struct lang_screen *screen = lang_screen_from_scr(scr);
 	widgetset_post(screen->widgetset);
 	nc_scr_frame_draw(scr);
-	redrawwin(scr->main_ncw);
 	wrefresh(screen->scr.main_ncw);
 	pad_refresh(screen);
 	return 0;

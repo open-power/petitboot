@@ -44,6 +44,7 @@ struct boot_editor {
 	void			(*on_exit)(struct cui *cui,
 					struct pmenu_item *item,
 					struct pb_boot_data *bd);
+	bool			need_redraw;
 
 	int			label_x;
 	int			field_x;
@@ -111,7 +112,10 @@ static int boot_editor_post(struct nc_scr *scr)
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
 	widgetset_post(boot_editor->widgetset);
 	nc_scr_frame_draw(scr);
-	redrawwin(scr->main_ncw);
+	if (boot_editor->need_redraw) {
+		redrawwin(scr->main_ncw);
+		boot_editor->need_redraw = false;
+	}
 	wrefresh(boot_editor->scr.main_ncw);
 	pad_refresh(boot_editor);
 	return 0;
@@ -173,6 +177,10 @@ static struct pb_boot_data *boot_editor_prepare_data(
 
 	s = widget_textbox_get_value(boot_editor->widgets.image_f);
 	bd->image = conditional_prefix(bd, prefix, s);
+	if (!bd->image) {
+		talloc_free(bd);
+		return NULL;
+	}
 
 	s = widget_textbox_get_value(boot_editor->widgets.initrd_f);
 	bd->initrd = conditional_prefix(bd, prefix, s);
@@ -216,12 +224,18 @@ static void boot_editor_process_key(struct nc_scr *scr, int key)
 	case STATE_SAVE:
 		item = boot_editor->item;
 		bd = boot_editor_prepare_data(boot_editor);
+		if (!bd) {
+			/* Incomplete entry */
+			boot_editor->state = STATE_EDIT;
+			break;
+		}
 		/* fall through */
 	case STATE_CANCEL:
 		boot_editor->on_exit(boot_editor->cui, item, bd);
 		break;
 	case STATE_HELP:
 		boot_editor->state = STATE_EDIT;
+		boot_editor->need_redraw = true;
 		cui_show_help(boot_editor->cui, _("Boot Option Editor"),
 				&boot_editor_help_text);
 		break;
@@ -559,6 +573,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->item = item;
 	boot_editor->on_exit = on_exit;
 	boot_editor->state = STATE_EDIT;
+	boot_editor->need_redraw = false;
 
 	int ncols1 = strncols(_("Device tree:"));
 	int ncols2 = strncols(_("Boot arguments:"));

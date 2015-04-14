@@ -57,6 +57,7 @@ struct config_screen {
 
 	bool			exit;
 	bool			show_help;
+	bool			need_redraw;
 	void			(*on_exit)(struct cui *);
 
 	int			scroll_y;
@@ -146,6 +147,7 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 
 	} else if (screen->show_help) {
 		screen->show_help = false;
+		screen->need_redraw = true;
 		cui_show_help(screen->cui, _("System Configuration"),
 				&config_help_text);
 
@@ -165,7 +167,10 @@ static int config_screen_post(struct nc_scr *scr)
 	struct config_screen *screen = config_screen_from_scr(scr);
 	widgetset_post(screen->widgetset);
 	nc_scr_frame_draw(scr);
-	redrawwin(scr->main_ncw);
+	if (screen->need_redraw) {
+		redrawwin(scr->main_ncw);
+		screen->need_redraw = false;
+	}
 	wrefresh(screen->scr.main_ncw);
 	pad_refresh(screen);
 	return 0;
@@ -859,6 +864,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 
 	screen->cui = cui;
 	screen->on_exit = on_exit;
+	screen->need_redraw = false;
 	screen->label_x = 2;
 	screen->field_x = 17;
 
