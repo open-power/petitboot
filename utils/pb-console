@@ -104,6 +104,13 @@ case "$(tty)" in
 	;;
 esac
 
+# we may have been run from udev - ensure we have a sensible PATH
+if [ -z "$PATH" ]
+then
+	PATH=/usr/bin:/usr/sbin:/bin:/sbin
+fi
+export PATH
+
 verbose_opt=
 if $pb_config debug | grep -q enabled
 then
