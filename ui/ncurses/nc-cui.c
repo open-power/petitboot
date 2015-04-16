@@ -69,6 +69,16 @@ static void cui_start(void)
 	 */
 	define_key("\x1b[Z", KEY_BTAB);
 
+	/* We'll define a few other keys too since they're commonly
+	 * used for navigation but the escape character will cause
+	 * Petitboot to exit if they're left undefined */
+	define_key("\x1b\x5b\x35\x7e", KEY_PPAGE);
+	define_key("\x1b\x5b\x36\x7e", KEY_NPAGE);
+	define_key("\x1b\x4f\x48", KEY_HOME);
+	define_key("\x1b\x4f\x46", KEY_END);
+	define_key("OH", KEY_HOME);
+	define_key("OF", KEY_END);
+
 	while (getch() != ERR)		/* flush stdin */
 		(void)0;
 }
