@@ -184,6 +184,7 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 {
 	struct pmenu *menu = cui->main;
 	struct cui_opt_data *cod;
+	int idx, top, rows, cols;
 	static int user_idx = 0;
 
 	/* Was the edit cancelled? */
@@ -222,6 +223,22 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 
 		/* Re-attach the items array. */
 		set_menu_items(menu->ncm, menu->items);
+
+		/* If our index is above the current top row, align
+		 * us to the new top. Otherwise, align us to the new
+		 * bottom */
+		menu_format(cui->main->ncm, &rows, &cols);
+		top = top_row(cui->main->ncm);
+		idx = item_index(item->nci);
+
+		if (top >= idx)
+			top = idx;
+		else
+			top = idx < rows ? 0 : idx - rows + 1;
+
+		set_top_row(cui->main->ncm, top);
+		set_current_item(item->pmenu->ncm, item->nci);
+
 		nc_scr_post(&menu->scr);
 	} else {
 		cod = item->data;
@@ -229,7 +246,6 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 
 	cod->bd = talloc_steal(cod, bd);
 
-	set_current_item(item->pmenu->ncm, item->nci);
 out:
 	cui_set_current(cui, &cui->main->scr);
 	talloc_free(cui->boot_editor);
@@ -562,7 +578,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		/* If our index is above the current top row, align
 		 * us to the new top. Otherwise, align us to the new
 		 * bottom */
-		top = top < idx ? idx - rows : idx;
+		top = top < idx ? idx - rows + 1 : idx;
 
 		set_top_row(cui->main->ncm, top);
 		set_current_item(cui->main->ncm, selected);
@@ -586,6 +602,7 @@ static void cui_device_remove(struct device *dev, void *arg)
 	struct cui *cui = cui_from_arg(arg);
 	struct boot_option *opt;
 	unsigned int i;
+	int rows, cols, top, last;
 	int result;
 
 	pb_log("%s: %p %s\n", __func__, dev, dev->id);
@@ -621,6 +638,15 @@ static void cui_device_remove(struct device *dev, void *arg)
 	/* Re-attach the items array. */
 
 	result = set_menu_items(cui->main->ncm, cui->main->items);
+
+	/* Move cursor to 'Exit' menu entry */
+	menu_format(cui->main->ncm, &rows, &cols);
+	last = cui->main->item_count - 1;
+	set_current_item(cui->main->ncm, cui->main->items[last]);
+	if (!item_visible(cui->main->items[last])) {
+		top = last < rows ? 0 : last - rows + 1;
+		set_top_row(cui->main->ncm, top);
+	}
 
 	if (result)
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
