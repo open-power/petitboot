@@ -5,12 +5,14 @@
 #include <stdint.h>
 
 enum ipmi_netfn {
-	IPMI_NETFN_CHASSIS = 0x0,
+	IPMI_NETFN_CHASSIS	= 0x0,
+	IPMI_NETFN_SE		= 0x04,
 };
 
 enum ipmi_cmd {
 	IPMI_CMD_CHASSIS_SET_SYSTEM_BOOT_OPTIONS	= 0x08,
 	IPMI_CMD_CHASSIS_GET_SYSTEM_BOOT_OPTIONS	= 0x09,
+	IPMI_CMD_SENSOR_SET				= 0x30,
 };
 
 enum ipmi_bootdev {
@@ -20,6 +22,10 @@ enum ipmi_bootdev {
 	IPMI_BOOTDEV_SAFE = 0x3,
 	IPMI_BOOTDEV_CDROM = 0x5,
 	IPMI_BOOTDEV_SETUP = 0x6,
+};
+
+enum ipmi_sensor_ids {
+	IPMI_SENSOR_ID_OS_BOOT		= 0x1F,
 };
 
 struct ipmi;

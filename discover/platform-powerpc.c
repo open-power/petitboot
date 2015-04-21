@@ -17,6 +17,7 @@
 
 #include "platform.h"
 #include "ipmi.h"
+#include "dt.h"
 
 static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
@@ -38,6 +39,8 @@ struct platform_powerpc {
 				struct platform_powerpc *platform,
 				uint8_t *bootdev, bool *persistent);
 	int		(*clear_ipmi_bootdev)(
+				struct platform_powerpc *platform);
+	int 		(*set_os_boot_sensor)(
 				struct platform_powerpc *platform);
 };
 
@@ -792,6 +795,42 @@ static int get_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
 	return 0;
 }
 
+static int set_ipmi_os_boot_sensor(struct platform_powerpc *platform)
+{
+	int sensor_number;
+	uint16_t resp_len;
+	uint8_t resp[1];
+	uint8_t req[] = {
+		0x00, /* sensor number: os boot */
+		0x10, /* operation: set assertion bits */
+		0x00, /* sensor reading: none */
+		0x40, /* assertion mask lsb: set state 6 */
+		0x00, /* assertion mask msb: none */
+		0x00, /* deassertion mask lsb: none */
+		0x00, /* deassertion mask msb: none */
+		0x00, /* event data 1: none */
+		0x00, /* event data 2: none */
+		0x00, /* event data 3: none */
+	};
+
+	sensor_number = get_ipmi_sensor(platform, IPMI_SENSOR_ID_OS_BOOT);
+	if (sensor_number < 0) {
+		pb_log("Couldn't find OS boot sensor in device tree\n");
+		return -1;
+	}
+
+	req[0] = sensor_number;
+
+	resp_len = sizeof(resp);
+
+	ipmi_transaction(platform->ipmi, IPMI_NETFN_SE,
+			IPMI_CMD_SENSOR_SET,
+			req, sizeof(req),
+			resp, &resp_len,
+			ipmi_timeout); return 0;
+
+	return 0;
+}
 
 static int load_config(struct platform *p, struct config *config)
 {
@@ -838,6 +877,9 @@ static void pre_boot(struct platform *p, const struct config *config)
 
 	if (!config->ipmi_bootdev_persistent && platform->clear_ipmi_bootdev)
 		platform->clear_ipmi_bootdev(platform);
+
+	if (platform->set_os_boot_sensor)
+		platform->set_os_boot_sensor(platform);
 }
 
 static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
@@ -875,7 +917,7 @@ static bool probe(struct platform *p, void *ctx)
 	if (!S_ISDIR(statbuf.st_mode))
 		return false;
 
-	platform = talloc(ctx, struct platform_powerpc);
+	platform = talloc_zero(ctx, struct platform_powerpc);
 	list_init(&platform->params);
 
 	p->platform_data = platform;
@@ -885,6 +927,7 @@ static bool probe(struct platform *p, void *ctx)
 		platform->ipmi = ipmi_open(platform);
 		platform->get_ipmi_bootdev = get_ipmi_bootdev_ipmi;
 		platform->clear_ipmi_bootdev = clear_ipmi_bootdev_ipmi;
+		platform->set_os_boot_sensor = set_ipmi_os_boot_sensor;
 
 	} else if (!stat(sysparams_dir, &statbuf)) {
 		pb_debug("platform: using sysparams for IPMI paramters\n");

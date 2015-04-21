@@ -71,6 +71,8 @@ discover_platform_ro_SOURCES = \
 	discover/platform.h \
 	discover/ipmi.c \
 	discover/ipmi.h \
+	discover/dt.c \
+	discover/dt.h \
 	discover/platform-powerpc.c
 
 discover_platform_ro_LINK = \
