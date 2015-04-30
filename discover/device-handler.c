@@ -830,7 +830,7 @@ int device_handler_dhcp(struct device_handler *handler,
 int device_handler_conf(struct device_handler *handler,
 		struct discover_device *dev, struct pb_url *url)
 {
-        struct discover_context *ctx;
+	struct discover_context *ctx;
 	struct boot_status *status;
 
 	status = talloc_zero(handler, struct boot_status);
@@ -838,22 +838,22 @@ int device_handler_conf(struct device_handler *handler,
 	status->message = talloc_asprintf(status, "Processing user config");
 	boot_status(handler, status);
 
-        /* create our context */
-        ctx = device_handler_discover_context_create(handler, dev);
-        ctx->conf_url = url;
+	/* create our context */
+	ctx = device_handler_discover_context_create(handler, dev);
+	ctx->conf_url = url;
 
-        iterate_parsers(ctx);
+	iterate_parsers(ctx);
 
-        device_handler_discover_context_commit(handler, ctx);
+	device_handler_discover_context_commit(handler, ctx);
 
 	status->message = talloc_asprintf(status,
 				"Processing user config complete");
 	boot_status(handler, status);
 
 	talloc_free(status);
-        talloc_free(ctx);
+	talloc_free(ctx);
 
-        return 0;
+	return 0;
 }
 
 static struct discover_boot_option *find_boot_option_by_id(
