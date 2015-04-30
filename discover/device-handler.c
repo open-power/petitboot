@@ -755,7 +755,15 @@ int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev)
 {
 	struct discover_context *ctx;
+	struct boot_status *status;
 	int rc;
+
+	status = talloc_zero(handler, struct boot_status);
+	status->type = BOOT_STATUS_INFO;
+	status->message = talloc_asprintf(status, "Processing %s device %s",
+				device_type_display_name(dev->device->type),
+				dev->device->id);
+	boot_status(handler, status);
 
 	process_boot_option_queue(handler);
 
@@ -777,6 +785,11 @@ int device_handler_discover(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 out:
+	status->message = talloc_asprintf(status,"Processing %s complete\n",
+				dev->device->id);
+	boot_status(handler, status);
+
+	talloc_free(status);
 	talloc_free(ctx);
 
 	return 0;
@@ -787,6 +800,13 @@ int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event)
 {
 	struct discover_context *ctx;
+	struct boot_status *status;
+
+	status = talloc_zero(handler, struct boot_status);
+	status->type = BOOT_STATUS_INFO;
+	status->message = talloc_asprintf(status, "Processing dhcp event on %s",
+				dev->device->id);
+	boot_status(handler, status);
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
@@ -796,6 +816,11 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	device_handler_discover_context_commit(handler, ctx);
 
+	status->message = talloc_asprintf(status,"Processing %s complete\n",
+				dev->device->id);
+	boot_status(handler, status);
+
+	talloc_free(status);
 	talloc_free(ctx);
 
 	return 0;
@@ -806,6 +831,12 @@ int device_handler_conf(struct device_handler *handler,
 		struct discover_device *dev, struct pb_url *url)
 {
         struct discover_context *ctx;
+	struct boot_status *status;
+
+	status = talloc_zero(handler, struct boot_status);
+	status->type = BOOT_STATUS_INFO;
+	status->message = talloc_asprintf(status, "Processing user config");
+	boot_status(handler, status);
 
         /* create our context */
         ctx = device_handler_discover_context_create(handler, dev);
@@ -815,6 +846,11 @@ int device_handler_conf(struct device_handler *handler,
 
         device_handler_discover_context_commit(handler, ctx);
 
+	status->message = talloc_asprintf(status,
+				"Processing user config complete");
+	boot_status(handler, status);
+
+	talloc_free(status);
         talloc_free(ctx);
 
         return 0;
