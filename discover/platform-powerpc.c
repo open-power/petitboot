@@ -802,7 +802,7 @@ static int set_ipmi_os_boot_sensor(struct platform_powerpc *platform)
 	uint8_t resp[1];
 	uint8_t req[] = {
 		0x00, /* sensor number: os boot */
-		0x10, /* operation: set assertion bits */
+		0xA9, /* operation: set everything */
 		0x00, /* sensor reading: none */
 		0x40, /* assertion mask lsb: set state 6 */
 		0x00, /* assertion mask msb: none */
