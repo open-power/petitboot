@@ -53,6 +53,7 @@ static const char *known_params[] = {
 	"petitboot,bootdevs",
 	"petitboot,language",
 	"petitboot,debug?",
+	"petitboot,write?",
 	NULL,
 };
 
@@ -548,6 +549,10 @@ static void populate_config(struct platform_powerpc *platform,
 		val = get_param(platform, "petitboot,debug?");
 		config->debug = val && !strcmp(val, "true");
 	}
+
+	val = get_param(platform, "petitboot,write?");
+	if (val)
+		config->allow_writes = !strcmp(val, "true");
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)
@@ -706,6 +711,12 @@ static int update_config(struct platform_powerpc *platform,
 
 	val = config->lang ?: "";
 	update_string_config(platform, "petitboot,language", val);
+
+	if (config->allow_writes == defaults->allow_writes)
+		val = "";
+	else
+		val = config->allow_writes ? "true" : "false";
+	update_string_config(platform, "petitboot,write?", val);
 
 	update_network_config(platform, config);
 

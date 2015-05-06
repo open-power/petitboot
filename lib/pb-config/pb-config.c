@@ -77,6 +77,8 @@ struct config *config_copy(void *ctx, const struct config *src)
 	dest->ipmi_bootdev = src->ipmi_bootdev;
 	dest->ipmi_bootdev_persistent = src->ipmi_bootdev_persistent;
 
+	dest->allow_writes = src->allow_writes;
+
 	if (src->lang && strlen(src->lang))
 		dest->lang = talloc_strdup(dest, src->lang);
 	else

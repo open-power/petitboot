@@ -108,6 +108,7 @@ void config_set_defaults(struct config *config)
 	config->network.n_dns_servers = 0;
 	config->safe_mode = false;
 	config->lang = NULL;
+	config->allow_writes = true;
 
 	config->n_autoboot_opts = 2;
 	config->autoboot_opts = talloc_array(config, struct autoboot_option,

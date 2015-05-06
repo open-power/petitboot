@@ -146,6 +146,8 @@ struct config {
 	unsigned int		ipmi_bootdev;
 	bool			ipmi_bootdev_persistent;
 
+	bool			allow_writes;
+
 	char			*lang;
 
 	/* not user-settable */

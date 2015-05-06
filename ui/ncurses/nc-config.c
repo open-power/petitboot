@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	32
+#define N_FIELDS	34
 
 extern struct help_text config_help_text;
 
@@ -99,6 +99,9 @@ struct config_screen {
 		struct nc_widget_textbox	*dns_f;
 		struct nc_widget_label		*dns_dhcp_help_l;
 		struct nc_widget_label		*dns_help_l;
+
+		struct nc_widget_label		*allow_write_l;
+		struct nc_widget_select		*allow_write_f;
 
 		struct nc_widget_label		*safe_mode;
 		struct nc_widget_button		*ok_b;
@@ -203,6 +206,7 @@ static int screen_process_form(struct config_screen *screen)
 	struct config *config;
 	int i, n_boot_opts, rc, idx;
 	unsigned int *order;
+	bool allow_write;
 	char mac[20];
 
 	config = config_copy(screen, screen->cui->config);
@@ -330,6 +334,10 @@ static int screen_process_form(struct config_screen *screen)
 			str = NULL;
 		}
 	}
+
+	allow_write = widget_select_get_value(screen->widgets.allow_write_f);
+	if (allow_write != config->allow_writes)
+		config->allow_writes = allow_write;
 
 	config->safe_mode = false;
 	rc = cui_send_config(screen->cui, config);
@@ -539,6 +547,12 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 			y, screen->field_x);
 		y += 1;
 	}
+
+	layout_pair(screen, y, screen->widgets.allow_write_l,
+		    widget_select_base(screen->widgets.allow_write_f));
+	y += widget_height(widget_select_base(screen->widgets.allow_write_f));
+
+	y += 1;
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
@@ -899,6 +913,18 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	if (config->safe_mode)
 		screen->widgets.safe_mode = widget_new_label(set, 0, 0,
 			 _("Selecting 'OK' will exit safe mode"));
+
+	screen->widgets.allow_write_l = widget_new_label(set, 0, 0,
+			_("Disk R/W:"));
+	screen->widgets.allow_write_f = widget_new_select(set, 0, 0,
+						COLS - screen->field_x);
+
+	widget_select_add_option(screen->widgets.allow_write_f, 0,
+				_("Prevent all writes to disk"),
+				!config->allow_writes);
+	widget_select_add_option(screen->widgets.allow_write_f, 1,
+				_("Allow bootloader scripts to modify disks"),
+				config->allow_writes);
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
 			ok_click, screen);

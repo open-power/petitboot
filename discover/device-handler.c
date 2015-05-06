@@ -1391,9 +1391,14 @@ static int umount_device(struct discover_device *dev)
 int device_request_write(struct discover_device *dev, bool *release)
 {
 	const char *fstype, *device_path;
+	const struct config *config;
 	int rc;
 
 	*release = false;
+
+	config = config_get();
+	if (!config->allow_writes)
+		return -1;
 
 	if (!dev->mounted)
 		return -1;

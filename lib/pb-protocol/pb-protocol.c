@@ -290,6 +290,8 @@ int pb_protocol_config_len(const struct config *config)
 
 	len += 4 + 4; /* ipmi_bootdev, ipmi_bootdev_persistent */
 
+	len += 4; /* allow_writes */
+
 	len += 4 + optional_strlen(config->lang);
 
 	return len;
@@ -500,6 +502,9 @@ int pb_protocol_serialise_config(const struct config *config,
 	*(uint32_t *)pos = __cpu_to_be32(config->ipmi_bootdev);
 	pos += 4;
 	*(uint32_t *)pos = config->ipmi_bootdev_persistent;
+	pos += 4;
+
+	*(uint32_t *)pos = config->allow_writes;
 	pos += 4;
 
 	pos += pb_protocol_serialise_string(pos, config->lang);
@@ -957,6 +962,10 @@ int pb_protocol_deserialise_config(struct config *config,
 	if (read_u32(&pos, &len, &tmp))
 		goto out;
 	config->ipmi_bootdev_persistent = !!tmp;
+
+	if (read_u32(&pos, &len, &tmp))
+		goto out;
+	config->allow_writes = !!tmp;
 
 	if (read_string(config, &pos, &len, &str))
 		goto out;
