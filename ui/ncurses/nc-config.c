@@ -429,6 +429,7 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	wh = widget_label_base(screen->widgets.timeout_help_l);
 	widget_set_visible(wl, screen->autoboot_enabled);
 	widget_set_visible(wf, screen->autoboot_enabled);
+	widget_set_visible(wh, screen->autoboot_enabled);
 	if (screen->autoboot_enabled) {
 		widget_set_visible(wh, screen->autoboot_enabled);
 		widget_move(wl, y, screen->label_x);
