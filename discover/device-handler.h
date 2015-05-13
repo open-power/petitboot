@@ -26,6 +26,7 @@ struct discover_device {
 
 	char			*mount_path;
 	const char		*device_path;
+	struct ramdisk_device	*ramdisk;
 	bool			mounted;
 	bool			mounted_rw;
 	bool			unmount;
@@ -59,6 +60,14 @@ struct discover_context {
 	void			*test_data;
 };
 
+struct ramdisk_device {
+	const char	*path;
+	char		*snapshot;
+	char		*origin;
+	char		*base;
+	unsigned int	sectors;
+};
+
 struct device_handler *device_handler_init(struct discover_server *server,
 		struct waitset *waitset, int dry_run);
 
@@ -72,6 +81,11 @@ struct discover_device *discover_device_create(struct device_handler *handler,
 		const char *id);
 void device_handler_add_device(struct device_handler *handler,
 		struct discover_device *device);
+void device_handler_add_ramdisk(struct device_handler *handler,
+		const char *path);
+struct ramdisk_device *device_handler_get_ramdisk(
+		struct device_handler *handler);
+void device_handler_release_ramdisk(struct discover_device *device);
 int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev);
 int device_handler_dhcp(struct device_handler *handler,

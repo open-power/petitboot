@@ -56,6 +56,9 @@ struct device_handler {
 	struct discover_device	**devices;
 	unsigned int		n_devices;
 
+	struct ramdisk_device	**ramdisks;
+	unsigned int		n_ramdisks;
+
 	struct waitset		*waitset;
 	struct waiter		*timeout_waiter;
 	bool			autoboot_enabled;
@@ -319,6 +322,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 void device_handler_reinit(struct device_handler *handler)
 {
 	struct discover_boot_option *opt, *tmp;
+	struct ramdisk_device *ramdisk;
 	unsigned int i;
 
 	device_handler_cancel_default(handler);
@@ -333,12 +337,17 @@ void device_handler_reinit(struct device_handler *handler)
 	for (i = 0; i < handler->n_devices; i++) {
 		discover_server_notify_device_remove(handler->server,
 				handler->devices[i]->device);
+		ramdisk = handler->devices[i]->ramdisk;
 		talloc_free(handler->devices[i]);
+		talloc_free(ramdisk);
 	}
 
 	talloc_free(handler->devices);
 	handler->devices = NULL;
 	handler->n_devices = 0;
+	talloc_free(handler->ramdisks);
+	handler->ramdisks = NULL;
+	handler->n_ramdisks = 0;
 
 	device_handler_reinit_sources(handler);
 }
@@ -748,6 +757,95 @@ void device_handler_add_device(struct device_handler *handler,
 
 	if (device->device->type == DEVICE_TYPE_NETWORK)
 		network_register_device(handler->network, device);
+}
+
+void device_handler_add_ramdisk(struct device_handler *handler,
+		const char *path)
+{
+	struct ramdisk_device *dev;
+	unsigned int i;
+
+	if (!path)
+		return;
+
+	for (i = 0; i < handler->n_ramdisks; i++)
+		if (!strcmp(handler->ramdisks[i]->path, path))
+			return;
+
+	dev = talloc_zero(handler, struct ramdisk_device);
+	if (!dev) {
+		pb_log("Failed to allocate memory to track %s\n", path);
+		return;
+	}
+
+	dev->path = talloc_strdup(handler, path);
+
+	handler->ramdisks = talloc_realloc(handler, handler->ramdisks,
+				struct ramdisk_device *,
+				handler->n_ramdisks + 1);
+	if (!handler->ramdisks) {
+		pb_log("Failed to reallocate memory"
+		       "- ramdisk tracking inconsistent!\n");
+		return;
+	}
+
+	handler->ramdisks[i] = dev;
+	i = handler->n_ramdisks++;
+}
+
+struct ramdisk_device *device_handler_get_ramdisk(
+		struct device_handler *handler)
+{
+	unsigned int i;
+	char *name;
+	dev_t id;
+
+	/* Check if free ramdisk exists */
+	for (i = 0; i < handler->n_ramdisks; i++)
+		if (!handler->ramdisks[i]->snapshot &&
+		    !handler->ramdisks[i]->origin &&
+		    !handler->ramdisks[i]->base)
+			return handler->ramdisks[i];
+
+	/* Otherwise create a new one */
+	name = talloc_asprintf(handler, "/dev/ram%d",
+			handler->n_ramdisks);
+	if (!name) {
+		pb_debug("Failed to allocate memory to name /dev/ram%d",
+			handler->n_ramdisks);
+		return NULL;
+	}
+
+	id = makedev(1, handler->n_ramdisks);
+	if (mknod(name, S_IFBLK, id)) {
+		if (errno == EEXIST) {
+			/* We haven't yet received updates for existing
+			 * ramdisks - add and use this one */
+			pb_debug("Using untracked ramdisk %s\n", name);
+		} else {
+			pb_log("Failed to create new ramdisk %s: %s\n",
+			       name, strerror(errno));
+			return NULL;
+		}
+	}
+	device_handler_add_ramdisk(handler, name);
+	talloc_free(name);
+
+	return handler->ramdisks[i];
+}
+
+void device_handler_release_ramdisk(struct discover_device *device)
+{
+	struct ramdisk_device *ramdisk = device->ramdisk;
+
+	talloc_free(ramdisk->snapshot);
+	talloc_free(ramdisk->origin);
+	talloc_free(ramdisk->base);
+
+	ramdisk->snapshot = ramdisk->origin = ramdisk->base = NULL;
+	ramdisk->sectors = 0;
+
+	device->ramdisk = NULL;
 }
 
 /* Start discovery on a hotplugged device. The device will be in our devices
