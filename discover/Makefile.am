@@ -24,6 +24,8 @@ discover_pb_discover_SOURCES = \
 	discover/device-handler.h \
 	discover/discover-server.c \
 	discover/discover-server.h \
+	discover/devmapper.c \
+	discover/devmapper.h \
 	discover/event.c \
 	discover/event.h \
 	discover/params.c \
@@ -57,6 +59,10 @@ discover_pb_discover_LDADD = \
 	discover/platform.ro \
 	$(core_lib) \
 	$(UDEV_LIBS)
+
+discover_pb_discover_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-ldevmapper
 
 discover_pb_discover_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
