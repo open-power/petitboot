@@ -26,6 +26,7 @@
 
 #include "device-handler.h"
 #include "discover-server.h"
+#include "devmapper.h"
 #include "user-event.h"
 #include "platform.h"
 #include "event.h"
@@ -1237,14 +1238,22 @@ static const char *fs_parameters(unsigned int rw_flags, const char *fstype)
 	return "";
 }
 
+static inline const char *get_device_path(struct discover_device *dev)
+{
+	return dev->ramdisk ? dev->ramdisk->snapshot : dev->device_path;
+}
+
 static bool check_existing_mount(struct discover_device *dev)
 {
 	struct stat devstat, mntstat;
+	const char *device_path;
 	struct mntent *mnt;
 	FILE *fp;
 	int rc;
 
-	rc = stat(dev->device_path, &devstat);
+	device_path = get_device_path(dev);
+
+	rc = stat(device_path, &devstat);
 	if (rc) {
 		pb_debug("%s: stat failed: %s\n", __func__, strerror(errno));
 		return false;
@@ -1294,7 +1303,7 @@ static bool check_existing_mount(struct discover_device *dev)
 
 static int mount_device(struct discover_device *dev)
 {
-	const char *fstype;
+	const char *fstype, *device_path;
 	int rc;
 
 	if (!dev->device_path)
@@ -1326,9 +1335,11 @@ static int mount_device(struct discover_device *dev)
 		goto err_free;
 	}
 
+	device_path = get_device_path(dev);
+
 	pb_log("mounting device %s read-only\n", dev->device_path);
 	errno = 0;
-	rc = mount(dev->device_path, dev->mount_path, fstype,
+	rc = mount(device_path, dev->mount_path, fstype,
 			MS_RDONLY | MS_SILENT,
 			fs_parameters(MS_RDONLY, fstype));
 	if (!rc) {
@@ -1339,7 +1350,10 @@ static int mount_device(struct discover_device *dev)
 	}
 
 	pb_log("couldn't mount device %s: mount failed: %s\n",
-			dev->device_path, strerror(errno));
+			device_path, strerror(errno));
+
+	/* If mount fails clean up any snapshot */
+	devmapper_destroy_snapshot(dev);
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 err_free:
@@ -1350,17 +1364,21 @@ err_free:
 
 static int umount_device(struct discover_device *dev)
 {
+	const char *device_path;
 	int rc;
 
 	if (!dev->mounted || !dev->unmount)
 		return 0;
 
-	pb_log("unmounting device %s\n", dev->device_path);
+	device_path = get_device_path(dev);
+
+	pb_log("unmounting device %s\n", device_path);
 	rc = umount(dev->mount_path);
 	if (rc)
 		return -1;
 
 	dev->mounted = false;
+	devmapper_destroy_snapshot(dev);
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 
@@ -1372,7 +1390,7 @@ static int umount_device(struct discover_device *dev)
 
 int device_request_write(struct discover_device *dev, bool *release)
 {
-	const char *fstype;
+	const char *fstype, *device_path;
 	int rc;
 
 	*release = false;
@@ -1385,14 +1403,18 @@ int device_request_write(struct discover_device *dev, bool *release)
 
 	fstype = discover_device_get_param(dev, "ID_FS_TYPE");
 
-	pb_log("remounting device %s read-write\n", dev->device_path);
+	device_path = get_device_path(dev);
+
+	pb_log("remounting device %s read-write\n", device_path);
 
 	rc = umount(dev->mount_path);
 	if (rc) {
-		pb_log("Failed to unmount %s\n", dev->mount_path);
+		pb_log("Failed to unmount %s: %s\n",
+		       dev->mount_path, strerror(errno));
 		return -1;
 	}
-	rc = mount(dev->device_path, dev->mount_path, fstype,
+
+	rc = mount(device_path, dev->mount_path, fstype,
 			MS_SILENT,
 			fs_parameters(MS_REMOUNT, fstype));
 	if (rc)
@@ -1403,29 +1425,50 @@ int device_request_write(struct discover_device *dev, bool *release)
 	return 0;
 
 mount_ro:
-	pb_log("Unable to remount device %s read-write\n", dev->device_path);
-	rc = mount(dev->device_path, dev->mount_path, fstype,
+	pb_log("Unable to remount device %s read-write: %s\n",
+	       device_path, strerror(errno));
+	if (mount(device_path, dev->mount_path, fstype,
 			MS_RDONLY | MS_SILENT,
-			fs_parameters(MS_RDONLY, fstype));
-	if (rc)
-		pb_log("Unable to recover mount for %s\n", dev->device_path);
+			fs_parameters(MS_RDONLY, fstype)))
+		pb_log("Unable to recover mount for %s: %s\n",
+		       device_path, strerror(errno));
 	return -1;
 }
 
 void device_release_write(struct discover_device *dev, bool release)
 {
-	const char *fstype;
+	const char *fstype, *device_path;
+	int rc = 0;
 
 	if (!release)
 		return;
 
+	device_path = get_device_path(dev);
+
 	fstype = discover_device_get_param(dev, "ID_FS_TYPE");
 
-	pb_log("remounting device %s read-only\n", dev->device_path);
-	mount(dev->device_path, dev->mount_path, "",
-			MS_REMOUNT | MS_RDONLY | MS_SILENT,
+	pb_log("remounting device %s read-only\n", device_path);
+
+	if (umount(dev->mount_path)) {
+		pb_log("Failed to unmount %s\n", dev->mount_path);
+		return;
+	}
+	dev->mounted_rw = dev->mounted = false;
+
+	if (dev->ramdisk) {
+		devmapper_merge_snapshot(dev);
+		/* device_path becomes stale after merge */
+		device_path = get_device_path(dev);
+	}
+
+	mount(device_path, dev->mount_path, fstype,
+			MS_RDONLY | MS_SILENT,
 			fs_parameters(MS_RDONLY, fstype));
-	dev->mounted_rw = false;
+	if (rc)
+		pb_log("Failed to remount %s read-only: %s\n",
+		       device_path, strerror(errno));
+	else
+		dev->mounted = true;
 }
 
 #else

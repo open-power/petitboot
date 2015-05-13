@@ -25,6 +25,7 @@
 #include "pb-discover.h"
 #include "device-handler.h"
 #include "cdrom.h"
+#include "devmapper.h"
 
 /* We set a default monitor buffer size, as we may not process monitor
  * events while performing device discvoery. systemd uses a 128M buffer, so
@@ -94,9 +95,13 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 
 	node = udev_device_get_devnode(dev);
 	path = udev_device_get_devpath(dev);
-	if (path && (strstr(path, "virtual/block/loop")
-			|| strstr(path, "virtual/block/ram"))) {
+	if (path && strstr(path, "virtual/block/loop")) {
 		pb_log("SKIP: %s: ignored (path=%s)\n", name, path);
+		return 0;
+	}
+
+	if (path && strstr(path, "virtual/block/ram")) {
+		device_handler_add_ramdisk(udev->handler, node);
 		return 0;
 	}
 
@@ -109,6 +114,14 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 			pb_log("SKIP: %s: no media present\n", name);
 			return 0;
 		}
+	}
+
+	/* If our environment's udev can recognise them explictly skip any
+	 * device mapper devices we encounter */
+	const char *devname = udev_device_get_property_value(dev, "DM_NAME");
+	if (devname) {
+		pb_log("SKIP: dm-device %s\n", devname);
+		return 0;
 	}
 
 	type = udev_device_get_property_value(dev, "ID_FS_TYPE");
@@ -141,6 +154,9 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	ddev->device->type = cdrom ? DEVICE_TYPE_OPTICAL : DEVICE_TYPE_DISK;
 
 	udev_setup_device_params(dev, ddev);
+
+	if (ddev->device->type == DEVICE_TYPE_DISK)
+		devmapper_init_snapshot(udev->handler, ddev);
 
 	device_handler_discover(udev->handler, ddev);
 
