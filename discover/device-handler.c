@@ -330,9 +330,11 @@ void device_handler_reinit(struct device_handler *handler)
 	list_init(&handler->unresolved_boot_options);
 
 	/* drop all devices */
-	for (i = 0; i < handler->n_devices; i++)
+	for (i = 0; i < handler->n_devices; i++) {
 		discover_server_notify_device_remove(handler->server,
 				handler->devices[i]->device);
+		talloc_free(handler->devices[i]);
+	}
 
 	talloc_free(handler->devices);
 	handler->devices = NULL;
