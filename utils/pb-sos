@@ -1,0 +1,76 @@
+#!/bin/sh
+
+diagdir="diag"
+tarfile="pb-sos.tar"
+tarflags=""
+corefile="/core"
+verbose=0
+
+usage() {
+	echo "usage: $0 [-v] [-f file] [-d user@host:/path]"
+}
+
+log() {
+	if [ $verbose -eq 1 ]
+	then
+		echo $1
+	fi
+}
+
+ARGS=`getopt vd:f:h "$@"`
+rc=$?
+set -- $ARGS
+if [ $# -lt 1 ] || [ $rc -ne 0 ]; then
+	usage
+	exit 1
+fi
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+	-v)	verbose=1; tarflags="$tarflags --verbose";;
+	-f)	tarfile="$2"; shift;;
+	-d)	desthost="$2"; shift;;
+	--)	shift; break;;
+	-h)
+		usage
+		exit 1;;
+	-*)
+		usage
+		exit 1;;
+	*)	break;;
+    esac
+    shift
+done
+
+mkdir -p /$diagdir
+
+# Include version of pb-discover
+pb-discover --version > /$diagdir/version
+
+# Unconditionally grab relevant /var/log files
+log "Adding files from /var/log"
+cp -r /var/log/messages /var/log/petitboot /$diagdir/
+
+# Check if pb-discover segfaulted
+if [ -r $corefile ]
+then
+	log "Adding core dump"
+	cp /core /$diagdir/
+fi
+
+# Copy dmesg
+log "Adding dmesg"
+dmesg > /$diagdir/dmesg
+
+log "Compressing..."
+cd /
+tar $tarflags -cf $tarfile $diagdir
+
+echo "Complete, tarfile location $tarfile"
+
+# Optionally scp out to a host
+if [ -n "${desthost+1}" ]; then
+	echo "Copying to remote host $desthost"
+	scp $tarfile $desthost
+fi
