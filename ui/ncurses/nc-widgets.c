@@ -61,6 +61,7 @@
 #define to_textbox(w) container_of(w, struct nc_widget_textbox, widget)
 #define to_button(w) container_of(w, struct nc_widget_button, widget)
 #define to_select(w) container_of(w, struct nc_widget_select, widget)
+#define to_subset(w) container_of(w, struct nc_widget_subset, widget)
 
 static const char *checkbox_checked_str = "[*]";
 static const char *checkbox_unchecked_str = "[ ]";
@@ -112,6 +113,24 @@ struct nc_widget_textbox {
 	struct nc_widget	widget;
 };
 
+struct nc_widget_subset {
+	struct nc_widget	widget;
+	int			*active;
+	int			n_active;
+	struct subset_option {
+		char		*str;
+		int		val;
+		FIELD		*field;
+	} *options;
+	int			n_options;
+	int			top, left, size;
+	struct nc_widgetset	*set;
+	void			(*on_change)(void *, int);
+	void			*on_change_arg;
+	void			(*screen_cb)(void *,
+					struct nc_widget_subset *, int);
+};
+
 struct nc_widget_select {
 	struct nc_widget	widget;
 	struct select_option {
@@ -140,6 +159,21 @@ static bool key_is_select(int key)
 	return key == ' ' || key == '\r' || key == '\n' || key == KEY_ENTER;
 }
 
+static bool key_is_minus(int key)
+{
+	return key == 055;
+}
+
+static bool key_is_left(int key)
+{
+	return key == KEY_LEFT;
+}
+
+static bool key_is_right(int key)
+{
+	return key == KEY_RIGHT;
+}
+
 static bool process_key_nop(struct nc_widget *widget __attribute__((unused)),
 		FORM *form __attribute((unused)),
 		int key __attribute__((unused)))
@@ -153,6 +187,11 @@ static void field_set_visible(FIELD *field, bool visible)
 	if (visible)
 		opts |= O_VISIBLE;
 	set_field_opts(field, opts);
+}
+
+static bool field_visible(FIELD *field)
+{
+	return (field_opts(field) & O_VISIBLE) == O_VISIBLE;
 }
 
 static void field_move(FIELD *field, int y, int x)
@@ -412,6 +451,329 @@ void widget_textbox_set_validator_ipv4_multi(struct nc_widget_textbox *textbox)
 				check_ipv4_multi_char);
 	}
 	set_field_type(textbox->widget.field, textbox->set->ipv4_multi_type);
+}
+
+static void subset_update_order(struct nc_widget_subset *subset)
+{
+	char *str;
+	int i, val;
+
+	for (i = 0; i < subset->n_active; i++) {
+		val = subset->active[i];
+		str = talloc_asprintf(subset, "(%d) %s",
+				      i, subset->options[val].str);
+		set_field_buffer(subset->options[val].field, 0,
+				 str);
+		talloc_free(str);
+	}
+}
+
+static void widget_focus_change(struct nc_widget *widget, FIELD *field,
+		bool focussed);
+
+static void subset_delete_active(struct nc_widget_subset *subset, int idx)
+{
+	bool last = idx == (subset->n_active - 1);
+	struct nc_widgetset *set = subset->set;
+	struct nc_widget *widget;
+	size_t rem;
+	int i, val;
+
+	/* Shift field focus to nearest active option or next visible field */
+	if (subset->n_active > 1) {
+		if (last)
+			val = subset->active[idx - 1];
+		else
+			val = subset->active[idx + 1];
+		set->cur_field = subset->options[val].field;
+	} else {
+		for (i = 0; i < set->n_fields; i++)
+			if (field_visible(set->fields[i])) {
+				set->cur_field = set->fields[i];
+				break;
+			}
+	}
+
+	set_current_field(set->form, set->cur_field);
+	widget = field_userptr(set->cur_field);
+	widget_focus_change(widget, set->cur_field, true);
+	if (set->widget_focus)
+		set->widget_focus(widget, set->widget_focus_arg);
+
+	/* Update active array */
+	rem = sizeof(int) * (subset->n_active - idx - 1);
+	val = subset->active[idx];
+	field_set_visible(subset->options[val].field, false);
+	if (rem)
+		memmove(&subset->active[idx], &subset->active[idx + 1], rem);
+	subset->n_active--;
+	subset->active = talloc_realloc(subset, subset->active,
+					 int, subset->n_active);
+
+	subset->widget.height = subset->n_active;
+}
+
+static bool subset_process_key(struct nc_widget *w, FORM *form, int key)
+{
+	struct nc_widget_subset *subset = to_subset(w);
+	int i, val, opt_idx = -1;
+	FIELD *field;
+
+	if (!key_is_minus(key) && !key_is_left(key) && !key_is_right(key))
+		return false;
+
+	field = current_field(form);
+
+	for (i = 0; i < subset->n_active; i++) {
+		val = subset->active[i];
+		if (subset->options[val].field == field) {
+			opt_idx = i;
+			break;
+		}
+	}
+
+	if (opt_idx < 0)
+		return false;
+
+	if (key_is_minus(key))
+		subset_delete_active(subset, opt_idx);
+
+	if (key_is_left(key)){
+		if (opt_idx == 0)
+			return true;
+
+		val = subset->active[opt_idx];
+		subset->active[opt_idx] = subset->active[opt_idx - 1];
+		subset->active[opt_idx - 1] = val;
+	}
+
+	if (key_is_right(key)){
+		if (opt_idx >= subset->n_active - 1)
+			return true;
+
+		val = subset->active[opt_idx];
+		subset->active[opt_idx] = subset->active[opt_idx + 1];
+		subset->active[opt_idx + 1] = val;
+	}
+
+	subset_update_order(subset);
+
+	if (subset->on_change)
+		subset->on_change(subset->on_change_arg, 0);
+
+	return true;
+}
+
+static void subset_set_visible(struct nc_widget *widget, bool visible)
+{
+	struct nc_widget_subset *subset = to_subset(widget);
+	int i, val;
+
+	for (i = 0; i < subset->n_active; i++) {
+		val = subset->active[i];
+		field_set_visible(subset->options[val].field, visible);
+	}
+}
+
+static void subset_move(struct nc_widget *widget, int y, int x)
+{
+	struct nc_widget_subset *subset = to_subset(widget);
+	int i, val;
+
+	for (i = 0; i < subset->n_active; i++) {
+		val = subset->active[i];
+		field_move(subset->options[val].field, y + i , x);
+	}
+}
+
+static void subset_field_focus(struct nc_widget *widget, FIELD *field)
+{
+	struct nc_widget_subset *subset = to_subset(widget);
+	int i, val;
+
+	for (i = 0; i < subset->n_active; i++) {
+		val = subset->active[i];
+		if (field == subset->options[val].field) {
+			widget->focus_y = i;
+			return;
+		}
+	}
+}
+
+static int subset_destructor(void *ptr)
+{
+	struct nc_widget_subset *subset = ptr;
+	int i;
+
+	for (i = 0; i < subset->n_options; i++)
+		free_field(subset->options[i].field);
+
+	return 0;
+}
+
+struct nc_widget_subset *widget_new_subset(struct nc_widgetset *set,
+		int y, int x, int len, void *screen_cb)
+{
+	struct nc_widget_subset *subset;
+
+	subset = talloc_zero(set, struct nc_widget_subset);
+	subset->widget.width = len;
+	subset->widget.height = 0;
+	subset->widget.x = x;
+	subset->widget.y = y;
+	subset->widget.process_key = subset_process_key;
+	subset->widget.set_visible = subset_set_visible;
+	subset->widget.move = subset_move;
+	subset->widget.field_focus = subset_field_focus;
+	subset->widget.focussed_attr = A_REVERSE;
+	subset->widget.unfocussed_attr = A_NORMAL;
+	subset->top = y;
+	subset->left = x;
+	subset->size = len;
+	subset->set = set;
+	subset->n_active = subset->n_options = 0;
+	subset->active = NULL;
+	subset->options = NULL;
+	subset->screen_cb = screen_cb;
+
+	talloc_set_destructor(subset, subset_destructor);
+
+	return subset;
+}
+
+void widget_subset_add_option(struct nc_widget_subset *subset, const char *text)
+{
+	FIELD *f;
+	int i;
+
+	i = subset->n_options++;
+	subset->options = talloc_realloc(subset, subset->options,
+					 struct subset_option, i + 1);
+
+	subset->options[i].str = talloc_strdup(subset->options, text);
+
+	subset->options[i].field = f = new_field(1, subset->size, subset->top + i,
+						 subset->left, 0, 0);
+
+	field_opts_off(f, O_WRAP | O_EDIT);
+	set_field_userptr(f, &subset->widget);
+	set_field_buffer(f, 0, subset->options[i].str);
+	field_set_visible(f, false);
+	widgetset_add_field(subset->set, f);
+}
+
+void widget_subset_make_active(struct nc_widget_subset *subset, int idx)
+{
+	int i;
+
+	for (i = 0; i < subset->n_active; i++)
+		if (subset->active[i] == idx) {
+			pb_debug("%s: Index %d already active\n", __func__, idx);
+			return;
+		}
+
+	i = subset->n_active++;
+	subset->widget.height = subset->n_active;
+	subset->active = talloc_realloc(subset, subset->active,
+					int, i + 1);
+	subset->active[i] = idx;
+
+	subset_update_order(subset);
+}
+
+int widget_subset_get_order(void *ctx, unsigned int **order,
+		struct nc_widget_subset *subset)
+{
+	unsigned int *buf = talloc_array(ctx, unsigned int, subset->n_active);
+	int i;
+
+	for (i = 0; i < subset->n_active; i++)
+		buf[i] = subset->active[i];
+
+	*order = buf;
+	return i;
+}
+
+void widget_subset_show_inactive(struct nc_widget_subset *subset,
+		struct nc_widget_select *select)
+{
+	bool active = false, first = true;
+	int i, j;
+
+	for (i = 0; i < subset->n_options; i++) {
+		active = false;
+		for (j = 0; j < subset->n_active; j++)
+			if (subset->active[j] == i)
+				active = true;
+
+		if (active)
+			continue;
+
+		widget_select_add_option(select, i,
+					 subset->options[i].str, first);
+		if (first)
+			first = false;
+	}
+}
+
+int widget_subset_n_inactive(struct nc_widget_subset *subset)
+{
+	return subset->n_options - subset->n_active;
+}
+
+int widget_subset_height(struct nc_widget_subset *subset)
+{
+	return subset->n_active;
+}
+
+void widget_subset_on_change(struct nc_widget_subset *subset,
+		void (*on_change)(void *, int), void *arg)
+{
+	subset->on_change = on_change;
+	subset->on_change_arg = arg;
+}
+
+void widget_subset_drop_options(struct nc_widget_subset *subset)
+{
+	struct nc_widgetset *set = subset->set;
+	int i;
+
+	for (i = 0; i < subset->n_options; i++) {
+		FIELD *field = subset->options[i].field;
+		widgetset_remove_field(set, field);
+		if (field == set->cur_field)
+			set->cur_field = NULL;
+		free_field(subset->options[i].field);
+	}
+
+	talloc_free(subset->options);
+	talloc_free(subset->active);
+	subset->options = NULL;
+	subset->active = NULL;
+	subset->n_options = 0;
+	subset->n_active = 0;
+	subset->widget.height = 0;
+	subset->widget.focus_y = 0;
+}
+
+void widget_subset_clear_active(struct nc_widget_subset *subset)
+{
+	int i;
+
+	for (i = 0; i < subset->n_options; i++)
+		field_set_visible(subset->options[i].field, false);
+
+	talloc_free(subset->active);
+	subset->active = NULL;
+	subset->n_active = 0;
+	subset->widget.height = 0;
+	subset->widget.focus_y = 0;
+}
+
+void widget_subset_callback(void *arg,
+		struct nc_widget_subset *subset, int idx)
+{
+	subset->screen_cb(arg, subset, idx);
 }
 
 static void select_option_change(struct select_option *opt, bool selected)
@@ -679,7 +1041,7 @@ struct nc_widget_button *widget_new_button(struct nc_widgetset *set,
 	return button;
 }
 
-static void widget_focus_change(struct nc_widget *widget, FIELD *field,
+void widget_focus_change(struct nc_widget *widget, FIELD *field,
 		bool focussed)
 {
 	int attr = focussed ? widget->focussed_attr : widget->unfocussed_attr;
@@ -704,19 +1066,19 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 		tab = true;
 		/* fall through */
 	case KEY_UP:
-		req = REQ_PREV_FIELD;
+		req = REQ_SPREV_FIELD;
 		break;
 	case '\t':
 		tab = true;
 		/* fall through */
 	case KEY_DOWN:
-		req = REQ_NEXT_FIELD;
+		req = REQ_SNEXT_FIELD;
 		break;
 	case KEY_PPAGE:
-		req = REQ_FIRST_FIELD;
+		req = REQ_SFIRST_FIELD;
 		break;
 	case KEY_NPAGE:
-		req = REQ_LAST_FIELD;
+		req = REQ_SLAST_FIELD;
 		break;
 	}
 
@@ -856,6 +1218,7 @@ static void widgetset_remove_field(struct nc_widgetset *set, FIELD *field)
 
 DECLARE_BASEFN(textbox);
 DECLARE_BASEFN(checkbox);
+DECLARE_BASEFN(subset);
 DECLARE_BASEFN(select);
 DECLARE_BASEFN(label);
 DECLARE_BASEFN(button);

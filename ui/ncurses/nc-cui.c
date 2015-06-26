@@ -41,6 +41,7 @@
 #include "nc-sysinfo.h"
 #include "nc-lang.h"
 #include "nc-helpscreen.h"
+#include "nc-subset.h"
 
 extern const struct help_text main_menu_help_text;
 
@@ -68,6 +69,16 @@ static void cui_start(void)
 	 * this (kcbt), but we don't want to require a full linux/xterm termcap
 	 */
 	define_key("\x1b[Z", KEY_BTAB);
+
+	/* We'll define a few other keys too since they're commonly
+	 * used for navigation but the escape character will cause
+	 * Petitboot to exit if they're left undefined */
+	define_key("\x1b\x5b\x35\x7e", KEY_PPAGE);
+	define_key("\x1b\x5b\x36\x7e", KEY_NPAGE);
+	define_key("\x1b\x4f\x48", KEY_HOME);
+	define_key("\x1b\x4f\x46", KEY_END);
+	define_key("OH", KEY_HOME);
+	define_key("OF", KEY_END);
 
 	while (getch() != ERR)		/* flush stdin */
 		(void)0;
@@ -173,6 +184,7 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 {
 	struct pmenu *menu = cui->main;
 	struct cui_opt_data *cod;
+	int idx, top, rows, cols;
 	static int user_idx = 0;
 
 	/* Was the edit cancelled? */
@@ -211,6 +223,22 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 
 		/* Re-attach the items array. */
 		set_menu_items(menu->ncm, menu->items);
+
+		/* If our index is above the current top row, align
+		 * us to the new top. Otherwise, align us to the new
+		 * bottom */
+		menu_format(cui->main->ncm, &rows, &cols);
+		top = top_row(cui->main->ncm);
+		idx = item_index(item->nci);
+
+		if (top >= idx)
+			top = idx;
+		else
+			top = idx < rows ? 0 : idx - rows + 1;
+
+		set_top_row(cui->main->ncm, top);
+		set_current_item(item->pmenu->ncm, item->nci);
+
 		nc_scr_post(&menu->scr);
 	} else {
 		cod = item->data;
@@ -218,7 +246,6 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 
 	cod->bd = talloc_steal(cod, bd);
 
-	set_current_item(item->pmenu->ncm, item->nci);
 out:
 	cui_set_current(cui, &cui->main->scr);
 	talloc_free(cui->boot_editor);
@@ -316,6 +343,29 @@ void cui_show_help(struct cui *cui, const char *title,
 
 	if (cui->help_screen)
 		cui_set_current(cui, help_screen_scr(cui->help_screen));
+}
+
+static void cui_subset_exit(struct cui *cui)
+{
+	cui_set_current(cui, subset_screen_return_scr(cui->subset_screen));
+	talloc_free(cui->subset_screen);
+	cui->subset_screen = NULL;
+}
+
+void cui_show_subset(struct cui *cui, const char *title,
+		     void *arg)
+{
+	if (!cui->current)
+		return;
+
+	if (cui->subset_screen)
+		return;
+
+	cui->subset_screen = subset_screen_init(cui, cui->current,
+			title, arg, cui_subset_exit);
+
+	if (cui->subset_screen)
+		cui_set_current(cui, subset_screen_scr(cui->subset_screen));
 }
 
 /**
@@ -528,7 +578,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		/* If our index is above the current top row, align
 		 * us to the new top. Otherwise, align us to the new
 		 * bottom */
-		top = top < idx ? idx - rows : idx;
+		top = top < idx ? idx - rows + 1 : idx;
 
 		set_top_row(cui->main->ncm, top);
 		set_current_item(cui->main->ncm, selected);
@@ -552,6 +602,7 @@ static void cui_device_remove(struct device *dev, void *arg)
 	struct cui *cui = cui_from_arg(arg);
 	struct boot_option *opt;
 	unsigned int i;
+	int rows, cols, top, last;
 	int result;
 
 	pb_log("%s: %p %s\n", __func__, dev, dev->id);
@@ -587,6 +638,15 @@ static void cui_device_remove(struct device *dev, void *arg)
 	/* Re-attach the items array. */
 
 	result = set_menu_items(cui->main->ncm, cui->main->items);
+
+	/* Move cursor to 'Exit' menu entry */
+	menu_format(cui->main->ncm, &rows, &cols);
+	last = cui->main->item_count - 1;
+	set_current_item(cui->main->ncm, cui->main->items[last]);
+	if (!item_visible(cui->main->items[last])) {
+		top = last < rows ? 0 : last - rows + 1;
+		set_top_row(cui->main->ncm, top);
+	}
 
 	if (result)
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);

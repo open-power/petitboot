@@ -17,23 +17,6 @@ static struct config	*config;
 
 static const char *kernel_cmdline_debug = "petitboot.debug";
 
-static const char *device_type_name(enum device_type type)
-{
-	switch (type) {
-	case DEVICE_TYPE_DISK:
-		return "disk";
-	case DEVICE_TYPE_OPTICAL:
-		return "optical";
-	case DEVICE_TYPE_NETWORK:
-		return "network";
-	case DEVICE_TYPE_ANY:
-		return "any";
-	case DEVICE_TYPE_UNKNOWN:
-	default:
-		return "unknown";
-	}
-}
-
 static void dump_config(struct config *config)
 {
 	unsigned int i;
@@ -79,16 +62,13 @@ static void dump_config(struct config *config)
 	for (i = 0; i < config->network.n_dns_servers; i++)
 		pb_log("  dns server %s\n", config->network.dns_servers[i]);
 
-	if (config->boot_device)
-		pb_log("  boot device %s\n", config->boot_device);
-
-	if (config->n_boot_priorities)
-		pb_log(" boot priority order:\n");
-
-	for (i = 0; i < config->n_boot_priorities; i++) {
-		struct boot_priority *prio = &config->boot_priorities[i];
-		pb_log(" %10s: %d\n", device_type_name(prio->type),
-					prio->priority);
+	for (i = 0; i < config->n_autoboot_opts; i++) {
+		if (config->autoboot_opts[i].boot_type == BOOT_DEVICE_TYPE)
+			pb_log("  boot device %d: %s\n", i,
+			       device_type_name(config->autoboot_opts[i].type));
+		else
+			pb_log("  boot device %d: uuid: %s\n",
+			       i, config->autoboot_opts[i].uuid);
 	}
 
 	pb_log("  IPMI boot device 0x%02x%s\n", config->ipmi_bootdev,
@@ -126,17 +106,16 @@ void config_set_defaults(struct config *config)
 	config->network.n_interfaces = 0;
 	config->network.dns_servers = NULL;
 	config->network.n_dns_servers = 0;
-	config->boot_device = NULL;
 	config->safe_mode = false;
 	config->lang = NULL;
 
-	config->n_boot_priorities = 2;
-	config->boot_priorities = talloc_array(config, struct boot_priority,
-						config->n_boot_priorities);
-	config->boot_priorities[0].type = DEVICE_TYPE_NETWORK;
-	config->boot_priorities[0].priority = 0;
-	config->boot_priorities[1].type = DEVICE_TYPE_ANY;
-	config->boot_priorities[1].priority = 1;
+	config->n_autoboot_opts = 2;
+	config->autoboot_opts = talloc_array(config, struct autoboot_option,
+						config->n_autoboot_opts);
+	config->autoboot_opts[0].boot_type = BOOT_DEVICE_TYPE;
+	config->autoboot_opts[0].type = DEVICE_TYPE_NETWORK;
+	config->autoboot_opts[1].boot_type = BOOT_DEVICE_TYPE;
+	config->autoboot_opts[1].type = DEVICE_TYPE_ANY;
 
 	config->ipmi_bootdev = 0;
 	config->ipmi_bootdev_persistent = false;

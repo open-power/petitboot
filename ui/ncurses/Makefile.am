@@ -47,7 +47,9 @@ ui_ncurses_libpbnc_la_SOURCES = \
 	ui/ncurses/nc-widgets.h \
 	ui/ncurses/nc-add-url.c \
 	ui/ncurses/nc-add-url.h \
-	ui/ncurses/nc-add-url-help.c
+	ui/ncurses/nc-add-url-help.c \
+	ui/ncurses/nc-subset.c \
+	ui/ncurses/nc-subset.h
 
 sbin_PROGRAMS += ui/ncurses/petitboot-nc
 

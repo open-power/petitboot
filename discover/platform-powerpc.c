@@ -39,7 +39,8 @@ struct platform_powerpc {
 				struct platform_powerpc *platform,
 				uint8_t *bootdev, bool *persistent);
 	int		(*clear_ipmi_bootdev)(
-				struct platform_powerpc *platform);
+				struct platform_powerpc *platform,
+				bool persistent);
 	int 		(*set_os_boot_sensor)(
 				struct platform_powerpc *platform);
 };
@@ -49,6 +50,7 @@ static const char *known_params[] = {
 	"petitboot,network",
 	"petitboot,timeout",
 	"petitboot,bootdev",
+	"petitboot,bootdevs",
 	"petitboot,language",
 	"petitboot,debug?",
 	NULL,
@@ -388,30 +390,129 @@ static void populate_network_config(struct platform_powerpc *platform,
 	talloc_free(val);
 }
 
+static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
+{
+	char *delim = strchr(*pos, ' ');
+	int len, prefix = 0, rc = -1;
+	enum device_type type;
+
+	if (!strncmp(*pos, "uuid:", strlen("uuid:"))) {
+		prefix = strlen("uuid:");
+		opt->boot_type = BOOT_DEVICE_UUID;
+		rc = 0;
+	} else if (!strncmp(*pos, "mac:", strlen("mac:"))) {
+		prefix = strlen("mac:");
+		opt->boot_type = BOOT_DEVICE_UUID;
+		rc = 0;
+	} else {
+		type = find_device_type(*pos);
+		if (type != DEVICE_TYPE_UNKNOWN) {
+			opt->type = type;
+			opt->boot_type = BOOT_DEVICE_TYPE;
+			rc = 0;
+		}
+	}
+
+	if (opt->boot_type == BOOT_DEVICE_UUID) {
+		if (delim)
+			len = (int)(delim - *pos) - prefix;
+		else
+			len = strlen(*pos);
+
+		opt->uuid = talloc_strndup(ctx, *pos + prefix, len);
+	}
+
+	/* Always advance pointer to next option or end */
+	if (delim)
+		*pos = delim + 1;
+	else
+		*pos += strlen(*pos);
+
+	return rc;
+}
+
 static void populate_bootdev_config(struct platform_powerpc *platform,
 		struct config *config)
-
 {
+	struct autoboot_option *opt, *new = NULL;
+	char *pos, *end, *old_dev = NULL;
+	const char delim = ' ';
+	unsigned int n_new = 0;
 	const char *val;
+	bool conflict;
 
-	config->boot_device = NULL;
-
+	/* Check for old-style bootdev */
 	val = get_param(platform, "petitboot,bootdev");
-	if (!val || !strlen(val))
-		return;
-
-	if (!strncmp(val, "uuid:", strlen("uuid:"))) {
-		config->boot_device = talloc_strdup(config,
+	if (val && strlen(val)) {
+		pos = talloc_strdup(config, val);
+		if (!strncmp(val, "uuid:", strlen("uuid:")))
+			old_dev = talloc_strdup(config,
 						val + strlen("uuid:"));
-
-	} else if (!strncmp(val, "mac:", strlen("mac:"))) {
-		config->boot_device = talloc_strdup(config,
+		else if (!strncmp(val, "mac:", strlen("mac:")))
+			old_dev = talloc_strdup(config,
 						val + strlen("mac:"));
-
-	} else {
-		pb_log("bootdev config is in an unknown format "
-				"(expected uuid:... or mac:...)");
 	}
+
+	/* Check for ordered bootdevs */
+	val = get_param(platform, "petitboot,bootdevs");
+	if (!val || !strlen(val)) {
+		pos = end = NULL;
+	} else {
+		pos = talloc_strdup(config, val);
+		end = strchr(pos, '\0');
+	}
+
+	while (pos && pos < end) {
+		opt = talloc(config, struct autoboot_option);
+
+		if (read_bootdev(config, &pos, opt)) {
+			pb_log("bootdev config is in an unknown format "
+			       "(expected uuid:... or mac:...)");
+			talloc_free(opt);
+			if (strchr(pos, delim))
+				continue;
+			return;
+		}
+
+		new = talloc_realloc(config, new, struct autoboot_option,
+				     n_new + 1);
+		new[n_new] = *opt;
+		n_new++;
+		talloc_free(opt);
+
+	}
+
+	if (!n_new && !old_dev) {
+		/* If autoboot has been disabled, clear the default options */
+		if (!config->autoboot_enabled) {
+			talloc_free(config->autoboot_opts);
+			config->n_autoboot_opts = 0;
+		}
+		return;
+	}
+
+	conflict = old_dev && (!n_new ||
+				    new[0].boot_type == BOOT_DEVICE_TYPE ||
+				    /* Canonical UUIDs are 36 characters long */
+				    strncmp(new[0].uuid, old_dev, 36));
+
+	if (!conflict) {
+		talloc_free(config->autoboot_opts);
+		config->autoboot_opts = new;
+		config->n_autoboot_opts = n_new;
+		return;
+	}
+
+	/*
+	 * Difference detected, defer to old format in case it has been updated
+	 * recently
+	 */
+	pb_debug("Old autoboot bootdev detected\n");
+	talloc_free(config->autoboot_opts);
+	config->autoboot_opts = talloc(config, struct autoboot_option);
+	config->autoboot_opts[0].boot_type = BOOT_DEVICE_UUID;
+	config->autoboot_opts[0].uuid = talloc_strdup(config, old_dev);
+	config->n_autoboot_opts = 1;
 }
 
 static void populate_config(struct platform_powerpc *platform,
@@ -537,16 +638,40 @@ static void update_network_config(struct platform_powerpc *platform,
 static void update_bootdev_config(struct platform_powerpc *platform,
 		struct config *config)
 {
-	char *val, *tmp = NULL;
+	char *val = NULL, *boot_str = NULL, *tmp = NULL, *first = NULL;
+	struct autoboot_option *opt;
+	const char delim = ' ';
+	unsigned int i;
 
-	if (!config->boot_device)
-		val = "";
+	if (!config->n_autoboot_opts)
+		first = val = "";
+	else if (config->autoboot_opts[0].boot_type == BOOT_DEVICE_UUID)
+		first = talloc_asprintf(config, "uuid:%s",
+					config->autoboot_opts[0].uuid);
 	else
-		tmp = val = talloc_asprintf(platform,
-				"uuid:%s", config->boot_device);
+		first = "";
 
-	update_string_config(platform, "petitboot,bootdev", val);
+	for (i = 0; i < config->n_autoboot_opts; i++) {
+		opt = &config->autoboot_opts[i];
+		switch (opt->boot_type) {
+			case BOOT_DEVICE_TYPE:
+				boot_str = talloc_asprintf(config, "%s%c",
+						device_type_name(opt->type),
+						delim);
+				break;
+			case BOOT_DEVICE_UUID:
+				boot_str = talloc_asprintf(config, "uuid:%s%c",
+						opt->uuid, delim);
+				break;
+			}
+			tmp = val = talloc_asprintf_append(val, boot_str);
+	}
+
+	update_string_config(platform, "petitboot,bootdevs", val);
+	update_string_config(platform, "petitboot,bootdev", first);
 	talloc_free(tmp);
+	if (boot_str)
+		talloc_free(boot_str);
 }
 
 static int update_config(struct platform_powerpc *platform,
@@ -566,6 +691,14 @@ static int update_config(struct platform_powerpc *platform,
 	else
 		val = tmp = talloc_asprintf(platform, "%d",
 				config->autoboot_timeout_sec);
+
+	if (config->ipmi_bootdev == IPMI_BOOTDEV_INVALID &&
+	    platform->clear_ipmi_bootdev) {
+		platform->clear_ipmi_bootdev(platform,
+				config->ipmi_bootdev_persistent);
+		config->ipmi_bootdev = IPMI_BOOTDEV_NONE;
+		config->ipmi_bootdev_persistent = false;
+	}
 
 	update_string_config(platform, "petitboot,timeout", val);
 	if (tmp)
@@ -592,6 +725,7 @@ static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
 	case IPMI_BOOTDEV_DISK:
 	case IPMI_BOOTDEV_NETWORK:
 	case IPMI_BOOTDEV_CDROM:
+	default:
 		break;
 	case IPMI_BOOTDEV_SETUP:
 		config->autoboot_enabled = false;
@@ -681,10 +815,16 @@ static int write_bootdev_sysparam(const char *name, uint8_t val)
 }
 
 static int clear_ipmi_bootdev_sysparams(
-		struct platform_powerpc *platform __attribute__((unused)))
+		struct platform_powerpc *platform __attribute__((unused)),
+		bool persistent)
 {
-	/* invalidate next-boot-device setting */
-	write_bootdev_sysparam("next-boot-device", 0xff);
+	if (persistent) {
+		/* invalidate default-boot-device setting */
+		write_bootdev_sysparam("default-boot-device", 0xff);
+	} else {
+		/* invalidate next-boot-device setting */
+		write_bootdev_sysparam("next-boot-device", 0xff);
+	}
 	return 0;
 }
 
@@ -711,7 +851,8 @@ static int get_ipmi_bootdev_sysparams(
 	return 0;
 }
 
-static int clear_ipmi_bootdev_ipmi(struct platform_powerpc *platform)
+static int clear_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
+				   bool persistent __attribute__((unused)))
 {
 	uint16_t resp_len;
 	uint8_t resp[1];
@@ -876,7 +1017,7 @@ static void pre_boot(struct platform *p, const struct config *config)
 	struct platform_powerpc *platform = to_platform_powerpc(p);
 
 	if (!config->ipmi_bootdev_persistent && platform->clear_ipmi_bootdev)
-		platform->clear_ipmi_bootdev(platform);
+		platform->clear_ipmi_bootdev(platform, false);
 
 	if (platform->set_os_boot_sensor)
 		platform->set_os_boot_sensor(platform);

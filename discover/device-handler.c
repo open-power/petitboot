@@ -40,8 +40,7 @@
 
 enum default_priority {
 	DEFAULT_PRIORITY_REMOTE		= 1,
-	DEFAULT_PRIORITY_LOCAL_UUID	= 2,
-	DEFAULT_PRIORITY_LOCAL_FIRST	= 3,
+	DEFAULT_PRIORITY_LOCAL_FIRST	= 2,
 	DEFAULT_PRIORITY_LOCAL_LAST	= 0xfe,
 	DEFAULT_PRIORITY_DISABLED	= 0xff,
 };
@@ -462,11 +461,27 @@ static bool ipmi_device_type_matches(enum ipmi_bootdev ipmi_type,
 	return false;
 }
 
-static bool priority_matches(struct boot_priority *prio,
-		struct discover_boot_option *opt)
+static int autoboot_option_priority(const struct config *config,
+				struct discover_boot_option *opt)
 {
-	return prio->type == opt->device->device->type ||
-		prio->type == DEVICE_TYPE_ANY;
+	enum device_type type = opt->device->device->type;
+	const char *uuid = opt->device->uuid;
+	struct autoboot_option *auto_opt;
+	unsigned int i;
+
+	for (i = 0; i < config->n_autoboot_opts; i++) {
+		auto_opt = &config->autoboot_opts[i];
+		if (auto_opt->boot_type == BOOT_DEVICE_UUID)
+			if (!strcmp(auto_opt->uuid, uuid))
+				return DEFAULT_PRIORITY_LOCAL_FIRST + i;
+
+		if (auto_opt->boot_type == BOOT_DEVICE_TYPE)
+			if (auto_opt->type == type ||
+			    auto_opt->type == DEVICE_TYPE_ANY)
+				return DEFAULT_PRIORITY_LOCAL_FIRST + i;
+	}
+
+	return -1;
 }
 
 /*
@@ -478,8 +493,6 @@ static enum default_priority default_option_priority(
 		struct discover_boot_option *opt)
 {
 	const struct config *config;
-	const char *dev_str;
-	unsigned int i;
 
 	config = config_get();
 
@@ -498,25 +511,17 @@ static enum default_priority default_option_priority(
 		return DEFAULT_PRIORITY_DISABLED;
 	}
 
-	/* Next, allow matching by device UUID. If we have one set but it
-	 * doesn't match, disallow the default entirely */
-	dev_str = config->boot_device;
-	if (dev_str && dev_str[0]) {
-		if (!strcmp(opt->device->uuid, dev_str))
-			return DEFAULT_PRIORITY_LOCAL_UUID;
-
-		pb_debug("handler: disabled default priority due to "
-				"non-matching UUID\n");
-		return DEFAULT_PRIORITY_DISABLED;
+	/* Next, try to match the option against the user-defined autoboot
+	 * options, either by device UUID or type. */
+	if (config->n_autoboot_opts) {
+		int boot_match = autoboot_option_priority(config, opt);
+		if (boot_match > 0)
+			return boot_match;
 	}
 
-	/* Lastly, use the local priorities */
-	for (i = 0; i < config->n_boot_priorities; i++) {
-		struct boot_priority *prio = &config->boot_priorities[i];
-		if (priority_matches(prio, opt))
-			return DEFAULT_PRIORITY_LOCAL_FIRST + prio->priority;
-	}
-
+	/* If the option didn't match any entry in the array, it is disabled */
+	pb_debug("handler: disabled default priority due to "
+			"non-matching UUID or type\n");
 	return DEFAULT_PRIORITY_DISABLED;
 }
 
@@ -750,7 +755,15 @@ int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev)
 {
 	struct discover_context *ctx;
+	struct boot_status *status;
 	int rc;
+
+	status = talloc_zero(handler, struct boot_status);
+	status->type = BOOT_STATUS_INFO;
+	status->message = talloc_asprintf(status, "Processing %s device %s",
+				device_type_display_name(dev->device->type),
+				dev->device->id);
+	boot_status(handler, status);
 
 	process_boot_option_queue(handler);
 
@@ -772,6 +785,11 @@ int device_handler_discover(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 out:
+	status->message = talloc_asprintf(status,"Processing %s complete\n",
+				dev->device->id);
+	boot_status(handler, status);
+
+	talloc_free(status);
 	talloc_free(ctx);
 
 	return 0;
@@ -782,6 +800,13 @@ int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event)
 {
 	struct discover_context *ctx;
+	struct boot_status *status;
+
+	status = talloc_zero(handler, struct boot_status);
+	status->type = BOOT_STATUS_INFO;
+	status->message = talloc_asprintf(status, "Processing dhcp event on %s",
+				dev->device->id);
+	boot_status(handler, status);
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
@@ -791,6 +816,11 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	device_handler_discover_context_commit(handler, ctx);
 
+	status->message = talloc_asprintf(status,"Processing %s complete\n",
+				dev->device->id);
+	boot_status(handler, status);
+
+	talloc_free(status);
 	talloc_free(ctx);
 
 	return 0;
@@ -800,19 +830,30 @@ int device_handler_dhcp(struct device_handler *handler,
 int device_handler_conf(struct device_handler *handler,
 		struct discover_device *dev, struct pb_url *url)
 {
-        struct discover_context *ctx;
+	struct discover_context *ctx;
+	struct boot_status *status;
 
-        /* create our context */
-        ctx = device_handler_discover_context_create(handler, dev);
-        ctx->conf_url = url;
+	status = talloc_zero(handler, struct boot_status);
+	status->type = BOOT_STATUS_INFO;
+	status->message = talloc_asprintf(status, "Processing user config");
+	boot_status(handler, status);
 
-        iterate_parsers(ctx);
+	/* create our context */
+	ctx = device_handler_discover_context_create(handler, dev);
+	ctx->conf_url = url;
 
-        device_handler_discover_context_commit(handler, ctx);
+	iterate_parsers(ctx);
 
-        talloc_free(ctx);
+	device_handler_discover_context_commit(handler, ctx);
 
-        return 0;
+	status->message = talloc_asprintf(status,
+				"Processing user config complete");
+	boot_status(handler, status);
+
+	talloc_free(status);
+	talloc_free(ctx);
+
+	return 0;
 }
 
 static struct discover_boot_option *find_boot_option_by_id(

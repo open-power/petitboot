@@ -59,20 +59,20 @@ struct config *config_copy(void *ctx, const struct config *src)
 		dest->network.dns_servers[i] = talloc_strdup(dest,
 				src->network.dns_servers[i]);
 
-	dest->n_boot_priorities = src->n_boot_priorities;
-	dest->boot_priorities = talloc_array(dest, struct boot_priority,
-			src->n_boot_priorities);
+	dest->n_autoboot_opts = src->n_autoboot_opts;
+	dest->autoboot_opts = talloc_array(dest, struct autoboot_option,
+					dest->n_autoboot_opts);
 
-	for (i = 0; i < src->n_boot_priorities; i++) {
-		dest->boot_priorities[i].priority =
-					src->boot_priorities[i].priority;
-		dest->boot_priorities[i].type = src->boot_priorities[i].type;
+	for (i = 0; i < src->n_autoboot_opts; i++) {
+		dest->autoboot_opts[i].boot_type =
+			src->autoboot_opts[i].boot_type;
+		if (src->autoboot_opts[i].boot_type == BOOT_DEVICE_TYPE)
+			dest->autoboot_opts[i].type =
+				src->autoboot_opts[i].type;
+		else
+			dest->autoboot_opts[i].uuid =
+				talloc_strdup(dest, src->autoboot_opts[i].uuid);
 	}
-
-	if (src->boot_device && strlen(src->boot_device))
-		dest->boot_device = talloc_strdup(dest, src->boot_device);
-	else
-		dest->boot_device = NULL;
 
 	dest->ipmi_bootdev = src->ipmi_bootdev;
 	dest->ipmi_bootdev_persistent = src->ipmi_bootdev_persistent;

@@ -13,6 +13,21 @@ enum device_type {
 	DEVICE_TYPE_UNKNOWN,
 };
 
+enum ipmi_bootdev {
+	IPMI_BOOTDEV_NONE = 0x00,
+	IPMI_BOOTDEV_NETWORK = 0x01,
+	IPMI_BOOTDEV_DISK = 0x2,
+	IPMI_BOOTDEV_SAFE = 0x3,
+	IPMI_BOOTDEV_CDROM = 0x5,
+	IPMI_BOOTDEV_SETUP = 0x6,
+	IPMI_BOOTDEV_INVALID = 0xff,
+};
+
+const char *ipmi_bootdev_display_name(enum ipmi_bootdev bootdev);
+const char *device_type_display_name(enum device_type type);
+const char *device_type_name(enum device_type type);
+enum device_type find_device_type(const char *str);
+
 struct device {
 	char		*id;
 	enum device_type type;
@@ -109,13 +124,15 @@ struct network_config {
 	unsigned int		n_dns_servers;
 };
 
-struct boot_priority {
-	/* Boot options with higher priority values will take precedence over
-	 * lower values. Negative priorities signify "don't boot this by
-	 * default".
-	 */
-	int			priority;
-	enum device_type	type;
+struct autoboot_option {
+	enum {
+		BOOT_DEVICE_TYPE,
+		BOOT_DEVICE_UUID
+	} boot_type;
+	union {
+		enum device_type	type;
+		char			*uuid;
+	};
 };
 
 struct config {
@@ -123,10 +140,8 @@ struct config {
 	unsigned int		autoboot_timeout_sec;
 	struct network_config	network;
 
-	struct boot_priority	*boot_priorities;
-	unsigned int		n_boot_priorities;
-
-	char			*boot_device;
+	struct autoboot_option	*autoboot_opts;
+	unsigned int		n_autoboot_opts;
 
 	unsigned int		ipmi_bootdev;
 	bool			ipmi_bootdev_persistent;
