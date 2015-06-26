@@ -144,7 +144,7 @@ static void cancel_click(void *arg)
 
 static void subset_screen_layout_widgets(struct subset_screen *screen)
 {
-	int y = 2;
+	int y = 1;
 
 	/* select */
 	widget_move(widget_select_base(screen->widgets.options_f),
@@ -155,9 +155,9 @@ static void subset_screen_layout_widgets(struct subset_screen *screen)
 	y += 1;
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
-		y, screen->field_x + 12);
+		y, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.cancel_b),
-		y, screen->field_x + 24);
+		y, screen->field_x + 14);
 }
 
 static void subset_screen_option_select(void *arg, int value)
@@ -265,8 +265,8 @@ struct subset_screen *subset_screen_init(struct cui *cui,
 	screen->cui = cui;
 	screen->on_exit = on_exit;
 	screen->options = (struct nc_widget_subset *) subset;
-	screen->label_x = 2;
-	screen->field_x = 22;
+	screen->label_x = 8;
+	screen->field_x = 8;
 
 	screen->return_scr = current_scr;
 

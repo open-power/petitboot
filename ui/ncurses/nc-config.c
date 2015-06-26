@@ -383,10 +383,10 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	bool show;
 
 	y = 1;
+	/* currently, the longest label we have is the DNS-servers
+	 * widget, so layout our screen based on that */
 	help_x = screen->field_x + 2 +
 		widget_width(widget_textbox_base(screen->widgets.dns_f));
-
-	y += 1;
 
 	wl = widget_label_base(screen->widgets.boot_order_l);
 	widget_set_visible(wl, true);
@@ -412,9 +412,9 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	widget_move(widget_button_base(screen->widgets.boot_add_b),
 			y, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.boot_any_b),
-			y, screen->field_x + 12);
+			y, screen->field_x + 14);
 	widget_move(widget_button_base(screen->widgets.boot_none_b),
-			y, screen->field_x + 30);
+			y, screen->field_x + 34);
 
 	wf = widget_button_base(screen->widgets.boot_add_b);
 	if (widget_subset_n_inactive(screen->widgets.boot_order_f))
@@ -453,7 +453,7 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		y += 1;
 	}
 
-	y += 2;
+	y += 1;
 
 	y += layout_pair(screen, y, screen->widgets.network_l,
 			widget_select_base(screen->widgets.network_f));
@@ -571,7 +571,7 @@ static void config_screen_add_device(void *arg)
 	struct config_screen *screen = arg;
 
 	screen->show_subset = true;
-	cui_show_subset(screen->cui, _("Select an option"),
+	cui_show_subset(screen->cui, _("Select a boot device to add"),
 			screen->widgets.boot_order_f);
 }
 
@@ -704,19 +704,19 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	ifcfg = first_active_interface(config);
 
 	screen->widgets.boot_add_b = widget_new_button(set, 0, 0, 10,
-					_("Add Device"), config_screen_add_device,
-					screen);
+					_("Add Device"),
+					config_screen_add_device, screen);
 
 	screen->widgets.boot_none_b = widget_new_button(set, 0, 0, 10,
 					_("Clear"),
 					config_screen_autoboot_none, screen);
 
 	screen->widgets.boot_any_b = widget_new_button(set, 0, 0, 16,
-					_("Clear & Boot Any"), config_screen_autoboot_any,
-					screen);
+					_("Clear & Boot Any"),
+					config_screen_autoboot_any, screen);
 
 	screen->widgets.boot_order_l = widget_new_label(set, 0, 0,
-					_("Boot order:"));
+					_("Boot Order:"));
 	screen->widgets.boot_order_f = widget_new_subset(set, 0, 0,
 					COLS - screen->field_x,
 					config_screen_update_subset);
