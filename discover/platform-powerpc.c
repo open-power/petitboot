@@ -664,7 +664,7 @@ static void update_bootdev_config(struct platform_powerpc *platform,
 						opt->uuid, delim);
 				break;
 			}
-			tmp = val = talloc_asprintf_append(val, boot_str);
+			tmp = val = talloc_asprintf_append(val, "%s", boot_str);
 	}
 
 	update_string_config(platform, "petitboot,bootdevs", val);
