@@ -51,6 +51,7 @@
 #include <types/types.h>
 #include <log/log.h>
 #include <util/util.h>
+#include <i18n/i18n.h>
 
 #include "nc-cui.h"
 #include "nc-widgets.h"
@@ -1002,16 +1003,18 @@ struct nc_widget_button *widget_new_button(struct nc_widgetset *set,
 		void (*click)(void *), void *arg)
 {
 	struct nc_widget_button *button;
+	int idx, len, pad1, pad2, bufsz;
 	char *text;
 	FIELD *f;
-	int idx, len;
+
+	int field_size = size + 2;
 
 	button = talloc_zero(set, struct nc_widget_button);
 	button->widget.height = 1;
-	button->widget.width = size;
+	button->widget.width = field_size;
 	button->widget.x = x;
 	button->widget.y = y;
-	button->widget.field = f = new_field(1, size + 2, y, x, 0, 0);
+	button->widget.field = f = new_field(1, field_size, y, x, 0, 0);
 	button->widget.process_key = button_process_key;
 	button->widget.focussed_attr = A_REVERSE;
 	button->widget.unfocussed_attr = A_NORMAL;
@@ -1021,17 +1024,28 @@ struct nc_widget_button *widget_new_button(struct nc_widgetset *set,
 	field_opts_off(f, O_EDIT);
 	set_field_userptr(f, &button->widget);
 
-	/* center str in a size-char buffer, but don't overrun */
-	len = strlen(str);
-	len = min(len, size);
-	idx = (size - len) / 2;
+	/* Center str in the field. This depends on the number of columns used
+	 * by the string, not the number of chars in str */
+	len = strncols(str);
+	if (len <= size) {
+		idx = (field_size - len) / 2;
+	} else {
+		idx = 1;
+		pb_log("Warning: '%s' %d columns wide "
+		       "but button is %d columns wide\n",
+		       str, len, size);
+	}
 
-	text = talloc_array(button, char, size + 3);
-	memset(text, ' ', size + 2);
-	memcpy(text + idx + 1, str, len);
+	pad1 = max(idx - 1, 0);
+	pad2 = max(size - len - pad1, 0);
+	bufsz = 1 + pad1 + strlen(str) + pad2 + 2;
+
+	text = talloc_array(button, char, bufsz);
+	memset(text, ' ', bufsz);
+	memcpy(text + idx, str, strlen(str));
 	text[0] = '[';
-	text[size + 1] = ']';
-	text[size + 2] = '\0';
+	text[bufsz - 2] = ']';
+	text[bufsz - 1] = '\0';
 
 	set_field_buffer(f, 0, text);
 
