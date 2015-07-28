@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-10-13 09:24+1100\n"
+"POT-Creation-Date: 2015-07-28 14:45+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: French\n"
@@ -14,7 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n>1;\n"
 
 msgid "running boot hooks"
 msgstr "exécution points d'ancrage d'amorçage"
@@ -128,20 +128,28 @@ msgstr "Configuration système"
 msgid "No IP / mask values are set"
 msgstr "Aucune valeur IP/de masque définie"
 
+msgid "Select a boot device to add"
+msgstr "Sélectionner une unité d'amorçage à ajouter"
+
 msgid "Waiting for configuration data..."
 msgstr "Attente de données de configuration..."
 
-msgid "Autoboot:"
-msgstr "Amorçage auto :"
+#, fuzzy
+msgid "Add Device"
+msgstr "Unité :"
 
-msgid "Don't autoboot"
-msgstr "Pas d'amorçage automatique"
+msgid "Clear"
+msgstr "Effacer"
 
-msgid "Autoboot from any disk/network device"
-msgstr "Amorçage automatique depuis unité de disque/réseau"
+msgid "Clear & Boot Any"
+msgstr "Effacer & amorcer"
 
-msgid "Only autoboot from a specific disk/network device"
-msgstr "Amorçage auto seulement depuis unité disque/réseau spécifique"
+#, fuzzy
+msgid "Boot Order:"
+msgstr "Arguments d'amorçage :"
+
+msgid "(None)"
+msgstr "(Aucun)"
 
 #, c-format
 msgid "disk: %s [uuid: %s]"
@@ -151,15 +159,26 @@ msgstr "disque : %s [uuid : %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "réseau :  %s [mac : %s]"
 
+#, fuzzy
+msgid "Any Device"
+msgstr "Unité :"
+
 #, c-format
-msgid "Unknown UUID: %s"
-msgstr "UUID inconnu : %s"
+msgid "Any %s device"
+msgstr "N'importe quelle unité %s"
 
 msgid "Timeout:"
 msgstr "Délai attente :"
 
 msgid "seconds"
 msgstr "secondes"
+
+#, c-format
+msgid "%s IPMI boot option: %s"
+msgstr "%s Option d'amorçage IPMI : %s"
+
+msgid "Clear option:"
+msgstr "Option d'effacement :"
 
 msgid "Network:"
 msgstr "Réseau :"
@@ -476,23 +495,28 @@ msgstr ""
 "Exemple : root=/dev/sda1 console=hvc0\n"
 "\n"
 
+#, fuzzy
 msgid ""
-"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"Autoboot: Specify which devices to autoboot from.\n"
 "\n"
-"Don't autoboot: boot options will be listed in the petitboot menu, but none "
-"will be booted automatically. User interaction will be required to continue "
+"By selecting the 'Add Device' button new devices can be added to the "
+"autoboot list, either by UUID, MAC address, or device type. Once added to "
+"the boot order, the priority of devices can be changed with the 'left' and "
+"'right' keys Devices can be individually removed from the boot order with "
+"the minus key. Use this option if you have multiple operating system images "
+"installed.\n"
+"\n"
+"To autoboot from any device, select the 'Clear & Boot Any' button. In this "
+"case, any boot option that is marked as a default (by bootloader "
+"configuration) will be booted automatically after a timeout. Use this option "
+"if you want to quickly boot your system without changing any boot option "
+"settings. This is the typical configuration.\n"
+"\n"
+"To disable autoboot, select the 'Clear' button, which will clear the boot "
+"order. With autoboot disabled, user interaction will be required to continue "
 "past the petitboot menu. Use this option if you want the machine to wait for "
 "an explicit boot selection, or want to interact with petitboot before "
 "booting the system\n"
-"\n"
-"Autoboot from any disk/network device: any boot option that is marked as a "
-"default (by bootloader configuration) will be booted automatically after a "
-"timeout. Use this option if you want to quickly boot your system without "
-"changing any boot option settings. This is the typical configuration.\n"
-"\n"
-"Only autoboot from a specific disk/network device: only boot options from a "
-"single device (specifed here) will be booted automatically after a timeout. "
-"Use this option if you have multiple operating system images installed.\n"
 "\n"
 "Timeout: Specify the length of time, in seconds, that the main menu will be "
 "displayed before the default boot option is started. This option is only "
@@ -558,3 +582,18 @@ msgstr ""
 
 msgid "Usage"
 msgstr "Utilisation"
+
+#~ msgid "Autoboot:"
+#~ msgstr "Autoboot:"
+
+#~ msgid "Don't autoboot"
+#~ msgstr "Don't autoboot"
+
+#~ msgid "Autoboot from any disk/network device"
+#~ msgstr "Autoboot from any disk/network device"
+
+#~ msgid "Only autoboot from a specific disk/network device"
+#~ msgstr "Only autoboot from a specific disk/network device"
+
+#~ msgid "Unknown UUID: %s"
+#~ msgstr "Unknown UUID: %s"

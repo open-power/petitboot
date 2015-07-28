@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2014-10-13 09:24+1100\n"
+"POT-Creation-Date: 2015-07-28 14:45+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Korean\n"
@@ -14,7 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "running boot hooks"
 msgstr "부트 후크 실행 중"
@@ -128,20 +128,28 @@ msgstr "시스템 구성"
 msgid "No IP / mask values are set"
 msgstr "IP/마스크 값이 설정되지 않음"
 
+msgid "Select a boot device to add"
+msgstr "추가할 부트 장치를 선택하십시오. "
+
 msgid "Waiting for configuration data..."
 msgstr "구성 데이터 대기 중..."
 
-msgid "Autoboot:"
-msgstr "자동 부트:"
+#, fuzzy
+msgid "Add Device"
+msgstr "장치: "
 
-msgid "Don't autoboot"
-msgstr "자동 부트하지 않음"
+msgid "Clear"
+msgstr "선택 취소"
 
-msgid "Autoboot from any disk/network device"
-msgstr "모든 디스크/네트워크 장치에서 자동 부트"
+msgid "Clear & Boot Any"
+msgstr "선택 취소 & 모든 부트"
 
-msgid "Only autoboot from a specific disk/network device"
-msgstr "특정 디스크/네트워크 장치에서만 자동 부트"
+#, fuzzy
+msgid "Boot Order:"
+msgstr "부트 인수:"
+
+msgid "(None)"
+msgstr "(없음)"
 
 #, c-format
 msgid "disk: %s [uuid: %s]"
@@ -151,15 +159,26 @@ msgstr "디스크: %s [uuid: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "네트:  %s [mac: %s]"
 
+#, fuzzy
+msgid "Any Device"
+msgstr "장치: "
+
 #, c-format
-msgid "Unknown UUID: %s"
-msgstr "알 수 없는 UUID: %s"
+msgid "Any %s device"
+msgstr "모든 %s 장치"
 
 msgid "Timeout:"
 msgstr "제한시간:"
 
 msgid "seconds"
 msgstr "초"
+
+#, c-format
+msgid "%s IPMI boot option: %s"
+msgstr "%s IPMI 부트 옵션: %s"
+
+msgid "Clear option:"
+msgstr "선택 취소 옵션:"
 
 msgid "Network:"
 msgstr "네트워크:"
@@ -323,24 +342,24 @@ msgstr "스토리지 장치"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID:       %s"
+msgstr "  UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " 마운트 위치: %s"
+msgstr "  마운트 위치: %s"
 
 msgid "Network interfaces"
 msgstr "네트워크 인터페이스"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr " MAC:  %s"
+msgstr "  MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr " 링크: %s"
+msgstr "  링크: %s"
 
 msgid "up"
 msgstr "연결"
@@ -471,23 +490,28 @@ msgstr ""
 "예: root=/dev/sda1 console=hvc0\n"
 "\n"
 
+#, fuzzy
 msgid ""
-"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
+"Autoboot: Specify which devices to autoboot from.\n"
 "\n"
-"Don't autoboot: boot options will be listed in the petitboot menu, but none "
-"will be booted automatically. User interaction will be required to continue "
+"By selecting the 'Add Device' button new devices can be added to the "
+"autoboot list, either by UUID, MAC address, or device type. Once added to "
+"the boot order, the priority of devices can be changed with the 'left' and "
+"'right' keys Devices can be individually removed from the boot order with "
+"the minus key. Use this option if you have multiple operating system images "
+"installed.\n"
+"\n"
+"To autoboot from any device, select the 'Clear & Boot Any' button. In this "
+"case, any boot option that is marked as a default (by bootloader "
+"configuration) will be booted automatically after a timeout. Use this option "
+"if you want to quickly boot your system without changing any boot option "
+"settings. This is the typical configuration.\n"
+"\n"
+"To disable autoboot, select the 'Clear' button, which will clear the boot "
+"order. With autoboot disabled, user interaction will be required to continue "
 "past the petitboot menu. Use this option if you want the machine to wait for "
 "an explicit boot selection, or want to interact with petitboot before "
 "booting the system\n"
-"\n"
-"Autoboot from any disk/network device: any boot option that is marked as a "
-"default (by bootloader configuration) will be booted automatically after a "
-"timeout. Use this option if you want to quickly boot your system without "
-"changing any boot option settings. This is the typical configuration.\n"
-"\n"
-"Only autoboot from a specific disk/network device: only boot options from a "
-"single device (specifed here) will be booted automatically after a timeout. "
-"Use this option if you have multiple operating system images installed.\n"
 "\n"
 "Timeout: Specify the length of time, in seconds, that the main menu will be "
 "displayed before the default boot option is started. This option is only "
@@ -544,3 +568,18 @@ msgstr ""
 
 msgid "Usage"
 msgstr "사용법"
+
+#~ msgid "Autoboot:"
+#~ msgstr "Autoboot:"
+
+#~ msgid "Don't autoboot"
+#~ msgstr "Don't autoboot"
+
+#~ msgid "Autoboot from any disk/network device"
+#~ msgstr "Autoboot from any disk/network device"
+
+#~ msgid "Only autoboot from a specific disk/network device"
+#~ msgstr "Only autoboot from a specific disk/network device"
+
+#~ msgid "Unknown UUID: %s"
+#~ msgstr "Unknown UUID: %s"
