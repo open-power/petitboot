@@ -2,8 +2,11 @@
 
 __dest=/
 __pb_mount_dir=/var/petitboot/mnt/dev/
-plugin_dev_meta=pb-plugin.conf
-plugin_installed_meta_dir=/etc/preboot-plugins/
+__plugin_basedir=/tmp/
+plugin_file=pb-plugin.cpio.gz
+plugin_meta=pb-plugin.conf
+plugin_meta_dir=etc/preboot-plugins/
+plugin_meta_path=$plugin_meta_dir$plugin_meta
 
 usage()
 {
@@ -11,9 +14,8 @@ usage()
 Usage: $0 <command>
 
 Where <command> is one of:
-  install <FILE|URL>  - install plugin from FILE/URL
+  run <FILE|URL>      - run plugin from FILE/URL
   scan                - look for available plugins on attached devices
-  list                - list currently-installed plugins
   create <DIR>        - create a new plugin archive from DIR
 EOF
 }
@@ -60,27 +62,45 @@ plugin_info()
 	echo "  (version $PLUGIN_VERSION)"
 }
 
-do_install()
+__run_init()
 {
-	local url
+	local base dir
+
+	base=$1
+
+	for dir in etc dev sys proc
+	do
+		mkdir -p $base/$dir
+	done
+
+	cp /etc/resolv.conf $base/etc
+	mount -o bind /dev $base/dev
+	mount -o bind /sys $base/sys
+	mount -o bind /proc $base/proc
+}
+
+__run_cleanup()
+{
+	local base
+
+	base=$1
+
+	[ -e $base/dev/null ] && umount $base/dev
+	[ -e $base/sys/kernel ] && umount $base/sys
+	[ -e $base/proc/stat ] && umount $base/proc
+	rm -rf $base
+}
+
+do_run()
+{
+	local url executable
 
 	url=$1
+	executable=$2
 
 	if [ -z "$url" ]
 	then
 		echo "error: install requires a file/URL argument." >&2
-		exit 1
-	fi
-
-	if [ ! -d "$__dest" ]
-	then
-		echo "error: destination directory '$__dest' doesn't exist" >&2
-		exit 1
-	fi
-
-	if [ ! -w "$__dest" ]
-	then
-		echo "error: destination directory isn't writeable" >&2
 		exit 1
 	fi
 
@@ -109,7 +129,7 @@ do_install()
 	echo
 	sha256sum "$file" | cut -f1 -d' '
 	echo
-	echo "Do you want to install into the pre-boot environment? (y/N)"
+	echo "Do you want to run this plugin? (y/N)"
 	read resp
 
 	case $resp in
@@ -121,33 +141,68 @@ do_install()
 		;;
 	esac
 
+	__dest=$(mktemp -d)
 	gunzip -c "$file" | ( cd $__dest && cpio -i -d)
 
 	if [ $? -ne 0 ]
 	then
 		echo "error: Failed to extract archive $url, exiting"
+		rm -rf $__dest
 		exit 1
 	fi
+
+	. $__dest/$plugin_meta_path
+
+	(
+		executable=${PLUGIN_EXECUTABLE:-$executable}
+
+		__run_init $__dest
+
+		printf "Entering plugin\n"
+		plugin_info
+
+		chroot $__dest $executable
+
+		printf "\nExiting plugin & cleaning up\n"
+		__run_cleanup $__dest
+	)
+
 }
 
 do_scan()
 {
-	local found
+	local found dev plugin_path __meta_tmp
 	found=0
 	for mnt in $__pb_mount_dir/*
 	do
 		dev=$(basename $mnt)
-		metafile="$mnt/$plugin_dev_meta"
-		[ -e "$metafile" ] || continue
+		plugin_path="$mnt/$plugin_file"
+
+		[ -e "$plugin_path" ] || continue
+
+		# extract plugin metadata to a temporary directory
+		__meta_tmp=$(mktemp -d)
+		[ -d $__meta_tmp ] || continue
+		gunzip -c "$plugin_path" |
+			(cd $__meta_tmp &&
+				cpio -i -d $plugin_meta_path 2>/dev/null)
+		if ! [ $? = 0 -a -e "$plugin_path" ]
+		then
+			rm -rf $__meta_tmp
+			continue
+		fi
+
 		(
-			. $metafile
+			. $__meta_tmp/$plugin_meta_path
+
 			printf "Plugin found on %s:\n" $dev
 			plugin_info
 			printf "\n"
-			printf "To install this plugin, run:\n"
-			printf "  $0 install $mnt/$PLUGIN_FILE\n"
+			printf "To run this plugin:\n"
+			printf "  $0 run $plugin_path\n"
 			printf "\n"
 		)
+		rm -rf $__meta_tmp
 		found=1
 	done
 
@@ -157,36 +212,14 @@ do_scan()
 	fi
 }
 
-do_list()
-{
-	local found
-	found=0
-	for meta in $plugin_installed_meta_dir/*
-	do
-		[ -e "$meta" ] || continue
-		[ $found = 0 ] && printf "Installed plugins:\n"
-		found=1
-		(
-			. $meta
-			plugin_info
-			echo
-		)
-	done
-
-	if [ "$found" = 0 ]
-	then
-		echo "No plugins installed"
-	fi
-}
-
 guided_meta()
 {
 	local vendorname vendorshortname
 	local pluginname pluginnhortname
-	local version date
-	local dir
+	local version date executable
+	local file
 
-	dir=$1
+	file=$1
 
 cat <<EOF
 
@@ -224,22 +257,30 @@ Enter the plugin version. This should not contain spaces (eg 1.2):
 EOF
 	read version
 
+cat <<EOF
+
+Enter the full path (within the plugin root) to the plugin executable file.
+This will be the default action when the plugin is run. (eg /usr/bin/my-util)
+EOF
+	read executable
+
 	date=$(date +%Y-%m-%d)
 
-	mkdir -p $dir
+	mkdir -p $(dirname $file)
 
-	cat <<EOF > $dir/$vendorshortname-$pluginshortname
+	cat <<EOF > $file
 PLUGIN_VENDOR='$vendorname'
 PLUGIN_NAME='$pluginname'
 PLUGIN_VERSION='$version'
 PLUGIN_DATE='$date'
+PLUGIN_EXECUTABLE='$executable'
 EOF
 
 }
 
 do_create()
 {
-	local src found meta_dir_abs meta_file
+	local src meta_dir_abs meta_file
 	src=$1
 
 	if [ -z "$src" ]
@@ -255,16 +296,9 @@ do_create()
 		exit 1
 	fi
 
-	meta_dir_abs="$src/$plugin_installed_meta_dir"
-	found=0
-	for meta in $meta_dir_abs/*
-	do
-		[ -e "$meta" ] || continue
-		found=$(($found+1))
-		meta_file=$meta
-	done
+	meta_file=$src/$plugin_meta_path
 
-	if [ $found = 0 ]
+	if [ ! -e $meta_file ]
 	then
 		echo "No plugin metadata file found. " \
 			"Would you like to create one? (Y/n)"
@@ -275,14 +309,7 @@ do_create()
 			exit 1
 			;;
 		esac
-		guided_meta $meta_dir_abs || exit
-		meta_file=$meta_dir_abs/*
-	fi
-
-	if [ $found -gt 1 ]
-	then
-		echo "error: Multiple metadata files found in $meta_dir_abs" >&2
-		exit 1
+		guided_meta $meta_file || exit
 	fi
 
 	# Sanity check metadata file
@@ -308,18 +335,21 @@ do_create()
 			echo "error: no PLUGIN_DATE defined in metadata" &>2
 			exit 1
 		fi
+		if [ ! -n "$PLUGIN_EXECUTABLE" ]
+		then
+			echo "error: no PLUGIN_EXECUTABLE defined in metadata" \
+				&>2
+			exit 1
+		fi
 
 	) || exit 1
 
-	outfile=pb-plugin.cpio.gz
+	outfile=$plugin_file
 
 	(
 		cd $src
 		find -mindepth 1 | cpio -o -Hnewc -v
-	) | gzip -c > pb-plugin.cpio.gz
-
-	cp $meta_file $plugin_dev_meta
-	echo "PLUGIN_FILE='$outfile'" >> $plugin_dev_meta
+	) | gzip -c > $outfile
 
 	echo
 	echo "Plugin metadata:"
@@ -339,12 +369,9 @@ do_create()
 cat <<EOF
 Plugin created in:
   $outfile
-  
-Metadata in:
-  $plugin_dev_meta
 
-If you rename $outfile (or distribute it in a non-root directory), then
-also update the PLUGIN_FILE variable in $plugin_dev_meta.
+Ship this file in the top-level-directory of a USB device or CD to have it
+automatically discoverable by 'pb-plugin scan'.
 EOF
 }
 
@@ -388,12 +415,16 @@ test_scan()
 {
 	__pb_mount_dir="$test_tmpdir/mnt"
 	mnt_dir="$__pb_mount_dir/sda"
-	mkdir -p $mnt_dir
+	mkdir -p $mnt_dir/$plugin_meta_dir
 	(
 		echo "PLUGIN_NAME=test"
 		echo "PLUGIN_VERSION=1"
-		echo "PLUGIN_FILE=data/pb-plugin.cpio.gz"
-	) > $mnt_dir/$plugin_dev_meta
+		echo "PLUGIN_EXECUTABLE=/bin/sh"
+	) > $mnt_dir/$plugin_meta_path
+	(
+		cd $mnt_dir;
+		find -mindepth 1 | cpio -o -Hnewc 2>/dev/null
+	) | gzip -c > $mnt_dir/$plugin_file
 
 	do_scan | grep -q 'test 1'
 	rc=$?
@@ -401,6 +432,8 @@ test_scan()
 
 test_empty_scan()
 {
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mkdir -p $__pb_mount_dir
 	do_scan | grep -q "No plugins"
 }
 
@@ -410,10 +443,6 @@ test_setup()
 
 	test_tmpdir="$tests_tmpdir/$n"
 	mkdir "$test_tmpdir"
-	__test_dest="$test_tmpdir/base"
-	mkdir "$__test_dest"
-	[ -d "$__test_dest" ] || exit 1
-	__dest=$__test_dest
 }
 
 test_teardown()
@@ -479,17 +508,13 @@ do_tests()
 }
 
 case "$1" in
-install)
+run)
 	shift
-	do_install $@
+	do_run $@
 	;;
 scan)
 	shift
 	do_scan $@
-	;;
-list)
-	shift
-	do_list $@
 	;;
 create)
 	shift
