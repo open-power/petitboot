@@ -74,12 +74,20 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		const char *name)
 {
 	struct discover_device *ddev;
+	unsigned int i = 0;
 	const char *typestr;
 	const char *uuid;
 	const char *path;
 	const char *node;
 	const char *prop;
 	const char *type;
+	const char *devname;
+	const char *ignored_types[] = {
+		"linux_raid_member",
+		"swap",
+		"LVM2_member",
+		NULL,
+	};
 	bool cdrom;
 
 	typestr = udev_device_get_devtype(dev);
@@ -118,9 +126,9 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 
 	/* If our environment's udev can recognise them explictly skip any
 	 * device mapper devices we encounter */
-	const char *devname = udev_device_get_property_value(dev, "DM_NAME");
+	devname = udev_device_get_property_value(dev, "DM_NAME");
 	if (devname) {
-		pb_log("SKIP: dm-device %s\n", devname);
+		pb_debug("SKIP: dm-device %s\n", devname);
 		return 0;
 	}
 
@@ -128,6 +136,14 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	if (!type) {
 		pb_log("SKIP: %s: no ID_FS_TYPE property\n", name);
 		return 0;
+	}
+
+	while (ignored_types[i]) {
+		if (!strncmp(type, ignored_types[i], strlen(ignored_types[i]))) {
+			pb_log("SKIP: %s: ignore '%s' filesystem\n", name, type);
+			return 0;
+		}
+		i++;
 	}
 
 	/* We may see multipath devices; they'll have the same uuid as an
@@ -155,7 +171,9 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 
 	udev_setup_device_params(dev, ddev);
 
-	if (ddev->device->type == DEVICE_TYPE_DISK)
+	/* Create a snapshot for all disks, unless it is an assembled RAID array */
+	if (ddev->device->type == DEVICE_TYPE_DISK &&
+	    !udev_device_get_property_value(dev, "MD_LEVEL"))
 		devmapper_init_snapshot(udev->handler, ddev);
 
 	device_handler_discover(udev->handler, ddev);
