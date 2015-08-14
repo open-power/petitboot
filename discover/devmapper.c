@@ -40,12 +40,21 @@ static unsigned int get_block_sectors(struct discover_device *device)
 	return sectors;
 }
 
-/* Petitboot's libdm isn't compiled with --enable-udev_sync, so we set
- * empty cookie and flags unconditionally */
+/*
+ * The system's libdm may or may not have udev sync support. Tell libdm
+ * to manage the creation of device nodes itself rather than waiting on udev
+ * to do it
+ */
 static inline int set_cookie(struct dm_task *task, uint32_t *cookie)
 {
+	uint16_t udev_rules = 0;
 	*cookie = 0;
-	return dm_task_set_cookie(task, cookie, 0);
+
+	dm_udev_set_sync_support(0);
+	udev_rules |= DM_UDEV_DISABLE_DM_RULES_FLAG |
+		DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG;
+
+	return dm_task_set_cookie(task, cookie, udev_rules);
 }
 
 static bool snapshot_merge_complete(const char *dm_name)
