@@ -79,6 +79,8 @@ static void print_config(void *ctx, struct config *config, const char *var)
 			config->safe_mode ? "enabled" : "disabled");
 	print_one_config(ctx, var, "debug", "%s",
 			config->debug ? "enabled" : "disabled");
+	print_one_config(ctx, var, "dm-snapshots", "%s",
+			config->disable_snapshots ? "disabled" : "enabled");
 }
 
 int main(int argc, char **argv)

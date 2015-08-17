@@ -54,6 +54,7 @@ static const char *known_params[] = {
 	"petitboot,language",
 	"petitboot,debug?",
 	"petitboot,write?",
+	"petitboot,snapshots?",
 	NULL,
 };
 
@@ -553,6 +554,10 @@ static void populate_config(struct platform_powerpc *platform,
 	val = get_param(platform, "petitboot,write?");
 	if (val)
 		config->allow_writes = !strcmp(val, "true");
+
+	val = get_param(platform, "petitboot,snapshots?");
+	if (val)
+		config->disable_snapshots = !strcmp(val, "false");
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)

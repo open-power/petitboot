@@ -35,6 +35,9 @@ static void dump_config(struct config *config)
 	if (config->safe_mode)
 		pb_log(" safe mode: active\n");
 
+	if (config->disable_snapshots)
+		pb_log(" dm-snapshots disabled\n");
+
 	for (i = 0; i < config->network.n_interfaces; i++) {
 		struct interface_config *ifconf =
 			config->network.interfaces[i];
@@ -109,6 +112,7 @@ void config_set_defaults(struct config *config)
 	config->safe_mode = false;
 	config->lang = NULL;
 	config->allow_writes = true;
+	config->disable_snapshots = false;
 
 	config->n_autoboot_opts = 2;
 	config->autoboot_opts = talloc_array(config, struct autoboot_option,

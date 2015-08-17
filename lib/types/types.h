@@ -151,6 +151,7 @@ struct config {
 	char			*lang;
 
 	/* not user-settable */
+	bool			disable_snapshots;
 	bool			safe_mode;
 	bool			debug;
 };

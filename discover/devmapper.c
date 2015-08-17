@@ -6,6 +6,7 @@
 
 #include "libdevmapper.h"
 #include "devmapper.h"
+#include "platform.h"
 
 #define MERGE_INTERVAL_US	200000
 
@@ -319,6 +320,9 @@ int devmapper_init_snapshot(struct device_handler *handler,
 		     struct discover_device *device)
 {
 	struct ramdisk_device *ramdisk;
+
+	if (config_get()->disable_snapshots)
+		return 0;
 
 	ramdisk = device_handler_get_ramdisk(handler);
 	if (!ramdisk) {
