@@ -336,7 +336,8 @@ static void configure_interface_dhcp(struct interface *interface)
 	return;
 }
 
-static void configure_interface_static(struct interface *interface,
+static void configure_interface_static(struct network *network,
+		struct interface *interface,
 		const struct interface_config *config)
 {
 	int rc;
@@ -368,6 +369,12 @@ static void configure_interface_static(struct interface *interface,
 		pb_log("failed to add default route %s on interface %s\n",
 				config->static_config.gateway,
 				interface->name);
+	}
+
+	if (config->static_config.url) {
+		pb_log("config URL %s\n", config->static_config.url);
+		device_handler_process_url(network->handler,
+				config->static_config.url);
 	}
 
 	return;
@@ -438,7 +445,7 @@ static void configure_interface(struct network *network,
 		configure_interface_dhcp(interface);
 
 	} else if (config->method == CONFIG_METHOD_STATIC) {
-		configure_interface_static(interface, config);
+		configure_interface_static(network, interface, config);
 	}
 }
 

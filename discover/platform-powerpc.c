@@ -310,7 +310,7 @@ static int parse_one_interface_config(struct config *config,
 	} else if (!strcmp(tok, "static")) {
 		ifconf->method = CONFIG_METHOD_STATIC;
 
-		/* ip/mask, [optional] gateway */
+		/* ip/mask, [optional] gateway, [optional] url */
 		tok = strtok_r(NULL, ",", &saveptr);
 		if (!tok)
 			goto out_err;
@@ -320,6 +320,12 @@ static int parse_one_interface_config(struct config *config,
 		tok = strtok_r(NULL, ",", &saveptr);
 		if (tok) {
 			ifconf->static_config.gateway =
+				talloc_strdup(ifconf, tok);
+		}
+
+		tok = strtok_r(NULL, ",", &saveptr);
+		if (tok) {
+			ifconf->static_config.url =
 				talloc_strdup(ifconf, tok);
 		}
 
@@ -575,10 +581,12 @@ static char *iface_config_str(void *ctx, struct interface_config *config)
 		str = talloc_asprintf_append(str, "dhcp");
 
 	} else if (config->method == CONFIG_METHOD_STATIC) {
-		str = talloc_asprintf_append(str, "static,%s%s%s",
+		str = talloc_asprintf_append(str, "static,%s%s%s%s%s",
 				config->static_config.address,
 				config->static_config.gateway ? "," : "",
-				config->static_config.gateway ?: "");
+				config->static_config.gateway ?: "",
+				config->static_config.url ? "," : "",
+				config->static_config.url ?: "");
 	}
 	return str;
 }

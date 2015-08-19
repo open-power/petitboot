@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	34
+#define N_FIELDS	37
 
 extern struct help_text config_help_text;
 
@@ -96,6 +96,9 @@ struct config_screen {
 		struct nc_widget_label		*gateway_l;
 		struct nc_widget_textbox	*gateway_f;
 		struct nc_widget_label		*gateway_help_l;
+		struct nc_widget_label		*url_l;
+		struct nc_widget_textbox	*url_f;
+		struct nc_widget_label		*url_help_l;
 		struct nc_widget_label		*dns_l;
 		struct nc_widget_textbox	*dns_f;
 		struct nc_widget_label		*dns_dhcp_help_l;
@@ -274,11 +277,12 @@ static int screen_process_form(struct config_screen *screen)
 	}
 
 	if (net_conf_type == NET_CONF_TYPE_STATIC) {
-		char *ip, *mask, *gateway;
+		char *ip, *mask, *gateway, *url;
 
 		ip = widget_textbox_get_value(screen->widgets.ip_addr_f);
 		mask = widget_textbox_get_value(screen->widgets.ip_mask_f);
 		gateway = widget_textbox_get_value(screen->widgets.gateway_f);
+		url = widget_textbox_get_value(screen->widgets.url_f);
 
 		if (!ip || !*ip || !mask || !*mask) {
 			screen->scr.frame.status =
@@ -292,6 +296,7 @@ static int screen_process_form(struct config_screen *screen)
 		iface->static_config.address = talloc_asprintf(iface, "%s/%s",
 				ip, mask);
 		iface->static_config.gateway = talloc_strdup(iface, gateway);
+		iface->static_config.url = talloc_strdup(iface, url);
 	}
 
 	str = widget_textbox_get_value(screen->widgets.dns_f);
@@ -510,6 +515,19 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		y++;
 	}
 
+	wl = widget_label_base(screen->widgets.url_l);
+	wf = widget_textbox_base(screen->widgets.url_f);
+	wh = widget_label_base(screen->widgets.url_help_l);
+	widget_set_visible(wl, show);
+	widget_set_visible(wf, show);
+	widget_set_visible(wh, show);
+
+	if (show) {
+		layout_pair(screen, y, screen->widgets.url_l, wf);
+		widget_move(wh, y, help_x);
+		y++;
+	}
+
 	wh = widget_label_base(screen->widgets.dns_help_l);
 	layout_pair(screen, y, screen->widgets.dns_l,
 			widget_textbox_base(screen->widgets.dns_f));
@@ -693,7 +711,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 {
 	struct nc_widgetset *set = screen->widgetset;
 	struct interface_config *ifcfg;
-	char *str, *ip, *mask, *gw;
+	char *str, *ip, *mask, *gw, *url;
 	enum net_conf_type type;
 	unsigned int i;
 	int add_len, clear_len, any_len, min_len = 20;
@@ -849,7 +867,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 						i, str, is_default);
 	}
 
-	gw = ip = mask = NULL;
+	url = gw = ip = mask = NULL;
 	if (ifcfg && ifcfg->method == CONFIG_METHOD_STATIC) {
 		char *sep;
 
@@ -862,6 +880,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 			mask = sep + 1;
 		}
 		gw = ifcfg->static_config.gateway;
+		url = ifcfg->static_config.url;
 	}
 
 	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, _("IP/mask:"));
@@ -883,6 +902,11 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	widget_textbox_set_fixed_size(screen->widgets.gateway_f);
 	widget_textbox_set_validator_ipv4(screen->widgets.gateway_f);
+
+	screen->widgets.url_l = widget_new_label(set, 0, 0, _("URL:"));
+	screen->widgets.url_f = widget_new_textbox(set, 0, 0, 32, url);
+	screen->widgets.url_help_l =
+		widget_new_label(set, 0, 0, _("(eg. tftp://)"));
 
 	str = talloc_strdup(screen, "");
 	for (i = 0; i < config->network.n_dns_servers; i++) {

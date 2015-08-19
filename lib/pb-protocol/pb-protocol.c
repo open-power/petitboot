@@ -260,6 +260,7 @@ static int pb_protocol_interface_config_len(struct interface_config *conf)
 	if (conf->method == CONFIG_METHOD_STATIC) {
 		len += 4 + optional_strlen(conf->static_config.address);
 		len += 4 + optional_strlen(conf->static_config.gateway);
+		len += 4 + optional_strlen(conf->static_config.url);
 	}
 
 	return len;
@@ -454,6 +455,8 @@ static int pb_protocol_serialise_config_interface(char *buf,
 				conf->static_config.address);
 		pos += pb_protocol_serialise_string(pos,
 				conf->static_config.gateway);
+		pos += pb_protocol_serialise_string(pos,
+				conf->static_config.url);
 	}
 
 	return pos - buf;
@@ -899,6 +902,9 @@ static int pb_protocol_deserialise_config_interface(const char **buf,
 			return -1;
 
 		if (read_string(iface, buf, len, &iface->static_config.gateway))
+			return -1;
+
+		if (read_string(iface, buf, len, &iface->static_config.url))
 			return -1;
 	}
 

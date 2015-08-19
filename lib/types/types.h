@@ -115,6 +115,7 @@ struct interface_config {
 		struct {
 			char *address;
 			char *gateway;
+			char *url;
 		} static_config;
 	};
 };

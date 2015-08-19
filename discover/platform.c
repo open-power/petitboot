@@ -60,6 +60,7 @@ static void dump_config(struct config *config)
 			pb_log("   static:\n");
 			pb_log("    ip:  %s\n", ifconf->static_config.address);
 			pb_log("    gw:  %s\n", ifconf->static_config.gateway);
+			pb_log("    url:  %s\n", ifconf->static_config.url);
 
 		}
 	}
