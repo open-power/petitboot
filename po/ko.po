@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Korean\n"
@@ -222,6 +222,16 @@ msgstr "(DHCP 서버에서 제공되지 않은 경우)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "'확인'을 선택하면 안전 모드를 종료합니다."
 
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "디스크"
+
+msgid "Prevent all writes to disk"
+msgstr "디스크에 대한 모든 쓰기 방지"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "부트 로더 스크립트가 디스크를 수정하도록 허용"
+
 msgid "Petitboot System Configuration"
 msgstr "Petitboot 시스템 구성"
 
@@ -342,24 +352,24 @@ msgstr "스토리지 장치"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  마운트 위치: %s"
+msgstr " 마운트 위치: %s"
 
 msgid "Network interfaces"
 msgstr "네트워크 인터페이스"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  링크: %s"
+msgstr " 링크: %s"
 
 msgid "up"
 msgstr "연결"

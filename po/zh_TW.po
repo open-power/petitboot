@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Traditional Chinese\n"
@@ -14,7 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "running boot hooks"
 msgstr "正在執行啟動連結鉤"
@@ -222,6 +222,16 @@ msgstr "（如果 DHCP 伺服器未提供的話）"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "選取「確定」將會結束安全模式"
 
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "磁碟"
+
+msgid "Prevent all writes to disk"
+msgstr "阻止全部寫入磁碟"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "容許開機載入器 Script 修改磁碟"
+
 msgid "Petitboot System Configuration"
 msgstr "Petitboot 系統配置"
 
@@ -314,7 +324,7 @@ msgstr "選取 Petitboot 語言"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "選項 %d 無效！"
+msgstr "!無效選項 %d"
 
 msgid "Disk"
 msgstr "磁碟"
@@ -342,24 +352,24 @@ msgstr "儲存裝置"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID：      %s"
+msgstr " UUID：      %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  裝載位置：%s"
+msgstr " 裝載位置：%s"
 
 msgid "Network interfaces"
 msgstr "網路介面"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC：%s"
+msgstr " MAC：%s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  鏈結：%s"
+msgstr " 鏈結：%s"
 
 msgid "up"
 msgstr "向上鏈結"
@@ -545,8 +555,8 @@ msgstr ""
 "\n"
 "網路選項：\n"
 "\n"
-"對所有作用中介面使用 DHCP：自動將 IP 位址指派給每一個網路介面。如果網路上有 "
-"DHCP 伺服器，請使用此選項。\n"
+"對所有作用中介面使用 DHCP：自動將 IP 位址指派給每一個網路介面。如果您的網路中"
+"有 DHCP 伺服器請使用此選項。\n"
 "\n"
 "對特定介面使用 DHCP：自動將 IP 位址指派給選定的網路介面。不配置其他介面。如果"
 "您在不同的介面上具有多個 DHCP 伺服器，但在啟動期間只想配置單一介面，請選取此"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Japanese\n"
@@ -222,6 +222,16 @@ msgstr "(DHCP サーバーから提供されない場合)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "「OK」を選択するとセーフ・モードが終了します"
 
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "ディスク"
+
+msgid "Prevent all writes to disk"
+msgstr "ディスクへの書き込みをすべて抑止する"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "ブート・ローダー・スクリプトでディスクを変更できるようにする"
+
 msgid "Petitboot System Configuration"
 msgstr "Petitboot システム構成"
 
@@ -315,7 +325,7 @@ msgstr "Petitboot 言語選択"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "!オプション %d  は無効です"
+msgstr "!オプション %d は無効です"
 
 msgid "Disk"
 msgstr "ディスク"
@@ -343,24 +353,24 @@ msgstr "ストレージ・デバイス"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  マウント位置: %s"
+msgstr " マウント位置: %s"
 
 msgid "Network interfaces"
 msgstr "ネットワーク・インターフェース"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  リンク: %s"
+msgstr " リンク: %s"
 
 msgid "up"
 msgstr "アップ"
@@ -572,8 +582,9 @@ msgstr ""
 "\n"
 "特定のインターフェースに DHCP: 選択されたネットワーク・インターフェースに IP "
 "アドレスが自動的に割り当てられます。その他のインターフェースは構成されませ"
-"ん。さまざまなインターフェースに対して複数のDHCP サーバーがあるが、ブート時に"
-"は単一のインターフェースのみを構成する場合に、このオプションを選択します。\n"
+"ん。さまざまなインターフェースに対して複数の DHCP サーバーがあるが、ブート時"
+"には単一のインターフェースのみを構成したい\n"
+"場合に、このオプションを選択します。\n"
 "\n"
 "静的 IP 構成: ネットワーク・インターフェースの IPv4 アドレスとネットワーク・"
 "マスク、ゲートウェイ、および DNS サーバーを指定できます。DHCP サーバーがない"

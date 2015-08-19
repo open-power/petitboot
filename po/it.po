@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Italian\n"
@@ -166,7 +166,7 @@ msgstr "Dispositivo:"
 
 #, c-format
 msgid "Any %s device"
-msgstr "Qualsiasi dispositivo %s "
+msgstr "Qualsiasi dispositivo %s"
 
 msgid "Timeout:"
 msgstr "Timeout:"
@@ -222,6 +222,16 @@ msgstr "(se non fornito dal server DHCP)"
 
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Selezionando 'OK' si uscirà in modalità sicura"
+
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "Disco"
+
+msgid "Prevent all writes to disk"
+msgstr "Impedisci tutte le scritture su disco"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "Consenti script bootloader per modificare i dischi"
 
 msgid "Petitboot System Configuration"
 msgstr "Configurazione di sistema Petitboot"
@@ -315,7 +325,7 @@ msgstr "Selezione lingua di Petitboot"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "!Opzione non valida %d"
+msgstr "Opzione non valida %d"
 
 msgid "Disk"
 msgstr "Disco"

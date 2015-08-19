@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: German\n"
@@ -14,10 +14,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "running boot hooks"
-msgstr "Aktive Boot-Anbindungspunkte (Hooks)"
+msgstr "Aktive Bootanbindungspunkte"
 
 #, c-format
 msgid "Couldn't load %s"
@@ -224,6 +224,17 @@ msgstr "(falls nicht vom DHCP-Server bereitgestellt)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Durch die Auswahl von 'OK' wird der abgesicherte Modus beendet"
 
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "Platte"
+
+msgid "Prevent all writes to disk"
+msgstr "Alle Schreibvorgänge auf die Platte verhindern"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr ""
+"Zulassen, dass mit Scripts des Bootladeprogramms Platten geändert werden"
+
 msgid "Petitboot System Configuration"
 msgstr "Petitboot-Systemkonfiguration"
 
@@ -345,24 +356,24 @@ msgstr "Speichereinheiten"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  angehängt bei: %s"
+msgstr " angehängt bei: %s"
 
 msgid "Network interfaces"
 msgstr "Netzschnittstellen"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  Verbindung: %s"
+msgstr " Verbindung: %s"
 
 msgid "up"
 msgstr "aktiv"

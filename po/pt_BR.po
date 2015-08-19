@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Portugese (Brazil)\n"
@@ -14,7 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n>1;\n"
 
 msgid "running boot hooks"
 msgstr "executando ganchos de inicialização"
@@ -129,7 +129,7 @@ msgid "No IP / mask values are set"
 msgstr "Nenhum valor de máscara/IP está configurado"
 
 msgid "Select a boot device to add"
-msgstr "Selecione um dispositivo de inicialização a incluir. "
+msgstr "Selecione um dispositivo de inicialização a incluir."
 
 msgid "Waiting for configuration data..."
 msgstr "Aguardando dados de configuração..."
@@ -178,7 +178,7 @@ msgid "%s IPMI boot option: %s"
 msgstr "%s Opção de inicialização de IPMI: %s"
 
 msgid "Clear option:"
-msgstr "Limpar opção: "
+msgstr "Limpar opção:"
 
 msgid "Network:"
 msgstr "Rede:"
@@ -225,6 +225,16 @@ msgstr "(se não for fornecido pelo servidor DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Selecionar 'OK' irá sair do modo de segurança"
 
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "Disco"
+
+msgid "Prevent all writes to disk"
+msgstr "Evitar todas as gravações em disco"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "Permitir que scripts de carregador de inicialização modifiquem discos"
+
 msgid "Petitboot System Configuration"
 msgstr "Configuração do Sistema Petitboot"
 
@@ -246,7 +256,7 @@ msgstr "Falha: inicializar %s"
 
 #, c-format
 msgid "User item %u"
-msgstr "Item do usuário %u"
+msgstr "Item de usuário %u"
 
 msgid "Error"
 msgstr "Erro"
@@ -572,7 +582,7 @@ msgstr ""
 "\n"
 "DHCP (Protocolo de Configuração de Host Dinâmico) em todas as interfaces "
 "ativas: designa automaticamente endereços IP a cada interface de rede. Use "
-"essa opção se tiver um servidor DHCP em suarede.\n"
+"essa opção se tiver um servidor DHCP em sua rede.\n"
 "\n"
 "DHCP (Protocolo de Configuração de Host Dinâmico) em uma interface "
 "específica: designa automaticamente endereços IP à interface de rede "

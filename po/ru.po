@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Russian\n"
@@ -223,6 +223,16 @@ msgstr "(если не предоставляется сервером DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "После нажатия 'OK' безопасный режим будет выключен"
 
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "Диск"
+
+msgid "Prevent all writes to disk"
+msgstr "Запретить любую запись на диск"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "Разрешить сценарии загрузчика для изменения дисков"
+
 msgid "Petitboot System Configuration"
 msgstr "Конфигурация Petitboot System"
 
@@ -244,7 +254,7 @@ msgstr "Не удалось: загрузиться %s"
 
 #, c-format
 msgid "User item %u"
-msgstr "Пользовательский элемент %u"
+msgstr "Объект пользователя %u"
 
 msgid "Error"
 msgstr "Ошибка"

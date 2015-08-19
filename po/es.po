@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-07-28 14:45+1000\n"
+"POT-Creation-Date: 2015-08-19 14:19+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Spanish\n"
@@ -222,6 +222,16 @@ msgstr "(si no se proporciona por servidor DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Si selecciona 'Aceptar' saldrá de la modalidad segura"
 
+#, fuzzy
+msgid "Disk R/W:"
+msgstr "Disco"
+
+msgid "Prevent all writes to disk"
+msgstr "Impide todas las escrituras en disco"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "Permite a los scripts del gestor de arranque modificar los discos"
+
 msgid "Petitboot System Configuration"
 msgstr "Configuración del sistema de Petitboot"
 
@@ -342,24 +352,24 @@ msgstr "Dispositivos de almacenamiento"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  montado en: %s"
+msgstr " montado en: %s"
 
 msgid "Network interfaces"
 msgstr "Interfaces de red"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  enlace: %s"
+msgstr " enlace: %s"
 
 msgid "up"
 msgstr "activo"
