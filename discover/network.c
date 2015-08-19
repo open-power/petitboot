@@ -374,7 +374,11 @@ static void configure_interface_static(struct network *network,
 	if (config->static_config.url) {
 		pb_log("config URL %s\n", config->static_config.url);
 		device_handler_process_url(network->handler,
-				config->static_config.url);
+				config->static_config.url,
+				mac_bytes_to_string(interface->dev,
+						interface->hwaddr,
+						sizeof(interface->hwaddr)),
+				config->static_config.address);
 	}
 
 	return;

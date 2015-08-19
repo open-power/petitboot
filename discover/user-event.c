@@ -439,7 +439,7 @@ static int user_event_url(struct user_event *uev, struct event *event)
 
 	url = event_get_param(event, "url");
 	if (url)
-		device_handler_process_url(handler, url);
+		device_handler_process_url(handler, url, NULL, NULL);
 
 	return 0;
 }

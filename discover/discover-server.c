@@ -266,7 +266,8 @@ static int discover_server_process_message(void *arg)
 	case PB_PROTOCOL_ACTION_ADD_URL:
 		url = pb_protocol_deserialise_string((void *) client, message);
 
-		device_handler_process_url(client->server->device_handler, url);
+		device_handler_process_url(client->server->device_handler,
+				url, NULL, NULL);
 		break;
 
 	default:

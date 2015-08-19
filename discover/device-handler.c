@@ -1125,9 +1125,8 @@ static char *device_from_addr(void *ctx, struct pb_url *url)
 	return dev;
 }
 
-
 void device_handler_process_url(struct device_handler *handler,
-		const char *url)
+		const char *url, const char *mac, const char *ip)
 {
 	struct discover_context *ctx;
 	struct discover_device *dev;
@@ -1153,11 +1152,25 @@ void device_handler_process_url(struct device_handler *handler,
 	event->type = EVENT_TYPE_USER;
 	event->action = EVENT_ACTION_CONF;
 
-	event->params = talloc_array(event, struct param, 1);
-	param = &event->params[0];
-	param->name = talloc_strdup(event, "pxeconffile");
-	param->value = talloc_strdup(event, url);
-	event->n_params = 1;
+	if (url[strlen(url) - 1] == '/') {
+		event->params = talloc_array(event, struct param, 3);
+		param = &event->params[0];
+		param->name = talloc_strdup(event, "pxepathprefix");
+		param->value = talloc_strdup(event, url);
+		param = &event->params[1];
+		param->name = talloc_strdup(event, "mac");
+		param->value = talloc_strdup(event, mac);
+		param = &event->params[2];
+		param->name = talloc_strdup(event, "ip");
+		param->value = talloc_strdup(event, ip);
+		event->n_params = 3;
+	} else {
+		event->params = talloc_array(event, struct param, 1);
+		param = &event->params[0];
+		param->name = talloc_strdup(event, "pxeconffile");
+		param->value = talloc_strdup(event, url);
+		event->n_params = 1;
+	}
 
 	pb_url = pb_url_parse(event, event->params->value);
 	if (!pb_url || !pb_url->host) {
