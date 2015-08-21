@@ -7,6 +7,7 @@ plugin_file=pb-plugin.cpio.gz
 plugin_meta=pb-plugin.conf
 plugin_meta_dir=etc/preboot-plugins/
 plugin_meta_path=$plugin_meta_dir$plugin_meta
+plugin_wrapper_dir=/usr/bin
 
 usage()
 {
@@ -14,9 +15,9 @@ usage()
 Usage: $0 <command>
 
 Where <command> is one of:
-  run <FILE|URL>      - run plugin from FILE/URL
-  scan                - look for available plugins on attached devices
-  create <DIR>        - create a new plugin archive from DIR
+  install <FILE|URL> - install plugin from FILE/URL
+  scan               - look for available plugins on attached devices
+  create <DIR>       - create a new plugin archive from DIR
 EOF
 }
 
@@ -62,41 +63,55 @@ plugin_info()
 	echo "  (version $PLUGIN_VERSION)"
 }
 
-__run_init()
+do_wrap()
 {
-	local base dir
+	local base binary dir
 
 	base=$1
+	binary=$2
+	shift 2
 
-	for dir in etc dev sys proc
+	for dir in etc dev sys proc var
 	do
-		mkdir -p $base/$dir
+		[ -e "$base/$dir" ] || mkdir -p "$base/$dir"
 	done
 
 	cp /etc/resolv.conf $base/etc
 	mount -o bind /dev $base/dev
 	mount -o bind /sys $base/sys
 	mount -o bind /proc $base/proc
+	mount -o bind /var $base/var
+
+	chroot "$base" "$binary" "$@"
+
+	umount $base/dev
+	umount $base/sys
+	umount $base/proc
+	umount $base/var
 }
 
-__run_cleanup()
+__create_wrapper()
 {
-	local base
+	local base binary wrapper
 
 	base=$1
+	binary=$2
+	wrapper=$plugin_wrapper_dir/$(basename $binary)
 
-	[ -e $base/dev/null ] && umount $base/dev
-	[ -e $base/sys/kernel ] && umount $base/sys
-	[ -e $base/proc/stat ] && umount $base/proc
-	rm -rf $base
+	cat <<EOF > $wrapper
+#!/bin/sh
+
+exec $(realpath $0) __wrap '$base' '$binary' "\$@"
+EOF
+
+	chmod a+x $wrapper
 }
 
-do_run()
+do_install()
 {
-	local url executable
+	local url name file __dest
 
 	url=$1
-	executable=$2
 
 	if [ -z "$url" ]
 	then
@@ -129,7 +144,7 @@ do_run()
 	echo
 	sha256sum "$file" | cut -f1 -d' '
 	echo
-	echo "Do you want to run this plugin? (y/N)"
+	echo "Do you want to install this plugin? (y/N)"
 	read resp
 
 	case $resp in
@@ -153,20 +168,13 @@ do_run()
 
 	. $__dest/$plugin_meta_path
 
-	(
-		executable=${PLUGIN_EXECUTABLE:-$executable}
+	for binary in ${PLUGIN_EXECUTABLES}
+	do
+		__create_wrapper "$__dest" "$binary"
+	done
 
-		__run_init $__dest
-
-		printf "Entering plugin\n"
-		plugin_info
-
-		chroot $__dest $executable
-
-		printf "\nExiting plugin & cleaning up\n"
-		__run_cleanup $__dest
-	)
-
+	echo "Plugin installed"
+	plugin_info
 }
 
 do_scan()
@@ -259,10 +267,13 @@ EOF
 
 cat <<EOF
 
-Enter the full path (within the plugin root) to the plugin executable file.
-This will be the default action when the plugin is run. (eg /usr/bin/my-util)
+Enter the full path (within the plugin root) to the plugin executable file(s).
+These will be exposed as wrapper scripts, to be run from the standard petitboot
+shell environment (eg, /usr/bin/my-raid-config).
+
+If multiple executables are provided, separate with a space.
 EOF
-	read executable
+	read executables
 
 	date=$(date +%Y-%m-%d)
 
@@ -273,7 +284,7 @@ PLUGIN_VENDOR='$vendorname'
 PLUGIN_NAME='$pluginname'
 PLUGIN_VERSION='$version'
 PLUGIN_DATE='$date'
-PLUGIN_EXECUTABLE='$executable'
+PLUGIN_EXECUTABLES='$executables'
 EOF
 
 }
@@ -335,10 +346,9 @@ do_create()
 			echo "error: no PLUGIN_DATE defined in metadata" &>2
 			exit 1
 		fi
-		if [ ! -n "$PLUGIN_EXECUTABLE" ]
+		if [ ! -n "$PLUGIN_EXECUTABLES" ]
 		then
-			echo "error: no PLUGIN_EXECUTABLE defined in metadata" \
-				&>2
+			echo "error: no PLUGIN_EXECUTABLES defined in metadata"\				&>2
 			exit 1
 		fi
 
@@ -419,7 +429,7 @@ test_scan()
 	(
 		echo "PLUGIN_NAME=test"
 		echo "PLUGIN_VERSION=1"
-		echo "PLUGIN_EXECUTABLE=/bin/sh"
+		echo "PLUGIN_EXECUTABLES=/bin/sh"
 	) > $mnt_dir/$plugin_meta_path
 	(
 		cd $mnt_dir;
@@ -508,9 +518,9 @@ do_tests()
 }
 
 case "$1" in
-run)
+install)
 	shift
-	do_run $@
+	do_install $@
 	;;
 scan)
 	shift
@@ -519,6 +529,10 @@ scan)
 create)
 	shift
 	do_create $@
+	;;
+__wrap)
+	shift
+	do_wrap $@
 	;;
 __test)
 	shift
