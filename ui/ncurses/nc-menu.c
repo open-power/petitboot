@@ -253,6 +253,7 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 	switch (dev->type) {
 	case DEVICE_TYPE_OPTICAL:
 	case DEVICE_TYPE_DISK:
+	case DEVICE_TYPE_USB:
 		/* Find block info */
 		for (i = 0; sys && i < sys->n_blockdevs; i++) {
 			bd = sys->blockdevs[i];
@@ -263,8 +264,9 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 		}
 		if (matched) {
 			snprintf(buf,sizeof(buf),"[%s: %s / %s]",
-				dev->type == DEVICE_TYPE_DISK ?
-					_("Disk") : _("CD/DVD"),
+				dev->type == DEVICE_TYPE_OPTICAL ?
+				_("CD/DVD") :
+				device_type_display_name(dev->type),
 				bd->name, bd->uuid);
 		}
 		break;

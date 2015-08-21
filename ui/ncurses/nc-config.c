@@ -762,7 +762,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		widget_subset_add_option(screen->widgets.boot_order_f, label);
 	}
 
-	for (i = DEVICE_TYPE_NETWORK; i < DEVICE_TYPE_NETWORK + 4; i++) {
+	for (i = DEVICE_TYPE_NETWORK; i < DEVICE_TYPE_UNKNOWN; i++) {
 		char *label;
 
 		if (i == DEVICE_TYPE_ANY)

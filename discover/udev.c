@@ -88,7 +88,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		"LVM2_member",
 		NULL,
 	};
-	bool cdrom;
+	bool cdrom, usb;
 
 	typestr = udev_device_get_devtype(dev);
 	if (!typestr) {
@@ -167,12 +167,18 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	prop = udev_device_get_property_value(dev, "ID_FS_LABEL");
 	if (prop)
 		ddev->label = talloc_strdup(ddev, prop);
-	ddev->device->type = cdrom ? DEVICE_TYPE_OPTICAL : DEVICE_TYPE_DISK;
+
+	usb = !!udev_device_get_property_value(dev, "ID_USB_DRIVER");
+	if (cdrom)
+		ddev->device->type = DEVICE_TYPE_OPTICAL;
+	else
+		ddev->device->type = usb ? DEVICE_TYPE_USB : DEVICE_TYPE_DISK;
 
 	udev_setup_device_params(dev, ddev);
 
 	/* Create a snapshot for all disks, unless it is an assembled RAID array */
-	if (ddev->device->type == DEVICE_TYPE_DISK &&
+	if ((ddev->device->type == DEVICE_TYPE_DISK ||
+	     ddev->device->type == DEVICE_TYPE_USB) &&
 	    !udev_device_get_property_value(dev, "MD_LEVEL"))
 		devmapper_init_snapshot(udev->handler, ddev);
 

@@ -8,6 +8,8 @@ static const char *device_type_string(enum device_type type)
 	switch (type) {
 	case DEVICE_TYPE_DISK:
 		return "disk";
+	case DEVICE_TYPE_USB:
+		return "usb";
 	case DEVICE_TYPE_NETWORK:
 		return "network";
 	case DEVICE_TYPE_OPTICAL:

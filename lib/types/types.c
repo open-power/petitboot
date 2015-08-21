@@ -27,6 +27,8 @@ const char *device_type_display_name(enum device_type type)
 	switch (type) {
 	case DEVICE_TYPE_DISK:
 		return _("Disk");
+	case DEVICE_TYPE_USB:
+		return _("USB");
 	case DEVICE_TYPE_OPTICAL:
 		return _("Optical");
 	case DEVICE_TYPE_NETWORK:
@@ -44,6 +46,8 @@ const char *device_type_name(enum device_type type)
 	switch (type) {
 	case DEVICE_TYPE_DISK:
 		return "disk";
+	case DEVICE_TYPE_USB:
+		return "usb";
 	case DEVICE_TYPE_OPTICAL:
 		return "optical";
 	case DEVICE_TYPE_NETWORK:
@@ -60,6 +64,8 @@ enum device_type find_device_type(const char *str)
 {
 	if (!strncmp(str, "disk", strlen("disk")))
 		return DEVICE_TYPE_DISK;
+	if (!strncmp(str, "usb", strlen("usb")))
+		return DEVICE_TYPE_USB;
 	if (!strncmp(str, "optical", strlen("optical")))
 		return DEVICE_TYPE_OPTICAL;
 	if (!strncmp(str, "network", strlen("network")))
