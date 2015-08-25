@@ -1225,15 +1225,25 @@ static void device_handler_reinit_sources(struct device_handler *handler)
 			handler->dry_run);
 }
 
-static const char *fs_parameters(unsigned int rw_flags, const char *fstype)
+static const char *fs_parameters(struct discover_device *dev,
+				 unsigned int rw_flags)
 {
+	const char *fstype = discover_device_get_param(dev, "ID_FS_TYPE");
+
+	/* XFS journals are not cross-endian compatible; don't try recovery
+	 * even if we have a snapshot */
+	if (!strncmp(fstype, "xfs", strlen("xfs")))
+		return "norecovery";
+
+	/* If we have a snapshot available allow touching the filesystem */
+	if (dev->ramdisk)
+		return "";
+
 	if ((rw_flags | MS_RDONLY) != MS_RDONLY)
 		return "";
 
-	/* Avoid writing back to the disk on journaled filesystems */
+	/* Avoid writes due to journal replay if we don't have a snapshot */
 	if (!strncmp(fstype, "ext4", strlen("ext4")))
-		return "norecovery";
-	if (!strncmp(fstype, "xfs", strlen("xfs")))
 		return "norecovery";
 
 	return "";
@@ -1342,7 +1352,7 @@ static int mount_device(struct discover_device *dev)
 	errno = 0;
 	rc = mount(device_path, dev->mount_path, fstype,
 			MS_RDONLY | MS_SILENT,
-			fs_parameters(MS_RDONLY, fstype));
+			fs_parameters(dev, MS_RDONLY));
 	if (!rc) {
 		dev->mounted = true;
 		dev->mounted_rw = false;
@@ -1422,7 +1432,7 @@ int device_request_write(struct discover_device *dev, bool *release)
 
 	rc = mount(device_path, dev->mount_path, fstype,
 			MS_SILENT,
-			fs_parameters(MS_REMOUNT, fstype));
+			fs_parameters(dev, MS_REMOUNT));
 	if (rc)
 		goto mount_ro;
 
@@ -1435,7 +1445,7 @@ mount_ro:
 	       device_path, strerror(errno));
 	if (mount(device_path, dev->mount_path, fstype,
 			MS_RDONLY | MS_SILENT,
-			fs_parameters(MS_RDONLY, fstype)))
+			fs_parameters(dev, MS_RDONLY)))
 		pb_log("Unable to recover mount for %s: %s\n",
 		       device_path, strerror(errno));
 	return -1;
@@ -1469,7 +1479,7 @@ void device_release_write(struct discover_device *dev, bool release)
 
 	mount(device_path, dev->mount_path, fstype,
 			MS_RDONLY | MS_SILENT,
-			fs_parameters(MS_RDONLY, fstype));
+			fs_parameters(dev, MS_RDONLY));
 	if (rc)
 		pb_log("Failed to remount %s read-only: %s\n",
 		       device_path, strerror(errno));
