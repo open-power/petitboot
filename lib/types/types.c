@@ -30,7 +30,7 @@ const char *device_type_display_name(enum device_type type)
 	case DEVICE_TYPE_USB:
 		return _("USB");
 	case DEVICE_TYPE_OPTICAL:
-		return _("Optical");
+		return _("CD/DVD");
 	case DEVICE_TYPE_NETWORK:
 		return _("Network");
 	case DEVICE_TYPE_ANY:

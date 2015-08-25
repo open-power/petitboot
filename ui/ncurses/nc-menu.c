@@ -264,8 +264,6 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 		}
 		if (matched) {
 			snprintf(buf,sizeof(buf),"[%s: %s / %s]",
-				dev->type == DEVICE_TYPE_OPTICAL ?
-				_("CD/DVD") :
 				device_type_display_name(dev->type),
 				bd->name, bd->uuid);
 		}
