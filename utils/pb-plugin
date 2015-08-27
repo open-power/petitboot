@@ -7,7 +7,7 @@ plugin_file=pb-plugin.cpio.gz
 plugin_meta=pb-plugin.conf
 plugin_meta_dir=etc/preboot-plugins/
 plugin_meta_path=$plugin_meta_dir$plugin_meta
-plugin_wrapper_dir=/usr/bin
+plugin_wrapper_dir=/var/lib/pb-plugins/bin
 
 usage()
 {
@@ -97,6 +97,8 @@ __create_wrapper()
 	base=$1
 	binary=$2
 	wrapper=$plugin_wrapper_dir/$(basename $binary)
+
+	mkdir -p $plugin_wrapper_dir
 
 	cat <<EOF > $wrapper
 #!/bin/sh
