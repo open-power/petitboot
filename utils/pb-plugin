@@ -237,7 +237,7 @@ do_scan_mount()
 			plugin_info
 			printf "\n"
 			printf "To run this plugin:\n"
-			printf "  $0 run $plugin_path\n"
+			printf "  $0 install $plugin_path\n"
 			printf "\n"
 		)
 		if [ $? = 0 ]
@@ -816,7 +816,7 @@ __test)
 	exit 1
 	;;
 *)
-	echo "Invalid command: $s" >&2
+	echo "Invalid command: $1" >&2
 	usage
 	exit 1
 esac
