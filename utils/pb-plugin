@@ -18,6 +18,7 @@ Where <command> is one of:
   install <FILE|URL> - install plugin from FILE/URL
   scan               - look for available plugins on attached devices
   create <DIR>       - create a new plugin archive from DIR
+  lint <FILE>        - perform a pre-distribution check on FILE
 EOF
 }
 
@@ -371,48 +372,14 @@ do_create()
 
 	# Sanity check metadata file
 	. $meta_file
-	if [ ! -n "$PLUGIN_ABI" ]
+
+	errors=0
+	warnings=0
+
+	lint_metadata
+
+	if [ $errors -ne 0 ]
 	then
-		echo "error: no PLUGIN_ABI defined in metadata" &>2
-		exit 1
-	fi
-	if [ "$PLUGIN_ABI" != "$plugin_abi" ]
-	then
-		echo "warning: PLUGIN_ABI (=$PLUGIN_ABI) is not $plugin_abi" &>2
-	fi
-	if [ ! -n "$PLUGIN_VENDOR" ]
-	then
-		echo "error: no PLUGIN_VENDOR defined in metadata" &>2
-		exit 1
-	fi
-	if [ ! -n "$PLUGIN_VENDOR_ID" ]
-	then
-		echo "error: no PLUGIN_VENDOR_ID defined in metadata" &>2
-		exit 1
-	fi
-	if [ ! -n "$PLUGIN_NAME" ]
-	then
-		echo "error: no PLUGIN_NAME defined in metadata" &>2
-		exit 1
-	fi
-	if [ ! -n "$PLUGIN_ID" ]
-	then
-		echo "error: no PLUGIN_ID defined in metadata" &>2
-		exit 1
-	fi
-	if [ ! -n "$PLUGIN_VERSION" ]
-	then
-		echo "error: no PLUGIN_VERSION defined in metadata" &>2
-		exit 1
-	fi
-	if [ ! -n "$PLUGIN_DATE" ]
-	then
-		echo "error: no PLUGIN_DATE defined in metadata" &>2
-		exit 1
-	fi
-	if [ ! -n "$PLUGIN_EXECUTABLES" ]
-	then
-		echo "error: no PLUGIN_EXECUTABLES defined in metadata" &>2
 		exit 1
 	fi
 
@@ -441,6 +408,134 @@ Ship this file in the top-level-directory of a USB device or CD to have it
 automatically discoverable by 'pb-plugin scan'. This file can be re-named,
 but must retain the .$plugin_ext extension to be discoverable.
 EOF
+}
+
+lint_fatal()
+{
+	echo "fatal:" "$@"
+	[ -d "$__dest" ] && rm -rf "$__dest"
+	exit 1
+}
+
+lint_err()
+{
+	echo "error:" "$@"
+	errors=$(($errors+1))
+}
+
+lint_warn()
+{
+	echo "warning:" "$@"
+	warnings=$(($warnings+1))
+}
+
+lint_metadata()
+{
+	[ -n "$PLUGIN_ABI" ] ||
+		lint_err "no PLUGIN_ABI defined in metadata"
+
+	printf '%s' "$PLUGIN_ABI" | grep -q '[^0-9]' &&
+		lint_err "PLUGIN_ABI has non-numeric characters"
+
+	[ -n "$PLUGIN_ABI_MIN" ] ||
+		lint_err "no PLUGIN_ABI_MIN defined in metadata"
+
+	printf '%s' "$PLUGIN_ABI_MIN" | grep -q '[^0-9]' &&
+		lint_err "PLUGIN_ABI_MIN has non-numeric characters"
+
+	[ "$PLUGIN_ABI" = "$plugin_abi" ] ||
+		lint_warn "PLUGIN_ABI (=$PLUGIN_ABI) is not $plugin_abi"
+
+	[ -n "$PLUGIN_VENDOR" ] ||
+		lint_err "no PLUGIN_VENDOR defined in metadata"
+
+	[ -n "$PLUGIN_VENDOR_ID" ] ||
+		lint_err "no PLUGIN_VENDOR_ID defined in metadata"
+
+	printf '%s' "$PLUGIN_VENDOR_ID" | grep -q '[^a-z0-9-]' &&
+		lint_err "PLUGIN_VENDOR_ID should only contain lowercase" \
+			"alphanumerics and hyphens"
+
+	[ -n "$PLUGIN_NAME" ] ||
+		lint_err "no PLUGIN_NAME defined in metadata"
+
+	[ -n "$PLUGIN_ID" ] ||
+		lint_err "no PLUGIN_ID defined in metadata"
+
+	printf '%s' "$PLUGIN_ID" | grep -q '[^a-z0-9-]' &&
+		lint_err "PLUGIN_ID should only contain lowercase" \
+			"alphanumerics and hyphens"
+
+	[ "$PLUGIN_VERSION" ] ||
+		lint_err "no PLUGIN_VERSION defined in metadata"
+
+	[ -n "$PLUGIN_DATE" ] ||
+		lint_err "no PLUGIN_DATE defined in metadata"
+
+	[ -n "$PLUGIN_EXECUTABLES" ] ||
+		lint_err "no PLUGIN_EXECUTABLES defined in metadata"
+}
+
+do_lint()
+{
+	local plugin_file errors warnings __dest executable dir
+
+	plugin_file=$1
+	errors=0
+	warnings=0
+	__dest=
+
+	[ "${plugin_file##*.}" = $plugin_ext ] ||
+		lint_err "Plugin file does not end with $plugin_ext"
+
+	gunzip -c "$plugin_file" > /dev/null 2>&1 ||
+		lint_fatal "Plugin can't be gunzipped"
+
+	gunzip -c "$plugin_file" 2>/dev/null | cpio -t >/dev/null 2>&1 ||
+		lint_fatal "Plugin can't be cpioed"
+
+	__dest=$(mktemp -d)
+	gunzip -c "$plugin_file" | ( cd $__dest && cpio -i -d 2>/dev/null)
+
+	[ -e "$__dest/$plugin_meta_path" ] ||
+		lint_fatal "No metadata file present (expecting" \
+			"$plugin_meta_path)"
+
+	(sh -e "$__dest/$plugin_meta_path") >/dev/null 2>&1  ||
+		lint_err "Plugin metadata file has shell errors"
+
+	. "$__dest/$plugin_meta_path"
+	lint_metadata
+
+	for executable in ${PLUGIN_EXECUTABLES}
+	do
+		exec_path="$__dest/$executable"
+		[ -e "$exec_path" ] || {
+			lint_err "PLUGIN_EXECUTABLES item $executable" \
+				"doesn't exist"
+			continue
+		}
+
+		[ -x "$exec_path" ] ||
+			lint_err "PLUGIN_EXECUTABLES item $executable" \
+				"isn't executable"
+	done
+
+	for dir in dev sys proc var
+	do
+		[ -e "$__dest/$dir" ] || continue
+
+		[ -d "$__dest/$dir" ] ||
+			lint_err "/$dir exists, but isn't a directory"
+
+		[ "$(find $__dest/$dir -mindepth 1)" ] &&
+			lint_warn "/$dir contains files/directories," \
+				"these will be lost during chroot setup"
+	done
+
+	printf '%s: %d errors, %d warnings\n' $plugin_file $errors $warnings
+	rm -rf $__dest
+	[ $errors = 0 ]
 }
 
 test_http_download()
@@ -702,6 +797,10 @@ scan)
 create)
 	shift
 	do_create $@
+	;;
+lint)
+	shift
+	do_lint $@
 	;;
 __wrap)
 	shift
