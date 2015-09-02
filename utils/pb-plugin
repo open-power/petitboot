@@ -2,8 +2,7 @@
 
 __dest=/
 __pb_mount_dir=/var/petitboot/mnt/dev/
-__plugin_basedir=/tmp/
-plugin_file=pb-plugin.cpio.gz
+plugin_ext=pb-plugin
 plugin_meta=pb-plugin.conf
 plugin_meta_dir=etc/preboot-plugins/
 plugin_meta_path=$plugin_meta_dir$plugin_meta
@@ -179,21 +178,20 @@ do_install()
 	plugin_info
 }
 
-do_scan()
+do_scan_mount()
 {
-	local found dev plugin_path __meta_tmp
-	found=0
-	for mnt in $__pb_mount_dir/*
-	do
-		dev=$(basename $mnt)
-		plugin_path="$mnt/$plugin_file"
+	local mnt dev plugin_path __meta_tmp
+	mnt=$1
+	dev=$(basename $mnt)
 
+	for plugin_path in $mnt/*.$plugin_ext
+	do
 		[ -e "$plugin_path" ] || continue
 
 		# extract plugin metadata to a temporary directory
 		__meta_tmp=$(mktemp -d)
 		[ -d $__meta_tmp ] || continue
-		gunzip -c "$plugin_path" |
+		gunzip -c "$plugin_path" 2>/dev/null |
 			(cd $__meta_tmp &&
 				cpio -i -d $plugin_meta_path 2>/dev/null)
 		if ! [ $? = 0 -a -e "$plugin_path" ]
@@ -214,6 +212,16 @@ do_scan()
 		)
 		rm -rf $__meta_tmp
 		found=1
+	done
+}
+
+do_scan()
+{
+	local found mnt
+	found=0
+	for mnt in $__pb_mount_dir/*
+	do
+		do_scan_mount $mnt
 	done
 
 	if [ "$found" = 0 ]
@@ -283,7 +291,9 @@ EOF
 
 	cat <<EOF > $file
 PLUGIN_VENDOR='$vendorname'
+PLUGIN_VENDOR_ID='$vendorshortname'
 PLUGIN_NAME='$pluginname'
+PLUGIN_ID='$pluginshortname'
 PLUGIN_VERSION='$version'
 PLUGIN_DATE='$date'
 PLUGIN_EXECUTABLES='$executables'
@@ -326,37 +336,44 @@ do_create()
 	fi
 
 	# Sanity check metadata file
-	(
-		. $meta_file
-		if [ ! -n "$PLUGIN_VENDOR" ]
-		then
-			echo "error: no PLUGIN_VENDOR defined in metadata" &>2
-			exit 1
-		fi
-		if [ ! -n "$PLUGIN_NAME" ]
-		then
-			echo "error: no PLUGIN_NAME defined in metadata" &>2
-			exit 1
-		fi
-		if [ ! -n "$PLUGIN_VERSION" ]
-		then
-			echo "error: no PLUGIN_VERSION defined in metadata" &>2
-			exit 1
-		fi
-		if [ ! -n "$PLUGIN_DATE" ]
-		then
-			echo "error: no PLUGIN_DATE defined in metadata" &>2
-			exit 1
-		fi
-		if [ ! -n "$PLUGIN_EXECUTABLES" ]
-		then
-			echo "error: no PLUGIN_EXECUTABLES defined in metadata"\				&>2
-			exit 1
-		fi
+	. $meta_file
+	if [ ! -n "$PLUGIN_VENDOR" ]
+	then
+		echo "error: no PLUGIN_VENDOR defined in metadata" &>2
+		exit 1
+	fi
+	if [ ! -n "$PLUGIN_VENDOR_ID" ]
+	then
+		echo "error: no PLUGIN_VENDOR_ID defined in metadata" &>2
+		exit 1
+	fi
+	if [ ! -n "$PLUGIN_NAME" ]
+	then
+		echo "error: no PLUGIN_NAME defined in metadata" &>2
+		exit 1
+	fi
+	if [ ! -n "$PLUGIN_ID" ]
+	then
+		echo "error: no PLUGIN_ID defined in metadata" &>2
+		exit 1
+	fi
+	if [ ! -n "$PLUGIN_VERSION" ]
+	then
+		echo "error: no PLUGIN_VERSION defined in metadata" &>2
+		exit 1
+	fi
+	if [ ! -n "$PLUGIN_DATE" ]
+	then
+		echo "error: no PLUGIN_DATE defined in metadata" &>2
+		exit 1
+	fi
+	if [ ! -n "$PLUGIN_EXECUTABLES" ]
+	then
+		echo "error: no PLUGIN_EXECUTABLES defined in metadata" &>2
+		exit 1
+	fi
 
-	) || exit 1
-
-	outfile=$plugin_file
+	outfile=${PLUGIN_ID}-${PLUGIN_VERSION}.${plugin_ext}
 
 	(
 		cd $src
@@ -369,21 +386,17 @@ do_create()
 	echo
 
 	echo "User-visible metadata:"
-
-	(
-		. $meta_file
-		plugin_info | sed -e 's/^/  /'
-	)
+	plugin_info | sed -e 's/^/  /'
 
 	echo
-
 
 cat <<EOF
 Plugin created in:
   $outfile
 
 Ship this file in the top-level-directory of a USB device or CD to have it
-automatically discoverable by 'pb-plugin scan'.
+automatically discoverable by 'pb-plugin scan'. This file can be re-named,
+but must retain the .$plugin_ext extension to be discoverable.
 EOF
 }
 
@@ -436,10 +449,81 @@ test_scan()
 	(
 		cd $mnt_dir;
 		find -mindepth 1 | cpio -o -Hnewc 2>/dev/null
-	) | gzip -c > $mnt_dir/$plugin_file
+	) | gzip -c > $mnt_dir/test.$plugin_ext
 
-	do_scan | grep -q 'test 1'
-	rc=$?
+	do_scan | grep -q 'test'
+}
+
+test_scan_nogzip()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	stderr_file="$test_tmpdir/stderr"
+
+	mkdir -p $mnt_dir
+	echo "invalid" > $mnt_dir/nogzip.$plugin_ext
+
+	do_scan 2>$stderr_file | grep -q 'No plugins'
+
+	[ $? = 0 ] || return 1
+
+	if [ -s "$stderr_file" ]
+	then
+		echo "Scan with invalid (non-gzip) file produced error output" \
+			>&2
+		cat "$stderr_file"
+		return 1
+	fi
+	true
+}
+
+test_scan_nocpio()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	stderr_file="$test_tmpdir/stderr"
+
+	mkdir -p $mnt_dir
+	echo "invalid" | gzip -c > $mnt_dir/nogzip.$plugin_ext
+
+	do_scan 2>$stderr_file | grep -q 'No plugins'
+
+	[ $? = 0 ] || return 1
+
+	if [ -s "$stderr_file" ]
+	then
+		echo "Scan with invalid (non-cpio) file produced error output" \
+			>&2
+		cat "$stderr_file"
+		return 1
+	fi
+	true
+}
+
+test_scan_multiple()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	outfile=$test_tmpdir/scan.out
+
+	for i in 1 2
+	do
+		mkdir -p $mnt_dir/$plugin_meta_dir
+		(
+			echo "PLUGIN_NAME=test-$i"
+			echo "PLUGIN_VERSION=1"
+			echo "PLUGIN_EXECUTABLES=/bin/sh"
+		) > $mnt_dir/$plugin_meta_path
+		(
+			cd $mnt_dir;
+			find -mindepth 1 | cpio -o -Hnewc 2>/dev/null
+		) | gzip -c > $mnt_dir/test-${i}.$plugin_ext
+		rm -rf $mnt_dir/$plugin_meta_dir
+	done
+
+	do_scan >$outfile
+
+	grep -q 'test-1' $outfile && grep -q 'test-2' $outfile
 }
 
 test_empty_scan()
@@ -507,6 +591,9 @@ do_tests()
 	do_test test_http_download
 	do_test test_ftp_download
 	do_test test_scan
+	do_test test_scan_nogzip
+	do_test test_scan_nocpio
+	do_test test_scan_multiple
 	do_test test_empty_scan
 
 	if [ $test_failed = 0 ]
@@ -514,9 +601,10 @@ do_tests()
 		echo "$n tests passed"
 	else
 		echo "Tests failed"
-		false
 	fi
 	rm -rf "$tests_tmpdir"
+
+	[ $test_failed = 0 ]
 }
 
 case "$1" in
