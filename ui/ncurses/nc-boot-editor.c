@@ -44,6 +44,7 @@ struct boot_editor {
 					struct pmenu_item *item,
 					struct pb_boot_data *bd);
 	bool			need_redraw;
+	bool			need_update;
 
 	int			label_x;
 	int			field_x;
@@ -109,7 +110,14 @@ static struct boot_editor *boot_editor_from_arg(void *arg)
 static int boot_editor_post(struct nc_scr *scr)
 {
 	struct boot_editor *boot_editor = boot_editor_from_scr(scr);
-	widgetset_post(boot_editor->widgetset);
+
+	if (boot_editor->need_update) {
+		boot_editor_update(boot_editor, boot_editor->cui->sysinfo);
+		boot_editor->need_update = false;
+	} else {
+		widgetset_post(boot_editor->widgetset);
+	}
+
 	nc_scr_frame_draw(scr);
 	if (boot_editor->need_redraw) {
 		redrawwin(scr->main_ncw);
@@ -506,6 +514,11 @@ void boot_editor_update(struct boot_editor *boot_editor,
 {
 	int height;
 
+	if (boot_editor->cui->current != boot_editor_scr(boot_editor)) {
+		boot_editor->need_update = true;
+		return;
+	}
+
 	widgetset_unpost(boot_editor->widgetset);
 
 	height = pad_height(sysinfo ? sysinfo->n_blockdevs : 0);
@@ -546,6 +559,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	boot_editor->on_exit = on_exit;
 	boot_editor->state = STATE_EDIT;
 	boot_editor->need_redraw = false;
+	boot_editor->need_update = false;
 
 	int ncols1 = strncols(_("Device tree:"));
 	int ncols2 = strncols(_("Boot arguments:"));

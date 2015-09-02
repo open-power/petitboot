@@ -104,7 +104,11 @@ void sysinfo_screen_update(struct sysinfo_screen *screen,
 		const struct system_info *sysinfo)
 {
 	sysinfo_screen_populate(screen, sysinfo);
-	text_screen_draw(&screen->text_scr);
+
+	if (screen->text_scr.cui->help_screen)
+		screen->text_scr.need_update = true;
+	else
+		text_screen_draw(&screen->text_scr);
 }
 
 struct sysinfo_screen *sysinfo_screen_init(struct cui *cui,

@@ -183,6 +183,13 @@ void text_screen_set_help(struct text_screen *screen, const char *title,
 
 static int text_screen_post(struct nc_scr *scr)
 {
+	struct text_screen *screen = text_screen_from_scr(scr);
+
+	if (screen->need_update) {
+		text_screen_draw(screen);
+		screen->need_update = false;
+	}
+
 	nc_scr_frame_draw(scr);
 	redrawwin(scr->main_ncw);
 	wrefresh(scr->main_ncw);
@@ -202,6 +209,7 @@ void text_screen_init(struct text_screen *screen, struct cui *cui,
 
 	screen->cui = cui;
 	screen->on_exit = on_exit;
+	screen->need_update = false;
 
 	screen->scr.frame.ltitle = talloc_strdup(screen, title);
 	screen->scr.frame.rtitle = NULL;

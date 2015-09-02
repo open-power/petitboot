@@ -53,6 +53,7 @@ struct config_screen {
 	bool			show_help;
 	bool			show_subset;
 	bool			need_redraw;
+	bool			need_update;
 
 	void			(*on_exit)(struct cui *);
 
@@ -168,21 +169,6 @@ static void config_screen_resize(struct nc_scr *scr)
 {
 	struct config_screen *screen = config_screen_from_scr(scr);
 	(void)screen;
-}
-
-static int config_screen_post(struct nc_scr *scr)
-{
-	struct config_screen *screen = config_screen_from_scr(scr);
-	screen->show_subset = false;
-	widgetset_post(screen->widgetset);
-	nc_scr_frame_draw(scr);
-	if (screen->need_redraw) {
-		redrawwin(scr->main_ncw);
-		screen->need_redraw = false;
-	}
-	wrefresh(screen->scr.main_ncw);
-	pad_refresh(screen);
-	return 0;
 }
 
 static int config_screen_unpost(struct nc_scr *scr)
@@ -1014,8 +1000,36 @@ void config_screen_update(struct config_screen *screen,
 		const struct config *config,
 		const struct system_info *sysinfo)
 {
+	if (screen->cui->current != config_screen_scr(screen)) {
+		screen->need_update = true;
+		return;
+	}
+
 	config_screen_draw(screen, config, sysinfo);
 	pad_refresh(screen);
+}
+
+static int config_screen_post(struct nc_scr *scr)
+{
+	struct config_screen *screen = config_screen_from_scr(scr);
+	screen->show_subset = false;
+
+	if (screen->need_update) {
+		config_screen_draw(screen, screen->cui->config,
+				   screen->cui->sysinfo);
+		screen->need_update = false;
+	} else {
+		widgetset_post(screen->widgetset);
+	}
+
+	nc_scr_frame_draw(scr);
+	if (screen->need_redraw) {
+		redrawwin(scr->main_ncw);
+		screen->need_redraw = false;
+	}
+	wrefresh(screen->scr.main_ncw);
+	pad_refresh(screen);
+	return 0;
 }
 
 static int config_screen_destroy(void *arg)
@@ -1043,6 +1057,7 @@ struct config_screen *config_screen_init(struct cui *cui,
 	screen->cui = cui;
 	screen->on_exit = on_exit;
 	screen->need_redraw = false;
+	screen->need_update = false;
 	screen->label_x = 2;
 	screen->field_x = 17;
 

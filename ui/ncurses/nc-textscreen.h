@@ -28,6 +28,7 @@ struct text_screen {
 	int			n_lines;
 	int			n_alloc_lines;
 	int			scroll_y;
+	bool			need_update;
 	const char		*help_title;
 	const struct help_text	*help_text;
 	void			(*on_exit)(struct cui *);

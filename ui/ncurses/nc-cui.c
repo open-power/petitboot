@@ -698,6 +698,9 @@ static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
 	if (cui->sysinfo_screen)
 		sysinfo_screen_update(cui->sysinfo_screen, sysinfo);
 
+	if (cui->subset_screen)
+		subset_screen_update(cui->subset_screen);
+
 	/* ... and do the same with the config screen... */
 	if (cui->config_screen)
 		config_screen_update(cui->config_screen, cui->config, sysinfo);
@@ -743,6 +746,9 @@ static void cui_update_config(struct config *config, void *arg)
 
 	if (config->lang)
 		cui_update_language(cui, config->lang);
+
+	if (cui->subset_screen)
+		subset_screen_update(cui->subset_screen);
 
 	if (cui->config_screen)
 		config_screen_update(cui->config_screen, config, cui->sysinfo);

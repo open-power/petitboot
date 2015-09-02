@@ -62,6 +62,12 @@ struct nc_scr *subset_screen_return_scr(struct subset_screen *screen)
 	return screen->return_scr;
 }
 
+void subset_screen_update(struct subset_screen *screen)
+{
+	pb_debug("Exiting subset due to update\n");
+	return screen->on_exit(screen->cui);
+}
+
 static struct subset_screen *subset_screen_from_scr(struct nc_scr *scr)
 {
 	struct subset_screen *subset_screen;
