@@ -2,6 +2,7 @@
 
 __dest=/
 __pb_mount_dir=/var/petitboot/mnt/dev/
+plugin_abi=1
 plugin_ext=pb-plugin
 plugin_meta=pb-plugin.conf
 plugin_meta_dir=etc/preboot-plugins/
@@ -60,6 +61,23 @@ plugin_info()
 
 	echo "$title"
 	echo "  (version $PLUGIN_VERSION)"
+}
+
+# How the ABI versioning works:
+#
+#  - This script has an ABI defined ($plugin_abi)
+#
+#  - Plugins have a current ABI number ($PLUGIN_ABI), and a minimum supported
+#    ABI number ($PLUGIN_ABI_MIN).
+#
+#  - A plugin is OK to run if:
+#    - the plugin's ABI matches the script ABI, or
+#    - the plugin's minimum ABI is lower than or equal to the script ABI
+plugin_abi_check()
+{
+	[ -n "$PLUGIN_ABI" ] &&
+		( [ $PLUGIN_ABI -eq $plugin_abi ] ||
+		  [ $PLUGIN_ABI_MIN -le $plugin_abi ] )
 }
 
 do_wrap()
@@ -145,6 +163,7 @@ do_install()
 	echo
 	sha256sum "$file" | cut -f1 -d' '
 	echo
+
 	echo "Do you want to install this plugin? (y/N)"
 	read resp
 
@@ -168,6 +187,14 @@ do_install()
 	fi
 
 	. $__dest/$plugin_meta_path
+
+	if ! plugin_abi_check
+	then
+		echo "Plugin at $url is incompatible with this firmware," \
+			"exiting."
+		rm -rf $__dest
+		exit 1
+	fi
 
 	for binary in ${PLUGIN_EXECUTABLES}
 	do
@@ -203,6 +230,8 @@ do_scan_mount()
 		(
 			. $__meta_tmp/$plugin_meta_path
 
+			plugin_abi_check || exit 1
+
 			printf "Plugin found on %s:\n" $dev
 			plugin_info
 			printf "\n"
@@ -210,8 +239,11 @@ do_scan_mount()
 			printf "  $0 run $plugin_path\n"
 			printf "\n"
 		)
+		if [ $? = 0 ]
+		then
+			found=1
+		fi
 		rm -rf $__meta_tmp
-		found=1
 	done
 }
 
@@ -290,6 +322,8 @@ EOF
 	mkdir -p $(dirname $file)
 
 	cat <<EOF > $file
+PLUGIN_ABI='$plugin_abi'
+PLUGIN_ABI_MIN='1'
 PLUGIN_VENDOR='$vendorname'
 PLUGIN_VENDOR_ID='$vendorshortname'
 PLUGIN_NAME='$pluginname'
@@ -337,6 +371,15 @@ do_create()
 
 	# Sanity check metadata file
 	. $meta_file
+	if [ ! -n "$PLUGIN_ABI" ]
+	then
+		echo "error: no PLUGIN_ABI defined in metadata" &>2
+		exit 1
+	fi
+	if [ "$PLUGIN_ABI" != "$plugin_abi" ]
+	then
+		echo "warning: PLUGIN_ABI (=$PLUGIN_ABI) is not $plugin_abi" &>2
+	fi
 	if [ ! -n "$PLUGIN_VENDOR" ]
 	then
 		echo "error: no PLUGIN_VENDOR defined in metadata" &>2
@@ -436,12 +479,23 @@ test_ftp_download()
 	cmp -s "$ref" "$tmp"
 }
 
+test_abi_check()
+{
+	(
+		plugin_abi=$1
+		PLUGIN_ABI=$2
+		PLUGIN_ABI_MIN=$3
+		plugin_abi_check
+	)
+}
+
 test_scan()
 {
 	__pb_mount_dir="$test_tmpdir/mnt"
 	mnt_dir="$__pb_mount_dir/sda"
 	mkdir -p $mnt_dir/$plugin_meta_dir
 	(
+		echo "PLUGIN_ABI=$plugin_abi"
 		echo "PLUGIN_NAME=test"
 		echo "PLUGIN_VERSION=1"
 		echo "PLUGIN_EXECUTABLES=/bin/sh"
@@ -510,6 +564,7 @@ test_scan_multiple()
 	do
 		mkdir -p $mnt_dir/$plugin_meta_dir
 		(
+			echo "PLUGIN_ABI=$plugin_abi"
 			echo "PLUGIN_NAME=test-$i"
 			echo "PLUGIN_VERSION=1"
 			echo "PLUGIN_EXECUTABLES=/bin/sh"
@@ -524,6 +579,26 @@ test_scan_multiple()
 	do_scan >$outfile
 
 	grep -q 'test-1' $outfile && grep -q 'test-2' $outfile
+}
+
+test_scan_wrongabi()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	mkdir -p $mnt_dir/$plugin_meta_dir
+	(
+		echo "PLUGIN_ABI=$(($plugin_abi + 1))"
+		echo "PLUGIN_ABI_MIN=$(($plugin_abi + 1))"
+		echo "PLUGIN_NAME=test"
+		echo "PLUGIN_VERSION=1"
+		echo "PLUGIN_EXECUTABLES=/bin/sh"
+	) > $mnt_dir/$plugin_meta_path
+	(
+		cd $mnt_dir;
+		find -mindepth 1 | cpio -o -Hnewc 2>/dev/null
+	) | gzip -c > $mnt_dir/test.$plugin_ext
+
+	do_scan | grep -q 'No plugins'
 }
 
 test_empty_scan()
@@ -590,10 +665,18 @@ do_tests()
 	do_test is_url "git+ssh://example.com/path"
 	do_test test_http_download
 	do_test test_ftp_download
+	do_test ! test_abi_check
+	do_test ! test_abi_check 1
+	do_test test_abi_check 1 1
+	do_test test_abi_check 1 1 1
+	do_test test_abi_check 1 2 0
+	do_test test_abi_check 1 2 1
+	do_test ! test_abi_check 1 2 2
 	do_test test_scan
 	do_test test_scan_nogzip
 	do_test test_scan_nocpio
 	do_test test_scan_multiple
+	do_test test_scan_wrongabi
 	do_test test_empty_scan
 
 	if [ $test_failed = 0 ]
