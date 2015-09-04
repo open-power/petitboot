@@ -418,11 +418,11 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	y += 1;
 
 	widget_move(widget_button_base(screen->widgets.boot_add_b),
-			y, screen->field_x);
+			y++, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.boot_any_b),
-			y, screen->field_x + 14);
+			y++, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.boot_none_b),
-			y, screen->field_x + 34);
+			y, screen->field_x);
 
 	wf = widget_button_base(screen->widgets.boot_add_b);
 	if (widget_subset_n_inactive(screen->widgets.boot_order_f))
@@ -710,6 +710,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	char *str, *ip, *mask, *gw;
 	enum net_conf_type type;
 	unsigned int i;
+	int add_len, clear_len, any_len, min_len = 20;
 
 	build_assert(sizeof(screen->widgets) / sizeof(struct widget *)
 			== N_FIELDS);
@@ -717,15 +718,19 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	type = screen->net_conf_type;
 	ifcfg = first_active_interface(config);
 
-	screen->widgets.boot_add_b = widget_new_button(set, 0, 0, 10,
+	add_len = max(min_len, strncols(_("Add Device")));
+	clear_len = max(min_len, strncols(_("Clear")));
+	any_len = max(min_len, strncols(_("Clear & Boot Any")));
+
+	screen->widgets.boot_add_b = widget_new_button(set, 0, 0, add_len,
 					_("Add Device"),
 					config_screen_add_device, screen);
 
-	screen->widgets.boot_none_b = widget_new_button(set, 0, 0, 10,
+	screen->widgets.boot_none_b = widget_new_button(set, 0, 0, clear_len,
 					_("Clear"),
 					config_screen_autoboot_none, screen);
 
-	screen->widgets.boot_any_b = widget_new_button(set, 0, 0, 16,
+	screen->widgets.boot_any_b = widget_new_button(set, 0, 0, any_len,
 					_("Clear & Boot Any"),
 					config_screen_autoboot_any, screen);
 
