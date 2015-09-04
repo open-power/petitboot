@@ -194,9 +194,9 @@ static void add_url_screen_layout_widgets(struct add_url_screen *screen)
 	widget_move(widget_button_base(screen->widgets.ok_b),
 		y, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.help_b),
-		y, screen->field_x + 10);
+		y, screen->field_x + 14);
 	widget_move(widget_button_base(screen->widgets.cancel_b),
-		y, screen->field_x + 24);
+		y, screen->field_x + 28);
 }
 
 static void add_url_screen_setup_widgets(struct add_url_screen *screen)
@@ -210,7 +210,7 @@ static void add_url_screen_setup_widgets(struct add_url_screen *screen)
 			_("Configuration URL:"));
 	screen->widgets.url_f = widget_new_textbox(set, 0, 0, 50, NULL);
 
-	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
+	screen->widgets.ok_b = widget_new_button(set, 0, 0, 10, _("OK"),
 			ok_click, screen);
 	screen->widgets.help_b = widget_new_button(set, 0, 0, 10, _("Help"),
 			help_click, screen);

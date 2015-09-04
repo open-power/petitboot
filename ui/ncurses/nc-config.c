@@ -557,9 +557,9 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.help_b),
-			y, screen->field_x + 10);
+			y, screen->field_x + 14);
 	widget_move(widget_button_base(screen->widgets.cancel_b),
-			y, screen->field_x + 24);
+			y, screen->field_x + 28);
 }
 
 static void config_screen_network_change(void *arg, int value)
@@ -926,7 +926,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 				_("Allow bootloader scripts to modify disks"),
 				config->allow_writes);
 
-	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
+	screen->widgets.ok_b = widget_new_button(set, 0, 0, 10, _("OK"),
 			ok_click, screen);
 	screen->widgets.help_b = widget_new_button(set, 0, 0, 10, _("Help"),
 			help_click, screen);

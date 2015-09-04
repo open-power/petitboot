@@ -229,7 +229,7 @@ static void lang_screen_layout_widgets(struct lang_screen *screen)
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.cancel_b),
-			y, screen->field_x + 10);
+			y, screen->field_x + 14);
 }
 
 static void lang_screen_setup_empty(struct lang_screen *screen)
@@ -286,7 +286,7 @@ static void lang_screen_setup_widgets(struct lang_screen *screen,
 		screen->widgets.safe_mode = widget_new_label(set, 0, 0,
 			 _("Selecting 'OK' will exit safe mode"));
 
-	screen->widgets.ok_b = widget_new_button(set, 0, 0, 6, _("OK"),
+	screen->widgets.ok_b = widget_new_button(set, 0, 0, 10, _("OK"),
 			ok_click, screen);
 	screen->widgets.cancel_b = widget_new_button(set, 0, 0, 10, _("Cancel"),
 			cancel_click, screen);

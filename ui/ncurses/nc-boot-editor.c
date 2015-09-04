@@ -317,9 +317,12 @@ static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
 
 
 	y++;
-	widget_move(widget_button_base(boot_editor->widgets.ok_b), y, 9);
-	widget_move(widget_button_base(boot_editor->widgets.help_b), y, 19);
-	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y, 33);
+	widget_move(widget_button_base(boot_editor->widgets.ok_b), y,
+		    boot_editor->field_x);
+	widget_move(widget_button_base(boot_editor->widgets.help_b), y,
+		    boot_editor->field_x + 14);
+	widget_move(widget_button_base(boot_editor->widgets.cancel_b), y,
+		    boot_editor->field_x + 28);
 }
 
 static void boot_editor_widget_focus(struct nc_widget *widget, void *arg)
@@ -490,7 +493,7 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 	boot_editor->widgets.args_f = widget_new_textbox(set, 0, 0,
 					field_size, boot_editor->args);
 
-	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 6,
+	boot_editor->widgets.ok_b = widget_new_button(set, 0, 0, 10,
 					_("OK"), ok_click, boot_editor);
 	boot_editor->widgets.help_b = widget_new_button(set, 0, 0, 10,
 					_("Help"), help_click, boot_editor);
