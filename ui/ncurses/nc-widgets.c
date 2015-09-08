@@ -52,6 +52,7 @@
 #include <log/log.h>
 #include <util/util.h>
 #include <i18n/i18n.h>
+#include <fold/fold.h>
 
 #include "nc-cui.h"
 #include "nc-widgets.h"
@@ -138,6 +139,7 @@ struct nc_widget_select {
 		char		*str;
 		int		val;
 		FIELD		*field;
+		int		lines;
 	} *options;
 	int			top, left, size;
 	int			n_options, selected_option;
@@ -839,21 +841,25 @@ static void select_set_visible(struct nc_widget *widget, bool visible)
 static void select_move(struct nc_widget *widget, int y, int x)
 {
 	struct nc_widget_select *select = to_select(widget);
-	int i;
+	int i, cur = 0;
 
-	for (i = 0; i < select->n_options; i++)
-		field_move(select->options[i].field, y + i, x);
+	for (i = 0; i < select->n_options; i++) {
+		field_move(select->options[i].field, y + cur, x);
+		cur += select->options[i].lines;
+	}
 }
 
 static void select_field_focus(struct nc_widget *widget, FIELD *field)
 {
 	struct nc_widget_select *select = to_select(widget);
-	int i;
+	int i, cur = 0;
 
 	for (i = 0; i < select->n_options; i++) {
-		if (field != select->options[i].field)
+		if (field != select->options[i].field) {
+			cur += select->options[i].lines;
 			continue;
-		widget->focus_y = i;
+		}
+		widget->focus_y = cur;
 		return;
 	}
 }
@@ -895,10 +901,47 @@ struct nc_widget_select *widget_new_select(struct nc_widgetset *set,
 	return select;
 }
 
+static int widget_select_fold_cb(void *arg, const char *buf, int len)
+{
+	struct nc_widget_select *select = arg;
+	char *line, *newstr, *padbuf = NULL;
+	int i, pad;
+
+	if (!len)
+		return 0;
+
+	line = talloc_strndup(select->options, buf, len);
+
+	i = select->n_options - 1;
+	pad = max(0, select->widget.width - strncols(line));
+
+	if (pad) {
+		padbuf = talloc_array(select->options, char, pad + 1);
+		memset(padbuf, ' ', pad);
+		padbuf[pad] = '\0';
+	}
+
+	if (select->options[i].str)
+		newstr = talloc_asprintf_append(select->options[i].str,
+							 "%s%s", line,
+							 pad ? padbuf : "");
+	else
+		newstr = talloc_asprintf(select->options, "%s%s", line,
+							 pad ? padbuf : "");
+
+	select->options[i].str = newstr;
+	select->options[i].lines++;
+
+	talloc_free(padbuf);
+	talloc_free(line);
+	return 0;
+}
+
 void widget_select_add_option(struct nc_widget_select *select, int value,
 		const char *text, bool selected)
 {
 	const char *str;
+	char *full_text;
 	FIELD *f;
 	int i;
 
@@ -917,23 +960,29 @@ void widget_select_add_option(struct nc_widget_select *select, int value,
 		str = select_unselected_str;
 
 	i = select->n_options++;
-	select->widget.height = select->n_options;
-
 	select->options = talloc_realloc(select, select->options,
 				struct select_option, i + 2);
 	select->options[i].val = value;
-	select->options[i].str = talloc_asprintf(select->options,
-					"%s %s", str, text);
+	select->options[i].lines = 0;
+	select->options[i].str = NULL;
 
-	select->options[i].field = f = new_field(1, select->size,
-						select->top + i,
-						select->left, 0, 0);
+	full_text = talloc_asprintf(select->options, "%s %s", str, text);
+	fold_text(full_text, select->widget.width,
+		  widget_select_fold_cb, select);
 
-	field_opts_off(f, O_WRAP | O_EDIT);
+	select->options[i].field = f = new_field(select->options[i].lines,
+					select->size,
+					select->top + select->widget.height,
+					select->left, 0, 0);
+
+	select->widget.height += select->options[i].lines;
+
+	field_opts_off(f, O_EDIT);
 	set_field_userptr(f, &select->widget);
 	set_field_buffer(f, 0, select->options[i].str);
 
 	widgetset_add_field(select->set, f);
+	talloc_free(full_text);
 }
 
 int widget_select_get_value(struct nc_widget_select *select)
@@ -945,7 +994,7 @@ int widget_select_get_value(struct nc_widget_select *select)
 
 int widget_select_height(struct nc_widget_select *select)
 {
-	return select->n_options;
+	return select->widget.height;
 }
 
 void widget_select_on_change(struct nc_widget_select *select,

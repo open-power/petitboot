@@ -811,7 +811,8 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	}
 
 	screen->widgets.network_l = widget_new_label(set, 0, 0, _("Network:"));
-	screen->widgets.network_f = widget_new_select(set, 0, 0, 50);
+	screen->widgets.network_f = widget_new_select(set, 0, 0,
+						COLS - screen->field_x - 1);
 
 	widget_select_add_option(screen->widgets.network_f,
 					NET_CONF_TYPE_DHCP_ALL,
@@ -908,11 +909,12 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.allow_write_l = widget_new_label(set, 0, 0,
 			_("Disk R/W:"));
 	screen->widgets.allow_write_f = widget_new_select(set, 0, 0,
-						COLS - screen->field_x);
+						COLS - screen->field_x - 1);
 
 	widget_select_add_option(screen->widgets.allow_write_f, 0,
 				_("Prevent all writes to disk"),
 				!config->allow_writes);
+
 	widget_select_add_option(screen->widgets.allow_write_f, 1,
 				_("Allow bootloader scripts to modify disks"),
 				config->allow_writes);
