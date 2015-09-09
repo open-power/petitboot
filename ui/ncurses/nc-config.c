@@ -930,18 +930,22 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 static void config_screen_widget_focus(struct nc_widget *widget, void *arg)
 {
 	struct config_screen *screen = arg;
-	int w_y, s_max;
+	int w_y, w_height, w_focus, s_max, adjust;
 
-	w_y = widget_y(widget) + widget_focus_y(widget);
+	w_height = widget_height(widget);
+	w_focus = widget_focus_y(widget);
+	w_y = widget_y(widget) + w_focus;
 	s_max = getmaxy(screen->scr.sub_ncw) - 1;
 
 	if (w_y < screen->scroll_y)
 		screen->scroll_y = w_y;
 
-	else if (w_y + screen->scroll_y + 1 > s_max)
-		screen->scroll_y = 1 + w_y - s_max;
-
-	else
+	else if (w_y + screen->scroll_y + 1 > s_max) {
+		/* Fit as much of the widget into the screen as possible */
+		adjust = min(s_max - 1, w_height - w_focus);
+		if (w_y + adjust >= screen->scroll_y + s_max)
+			screen->scroll_y = max(0, 1 + w_y + adjust - s_max);
+	} else
 		return;
 
 	pad_refresh(screen);
