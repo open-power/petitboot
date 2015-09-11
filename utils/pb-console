@@ -109,6 +109,7 @@ if [ -z "$PATH" ]
 then
 	PATH=/usr/bin:/usr/sbin:/bin:/sbin
 fi
+PATH=/var/lib/pb-plugins/bin:$PATH
 export PATH
 
 verbose_opt=

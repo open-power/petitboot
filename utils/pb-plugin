@@ -2,8 +2,12 @@
 
 __dest=/
 __pb_mount_dir=/var/petitboot/mnt/dev/
-plugin_dev_meta=pb-plugin.conf
-plugin_installed_meta_dir=/etc/preboot-plugins/
+plugin_abi=1
+plugin_ext=pb-plugin
+plugin_meta=pb-plugin.conf
+plugin_meta_dir=etc/preboot-plugins/
+plugin_meta_path=$plugin_meta_dir$plugin_meta
+plugin_wrapper_dir=/var/lib/pb-plugins/bin
 
 usage()
 {
@@ -11,10 +15,10 @@ usage()
 Usage: $0 <command>
 
 Where <command> is one of:
-  install <FILE|URL>  - install plugin from FILE/URL
-  scan                - look for available plugins on attached devices
-  list                - list currently-installed plugins
-  create <DIR>        - create a new plugin archive from DIR
+  install <FILE|URL> - install plugin from FILE/URL
+  scan               - look for available plugins on attached devices
+  create <DIR>       - create a new plugin archive from DIR
+  lint <FILE>        - perform a pre-distribution check on FILE
 EOF
 }
 
@@ -60,27 +64,99 @@ plugin_info()
 	echo "  (version $PLUGIN_VERSION)"
 }
 
+parse_meta()
+{
+	local file name value IFS
+
+	file=$1
+
+	IFS='='
+	while read -r name value
+	do
+		# Ensure we have a sensible variable name
+		echo "$name" | grep -q '^PLUGIN_[A-Z_]*$' || continue
+
+		# we know that $name has no quoting/expansion chars, but we
+		# may need to do some basic surrounding-quote removal for
+		# $value, without evaluating it
+		value=$(echo "$value" | sed "s/^\([\"']\)\(.*\)\1\$/\2/g")
+
+		export $name="$value"
+	done < $file
+}
+
+# How the ABI versioning works:
+#
+#  - This script has an ABI defined ($plugin_abi)
+#
+#  - Plugins have a current ABI number ($PLUGIN_ABI), and a minimum supported
+#    ABI number ($PLUGIN_ABI_MIN).
+#
+#  - A plugin is OK to run if:
+#    - the plugin's ABI matches the script ABI, or
+#    - the plugin's minimum ABI is lower than or equal to the script ABI
+plugin_abi_check()
+{
+	[ -n "$PLUGIN_ABI" ] &&
+		( [ $PLUGIN_ABI -eq $plugin_abi ] ||
+		  [ $PLUGIN_ABI_MIN -le $plugin_abi ] )
+}
+
+do_wrap()
+{
+	local base binary dir
+
+	base=$1
+	binary=$2
+	shift 2
+
+	for dir in etc dev sys proc var
+	do
+		[ -e "$base/$dir" ] || mkdir -p "$base/$dir"
+	done
+
+	cp /etc/resolv.conf $base/etc
+	mount -o bind /dev $base/dev
+	mount -o bind /sys $base/sys
+	mount -o bind /proc $base/proc
+	mount -o bind /var $base/var
+
+	chroot "$base" "$binary" "$@"
+
+	umount $base/dev
+	umount $base/sys
+	umount $base/proc
+	umount $base/var
+}
+
+__create_wrapper()
+{
+	local base binary wrapper
+
+	base=$1
+	binary=$2
+	wrapper=$plugin_wrapper_dir/$(basename $binary)
+
+	mkdir -p $plugin_wrapper_dir
+
+	cat <<EOF > $wrapper
+#!/bin/sh
+
+exec $(realpath $0) __wrap '$base' '$binary' "\$@"
+EOF
+
+	chmod a+x $wrapper
+}
+
 do_install()
 {
-	local url
+	local url name file __dest
 
 	url=$1
 
 	if [ -z "$url" ]
 	then
 		echo "error: install requires a file/URL argument." >&2
-		exit 1
-	fi
-
-	if [ ! -d "$__dest" ]
-	then
-		echo "error: destination directory '$__dest' doesn't exist" >&2
-		exit 1
-	fi
-
-	if [ ! -w "$__dest" ]
-	then
-		echo "error: destination directory isn't writeable" >&2
 		exit 1
 	fi
 
@@ -109,7 +185,8 @@ do_install()
 	echo
 	sha256sum "$file" | cut -f1 -d' '
 	echo
-	echo "Do you want to install into the pre-boot environment? (y/N)"
+
+	echo "Do you want to install this plugin? (y/N)"
 	read resp
 
 	case $resp in
@@ -121,34 +198,84 @@ do_install()
 		;;
 	esac
 
+	__dest=$(mktemp -d)
 	gunzip -c "$file" | ( cd $__dest && cpio -i -d)
 
 	if [ $? -ne 0 ]
 	then
 		echo "error: Failed to extract archive $url, exiting"
+		rm -rf $__dest
 		exit 1
 	fi
+
+	parse_meta $__dest/$plugin_meta_path
+
+	if ! plugin_abi_check
+	then
+		echo "Plugin at $url is incompatible with this firmware," \
+			"exiting."
+		rm -rf $__dest
+		exit 1
+	fi
+
+	for binary in ${PLUGIN_EXECUTABLES}
+	do
+		__create_wrapper "$__dest" "$binary"
+	done
+
+	echo "Plugin installed"
+	plugin_info
+}
+
+do_scan_mount()
+{
+	local mnt dev plugin_path __meta_tmp
+	mnt=$1
+	dev=$(basename $mnt)
+
+	for plugin_path in $mnt/*.$plugin_ext
+	do
+		[ -e "$plugin_path" ] || continue
+
+		# extract plugin metadata to a temporary directory
+		__meta_tmp=$(mktemp -d)
+		[ -d $__meta_tmp ] || continue
+		gunzip -c "$plugin_path" 2>/dev/null |
+			(cd $__meta_tmp &&
+				cpio -i -d $plugin_meta_path 2>/dev/null)
+		if ! [ $? = 0 -a -e "$plugin_path" ]
+		then
+			rm -rf $__meta_tmp
+			continue
+		fi
+
+		(
+			parse_meta $__meta_tmp/$plugin_meta_path
+
+			plugin_abi_check || exit 1
+
+			printf "Plugin found on %s:\n" $dev
+			plugin_info
+			printf "\n"
+			printf "To run this plugin:\n"
+			printf "  $0 install $plugin_path\n"
+			printf "\n"
+		)
+		if [ $? = 0 ]
+		then
+			found=1
+		fi
+		rm -rf $__meta_tmp
+	done
 }
 
 do_scan()
 {
-	local found
+	local found mnt
 	found=0
 	for mnt in $__pb_mount_dir/*
 	do
-		dev=$(basename $mnt)
-		metafile="$mnt/$plugin_dev_meta"
-		[ -e "$metafile" ] || continue
-		(
-			. $metafile
-			printf "Plugin found on %s:\n" $dev
-			plugin_info
-			printf "\n"
-			printf "To install this plugin, run:\n"
-			printf "  $0 install $mnt/$PLUGIN_FILE\n"
-			printf "\n"
-		)
-		found=1
+		do_scan_mount $mnt
 	done
 
 	if [ "$found" = 0 ]
@@ -157,36 +284,14 @@ do_scan()
 	fi
 }
 
-do_list()
-{
-	local found
-	found=0
-	for meta in $plugin_installed_meta_dir/*
-	do
-		[ -e "$meta" ] || continue
-		[ $found = 0 ] && printf "Installed plugins:\n"
-		found=1
-		(
-			. $meta
-			plugin_info
-			echo
-		)
-	done
-
-	if [ "$found" = 0 ]
-	then
-		echo "No plugins installed"
-	fi
-}
-
 guided_meta()
 {
 	local vendorname vendorshortname
 	local pluginname pluginnhortname
-	local version date
-	local dir
+	local version date executable
+	local file
 
-	dir=$1
+	file=$1
 
 cat <<EOF
 
@@ -224,22 +329,37 @@ Enter the plugin version. This should not contain spaces (eg 1.2):
 EOF
 	read version
 
+cat <<EOF
+
+Enter the full path (within the plugin root) to the plugin executable file(s).
+These will be exposed as wrapper scripts, to be run from the standard petitboot
+shell environment (eg, /usr/bin/my-raid-config).
+
+If multiple executables are provided, separate with a space.
+EOF
+	read executables
+
 	date=$(date +%Y-%m-%d)
 
-	mkdir -p $dir
+	mkdir -p $(dirname $file)
 
-	cat <<EOF > $dir/$vendorshortname-$pluginshortname
+	cat <<EOF > $file
+PLUGIN_ABI='$plugin_abi'
+PLUGIN_ABI_MIN='1'
 PLUGIN_VENDOR='$vendorname'
+PLUGIN_VENDOR_ID='$vendorshortname'
 PLUGIN_NAME='$pluginname'
+PLUGIN_ID='$pluginshortname'
 PLUGIN_VERSION='$version'
 PLUGIN_DATE='$date'
+PLUGIN_EXECUTABLES='$executables'
 EOF
 
 }
 
 do_create()
 {
-	local src found meta_dir_abs meta_file
+	local src meta_dir_abs meta_file
 	src=$1
 
 	if [ -z "$src" ]
@@ -255,16 +375,9 @@ do_create()
 		exit 1
 	fi
 
-	meta_dir_abs="$src/$plugin_installed_meta_dir"
-	found=0
-	for meta in $meta_dir_abs/*
-	do
-		[ -e "$meta" ] || continue
-		found=$(($found+1))
-		meta_file=$meta
-	done
+	meta_file=$src/$plugin_meta_path
 
-	if [ $found = 0 ]
+	if [ ! -e $meta_file ]
 	then
 		echo "No plugin metadata file found. " \
 			"Would you like to create one? (Y/n)"
@@ -275,51 +388,28 @@ do_create()
 			exit 1
 			;;
 		esac
-		guided_meta $meta_dir_abs || exit
-		meta_file=$meta_dir_abs/*
-	fi
-
-	if [ $found -gt 1 ]
-	then
-		echo "error: Multiple metadata files found in $meta_dir_abs" >&2
-		exit 1
+		guided_meta $meta_file || exit
 	fi
 
 	# Sanity check metadata file
-	(
-		. $meta_file
-		if [ ! -n "$PLUGIN_VENDOR" ]
-		then
-			echo "error: no PLUGIN_VENDOR defined in metadata" &>2
-			exit 1
-		fi
-		if [ ! -n "$PLUGIN_NAME" ]
-		then
-			echo "error: no PLUGIN_NAME defined in metadata" &>2
-			exit 1
-		fi
-		if [ ! -n "$PLUGIN_VERSION" ]
-		then
-			echo "error: no PLUGIN_VERSION defined in metadata" &>2
-			exit 1
-		fi
-		if [ ! -n "$PLUGIN_DATE" ]
-		then
-			echo "error: no PLUGIN_DATE defined in metadata" &>2
-			exit 1
-		fi
+	parse_meta $meta_file
 
-	) || exit 1
+	errors=0
+	warnings=0
 
-	outfile=pb-plugin.cpio.gz
+	lint_metadata
+
+	if [ $errors -ne 0 ]
+	then
+		exit 1
+	fi
+
+	outfile=${PLUGIN_ID}-${PLUGIN_VERSION}.${plugin_ext}
 
 	(
 		cd $src
 		find -mindepth 1 | cpio -o -Hnewc -v
-	) | gzip -c > pb-plugin.cpio.gz
-
-	cp $meta_file $plugin_dev_meta
-	echo "PLUGIN_FILE='$outfile'" >> $plugin_dev_meta
+	) | gzip -c > $outfile
 
 	echo
 	echo "Plugin metadata:"
@@ -327,25 +417,143 @@ do_create()
 	echo
 
 	echo "User-visible metadata:"
-
-	(
-		. $meta_file
-		plugin_info | sed -e 's/^/  /'
-	)
+	plugin_info | sed -e 's/^/  /'
 
 	echo
-
 
 cat <<EOF
 Plugin created in:
   $outfile
-  
-Metadata in:
-  $plugin_dev_meta
 
-If you rename $outfile (or distribute it in a non-root directory), then
-also update the PLUGIN_FILE variable in $plugin_dev_meta.
+Ship this file in the top-level-directory of a USB device or CD to have it
+automatically discoverable by 'pb-plugin scan'. This file can be re-named,
+but must retain the .$plugin_ext extension to be discoverable.
 EOF
+}
+
+lint_fatal()
+{
+	echo "fatal:" "$@"
+	[ -d "$__dest" ] && rm -rf "$__dest"
+	exit 1
+}
+
+lint_err()
+{
+	echo "error:" "$@"
+	errors=$(($errors+1))
+}
+
+lint_warn()
+{
+	echo "warning:" "$@"
+	warnings=$(($warnings+1))
+}
+
+lint_metadata()
+{
+	[ -n "$PLUGIN_ABI" ] ||
+		lint_err "no PLUGIN_ABI defined in metadata"
+
+	printf '%s' "$PLUGIN_ABI" | grep -q '[^0-9]' &&
+		lint_err "PLUGIN_ABI has non-numeric characters"
+
+	[ -n "$PLUGIN_ABI_MIN" ] ||
+		lint_err "no PLUGIN_ABI_MIN defined in metadata"
+
+	printf '%s' "$PLUGIN_ABI_MIN" | grep -q '[^0-9]' &&
+		lint_err "PLUGIN_ABI_MIN has non-numeric characters"
+
+	[ "$PLUGIN_ABI" = "$plugin_abi" ] ||
+		lint_warn "PLUGIN_ABI (=$PLUGIN_ABI) is not $plugin_abi"
+
+	[ -n "$PLUGIN_VENDOR" ] ||
+		lint_err "no PLUGIN_VENDOR defined in metadata"
+
+	[ -n "$PLUGIN_VENDOR_ID" ] ||
+		lint_err "no PLUGIN_VENDOR_ID defined in metadata"
+
+	printf '%s' "$PLUGIN_VENDOR_ID" | grep -q '[^a-z0-9-]' &&
+		lint_err "PLUGIN_VENDOR_ID should only contain lowercase" \
+			"alphanumerics and hyphens"
+
+	[ -n "$PLUGIN_NAME" ] ||
+		lint_err "no PLUGIN_NAME defined in metadata"
+
+	[ -n "$PLUGIN_ID" ] ||
+		lint_err "no PLUGIN_ID defined in metadata"
+
+	printf '%s' "$PLUGIN_ID" | grep -q '[^a-z0-9-]' &&
+		lint_err "PLUGIN_ID should only contain lowercase" \
+			"alphanumerics and hyphens"
+
+	[ "$PLUGIN_VERSION" ] ||
+		lint_err "no PLUGIN_VERSION defined in metadata"
+
+	[ -n "$PLUGIN_DATE" ] ||
+		lint_err "no PLUGIN_DATE defined in metadata"
+
+	[ -n "$PLUGIN_EXECUTABLES" ] ||
+		lint_err "no PLUGIN_EXECUTABLES defined in metadata"
+}
+
+do_lint()
+{
+	local plugin_file errors warnings __dest executable dir
+
+	plugin_file=$1
+	errors=0
+	warnings=0
+	__dest=
+
+	[ "${plugin_file##*.}" = $plugin_ext ] ||
+		lint_err "Plugin file does not end with $plugin_ext"
+
+	gunzip -c "$plugin_file" > /dev/null 2>&1 ||
+		lint_fatal "Plugin can't be gunzipped"
+
+	gunzip -c "$plugin_file" 2>/dev/null | cpio -t >/dev/null 2>&1 ||
+		lint_fatal "Plugin can't be cpioed"
+
+	__dest=$(mktemp -d)
+	gunzip -c "$plugin_file" | ( cd $__dest && cpio -i -d 2>/dev/null)
+
+	[ -e "$__dest/$plugin_meta_path" ] ||
+		lint_fatal "No metadata file present (expecting" \
+			"$plugin_meta_path)"
+
+	parse_meta "$__dest/$plugin_meta_path"
+	lint_metadata
+
+	for executable in ${PLUGIN_EXECUTABLES}
+	do
+		exec_path="$__dest/$executable"
+		[ -e "$exec_path" ] || {
+			lint_err "PLUGIN_EXECUTABLES item $executable" \
+				"doesn't exist"
+			continue
+		}
+
+		[ -x "$exec_path" ] ||
+			lint_err "PLUGIN_EXECUTABLES item $executable" \
+				"isn't executable"
+	done
+
+	for dir in dev sys proc var
+	do
+		[ -e "$__dest/$dir" ] || continue
+
+		[ -d "$__dest/$dir" ] ||
+			lint_err "/$dir exists, but isn't a directory"
+
+		[ "$(find $__dest/$dir -mindepth 1)" ] &&
+			lint_warn "/$dir contains files/directories," \
+				"these will be lost during chroot setup"
+	done
+
+	printf '%s: %d errors, %d warnings\n' $plugin_file $errors $warnings
+	rm -rf $__dest
+	[ $errors = 0 ]
 }
 
 test_http_download()
@@ -384,23 +592,132 @@ test_ftp_download()
 	cmp -s "$ref" "$tmp"
 }
 
+test_abi_check()
+{
+	(
+		plugin_abi=$1
+		PLUGIN_ABI=$2
+		PLUGIN_ABI_MIN=$3
+		plugin_abi_check
+	)
+}
+
 test_scan()
 {
 	__pb_mount_dir="$test_tmpdir/mnt"
 	mnt_dir="$__pb_mount_dir/sda"
-	mkdir -p $mnt_dir
+	mkdir -p $mnt_dir/$plugin_meta_dir
 	(
+		echo "PLUGIN_ABI=$plugin_abi"
 		echo "PLUGIN_NAME=test"
 		echo "PLUGIN_VERSION=1"
-		echo "PLUGIN_FILE=data/pb-plugin.cpio.gz"
-	) > $mnt_dir/$plugin_dev_meta
+		echo "PLUGIN_EXECUTABLES=/bin/sh"
+	) > $mnt_dir/$plugin_meta_path
+	(
+		cd $mnt_dir;
+		find -mindepth 1 | cpio -o -Hnewc 2>/dev/null
+	) | gzip -c > $mnt_dir/test.$plugin_ext
 
-	do_scan | grep -q 'test 1'
-	rc=$?
+	do_scan | grep -q 'test'
+}
+
+test_scan_nogzip()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	stderr_file="$test_tmpdir/stderr"
+
+	mkdir -p $mnt_dir
+	echo "invalid" > $mnt_dir/nogzip.$plugin_ext
+
+	do_scan 2>$stderr_file | grep -q 'No plugins'
+
+	[ $? = 0 ] || return 1
+
+	if [ -s "$stderr_file" ]
+	then
+		echo "Scan with invalid (non-gzip) file produced error output" \
+			>&2
+		cat "$stderr_file"
+		return 1
+	fi
+	true
+}
+
+test_scan_nocpio()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	stderr_file="$test_tmpdir/stderr"
+
+	mkdir -p $mnt_dir
+	echo "invalid" | gzip -c > $mnt_dir/nogzip.$plugin_ext
+
+	do_scan 2>$stderr_file | grep -q 'No plugins'
+
+	[ $? = 0 ] || return 1
+
+	if [ -s "$stderr_file" ]
+	then
+		echo "Scan with invalid (non-cpio) file produced error output" \
+			>&2
+		cat "$stderr_file"
+		return 1
+	fi
+	true
+}
+
+test_scan_multiple()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	outfile=$test_tmpdir/scan.out
+
+	for i in 1 2
+	do
+		mkdir -p $mnt_dir/$plugin_meta_dir
+		(
+			echo "PLUGIN_ABI=$plugin_abi"
+			echo "PLUGIN_NAME=test-$i"
+			echo "PLUGIN_VERSION=1"
+			echo "PLUGIN_EXECUTABLES=/bin/sh"
+		) > $mnt_dir/$plugin_meta_path
+		(
+			cd $mnt_dir;
+			find -mindepth 1 | cpio -o -Hnewc 2>/dev/null
+		) | gzip -c > $mnt_dir/test-${i}.$plugin_ext
+		rm -rf $mnt_dir/$plugin_meta_dir
+	done
+
+	do_scan >$outfile
+
+	grep -q 'test-1' $outfile && grep -q 'test-2' $outfile
+}
+
+test_scan_wrongabi()
+{
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mnt_dir="$__pb_mount_dir/sda"
+	mkdir -p $mnt_dir/$plugin_meta_dir
+	(
+		echo "PLUGIN_ABI=$(($plugin_abi + 1))"
+		echo "PLUGIN_ABI_MIN=$(($plugin_abi + 1))"
+		echo "PLUGIN_NAME=test"
+		echo "PLUGIN_VERSION=1"
+		echo "PLUGIN_EXECUTABLES=/bin/sh"
+	) > $mnt_dir/$plugin_meta_path
+	(
+		cd $mnt_dir;
+		find -mindepth 1 | cpio -o -Hnewc 2>/dev/null
+	) | gzip -c > $mnt_dir/test.$plugin_ext
+
+	do_scan | grep -q 'No plugins'
 }
 
 test_empty_scan()
 {
+	__pb_mount_dir="$test_tmpdir/mnt"
+	mkdir -p $__pb_mount_dir
 	do_scan | grep -q "No plugins"
 }
 
@@ -410,10 +727,6 @@ test_setup()
 
 	test_tmpdir="$tests_tmpdir/$n"
 	mkdir "$test_tmpdir"
-	__test_dest="$test_tmpdir/base"
-	mkdir "$__test_dest"
-	[ -d "$__test_dest" ] || exit 1
-	__dest=$__test_dest
 }
 
 test_teardown()
@@ -465,7 +778,18 @@ do_tests()
 	do_test is_url "git+ssh://example.com/path"
 	do_test test_http_download
 	do_test test_ftp_download
+	do_test ! test_abi_check
+	do_test ! test_abi_check 1
+	do_test test_abi_check 1 1
+	do_test test_abi_check 1 1 1
+	do_test test_abi_check 1 2 0
+	do_test test_abi_check 1 2 1
+	do_test ! test_abi_check 1 2 2
 	do_test test_scan
+	do_test test_scan_nogzip
+	do_test test_scan_nocpio
+	do_test test_scan_multiple
+	do_test test_scan_wrongabi
 	do_test test_empty_scan
 
 	if [ $test_failed = 0 ]
@@ -473,9 +797,10 @@ do_tests()
 		echo "$n tests passed"
 	else
 		echo "Tests failed"
-		false
 	fi
 	rm -rf "$tests_tmpdir"
+
+	[ $test_failed = 0 ]
 }
 
 case "$1" in
@@ -487,13 +812,17 @@ scan)
 	shift
 	do_scan $@
 	;;
-list)
-	shift
-	do_list $@
-	;;
 create)
 	shift
 	do_create $@
+	;;
+lint)
+	shift
+	do_lint $@
+	;;
+__wrap)
+	shift
+	do_wrap $@
 	;;
 __test)
 	shift
@@ -505,7 +834,7 @@ __test)
 	exit 1
 	;;
 *)
-	echo "Invalid command: $s" >&2
+	echo "Invalid command: $1" >&2
 	usage
 	exit 1
 esac
