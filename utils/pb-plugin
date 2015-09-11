@@ -64,6 +64,27 @@ plugin_info()
 	echo "  (version $PLUGIN_VERSION)"
 }
 
+parse_meta()
+{
+	local file name value IFS
+
+	file=$1
+
+	IFS='='
+	while read -r name value
+	do
+		# Ensure we have a sensible variable name
+		echo "$name" | grep -q '^PLUGIN_[A-Z_]*$' || continue
+
+		# we know that $name has no quoting/expansion chars, but we
+		# may need to do some basic surrounding-quote removal for
+		# $value, without evaluating it
+		value=$(echo "$value" | sed "s/^\([\"']\)\(.*\)\1\$/\2/g")
+
+		export $name="$value"
+	done < $file
+}
+
 # How the ABI versioning works:
 #
 #  - This script has an ABI defined ($plugin_abi)
@@ -187,7 +208,7 @@ do_install()
 		exit 1
 	fi
 
-	. $__dest/$plugin_meta_path
+	parse_meta $__dest/$plugin_meta_path
 
 	if ! plugin_abi_check
 	then
@@ -229,7 +250,7 @@ do_scan_mount()
 		fi
 
 		(
-			. $__meta_tmp/$plugin_meta_path
+			parse_meta $__meta_tmp/$plugin_meta_path
 
 			plugin_abi_check || exit 1
 
@@ -371,7 +392,7 @@ do_create()
 	fi
 
 	# Sanity check metadata file
-	. $meta_file
+	parse_meta $meta_file
 
 	errors=0
 	warnings=0
@@ -501,10 +522,7 @@ do_lint()
 		lint_fatal "No metadata file present (expecting" \
 			"$plugin_meta_path)"
 
-	(sh -e "$__dest/$plugin_meta_path") >/dev/null 2>&1  ||
-		lint_err "Plugin metadata file has shell errors"
-
-	. "$__dest/$plugin_meta_path"
+	parse_meta "$__dest/$plugin_meta_path"
 	lint_metadata
 
 	for executable in ${PLUGIN_EXECUTABLES}
