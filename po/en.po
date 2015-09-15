@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-08-19 14:19+1000\n"
+"POT-Creation-Date: 2015-09-14 10:17+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: English\n"
@@ -56,6 +56,24 @@ msgstr "Boot cancelled"
 msgid "Booting in %d sec: %s"
 msgstr "Booting in %d sec: %s"
 
+#, c-format
+msgid "Processing %s device %s"
+msgstr ""
+
+#, c-format
+msgid "Processing %s complete\n"
+msgstr ""
+
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr ""
+
+msgid "Processing user config"
+msgstr ""
+
+msgid "Processing user config complete"
+msgstr ""
+
 msgid "Default boot cancelled"
 msgstr "Default boot cancelled"
 
@@ -76,6 +94,36 @@ msgstr "Unable to route to host %s"
 #, c-format
 msgid "Config file %s parsed"
 msgstr "Config file %s parsed"
+
+msgid "None"
+msgstr ""
+
+msgid "Network"
+msgstr "Network"
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "Safe Mode"
+msgstr ""
+
+msgid "Optical"
+msgstr ""
+
+msgid "Setup Mode"
+msgstr ""
+
+msgid "Unknown"
+msgstr "Unknown"
+
+msgid "USB"
+msgstr ""
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr ""
 
 msgid "Retrieve Config"
 msgstr "Retrieve Config"
@@ -134,9 +182,8 @@ msgstr ""
 msgid "Waiting for configuration data..."
 msgstr "Waiting for configuration data..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "Device:"
+msgstr "Add Device:"
 
 msgid "Clear"
 msgstr ""
@@ -144,9 +191,8 @@ msgstr ""
 msgid "Clear & Boot Any"
 msgstr ""
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "Boot arguments:"
+msgstr "Boot Order"
 
 msgid "(None)"
 msgstr ""
@@ -159,9 +205,8 @@ msgstr "disk: %s [uuid: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "net:  %s [mac: %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "Device:"
+msgstr "Any Device:"
 
 #, c-format
 msgid "Any %s device"
@@ -222,9 +267,8 @@ msgstr "(if not provided by DHCP server)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Selecting 'OK' will exit safe mode"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "Disk"
+msgstr "Disk R/W"
 
 msgid "Prevent all writes to disk"
 msgstr ""
@@ -326,15 +370,6 @@ msgstr "Petitboot Language Selection"
 msgid "!Invalid option %d"
 msgstr "!Invalid option %d"
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "CD/DVD"
-msgstr "CD/DVD"
-
-msgid "Network"
-msgstr "Network"
-
 msgid "Unknown Device"
 msgstr "Unknown Device"
 
@@ -374,9 +409,8 @@ msgstr " link: %s"
 msgid "up"
 msgstr ""
 
-#, fuzzy
 msgid "down"
-msgstr "link down"
+msgstr "down"
 
 msgid "Petitboot System Information"
 msgstr "Petitboot System Information"
@@ -499,7 +533,6 @@ msgstr ""
 "Example: root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -540,44 +573,12 @@ msgid ""
 "Static IP configuration: Allows you to specify an IPv4 address and network "
 "mask, gateway, and a DNS server or servers for a network interface. Select "
 "this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
+"network settings.\n"
+"\n"
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
 msgstr ""
-"Autoboot: There are three possible options for automatic-boot hehaviour:\n"
-"\n"
-"Don't autoboot: boot options will be listed in the petitboot menu, but none "
-"will be booted automatically. User interaction will be required to continue "
-"past the petitboot menu. Use this option if you want the machine to wait for "
-"an explicit boot selection, or want to interact with petitboot before "
-"booting the system\n"
-"\n"
-"Autoboot from any disk/network device: any boot option that is marked as a "
-"default (by bootloader configuration) will be booted automatically after a "
-"timeout. Use this option if you want to quickly boot your system without "
-"changing any boot option settings. This is the typical configuration.\n"
-"\n"
-"Only autoboot from a specific disk/network device: only boot options from a "
-"single device (specifed here) will be booted automatically after a timeout. "
-"Use this option if you have multiple operating system images installed.\n"
-"\n"
-"Timeout: Specify the length of time, in seconds, that the main menu will be "
-"displayed before the default boot option is started. This option is only "
-"displayed if autoboot is enabled.\n"
-"\n"
-"Network options:\n"
-"\n"
-"DHCP on all active interfaces: Automatically assigns IP addresses to each "
-"network interface. Use this option if you have a DHCP server on your "
-"network.\n"
-"\n"
-"DHCP on a specific interface: Automatically assigns IP addresses to the "
-"selected network interface. The other interfaces are not configured. Select "
-"this option if you have multiple DHCP servers on different interfaces, but "
-"only want to configure a single interface during boot.\n"
-"\n"
-"Static IP configuration: Allows you to specify an IPv4 address and network "
-"mask, gateway, and a DNS server or servers for a network interface. Select "
-"this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
 
 msgid "Usage"
 msgstr "Usage"

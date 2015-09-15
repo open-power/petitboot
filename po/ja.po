@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-08-19 14:19+1000\n"
+"POT-Creation-Date: 2015-09-10 14:36+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Japanese\n"
@@ -77,6 +77,36 @@ msgstr "ホスト %s に経路指定できません"
 msgid "Config file %s parsed"
 msgstr "構成ファイル %s が解析されました"
 
+msgid "None"
+msgstr "(なし)"
+
+msgid "Network"
+msgstr " ネットワーク"
+
+msgid "Disk"
+msgstr "ディスク"
+
+msgid "Safe Mode"
+msgstr ""
+
+msgid "Optical"
+msgstr ""
+
+msgid "Setup Mode"
+msgstr ""
+
+msgid "Unknown"
+msgstr "不明"
+
+msgid "USB"
+msgstr ""
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr ""
+
 msgid "Retrieve Config"
 msgstr "構成を取得してください"
 
@@ -142,7 +172,7 @@ msgid "Clear"
 msgstr "消去"
 
 msgid "Clear & Boot Any"
-msgstr "消去していずれかをブート"
+msgstr "消去してブート"
 
 #, fuzzy
 msgid "Boot Order:"
@@ -230,7 +260,7 @@ msgid "Prevent all writes to disk"
 msgstr "ディスクへの書き込みをすべて抑止する"
 
 msgid "Allow bootloader scripts to modify disks"
-msgstr "ブート・ローダー・スクリプトでディスクを変更できるようにする"
+msgstr "ブート・ローダー・スクリプトでディスクを変更可能にする"
 
 msgid "Petitboot System Configuration"
 msgstr "Petitboot システム構成"
@@ -326,15 +356,6 @@ msgstr "Petitboot 言語選択"
 #, c-format
 msgid "!Invalid option %d"
 msgstr "!オプション %d は無効です"
-
-msgid "Disk"
-msgstr "ディスク"
-
-msgid "CD/DVD"
-msgstr "CD/DVD"
-
-msgid "Network"
-msgstr " ネットワーク"
 
 msgid "Unknown Device"
 msgstr "不明なデバイスです"
@@ -549,7 +570,11 @@ msgid ""
 "Static IP configuration: Allows you to specify an IPv4 address and network "
 "mask, gateway, and a DNS server or servers for a network interface. Select "
 "this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
+"network settings.\n"
+"\n"
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
 msgstr ""
 "自動ブート: 自動ブートの動作に関して選択できるオプションは 3 つあります。\n"
 "\n"
