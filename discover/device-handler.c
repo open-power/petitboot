@@ -862,7 +862,7 @@ int device_handler_discover(struct device_handler *handler,
 
 	status = talloc_zero(handler, struct boot_status);
 	status->type = BOOT_STATUS_INFO;
-	status->message = talloc_asprintf(status, "Processing %s device %s",
+	status->message = talloc_asprintf(status, _("Processing %s device %s"),
 				device_type_display_name(dev->device->type),
 				dev->device->id);
 	boot_status(handler, status);
@@ -887,7 +887,7 @@ int device_handler_discover(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 out:
-	status->message = talloc_asprintf(status,"Processing %s complete\n",
+	status->message = talloc_asprintf(status,_("Processing %s complete\n"),
 				dev->device->id);
 	boot_status(handler, status);
 
@@ -906,7 +906,7 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	status = talloc_zero(handler, struct boot_status);
 	status->type = BOOT_STATUS_INFO;
-	status->message = talloc_asprintf(status, "Processing dhcp event on %s",
+	status->message = talloc_asprintf(status, _("Processing dhcp event on %s"),
 				dev->device->id);
 	boot_status(handler, status);
 
@@ -918,7 +918,7 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	device_handler_discover_context_commit(handler, ctx);
 
-	status->message = talloc_asprintf(status,"Processing %s complete\n",
+	status->message = talloc_asprintf(status,_("Processing %s complete\n"),
 				dev->device->id);
 	boot_status(handler, status);
 
@@ -937,7 +937,7 @@ int device_handler_conf(struct device_handler *handler,
 
 	status = talloc_zero(handler, struct boot_status);
 	status->type = BOOT_STATUS_INFO;
-	status->message = talloc_asprintf(status, "Processing user config");
+	status->message = talloc_asprintf(status, _("Processing user config"));
 	boot_status(handler, status);
 
 	/* create our context */
@@ -949,7 +949,7 @@ int device_handler_conf(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 	status->message = talloc_asprintf(status,
-				"Processing user config complete");
+				_("Processing user config complete"));
 	boot_status(handler, status);
 
 	talloc_free(status);
