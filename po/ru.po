@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-08-19 14:19+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Russian\n"
@@ -57,6 +57,38 @@ msgstr "Загрузка отменена"
 msgid "Booting in %d sec: %s"
 msgstr "Загрузка через %d сек: %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "Выполняется обработка %s устройства %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "Обработка %s завершена\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "Обработка события dhcp в %s"
+
+msgid "Processing user config"
+msgstr "Обработка конфигурации пользователя"
+
+msgid "Processing user config complete"
+msgstr "Обработка конфигурации пользователя завершена"
+
 msgid "Default boot cancelled"
 msgstr "Загрузка по умолчанию отменена"
 
@@ -77,6 +109,36 @@ msgstr "Не удалось перенаправить к хосту %s"
 #, c-format
 msgid "Config file %s parsed"
 msgstr "Файл конфигурации %s проанализирован"
+
+msgid "None"
+msgstr "Нет"
+
+msgid "Network"
+msgstr "Сеть"
+
+msgid "Disk"
+msgstr "Диск"
+
+msgid "Safe Mode"
+msgstr "Безопасный режим"
+
+msgid "Optical"
+msgstr "Оптический"
+
+msgid "Setup Mode"
+msgstr "Режим настройки"
+
+msgid "Unknown"
+msgstr "Неизвестно"
+
+msgid "USB"
+msgstr "USB"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr "Любой"
 
 msgid "Retrieve Config"
 msgstr "Получение конфигурации"
@@ -135,9 +197,8 @@ msgstr "Выберите загрузочное устройство для до
 msgid "Waiting for configuration data..."
 msgstr "Ожидание данных конфигурации..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "Устройство:"
+msgstr "Добавить устройство:"
 
 msgid "Clear"
 msgstr "Очистить"
@@ -145,9 +206,8 @@ msgstr "Очистить"
 msgid "Clear & Boot Any"
 msgstr "Очистить и загрузить все"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "Аргументы загрузки:"
+msgstr "Порядок загрузки"
 
 msgid "(None)"
 msgstr "(Нет)"
@@ -160,9 +220,8 @@ msgstr "диск: %s [uuid: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "сеть:  %s [mac: %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "Устройство:"
+msgstr "Любое устройство:"
 
 #, c-format
 msgid "Any %s device"
@@ -223,9 +282,8 @@ msgstr "(если не предоставляется сервером DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "После нажатия 'OK' безопасный режим будет выключен"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "Диск"
+msgstr "Чтение/Запись диска"
 
 msgid "Prevent all writes to disk"
 msgstr "Запретить любую запись на диск"
@@ -254,7 +312,7 @@ msgstr "Не удалось: загрузиться %s"
 
 #, c-format
 msgid "User item %u"
-msgstr "Объект пользователя %u"
+msgstr "Пользовательский элемент %u"
 
 msgid "Error"
 msgstr "Ошибка"
@@ -325,16 +383,7 @@ msgstr "Выбор языка в Petitboot"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "!Недопустимая опция %d"
-
-msgid "Disk"
-msgstr "Диск"
-
-msgid "CD/DVD"
-msgstr "CD/DVD"
-
-msgid "Network"
-msgstr "Сеть"
+msgstr "Недопустимая опция %d"
 
 msgid "Unknown Device"
 msgstr "Неизвестное устройство"
@@ -375,9 +424,8 @@ msgstr " линия связи: %s"
 msgid "up"
 msgstr "активна"
 
-#, fuzzy
 msgid "down"
-msgstr "неактивна"
+msgstr "отключена"
 
 msgid "Petitboot System Information"
 msgstr "Информация о системе Petitboot"
@@ -502,7 +550,6 @@ msgstr ""
 "Пример: root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -543,26 +590,33 @@ msgid ""
 "Static IP configuration: Allows you to specify an IPv4 address and network "
 "mask, gateway, and a DNS server or servers for a network interface. Select "
 "this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
+"network settings.\n"
+"\n"
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
 msgstr ""
-"Автозагрузка: существует три варианта поведения автоматической загрузки:\n"
+"Autoboot: Укажите, с каких устройств выполнять автоматическую загрузку.\n"
 "\n"
-"Не загружаться автоматически: вариант загрузки будет казан в меню petitboot, "
-"но ничего не будет загружаться автоматически. Для продолжения потребуется "
-"взаимодействие пользователя в работе с меню petitboot. Используйте этот "
-"вариант в том случае, если хотите, чтобы машина ждала точный выбор загрузки, "
-"или если хотите поработать с petitboot до загрузки системы\n"
+"При нажатии кнопки 'Добавить устройство' можно добавить новые устройства в "
+"список autoboot по UUID, MAC-адресу или типу устройства. После добавления в "
+"список порядка загрузки приоритет устройств можно изменить с помощью клавиш "
+"'стрелка влево' и 'стрелка вправо'. Для удаления конкретного устройства из "
+"списка нажмите клавишу минус. Эта опция применяется при использовании "
+"нескольких установленных образов операционных систем.\n"
 "\n"
-"Автозагрузка с любого диска/сетевого устройства: любой вариант загрузки с "
-"отметкой по умолчанию (в конфигурации загрузчика) будет автоматически "
-"загружен после тайм-аута. Используйте этот вариант в том случае, если хотите "
-"быстро загрузить систему без изменения каких-либо настроек варианта "
-"загрузки. Является стандартной конфигурацией.\n"
+"Для автоматической загрузки с любого устройства нажмите кнопку 'Очистить и "
+"загрузить все'. В этом случае вариант загрузки, помеченный как выбор по "
+"умолчанию (задается с помощью конфигурации bootloader) будет загружен "
+"автоматически после тайм-аута. Эта опция применяется для быстрой загрузки "
+"системы без изменения параметров загрузки. Это обычная конфигурация.\n"
 "\n"
-"Автоматическая загрузка только с указанного диска/сетевого устройства: "
-"вариант загрузки только с единственного устройства (указанного здесь) будет "
-"загружен автоматически после тайм-аута. Используйте данный вариант, если у "
-"вас установлено несколько образов операционных систем.\n"
+"Для отключения автоматической загрузки нажмите кнопку 'Очистить', после чего "
+"будет выполнен сброс порядка загрузки. При отключенной автоматической "
+"загрузке для продолжения работы с меню petitboot потребуется взаимодействие "
+"с пользователем. Используйте этот вариант в том случае, если хотите, чтобы "
+"машина ждала точный выбор загрузки, или если хотите поработать с petitboot "
+"до загрузки системы\n"
 "\n"
 "Тайм-аут: указывает отрезок времени в секундах, который выведет главное меню "
 "до начала текущей загрузки. Эта опция выводится только при включенной "
@@ -581,8 +635,13 @@ msgstr ""
 "\n"
 "Настройка статического IP: позволяет указать IPv4-адрес и сетевую маску, "
 "шлюз и сервер DNS или серверы для сетевого интерфейса. Выберите этот вариант "
-"если у вас нет сервера DHCP, или если требуется точный контроль настроек "
-"сети."
+"если у вас нет сервера DHCP, или если требуется точный контроль параметров "
+"сети.\n"
+"\n"
+"Чтение / Запись диска: для некоторых конфигураций bootloader может "
+"потребоваться доступ к дискам для записи с целью сохранения информации или "
+"обновления параметров (пример: GRUB2). Эта опция применяется для управления "
+"доступом к дискам.\n"
 
 msgid "Usage"
 msgstr "Использование"

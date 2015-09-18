@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-08-19 14:19+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Spanish\n"
@@ -56,6 +56,38 @@ msgstr "Arranque cancelado"
 msgid "Booting in %d sec: %s"
 msgstr "Arrancando en %d seg: %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "Procesando dispositivo %s %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "Proceso de %s completado\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "Procesando suceso dhcp en %s"
+
+msgid "Processing user config"
+msgstr "Procesando configuración de usuario"
+
+msgid "Processing user config complete"
+msgstr "Proceso de configuración de usuario completado"
+
 msgid "Default boot cancelled"
 msgstr "Arranque predeterminado cancelado"
 
@@ -76,6 +108,36 @@ msgstr "No se puede direccionar a host %s"
 #, c-format
 msgid "Config file %s parsed"
 msgstr "Archivo de configuración %s analizado"
+
+msgid "None"
+msgstr "Ninguno"
+
+msgid "Network"
+msgstr "Red"
+
+msgid "Disk"
+msgstr "Disco"
+
+msgid "Safe Mode"
+msgstr "Modalidad segura"
+
+msgid "Optical"
+msgstr "Óptico"
+
+msgid "Setup Mode"
+msgstr "Modalidad de configuración"
+
+msgid "Unknown"
+msgstr "Desconocido"
+
+msgid "USB"
+msgstr "USB"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr "Cualquiera"
 
 msgid "Retrieve Config"
 msgstr "Recuperar configuración"
@@ -134,9 +196,8 @@ msgstr "Seleccione un dispositivo de arranque para añadirlo"
 msgid "Waiting for configuration data..."
 msgstr "Esperando datos de configuración..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "Dispositivo:"
+msgstr "Añadir dispositivo:"
 
 msgid "Clear"
 msgstr "Borrar"
@@ -144,9 +205,8 @@ msgstr "Borrar"
 msgid "Clear & Boot Any"
 msgstr "Borrar y realizar cualquier arranque"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "Argumentos de arranque:"
+msgstr "Orden de arranque"
 
 msgid "(None)"
 msgstr "(Ninguno)"
@@ -159,9 +219,8 @@ msgstr "disco: %s [uuid: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "red:  %s [mac: %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "Dispositivo:"
+msgstr "Cualquier dispositivo:"
 
 #, c-format
 msgid "Any %s device"
@@ -222,9 +281,8 @@ msgstr "(si no se proporciona por servidor DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Si selecciona 'Aceptar' saldrá de la modalidad segura"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "Disco"
+msgstr "Lectura/Escritura en disco"
 
 msgid "Prevent all writes to disk"
 msgstr "Impide todas las escrituras en disco"
@@ -324,16 +382,7 @@ msgstr "Selección de idioma de Petitboot"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "Opción no válida %d"
-
-msgid "Disk"
-msgstr "Disco"
-
-msgid "CD/DVD"
-msgstr "CD/DVD"
-
-msgid "Network"
-msgstr "Red"
+msgstr "Opción %d no válida"
 
 msgid "Unknown Device"
 msgstr "Dispositivo desconocido"
@@ -352,31 +401,30 @@ msgstr "Dispositivos de almacenamiento"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID:       %s"
+msgstr "  UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " montado en: %s"
+msgstr "  montado en: %s"
 
 msgid "Network interfaces"
 msgstr "Interfaces de red"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr " MAC:  %s"
+msgstr "  MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr " enlace: %s"
+msgstr "  enlace: %s"
 
 msgid "up"
 msgstr "activo"
 
-#, fuzzy
 msgid "down"
-msgstr "enlace descendente"
+msgstr "inactivo"
 
 msgid "Petitboot System Information"
 msgstr "Información del sistema de Petitboot"
@@ -504,7 +552,6 @@ msgstr ""
 "Ejemplo: root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -545,28 +592,35 @@ msgid ""
 "Static IP configuration: Allows you to specify an IPv4 address and network "
 "mask, gateway, and a DNS server or servers for a network interface. Select "
 "this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
-msgstr ""
-"Arranque automático: hay tres opciones posibles para el comportamiento de "
-"arranque automático:\n"
+"network settings.\n"
 "\n"
-"No arrancar automáticamente: las opciones de arranque se listarán en el menú "
-"de petitboot, pero ninguna se arrancará automáticamente. Será necesario la "
-"interacción del usuario para continuar hasta pasar el menú de petitboot. "
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
+msgstr ""
+"Arranque automático: Especifica desde qué dispositivos se arranca "
+"automáticamente.\n"
+"\n"
+"Con el botón 'Añadir dispositivo' se pueden añadir más dispositivos a la "
+"lista de arranque automático por UUID, dirección MAC o tipo de dispositivo. "
+"Una vez añadidos al orden de arranque, puede cambiar la prioridad del "
+"dispositivo con las teclas 'izquierda' y 'derecha'. Pueden eliminarse los "
+"dispositivos individualmente del orden de arranque con la tecla menos. "
+"Utilice esta opción si tiene varias imágenes de sistemas operativos "
+"instaladas.\n"
+"\n"
+"Para arrancar automáticamente desde cualquier dispositivo, seleccione el "
+"botón 'Borrar y realizar cualquier arranque'. En este caso, la opción de "
+"arranque que esté marcada como predeterminada (por la configuración de "
+"arranque automático) arrancará automáticamente después de un tiempo de "
+"espera. Use esta opción si desea arrancar rápidamente el sistema sin cambiar "
+"ningún valor de las opciones de arranque. Esta es la configuración típica.\n"
+"\n"
+"Para inhabilitar el arranque automático, seleccione el botón 'Borrar' y se "
+"borrará el orden de arranque. Cuando está inhabilitado, se necesita la "
+"intervención del usuario para continuar hasta pasar el menú de petitboot. "
 "Utilice esta opción si desea que la máquina espere una selección de arranque "
 "explícita, o desea interactuar con petitboot antes de arrancar el sistema\n"
-"\n"
-"Arranque automático desde cualquier dispositivo de disco/red: cualquier "
-"opción de arranque que se marca como un valor predeterminado (mediante la "
-"configuración de gestor de arranque) se arrancará automáticamente después de "
-"un tiempo de espera. Utilice esta opción si desea arrancar rápidamente el "
-"sistema sin cambiar ningún valor de opción de arranque. Esta es la "
-"configuración típica.\n"
-"\n"
-"Arranque automático sólo desde un dispositivo de disco/red: sólo opciones de "
-"arranque de un único dispositivo (especificado aquí) se cargarán "
-"automáticamente después de un tiempo de espera. Utilice esta opción si tiene "
-"varias imágenes de sistemas operativos instaladas.\n"
 "\n"
 "Tiempo de espera: especifique la duración de tiempo, en segundos, que el "
 "menú principal se visualizará antes de iniciar la opción de arranque "
@@ -587,7 +641,12 @@ msgstr ""
 "Configuración IP estática: le permite especificar una dirección IPv4 y una "
 "máscara de red, pasarela y un servidor o servidores DNS para una interfaz de "
 "red. Seleccione esta opción si no tiene un servidor DHCP, o desea el control "
-"explícito de los valores de red"
+"explícito de los valores de red.\n"
+"\n"
+"Lectura/Escritura en disco: Algunas configuraciones del gestor de arranque "
+"podrían solicitar acceso de escritura a los discos para guardar información "
+"o actualizar parámetros (ejemplo, GRUB2). Utilice esta opción para controlar "
+"el acceso a los discos.\n"
 
 msgid "Usage"
 msgstr "Uso"

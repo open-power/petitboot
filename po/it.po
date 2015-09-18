@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-08-19 14:19+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Italian\n"
@@ -56,6 +56,38 @@ msgstr "Avvio annullato"
 msgid "Booting in %d sec: %s"
 msgstr "Avvio in %d sec: %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "Elaborazione dispositivo %s  %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "Elaborazione %s completata\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "Elaborazione evento dhcp in %s"
+
+msgid "Processing user config"
+msgstr "Elaborazione configurazione utente"
+
+msgid "Processing user config complete"
+msgstr "Elaborazione configurazione utente completata"
+
 msgid "Default boot cancelled"
 msgstr "Avvio predefinito annullato"
 
@@ -76,6 +108,36 @@ msgstr "Impossibile eseguire l'instradamento all'host %s"
 #, c-format
 msgid "Config file %s parsed"
 msgstr "File di configurazione %s analizzato"
+
+msgid "None"
+msgstr "Nessuno"
+
+msgid "Network"
+msgstr "Rete"
+
+msgid "Disk"
+msgstr "Disco"
+
+msgid "Safe Mode"
+msgstr "Modalità provvisoria"
+
+msgid "Optical"
+msgstr "Ottica"
+
+msgid "Setup Mode"
+msgstr "Modalità di configurazione"
+
+msgid "Unknown"
+msgstr "Sconosciuto"
+
+msgid "USB"
+msgstr "USB"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr "Qualsiasi"
 
 msgid "Retrieve Config"
 msgstr "Richiama configurazione"
@@ -135,9 +197,8 @@ msgstr "Selezionare un dispositivo di avvio da aggiungere"
 msgid "Waiting for configuration data..."
 msgstr "In attesa dei dati di configurazione..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "Dispositivo:"
+msgstr "Aggiungi dispositivo:"
 
 msgid "Clear"
 msgstr "Ripulisci"
@@ -145,9 +206,8 @@ msgstr "Ripulisci"
 msgid "Clear & Boot Any"
 msgstr "Ripulisci e avvia tutto"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "Argomenti avvio:"
+msgstr "Ordine di avvio"
 
 msgid "(None)"
 msgstr "(Nessuno)"
@@ -160,9 +220,8 @@ msgstr "disco: %s [uuid: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "rete:  %s [mac: %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "Dispositivo:"
+msgstr "Qualsiasi dispositivo:"
 
 #, c-format
 msgid "Any %s device"
@@ -223,9 +282,8 @@ msgstr "(se non fornito dal server DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Selezionando 'OK' si uscirà in modalità sicura"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "Disco"
+msgstr "Lettura/scrittura disco"
 
 msgid "Prevent all writes to disk"
 msgstr "Impedisci tutte le scritture su disco"
@@ -325,16 +383,7 @@ msgstr "Selezione lingua di Petitboot"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "Opzione non valida %d"
-
-msgid "Disk"
-msgstr "Disco"
-
-msgid "CD/DVD"
-msgstr "CD/DVD"
-
-msgid "Network"
-msgstr "Rete"
+msgstr "!Opzione non valida %d"
 
 msgid "Unknown Device"
 msgstr "Dispositivo sconosciuto"
@@ -375,9 +424,8 @@ msgstr " link: %s"
 msgid "up"
 msgstr "up"
 
-#, fuzzy
 msgid "down"
-msgstr "link inattivo"
+msgstr "inattivo"
 
 msgid "Petitboot System Information"
 msgstr "Informazioni sul sistema Petitboot"
@@ -449,7 +497,7 @@ msgid ""
 "host/pxeconffile or http://host/pxeconffile"
 msgstr ""
 "Fornire qui un URL valido per richiamare un file di configurazione di pxe-"
-"boot remoto e analizzare it.\n"
+"boot remoto e analizzare tale file.\n"
 "\n"
 "Gli URL sono nel formato 'schema://host/path/to/pxeconffile', ad esempio "
 "tftp://host/pxeconffile o http://host/pxeconffile"
@@ -505,7 +553,6 @@ msgstr ""
 "Esempio: root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -546,28 +593,36 @@ msgid ""
 "Static IP configuration: Allows you to specify an IPv4 address and network "
 "mask, gateway, and a DNS server or servers for a network interface. Select "
 "this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
+"network settings.\n"
+"\n"
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
 msgstr ""
-"Avvio automatico: ci sono tre possibili opzioni per la modalità di "
-"funzionamento di avvio automatico:\n"
+"Avvio automatico: specificare da quali dispositivi eseguire l'avvio "
+"automatico.\n"
 "\n"
-"Non eseguire l'avvio automatico: le opzioni di avvio saranno elencate nel "
-"menu di Petitboot, ma nessuna verrà avviata automaticamente. Sarà necessaria "
-"l'interazione dell'utente per continuare oltre il menu di Petitboot. "
-"Utilizzare questa opzione se si desidera che il computer attenda una "
-"esplicita selezione di avvio o se si desidera interagire con Petitboot prima "
-"di avviare il sistema\n"
+"Selezionando il pulsante 'Aggiungi dispositivo' sarà possibile aggiungere "
+"nuovi dispositivi all'elenco di avvio automatico, in base a UUID, indirizzo "
+"MAC o tipo di dispositivo. Una volta aggiunto all'ordine di avvio, sarà "
+"possibile modificare la priorità dei dispositivi con i tasti 'sinistra' e "
+"'destra'. I dispositivi possono essere rimossi singolarmente dall'elenco di "
+"avvio con il tasto meno. Utilizzare questa opzione se si hanno più immagini "
+"di sistema operativo installate.\n"
 "\n"
-"Avvia automaticamente da qualsiasi dispositivo di rete/disco: qualsiasi "
-"opzione di avvio contrassegnata come predefinita (dalla configurazione di "
-"bootloader) verrà avviata automaticamente dopo un timeout. Utilizzare questa "
-"opzione se si desidera avviare rapidamente il sistema senza modificare "
-"alcuna impostazione di opzione di avvio. Questa è la configurazione tipica.\n"
+"Per eseguire l'avvio automatico da un dispositivo, selezionare il pulsante "
+"'Ripulisci e avvia tutto'. In questo caso, qualsiasi opzione di avvio "
+"contrassegnata come predefinita (dalla configurazione del bootloader) verrà "
+"avviata automaticamente dopo un timeout. Utilizzare questa opzione se si "
+"desidera avviare rapidamente il sistema senza modificare le impostazioni "
+"dell'opzione di avvio. Questa è la configurazione tipica.\n"
 "\n"
-"Avvia automaticamente solo da uno specifico dispositivo disco/rete: solo le "
-"opzioni di avvio da un singolo dispositivo (qui specificato) verranno "
-"avviate automaticamente dopo un timeout. Utilizzare questa opzione se si "
-"dispone di più immagini di sistema operativo installate.\n"
+"Per disabilitare l'avvio automatico, selezionare il pulsante 'Cancella', "
+"l'ordine di avvio verrà cancellato. Con l'avvio automatico disabilitato, "
+"sarà necessaria l'interazione utente per continuare oltre il menu di "
+"Petitboot. Utilizzare questa opzione se si desidera che il computer attenda "
+"una esplicita selezione di avvio o se si desidera interagire con Petitboot "
+"prima di avviare il sistema\n"
 "\n"
 "Timeout: specificare il lasso di tempo, in secondi, per cui verrà "
 "visualizzato il menu principale prima che venga avviata l'opzione di avvio "
@@ -589,7 +644,12 @@ msgstr ""
 "Configurazione IP statico: consente di specificare un indirizzo IPv4 e una "
 "maschera di rete, un gateway e uno o più server DNS per un'interfaccia di "
 "rete. Selezionare questa opzione se non si ha un server DHCP o si desidera "
-"avere un controllo esplicito delle impostazioni di rete."
+"avere un controllo esplicito delle impostazioni di rete.\n"
+"\n"
+"Lettura/scrittura disco: alcune configurazioni di bootloader possono "
+"richiedere l'accesso in scrittura ai dischi per salvare le informazioni "
+"oppure per aggiornare i parametri (ad esempio, GRUB2). Utilizzare questa "
+"opzione per controllare l'accesso ai dischi.\n"
 
 msgid "Usage"
 msgstr "Utilizzo"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-09-11 11:02+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: German\n"
@@ -56,6 +56,38 @@ msgstr "Booten abgebrochen"
 msgid "Booting in %d sec: %s"
 msgstr "Booten erfolgt in %d Sekunden: %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "Verarbeitung von %s Einheit %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "Verarbeitung %s abgeschlossen\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "Verarbeitung eines DHCP-Ereignisses auf %s"
+
+msgid "Processing user config"
+msgstr "Verarbeitung der Benutzerkonfiguration"
+
+msgid "Processing user config complete"
+msgstr "Verarbeitung der Benutzerkonfiguration abgeschlossen"
+
 msgid "Default boot cancelled"
 msgstr "Standardbootvorgang abgebrochen"
 
@@ -77,9 +109,8 @@ msgstr "Weiterleitung an Host %s nicht möglich"
 msgid "Config file %s parsed"
 msgstr "Konfigurationsdatei %s geparst"
 
-#, fuzzy
 msgid "None"
-msgstr "(Keine Angabe)"
+msgstr "Ohne"
 
 msgid "Network"
 msgstr "Netz"
@@ -88,26 +119,25 @@ msgid "Disk"
 msgstr "Platte"
 
 msgid "Safe Mode"
-msgstr ""
+msgstr "Abgesicherter Modus"
 
 msgid "Optical"
-msgstr ""
+msgstr "Optisch"
 
 msgid "Setup Mode"
-msgstr ""
+msgstr "Einrichtungsmodus"
 
-#, fuzzy
 msgid "Unknown"
-msgstr "(unbekannt)"
+msgstr "Unbekannt"
 
 msgid "USB"
-msgstr ""
+msgstr "USB"
 
 msgid "CD/DVD"
 msgstr "CD/DVD"
 
 msgid "Any"
-msgstr ""
+msgstr "Alle"
 
 msgid "Retrieve Config"
 msgstr "Konfiguration abrufen"
@@ -168,9 +198,8 @@ msgstr "Wählen Sie eine Booteinheit aus, die hinzugefügt werden soll"
 msgid "Waiting for configuration data..."
 msgstr "Warten auf Konfigurationsdaten..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "Einheit:"
+msgstr "Einheit hinzufügen:"
 
 msgid "Clear"
 msgstr "Löschen"
@@ -178,9 +207,8 @@ msgstr "Löschen"
 msgid "Clear & Boot Any"
 msgstr "Löschen & bel. booten"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "Bootargumente:"
+msgstr "Bootreihenfolge:"
 
 msgid "(None)"
 msgstr "(Keine Angabe)"
@@ -193,9 +221,8 @@ msgstr "Platte: %s [UUID: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "Netz:  %s [MAC: %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "Einheit:"
+msgstr "Jede Einheit:"
 
 #, c-format
 msgid "Any %s device"
@@ -256,9 +283,8 @@ msgstr "(falls nicht vom DHCP-Server bereitgestellt)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Durch die Auswahl von 'OK' wird der abgesicherte Modus beendet"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "Platte"
+msgstr "Lese-/Schreibvorgang auf Platte"
 
 msgid "Prevent all writes to disk"
 msgstr "Alle Schreibvorgänge auf die Platte verhindern"
@@ -400,9 +426,8 @@ msgstr " Verbindung: %s"
 msgid "up"
 msgstr "aktiv"
 
-#, fuzzy
 msgid "down"
-msgstr "Verbindung inaktiv"
+msgstr "inaktiv"
 
 msgid "Petitboot System Information"
 msgstr "Petitboot-Systeminformationen"
@@ -535,7 +560,6 @@ msgstr ""
 "Beispiel: root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -582,27 +606,31 @@ msgid ""
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
 msgstr ""
-"Automatisches Booten: Für das Verhalten des automatischen Bootvorgangs gibt "
-"es drei Optionen:\n"
+"Automatisches Booten: Geben Sie an, auf welchen Einheiten ein automatisches "
+"Booten erfolgen soll.\n"
 "\n"
-"Kein automatisches Booten: Im Petitboot-Menü werden zwar Bootoptionen "
-"aufgelistet, sie werden jedoch nicht automatisch gebootet. Für weitere "
-"Vorgänge vom Petitboot-Menü aus ist eine Benutzeraktion erforderlich. "
-"Verwenden Sie diese Option, wenn die Maschine auf eine explizite Bootauswahl "
-"warten soll oder wenn Sie vor dem Booten des Systems mit Petitboot "
-"interagieren möchten.\n"
-"\n"
-"Von jeder Platte/Netzeinheit automatisch booten: Jede Bootoption, die (in "
-"der Konfiguration des Bootladeprogramms) als Standard markiert ist, wird "
-"nach einer Zeitlimitüberschreitung automatisch gebootet. Verwenden Sie diese "
-"Option, wenn Sie Ihr System schnell ohne Änderung der "
-"Bootoptionseinstellungen booten möchten. Dies ist die "
-"Standardkonfiguration.\n"
-"\n"
-"Nur von einer bestimmten Platte/Netzeinheit automatisch booten: Nach einer "
-"Zeitlimitüberschreitung werden nur die Bootoptionen einer (hier angegebenen) "
-"einzelnen Einheit automatisch gebootet. Verwenden Sie diese Option, wenn Sie "
+"Durch Auswahl der Schaltfläche 'Einheit hinzufügen' können neue Einheiten "
+"zur Liste zum automatischen Booten hinzugefügt werden, entweder nach UUID, "
+"MAC-Adresse oder Einheitentyp. Nach dem Angeben der Bootreihenfolge kann die "
+"Priorität der Einheiten mit den 'Links'- und 'Rechts'-Tasten geändert "
+"werden. Mithilfe der Minus-Taste können einzelne Geräte aus der "
+"Bootreihenfolge entfernt werden. Verwenden Sie diese Option, wenn Sie "
 "mehrere Betriebssystemimages installiert haben.\n"
+"\n"
+"Um ein automatisches Booten auf einer beliebigen Einheit durchzuführen, "
+"wählen Sie die Schaltfläche 'Löschen & bel. booten' aus. In diesem Fall wird "
+"mit jeder Bootoption, die (in der Konfiguration des Bootladeprogramms) als "
+"Standard markiert ist, nach einer Zeitlimitüberschreitung ein automatisches "
+"Booten durchgeführt. Verwenden Sie diese Option, wenn Sie Ihr System schnell "
+"ohne Änderung der Einstellungen für die Bootoptionen booten möchten. Dies "
+"ist die Standardkonfiguration.\n"
+"\n"
+"Um das automatische Booten zu inaktivieren, wählen Sie die Schaltfläche "
+"'Inaktivieren' aus, mit deren Hilfe die Bootreihenfolge inaktiviert wird. "
+"Wenn das automatische Booten inaktiviert ist, muss die Benutzerinteraktion "
+"nach dem Petitboot-Menü fortgesetzt werden. Verwenden Sie diese Option, wenn "
+"die Maschine auf eine explizite Bootauswahl warten soll oder wenn Sie vor "
+"dem Booten des Systems mit Petitboot interagieren möchten.\n"
 "\n"
 "Zeitlimit: Geben Sie in Sekunden an, wie lange das Hauptmenü angezeigt wird, "
 "bis die Standardbootoption gestartet wird. Diese Option wird nur angezeigt, "
@@ -624,7 +652,12 @@ msgstr ""
 "Netzmaske, ein Gateway sowie einen oder mehrere DNS-Server für eine "
 "Netzschnittstelle angeben. Wählen Sie diese Option aus, wenn Sie über keinen "
 "DHCP-Server verfügen oder eine explizite Steuerung der Netzeinstellungen "
-"wünschen."
+"wünschen.\n"
+"\n"
+"Lese-/Schreibvorgang auf Platte: Bestimmte Konfigurationen des "
+"Bootladeprogramms benötigen möglicherweise Schreibzugriff auf Platten, um "
+"Informationen zu speichern oder Parameter zu aktualisieren (z. B. GRUB2). "
+"Verwenden Sie diese Option, um Zugriff auf Platten zu steuern.\n"
 
 msgid "Usage"
 msgstr "Verwendung"

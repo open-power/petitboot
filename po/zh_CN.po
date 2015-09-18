@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-09-10 14:36+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Simplified Chinese\n"
@@ -56,6 +56,38 @@ msgstr "已取消引导"
 msgid "Booting in %d sec: %s"
 msgstr "将在 %d 秒内引导：%s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "处理 %s 设备 %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "处理 %s 完成\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "处理 %s 上的 DHCP 事件"
+
+msgid "Processing user config"
+msgstr "处理用户配置"
+
+msgid "Processing user config complete"
+msgstr "处理用户配置完成"
+
 msgid "Default boot cancelled"
 msgstr "已取消缺省引导"
 
@@ -77,9 +109,8 @@ msgstr "无法路由至主机 %s"
 msgid "Config file %s parsed"
 msgstr "已解析配置文件 %s"
 
-#, fuzzy
 msgid "None"
-msgstr "（无）"
+msgstr "无"
 
 msgid "Network"
 msgstr "网络"
@@ -88,25 +119,25 @@ msgid "Disk"
 msgstr "磁盘"
 
 msgid "Safe Mode"
-msgstr ""
+msgstr "安全模式"
 
 msgid "Optical"
-msgstr ""
+msgstr "光学"
 
 msgid "Setup Mode"
-msgstr ""
+msgstr "安装模式"
 
 msgid "Unknown"
 msgstr "未知"
 
 msgid "USB"
-msgstr ""
+msgstr "USB"
 
 msgid "CD/DVD"
 msgstr "CD/DVD"
 
 msgid "Any"
-msgstr ""
+msgstr "任何"
 
 msgid "Retrieve Config"
 msgstr "检索配置"
@@ -165,9 +196,8 @@ msgstr "选择要添加的引导设备"
 msgid "Waiting for configuration data..."
 msgstr "正在等待配置数据..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "设备："
+msgstr "添加设备："
 
 msgid "Clear"
 msgstr "清除"
@@ -175,9 +205,8 @@ msgstr "清除"
 msgid "Clear & Boot Any"
 msgstr "清除并引导任何项"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "引导参数："
+msgstr "引导顺序"
 
 msgid "(None)"
 msgstr "（无）"
@@ -190,9 +219,8 @@ msgstr "磁盘：%s [uuid：%s]"
 msgid "net:  %s [mac: %s]"
 msgstr "网路：%s [mac：%s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "设备："
+msgstr "任何设备："
 
 #, c-format
 msgid "Any %s device"
@@ -253,9 +281,8 @@ msgstr "（如果不是由 DHCP 服务器提供）"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "选择“确定”将退出安全模式"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "磁盘"
+msgstr "读/写磁盘"
 
 msgid "Prevent all writes to disk"
 msgstr "阻止对磁盘的所有写入操作"
@@ -374,29 +401,28 @@ msgstr "存储设备"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID：       %s"
+msgstr "  UUID：       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " 安装于：%s"
+msgstr "  安装于：%s"
 
 msgid "Network interfaces"
 msgstr "网络接口"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr " MAC：  %s"
+msgstr "  MAC：  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "链接： %s"
+msgstr " 链接： %s"
 
 msgid "up"
 msgstr "上行链路"
 
-#, fuzzy
 msgid "down"
 msgstr "下行链路"
 
@@ -513,7 +539,6 @@ msgstr ""
 "示例：root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -560,18 +585,19 @@ msgid ""
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
 msgstr ""
-"自动引导：自动引导行为有三个可能的选项：\n"
+"自动引导：指定要从其中自动引导的设备。\n"
 "\n"
-"不自动引导：引导选项将列示在 Petitboot 菜单中，但是没有任何一个选项将自动引"
-"导。需要用户交互才能继续通过 Petitboot 菜单。在下列情况下，请使用此选项：您希"
-"望机器等待显式选择引导，或要先与 Petitboot 交互，再引导系统\n"
+"选择“添加设备”按钮，按 UUID、MAC 地址或设备类型将新设备添加到自动引导列表。添"
+"加到引导顺序之后，可以使用“向左”和“向右”键来来更改设备的优先级。使用减号键(-)"
+"可以从引导顺序单独删除设备。如果安装了多个操作系统映像，则可以使用此选项。\n"
 "\n"
-"从任何磁盘/网络设备自动引导：标示为缺省值（通过 bootloader 配置）的任何引导选"
-"项将在超时后自动引导。如果您要快速引导系统而不更改任何引导选项设置，请使用此"
-"选项。此为典型配置。\n"
+"要从任何设备自动引导，请选择“清除/引导任何”按钮。在本示例中，所有标记为缺省的"
+"引导选项（由 bootloader 配置）将在超时后自动引导。如果要在不更改任何引导选项"
+"设置的情况下快速引导系统，请使用此选项。此为典型配置。\n"
 "\n"
-"仅从特定磁盘/网络设备自动引导：仅来自单个设备（在这里指定）的引导选项将在超时"
-"后自动引导。如果您安装了多个操作系统映像，请使用此选项。\n"
+"要禁用自动引导，请选择“清除”，这将清除该引导。顺序。自动引导禁用之后，需要用"
+"户交互才能继续先前的 Petitboot 菜单。在下列情况下，请使用此选项：您希望机器等"
+"待显式选择引导，或要先与 Petitboot 交互，再引导系统\n"
 "\n"
 "超时：指定时间长度（以秒计），在缺省引导选项启动之前，主菜单将在此时间内显"
 "示。仅当已启用自动引导时，才会显示此选项。\n"
@@ -586,7 +612,10 @@ msgstr ""
 "项。\n"
 "\n"
 "静态 IP 配置：允许您指定网络接口的 IPv4 地址和网络掩码、网关及 DNS 服务器。如"
-"果您没有 DHCP 服务器，或者要显式控制网络设置，请选择此选项。"
+"果您没有 DHCP 服务器，或者要显式控制网络设置，请选择此选项。\n"
+"\n"
+"读写磁盘：某些 Bootloader 配置可能要求对磁盘具有读入权限以保存信息或更新参数"
+"（如 GRUB2）。使用此选项以控制磁盘的访问权限。\n"
 
 msgid "Usage"
 msgstr "用法"

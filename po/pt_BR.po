@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-08-19 14:19+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Portugese (Brazil)\n"
@@ -14,7 +14,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n>1;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "running boot hooks"
 msgstr "executando ganchos de inicialização"
@@ -56,6 +56,38 @@ msgstr "Inicialização cancelada"
 msgid "Booting in %d sec: %s"
 msgstr "Inicializando em %d s: %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "Processando %s dispositivo %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "Processamento do %s foi concluído\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "Processando o evento dhcp no %s"
+
+msgid "Processing user config"
+msgstr "Processando a configuração de usuário"
+
+msgid "Processing user config complete"
+msgstr "Processamento de configuração de usuário concluída"
+
 msgid "Default boot cancelled"
 msgstr "Inicialização padrão cancelada"
 
@@ -76,6 +108,36 @@ msgstr "Não é possível rotear para o host %s"
 #, c-format
 msgid "Config file %s parsed"
 msgstr "Arquivo de configuração %s analisado"
+
+msgid "None"
+msgstr "Nenhum"
+
+msgid "Network"
+msgstr "Rede"
+
+msgid "Disk"
+msgstr "Disco"
+
+msgid "Safe Mode"
+msgstr "Modo de segurança"
+
+msgid "Optical"
+msgstr "Ótico"
+
+msgid "Setup Mode"
+msgstr "Modo de configuração"
+
+msgid "Unknown"
+msgstr "Desconhecido"
+
+msgid "USB"
+msgstr "USB"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr "Qualquer"
 
 msgid "Retrieve Config"
 msgstr "Recuperar Configuração"
@@ -134,9 +196,8 @@ msgstr "Selecione um dispositivo de inicialização a incluir."
 msgid "Waiting for configuration data..."
 msgstr "Aguardando dados de configuração..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "Dispositivo:"
+msgstr "Incluir dispositivo:"
 
 msgid "Clear"
 msgstr "Limpar"
@@ -144,9 +205,8 @@ msgstr "Limpar"
 msgid "Clear & Boot Any"
 msgstr "Limpar e inicializar qualquer um"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "Argumentos de inicialização:"
+msgstr "Ordem de inicialização"
 
 msgid "(None)"
 msgstr "(Nenhum)"
@@ -159,9 +219,8 @@ msgstr "disco: %s [uuid: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "rede:  %s [mac: %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "Dispositivo:"
+msgstr "Qualquer dispositivo:"
 
 #, c-format
 msgid "Any %s device"
@@ -225,9 +284,8 @@ msgstr "(se não for fornecido pelo servidor DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Selecionar 'OK' irá sair do modo de segurança"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "Disco"
+msgstr "R/W de disco"
 
 msgid "Prevent all writes to disk"
 msgstr "Evitar todas as gravações em disco"
@@ -256,7 +314,7 @@ msgstr "Falha: inicializar %s"
 
 #, c-format
 msgid "User item %u"
-msgstr "Item de usuário %u"
+msgstr "Item do usuário %u"
 
 msgid "Error"
 msgstr "Erro"
@@ -329,15 +387,6 @@ msgstr "Seleção de Idioma do Petitboot"
 msgid "!Invalid option %d"
 msgstr "!Opção inválida %d"
 
-msgid "Disk"
-msgstr "Disco"
-
-msgid "CD/DVD"
-msgstr "CD/DVD"
-
-msgid "Network"
-msgstr "Rede"
-
 msgid "Unknown Device"
 msgstr "Dispositivo Desconhecido"
 
@@ -377,9 +426,8 @@ msgstr " link: %s"
 msgid "up"
 msgstr "ativo"
 
-#, fuzzy
 msgid "down"
-msgstr "link inativo"
+msgstr "inativo"
 
 msgid "Petitboot System Information"
 msgstr "Informações do Sistema Petitboot"
@@ -507,7 +555,6 @@ msgstr ""
 "Exemplo: root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -548,30 +595,36 @@ msgid ""
 "Static IP configuration: Allows you to specify an IPv4 address and network "
 "mask, gateway, and a DNS server or servers for a network interface. Select "
 "this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
-msgstr ""
-"Executar a inicialização automática: há três possíveis opções para o "
-"comportamento de inicialização automática:\n"
+"network settings.\n"
 "\n"
-"Não executar a inicialização automática: as opções de inicialização serão "
-"listadas no menu do petitboot, mas nenhuma será inicializada "
-"automaticamente. A interação com o usuário será necessária para continuar "
-"pelo menu do petitboot. Use essa opção se desejar que a máquina aguarde uma "
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
+msgstr ""
+"Inicialização automática: especifique a partir de quais dispositivos "
+"especificar.\n"
+"\n"
+"Selecionando o botão 'Incluir dispositivo' novos dispositivos podem ser "
+"incluídos nalista de inicialização automática, seja por UUID, endereço MAC "
+"ou tipo de dispositivo. Quando incluído para a ordem de inicialização, a "
+"prioridade de dispositivos pode ser alterada com as teclas 'esquerdo' e "
+"'direito'. Os dispositivos podem ser removidos individualmente da ordem de "
+"inicialização coma tecla de menos. Use essa opção se tiver várias imagens do "
+"sistema operacionalinstaladas.\n"
+"\n"
+"Para inicializar automaticamente qualquer dispositivo, selecione o botão "
+"'Limpar e inicializar todos'.Nesse caso, qualquer opção de inicialização que "
+"for marcada como padrão (pela configuração do carregador de inicialização) "
+"será inicializada automaticamente após um tempo limite. Use essa opção se "
+"desejar inicializar rapidamente seu sistema sem mudar quaisquer "
+"configurações de opção deinicialização. Essa é a configuração típica.\n"
+"\n"
+"Para desativar a inicialização automática, selecione o botão 'Limpar', que "
+"limpará a ordem de de inicialização. Com a inicialização automática "
+"desativada, a interação com o usuário será requerida para continuar pelo "
+"menu do petitboot. Use essa opção se desejar que a máquina aguarde uma "
 "seleção de inicialização explícita, ou desejar interagir com o petitboot "
 "antes de inicializar o sistema\n"
-"\n"
-"Executar a inicialização automática a partir de qualquer dispositivo de "
-"disco/rede: qualquer opção de inicialização marcada como padrão (pela "
-"configuração do bootloader) será inicializada automaticamente após um tempo "
-"limite. Use essa opção se desejar inicializar rapidamente seu sistema sem "
-"alterar qualquer configuração da opção de inicialização. Essa é uma "
-"configuração típica.\n"
-"\n"
-"Executar a inicialização automática apenas a partir de um dispositivo de "
-"disco/rede específico: somente opções de inicialização a partir de um único "
-"dispositivo (especificado aqui) serão inicializadas automaticamente após um "
-"tempo limite. Use essa opção se tiver várias imagens do sistema operacional "
-"instaladas.\n"
 "\n"
 "Tempo limite: Especifique a duração de tempo, em segundos, em que o menu "
 "principal será exibido antes que a opção de inicialização padrão seja "
@@ -593,7 +646,12 @@ msgstr ""
 "Configuração de IP Estático: permite que você especifique um endereço IPv4 "
 "(Protocolo de Internet versão 4) e máscara, gateway e servidor(es) DNS de "
 "rede para uma interface de rede. Selecione essa opção se você não tiver um "
-"servidor DHCP ou desejar o controle explícito das configurações de rede."
+"servidor DHCP ou desejar o controle explícito das configurações de rede.\n"
+"\n"
+"R/W de disco: determinadas configurações do carregador de inicialização "
+"podem solicitar acesso de gravação aosdiscos para salvar informações ou "
+"parâmetros de atualização (por ex. GRUB2). Use essa opção para controlar "
+"acesso aos discos.\n"
 
 msgid "Usage"
 msgstr "Uso"

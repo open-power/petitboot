@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-09-10 14:36+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Traditional Chinese\n"
@@ -56,6 +56,38 @@ msgstr "已取消啟動"
 msgid "Booting in %d sec: %s"
 msgstr "將於 %d 秒後啟動：%s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "處理 %s 裝置 %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "處理 %s 完成\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "處理 %s 上的 DHCP 事件"
+
+msgid "Processing user config"
+msgstr "處理使用者配置"
+
+msgid "Processing user config complete"
+msgstr "處理使用者配置完成"
+
 msgid "Default boot cancelled"
 msgstr "已取消預設啟動"
 
@@ -77,9 +109,8 @@ msgstr "無法遞送至主機 %s"
 msgid "Config file %s parsed"
 msgstr "已剖析配置檔 %s"
 
-#, fuzzy
 msgid "None"
-msgstr "（無）"
+msgstr "無"
 
 msgid "Network"
 msgstr "網路"
@@ -88,25 +119,25 @@ msgid "Disk"
 msgstr "磁碟"
 
 msgid "Safe Mode"
-msgstr ""
+msgstr "安全模式"
 
 msgid "Optical"
-msgstr ""
+msgstr "光學"
 
 msgid "Setup Mode"
-msgstr ""
+msgstr "設定模式"
 
 msgid "Unknown"
 msgstr "不明"
 
 msgid "USB"
-msgstr ""
+msgstr "USB"
 
 msgid "CD/DVD"
 msgstr "CD/DVD"
 
 msgid "Any"
-msgstr ""
+msgstr "任何"
 
 msgid "Retrieve Config"
 msgstr "擷取配置"
@@ -165,9 +196,8 @@ msgstr "選取要新增的啟動裝置"
 msgid "Waiting for configuration data..."
 msgstr "正在等待配置資料..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "裝置："
+msgstr "新增裝置："
 
 msgid "Clear"
 msgstr "清除"
@@ -175,9 +205,8 @@ msgstr "清除"
 msgid "Clear & Boot Any"
 msgstr "清除並啟動任意項"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "啟動引數："
+msgstr "開機順序"
 
 msgid "(None)"
 msgstr "（無）"
@@ -190,9 +219,8 @@ msgstr "磁碟：%s [UUID：%s]"
 msgid "net:  %s [mac: %s]"
 msgstr "網路：%s [MAC：%s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "裝置："
+msgstr "任何裝置："
 
 #, c-format
 msgid "Any %s device"
@@ -253,9 +281,8 @@ msgstr "（如果 DHCP 伺服器未提供的話）"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "選取「確定」將會結束安全模式"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "磁碟"
+msgstr "磁碟 R/W"
 
 msgid "Prevent all writes to disk"
 msgstr "阻止全部寫入磁碟"
@@ -374,29 +401,28 @@ msgstr "儲存裝置"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID：      %s"
+msgstr "  UUID：      %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " 裝載位置：%s"
+msgstr "  裝載位置：%s"
 
 msgid "Network interfaces"
 msgstr "網路介面"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr " MAC：%s"
+msgstr "  MAC：%s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr " 鏈結：%s"
+msgstr "  鏈結：%s"
 
 msgid "up"
 msgstr "向上鏈結"
 
-#, fuzzy
 msgid "down"
 msgstr "向下鏈結"
 
@@ -516,7 +542,6 @@ msgstr ""
 "範例：root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -563,18 +588,20 @@ msgid ""
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
 msgstr ""
-"自動啟動：有 3 個可能的選項適用於自動啟動行為：\n"
+"自動啟動：指定要從其中自動啟動的裝置。\n"
 "\n"
-"不自動啟動：啟動選項將列在 Petitboot 功能表中，但任何一個均不自動啟動。將需要"
-"使用者互動才能繼續先前的 Petitboot 功能表。如果您要讓機器等待明確的啟動選項，"
-"或者要在啟動系統之前先與 Petitboot 互動，請使用此選項\n"
+"透過選取「新增裝置」按鈕，可依 UUID、MAC 位址或裝置類型將新裝置新增至自動啟動"
+"清單。新增至開機順序之後，即可利用「向左」與「向右」鍵，變更裝置的優先順序。"
+"可利用減號鍵將裝置從開機順序中個別地移除。如果已安裝了多個作業系統映像檔，請"
+"使用此選項。\n"
 "\n"
-"從任何磁碟/網路裝置自動啟動：逾時之後，已標示為預設（透過啟動載入器配置）的任"
-"何啟動選項都將自動啟動。如果要在不變更任何啟動選項設定的情況下快速啟動系統，"
-"請使用此選項。這是一般配置。\n"
+"若要從任何裝置中自動啟動，請選取「清除與啟動任何」按鈕。在此情況下，逾時之"
+"後，已標示為預設（透過開機載入器配置）的任何啟動選項都將自動啟動。如果要在不"
+"變更任何啟動選項設定的情況下快速啟動系統，請使用此選項。這是一般配置。\n"
 "\n"
-"僅從特定的磁碟/網路裝置自動啟動：逾時之後，只有單一裝置（在這裡指定）中的啟動"
-"選項才自動啟動。如果已安裝了多個作業系統映像檔，請使用此選項。\n"
+"若要停用自動啟動，請選取將清除開機順序的「清除」按鈕。在停用自動啟動的情況"
+"下，將需要使用者互動才能繼續先前的 Petitboot 功能表。如果您要讓機器等待明確的"
+"啟動選項，或者要在啟動系統之前先與 Petitboot 互動，請使用此選項\n"
 "\n"
 "逾時：指定時間長度（以秒為單位），該時間長度是主功能表在預設啟動選項啟動之"
 "前，將顯示的時間長度。僅當已啟用自動啟動時，才顯示此選項。\n"
@@ -589,7 +616,10 @@ msgstr ""
 "選項。\n"
 "\n"
 "靜態 IP 配置：容許您指定網路介面的 IPv4 位址和網路遮罩、閘道以及 DNS 伺服器。"
-"如果您沒有 DHCP 伺服器，或者您要明確控制網路設定，請選取此選項。"
+"如果您沒有 DHCP 伺服器，或者您要明確控制網路設定，請選取此選項。\n"
+"\n"
+"磁碟 R/W：某些開機載入器配置可能需要磁碟的寫入權，以儲存資訊或更新參數（例"
+"如：GRUB2）。使用此選項來控制對磁碟的存取。\n"
 
 msgid "Usage"
 msgstr "用法"

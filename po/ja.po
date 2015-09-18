@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-09-10 14:36+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Japanese\n"
@@ -56,6 +56,38 @@ msgstr "ブートが取り消されました"
 msgid "Booting in %d sec: %s"
 msgstr "%d 秒でブートします: %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "処理 %s デバイス %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "処理 %s 完了\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "%s で DHCP イベントを処理"
+
+msgid "Processing user config"
+msgstr "ユーザー構成の処理"
+
+msgid "Processing user config complete"
+msgstr "ユーザー構成の処理の完了"
+
 msgid "Default boot cancelled"
 msgstr "デフォルトのブートが取り消されました"
 
@@ -78,7 +110,7 @@ msgid "Config file %s parsed"
 msgstr "構成ファイル %s が解析されました"
 
 msgid "None"
-msgstr "(なし)"
+msgstr "なし"
 
 msgid "Network"
 msgstr " ネットワーク"
@@ -87,25 +119,25 @@ msgid "Disk"
 msgstr "ディスク"
 
 msgid "Safe Mode"
-msgstr ""
+msgstr "セーフ・モード"
 
 msgid "Optical"
-msgstr ""
+msgstr "オプティカル"
 
 msgid "Setup Mode"
-msgstr ""
+msgstr "セットアップ・モード"
 
 msgid "Unknown"
 msgstr "不明"
 
 msgid "USB"
-msgstr ""
+msgstr "USB"
 
 msgid "CD/DVD"
 msgstr "CD/DVD"
 
 msgid "Any"
-msgstr ""
+msgstr "任意"
 
 msgid "Retrieve Config"
 msgstr "構成を取得してください"
@@ -164,9 +196,8 @@ msgstr "追加するブート・デバイスの選択"
 msgid "Waiting for configuration data..."
 msgstr "構成データを待っています..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "デバイス: "
+msgstr "デバイスの追加:"
 
 msgid "Clear"
 msgstr "消去"
@@ -174,9 +205,8 @@ msgstr "消去"
 msgid "Clear & Boot Any"
 msgstr "消去してブート"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "ブート引数:"
+msgstr "ブート順序"
 
 msgid "(None)"
 msgstr "(なし)"
@@ -189,9 +219,8 @@ msgstr "ディスク: %s [uuid: %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "net:  %s [mac: %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "デバイス: "
+msgstr "任意のデバイス:"
 
 #, c-format
 msgid "Any %s device"
@@ -252,9 +281,8 @@ msgstr "(DHCP サーバーから提供されない場合)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "「OK」を選択するとセーフ・モードが終了します"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "ディスク"
+msgstr "ディスク R/W"
 
 msgid "Prevent all writes to disk"
 msgstr "ディスクへの書き込みをすべて抑止する"
@@ -355,7 +383,7 @@ msgstr "Petitboot 言語選択"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "!オプション %d は無効です"
+msgstr "オプション %d は無効です "
 
 msgid "Unknown Device"
 msgstr "不明なデバイスです"
@@ -374,31 +402,30 @@ msgstr "ストレージ・デバイス"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID:       %s"
+msgstr "  UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " マウント位置: %s"
+msgstr "  マウント位置: %s"
 
 msgid "Network interfaces"
 msgstr "ネットワーク・インターフェース"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr " MAC:  %s"
+msgstr "  MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr " リンク: %s"
+msgstr "  リンク: %s"
 
 msgid "up"
 msgstr "アップ"
 
-#, fuzzy
 msgid "down"
-msgstr "リンクダウン"
+msgstr "ダウン"
 
 msgid "Petitboot System Information"
 msgstr "Petitboot システム情報"
@@ -529,7 +556,6 @@ msgstr ""
 "例えば、root=/dev/sda1 console=hvc0 のように入力します。\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -576,24 +602,26 @@ msgid ""
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
 msgstr ""
-"自動ブート: 自動ブートの動作に関して選択できるオプションは 3 つあります。\n"
+"自動ブート: 自動ブートを開始するデバイスを指定します。\n"
 "\n"
-"自動ブートしない: petitboot のメニューにブート・オプションがリストされます"
-"が、自動的にブートされるものはありません。petitboot のメニューより先に進むに"
-"は、ユーザーによる対話が必要になります。明示的なブート選択をマシンが待つよう"
-"にしたい場合、またはシステムのブート前に petitboot と対話したい場合は、このオ"
-"プションを使用します。\n"
+"「デバイスの追加」ボタンを選択し、新しいデバイスを UUID、MAC アドレス、デバイ"
+"ス・タイプのいずれかで自動ブート・リストに追加できます。ブート順序に追加され"
+"ると、デバイスの優先順位は「left」および「right」キーで変更できます。マイナ"
+"ス・キーを使用すると、デバイスを個別にブート順序から除外できます。このオプ"
+"ションは、複数のオペレーティング・システム・イメージをインストール済みである"
+"場合に使用します。\n"
 "\n"
-"任意のディスク/ネットワーク・デバイスから自動ブート: (ブート・ローダー構成に"
-"より) デフォルトとしてマークされているブート・オプションはすべてタイムアウト"
-"後に自動的にブートされます。ブート・オプション設定を変更せずにシステムを素早"
-"くブートしたい場合は、このオプションを使用します。これは標準の\n"
-"構成です。\n"
+"任意のデバイスから自動ブートするには、「消去してブート」ボタンを選択します。"
+"この場合、(ブート・ローダ構成により) デフォルトとしてマークが付けられている"
+"ブート・オプションは、タイムアウトの後、自動的にブートされます。このオプショ"
+"ンは、ブート・オプションの設定を変更することなく、すばやくシステムをブートし"
+"たい場合に使用します。これは標準の構成です。\n"
 "\n"
-"特定のディスク/ネットワーク・デバイスからのみ自動ブート: 単一のデバイス (ここ"
-"に指定されたもの) からのブート・オプションのみがタイムアウト後に自動的にブー"
-"トされます。複数のオペレーティング・システム・イメージが\n"
-"インストールされている場合に、このオプションを使用します。\n"
+"自動ブートを無効にするには、「消去」ボタンを選択してブート順序を消去します。"
+"自動ブートを無効にすると、petitboot メニューをさらに続行するには、ユーザーに"
+"よる対話が必要になります。明示的なブート選択をマシンが待つようにしたい場合、"
+"またはシステムのブート前に petitboot と対話したい場合は、このオプションを使用"
+"します。\n"
 "\n"
 "タイムアウト: デフォルト・ブート・オプションが開始される前にメインメニューが"
 "表示される期間 (秒) を指定します。このオプションが表示されるのは、自動ブート"
@@ -614,7 +642,11 @@ msgstr ""
 "静的 IP 構成: ネットワーク・インターフェースの IPv4 アドレスとネットワーク・"
 "マスク、ゲートウェイ、および DNS サーバーを指定できます。DHCP サーバーがない"
 "場合や、ネットワーク設定を明示的に制御したい場合に、このオプションを選択しま"
-"す。"
+"す。\n"
+"\n"
+"ディスク R/W: 特定のブート・ローダー構成では、情報を保存したり、パラメーター"
+"(例: GRUB2) を更新するために、ディスクへの書き込み権限が必要な場合がありま"
+"す。このオプションを使用して、ディスクへのアクセスを制御します。\n"
 
 msgid "Usage"
 msgstr "使用法"

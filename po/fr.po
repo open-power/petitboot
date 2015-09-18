@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-08-19 14:19+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: French\n"
@@ -56,6 +56,38 @@ msgstr "Amorçage annulé"
 msgid "Booting in %d sec: %s"
 msgstr "Amorçage dans %d sec : %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
+#, c-format
+msgid "Processing %s device %s"
+msgstr "Traitement de %s, unité %s"
+
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing %s complete\n"
+msgstr "Traitement de %s terminé\n"
+
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
+#, c-format
+msgid "Processing dhcp event on %s"
+msgstr "Traitement de l'événement dhcp sur %s"
+
+msgid "Processing user config"
+msgstr "Traitement de la configuration utilisateur "
+
+msgid "Processing user config complete"
+msgstr "Traitement de la configuration utilisateur terminé "
+
 msgid "Default boot cancelled"
 msgstr "Amorçage par défaut annulé"
 
@@ -76,6 +108,36 @@ msgstr "Impossible de router vers l'hôte %s"
 #, c-format
 msgid "Config file %s parsed"
 msgstr "Fichier de config %s analysé"
+
+msgid "None"
+msgstr "Aucun "
+
+msgid "Network"
+msgstr "Réseau"
+
+msgid "Disk"
+msgstr "Disque"
+
+msgid "Safe Mode"
+msgstr "Mode sans échec "
+
+msgid "Optical"
+msgstr "Optique "
+
+msgid "Setup Mode"
+msgstr "Mode configuration "
+
+msgid "Unknown"
+msgstr "Inconnu "
+
+msgid "USB"
+msgstr "USB"
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr "Indifférent "
 
 msgid "Retrieve Config"
 msgstr "Extraire la config"
@@ -134,9 +196,8 @@ msgstr "Sélectionner une unité d'amorçage à ajouter"
 msgid "Waiting for configuration data..."
 msgstr "Attente de données de configuration..."
 
-#, fuzzy
 msgid "Add Device"
-msgstr "Unité :"
+msgstr "Ajouter une unité : "
 
 msgid "Clear"
 msgstr "Effacer"
@@ -144,9 +205,8 @@ msgstr "Effacer"
 msgid "Clear & Boot Any"
 msgstr "Effacer & amorcer"
 
-#, fuzzy
 msgid "Boot Order:"
-msgstr "Arguments d'amorçage :"
+msgstr "Ordre d'amorçage "
 
 msgid "(None)"
 msgstr "(Aucun)"
@@ -159,9 +219,8 @@ msgstr "disque : %s [uuid : %s]"
 msgid "net:  %s [mac: %s]"
 msgstr "réseau :  %s [mac : %s]"
 
-#, fuzzy
 msgid "Any Device"
-msgstr "Unité :"
+msgstr "Toute unité : "
 
 #, c-format
 msgid "Any %s device"
@@ -222,15 +281,14 @@ msgstr "(si non fourni par le serveur DHCP)"
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Sélectionner 'OK' vous fera sortir du mode sans échec"
 
-#, fuzzy
 msgid "Disk R/W:"
-msgstr "Disque"
+msgstr "Disque Lecture/Ecriture "
 
 msgid "Prevent all writes to disk"
-msgstr "Empêcher toute écriture sur le disque "
+msgstr "Empêcher toute écriture sur le disque"
 
 msgid "Allow bootloader scripts to modify disks"
-msgstr "Autoriser les scripts de chargeur de démarrage à modifier les disques "
+msgstr "Autoriser les scripts de chargeur de démarrage à modifier les disques"
 
 msgid "Petitboot System Configuration"
 msgstr "Configuration de système Petitboot"
@@ -253,7 +311,7 @@ msgstr "Echec : amorçage de %s"
 
 #, c-format
 msgid "User item %u"
-msgstr "Objet utilisateur %u"
+msgstr "Elément utilisateur %u"
 
 msgid "Error"
 msgstr "Erreur"
@@ -327,15 +385,6 @@ msgstr "Sélection de langue pour Petitboot"
 msgid "!Invalid option %d"
 msgstr "!Option non valide %d"
 
-msgid "Disk"
-msgstr "Disque"
-
-msgid "CD/DVD"
-msgstr "CD/DVD"
-
-msgid "Network"
-msgstr "Réseau"
-
 msgid "Unknown Device"
 msgstr "Unité inconnue"
 
@@ -375,9 +424,8 @@ msgstr " liaison : %s"
 msgid "up"
 msgstr "vers le haut"
 
-#, fuzzy
 msgid "down"
-msgstr "liaison vers le bas"
+msgstr "vers le bas "
 
 msgid "Petitboot System Information"
 msgstr "Informations système Petitboot"
@@ -436,7 +484,8 @@ msgstr ""
 "système, sélectionnez l'option 'Réanalyser les unités'.\n"
 "\n"
 "Pour extraire de nouvelles options d'amorçage d'un fichier de configuration "
-"distant, sélectionnez l'option 'Récupérer la config depuis une URL'.\n"
+"système, sélectionnez 'Réanalyser l'option 'Récupérer la config depuis une "
+"URL'.\n"
 "\n"
 "Pour fermer l'interface Petitboot, tapez X (exit).\n"
 
@@ -481,9 +530,8 @@ msgstr ""
 "\n"
 "Unité : Il s'agit d'une liste d'unités par bloc disponibles sur le système. "
 "Sélectionnez l'unité qui contient vos ressources d'amorçage (noyau, initrd "
-"et arborescence d'unités), ou \"Indiquer des chemins/adresses URL "
-"manuellement\" pour utiliser des URL complètes vers les ressources "
-"d'amorçage.\n"
+"et arborescence d'unités) ou \"Indiquer des chemins/adresses URL manuellement"
+"\" pour utiliser des URL complètes vers les ressources d'amorçage.\n"
 "\n"
 "Noyau : Entrez le chemin d'accès au noyau pour amorcer. Cette zone est "
 "obligatoire. Il doit s'agir d'une image de noyau que l'utilitaire kexec peut "
@@ -505,7 +553,6 @@ msgstr ""
 "Exemple : root=/dev/sda1 console=hvc0\n"
 "\n"
 
-#, fuzzy
 msgid ""
 "Autoboot: Specify which devices to autoboot from.\n"
 "\n"
@@ -546,28 +593,35 @@ msgid ""
 "Static IP configuration: Allows you to specify an IPv4 address and network "
 "mask, gateway, and a DNS server or servers for a network interface. Select "
 "this option if you do not have a DHCP server, or want explicit control of "
-"network settings."
+"network settings.\n"
+"\n"
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
 msgstr ""
-"Amorçage automatique : Trois options sont possibles pour le comportement "
-"d'amorçage automatique :\n"
+"Amorçage automatique : spécifiez les unités à partir desquelles effectuer "
+"l'amorçage automatique.\n"
 "\n"
-"Pas d'amorçage automatique : Des options d'amorçage sent répertoriées dans "
-"le menu Petitboot, mais aucune ne sera lancée automatiquement. Une "
-"interaction utilisateur est obligatoire pour continuer au-delà du menu "
-"Petitboot. Utilisez cette option si vous souhaitez que la machine attende "
-"une sélection d'amorçage explicite, ou si vous souhaitez interagir avec "
-"Petitboot avant d'amorcer le système\n"
+"Le bouton 'Ajouter une unité' permet d'ajouter de nouvelles unités à la "
+"liste d'amorçage automatique, par UUID, adresse MAC ou type d'unité. Après "
+"l'ajout, la priorité des unités peut être changée avec les touches 'gauche' "
+"et 'droite'. Les unités peuvent être retirées individuellement de l'ordre "
+"d'amorçage avec la touche moins. Utilisez cette option si plusieurs images "
+"de système d'exploitation sont installées.\n"
 "\n"
-"Amorçage automatique depuis toute unité de disque/réseau : toute option "
-"d'amorçage marquée comme option par défaut (par la configuration du chargeur "
-"de démarrage) sera lancée automatiquement après un délai d'attente. Utilisez "
-"cette option si vous souhaitez amorcer rapidement le système sans modifier "
-"les paramètres d'option d'amorçage. Il s'agit de la configuration typique.\n"
+"Pour effectuer l'amorçage automatique à partir de n'importe quelle unité, "
+"cliquez sur Effacer & amorcer. Dans ce cas, toute option d'amorçage définie "
+"comme option par défaut (par la configuration du chargeur de démarrage) sera "
+"amorçée automatiquement après un délai d'attente. Utilisez cette option pour "
+"amorcer votre système rapidement sans changer les paramètres des options "
+"d'amorçage. Il s'agit de la configuration classique d'amorçage.\n"
 "\n"
-"Amorçage automatique depuis une unité de disque/réseau spécifique : seules "
-"les options d'amorçage depuis une unité unique (spécifiée ici) seront "
-"lancées automatiquement après un délai d'attente. Utilisez cette option si "
-"plusieurs images de système d'exploitation sont installées.\n"
+"Pour désactiver l'amorçage automatique, cliquez sur 'Effacer' pour effacer "
+"l'ordre d'amorçage. Lorsque l'amorçage automatique est désactivé, "
+"l'utilisateur doit intervenir pour continuer au-delà du menu Petitboot. "
+"Utilisez cette option si vous voulez que la machine attende une sélection "
+"d'amorçage explicite ou si vous voulez interagir avec Petitboot avant "
+"l'amorçage du système.\n"
 "\n"
 "Délai d'attente : Indiquez le temps, en secondes, pendant lequel le menu "
 "principal sera affiché avant le lancement de l'option d'amorçage par défaut. "
@@ -582,13 +636,18 @@ msgstr ""
 "DHCP sur une interface spécifique : Affecte automatiquement des adresses IP "
 "à l'interface réseau sélectionnée. Les autres interfaces ne sont pas "
 "configurées. Sélectionnez cette option si vous disposez de plusieurs "
-"serveurs DHCP sur différentes interfaces, mais que vous souhaitez ne "
-"configurer qu'une seule interface lors de l'amorçage.\n"
+"serveurs DHCP sur différentes interfaces, mais que vous voulez n'en "
+"configurer qu'une lors de l'amorçage.\n"
 "\n"
 "Configuration IP statique : Permet d'indiquer une adresse, un masque de "
-"réseau et une passerelle IPv4, ainsi qu'un ou plusieurs serveurs DNS pour "
+"réseauet une passerelle IPv4, ainsi qu'un ou plusieurs serveurs DNS pour "
 "l'interface réseau. Sélectionnez cette option si vous n'avez pas de serveur "
-"DHCP ou si vous souhaitez un contrôle explicite sur les paramètres réseau."
+"DHCP ou si vous souhaitez un contrôle explicite des paramètres réseau.\n"
+"\n"
+"Disque Lecture/Ecriture : certaines configs de chargeur d'amorçage peuvent "
+"requérir l'accès en écriture aux disques pour sauvegarder des informations "
+"ou  mettre à jour des paramètres (ex : GRUB2). Utilisez cette option pour "
+"contrôler l'accès aux disques.\n"
 
 msgid "Usage"
 msgstr "Utilisation"
