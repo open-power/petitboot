@@ -198,7 +198,7 @@ msgid "Waiting for configuration data..."
 msgstr "Ожидание данных конфигурации..."
 
 msgid "Add Device"
-msgstr "Добавить устройство:"
+msgstr "Добавить устройство"
 
 msgid "Clear"
 msgstr "Очистить"
@@ -207,7 +207,7 @@ msgid "Clear & Boot Any"
 msgstr "Очистить и загрузить все"
 
 msgid "Boot Order:"
-msgstr "Порядок загрузки"
+msgstr "Порядок загрузки:"
 
 msgid "(None)"
 msgstr "(Нет)"
@@ -221,7 +221,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "сеть:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "Любое устройство:"
+msgstr "Любое устройство"
 
 #, c-format
 msgid "Any %s device"
@@ -271,7 +271,7 @@ msgid "(eg. 192.168.0.1)"
 msgstr "(eg. 192.168.0.1)"
 
 msgid "DNS Server(s):"
-msgstr "Сервер(серверы) DNS:"
+msgstr "Серверы DNS:"
 
 msgid "(eg. 192.168.0.2)"
 msgstr "(eg. 192.168.0.2)"

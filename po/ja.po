@@ -197,7 +197,7 @@ msgid "Waiting for configuration data..."
 msgstr "構成データを待っています..."
 
 msgid "Add Device"
-msgstr "デバイスの追加:"
+msgstr "デバイスの追加"
 
 msgid "Clear"
 msgstr "消去"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "消去してブート"
 
 msgid "Boot Order:"
-msgstr "ブート順序"
+msgstr "ブート順序:"
 
 msgid "(None)"
 msgstr "(なし)"
@@ -220,7 +220,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "net:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "任意のデバイス:"
+msgstr "任意のデバイス"
 
 #, c-format
 msgid "Any %s device"
@@ -383,7 +383,7 @@ msgstr "Petitboot 言語選択"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "オプション %d は無効です "
+msgstr "オプション %d は無効です"
 
 msgid "Unknown Device"
 msgstr "不明なデバイスです"
@@ -402,24 +402,24 @@ msgstr "ストレージ・デバイス"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  マウント位置: %s"
+msgstr " マウント位置: %s"
 
 msgid "Network interfaces"
 msgstr "ネットワーク・インターフェース"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  リンク: %s"
+msgstr " リンク: %s"
 
 msgid "up"
 msgstr "アップ"

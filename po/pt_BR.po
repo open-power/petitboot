@@ -197,7 +197,7 @@ msgid "Waiting for configuration data..."
 msgstr "Aguardando dados de configuração..."
 
 msgid "Add Device"
-msgstr "Incluir dispositivo:"
+msgstr "Incluir dispositivo"
 
 msgid "Clear"
 msgstr "Limpar"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "Limpar e inicializar qualquer um"
 
 msgid "Boot Order:"
-msgstr "Ordem de inicialização"
+msgstr "Ordem de inicialização:"
 
 msgid "(None)"
 msgstr "(Nenhum)"
@@ -220,7 +220,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "rede:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "Qualquer dispositivo:"
+msgstr "Qualquer dispositivo"
 
 #, c-format
 msgid "Any %s device"

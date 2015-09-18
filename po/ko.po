@@ -197,7 +197,7 @@ msgid "Waiting for configuration data..."
 msgstr "구성 데이터 대기 중..."
 
 msgid "Add Device"
-msgstr "장치 추가:"
+msgstr "장치 추가"
 
 msgid "Clear"
 msgstr "선택 취소"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "선택 취소 & 모든 부트"
 
 msgid "Boot Order:"
-msgstr "부팅 순서"
+msgstr "부팅 순서:"
 
 msgid "(None)"
 msgstr "(없음)"
@@ -220,7 +220,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "네트:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "임의의 장치:"
+msgstr "임의의 장치"
 
 #, c-format
 msgid "Any %s device"
@@ -311,7 +311,7 @@ msgstr "실패: %s 부트"
 
 #, c-format
 msgid "User item %u"
-msgstr "User item %u"
+msgstr "사용자 항목 %u"
 
 msgid "Error"
 msgstr "오류"
@@ -401,24 +401,24 @@ msgstr "스토리지 장치"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  마운트 위치: %s"
+msgstr " 마운트 위치: %s"
 
 msgid "Network interfaces"
 msgstr "네트워크 인터페이스"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  링크: %s"
+msgstr " 링크: %s"
 
 msgid "up"
 msgstr "연결"

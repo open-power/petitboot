@@ -197,7 +197,7 @@ msgid "Waiting for configuration data..."
 msgstr "正在等待配置数据..."
 
 msgid "Add Device"
-msgstr "添加设备："
+msgstr "添加设备"
 
 msgid "Clear"
 msgstr "清除"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "清除并引导任何项"
 
 msgid "Boot Order:"
-msgstr "引导顺序"
+msgstr "引导顺序："
 
 msgid "(None)"
 msgstr "（无）"
@@ -220,7 +220,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "网路：%s [mac：%s]"
 
 msgid "Any Device"
-msgstr "任何设备："
+msgstr "任何设备"
 
 #, c-format
 msgid "Any %s device"
@@ -401,18 +401,18 @@ msgstr "存储设备"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID：       %s"
+msgstr " UUID：       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  安装于：%s"
+msgstr " 安装于：%s"
 
 msgid "Network interfaces"
 msgstr "网络接口"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC：  %s"
+msgstr " MAC：  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.

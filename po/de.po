@@ -199,7 +199,7 @@ msgid "Waiting for configuration data..."
 msgstr "Warten auf Konfigurationsdaten..."
 
 msgid "Add Device"
-msgstr "Einheit hinzufügen:"
+msgstr "Einheit hinzufügen"
 
 msgid "Clear"
 msgstr "Löschen"
@@ -222,7 +222,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "Netz:  %s [MAC: %s]"
 
 msgid "Any Device"
-msgstr "Jede Einheit:"
+msgstr "Jede Einheit"
 
 #, c-format
 msgid "Any %s device"
@@ -284,7 +284,7 @@ msgid "Selecting 'OK' will exit safe mode"
 msgstr "Durch die Auswahl von 'OK' wird der abgesicherte Modus beendet"
 
 msgid "Disk R/W:"
-msgstr "Lese-/Schreibvorgang auf Platte"
+msgstr "Lese-/Schreibvorgang auf Platte:"
 
 msgid "Prevent all writes to disk"
 msgstr "Alle Schreibvorgänge auf die Platte verhindern"

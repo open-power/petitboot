@@ -119,16 +119,16 @@ msgid "Disk"
 msgstr "Disque"
 
 msgid "Safe Mode"
-msgstr "Mode sans échec "
+msgstr "Mode sans échec"
 
 msgid "Optical"
-msgstr "Optique "
+msgstr "Optique"
 
 msgid "Setup Mode"
-msgstr "Mode configuration "
+msgstr "Mode configuration"
 
 msgid "Unknown"
-msgstr "Inconnu "
+msgstr "Inconnu"
 
 msgid "USB"
 msgstr "USB"
@@ -137,7 +137,7 @@ msgid "CD/DVD"
 msgstr "CD/DVD"
 
 msgid "Any"
-msgstr "Indifférent "
+msgstr "Indifférent"
 
 msgid "Retrieve Config"
 msgstr "Extraire la config"
@@ -197,7 +197,7 @@ msgid "Waiting for configuration data..."
 msgstr "Attente de données de configuration..."
 
 msgid "Add Device"
-msgstr "Ajouter une unité : "
+msgstr "Ajouter une unité :"
 
 msgid "Clear"
 msgstr "Effacer"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "Effacer & amorcer"
 
 msgid "Boot Order:"
-msgstr "Ordre d'amorçage "
+msgstr "Ordre d'amorçage"
 
 msgid "(None)"
 msgstr "(Aucun)"
@@ -220,7 +220,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "réseau :  %s [mac : %s]"
 
 msgid "Any Device"
-msgstr "Toute unité : "
+msgstr "Toute unité :"
 
 #, c-format
 msgid "Any %s device"
@@ -282,7 +282,7 @@ msgid "Selecting 'OK' will exit safe mode"
 msgstr "Sélectionner 'OK' vous fera sortir du mode sans échec"
 
 msgid "Disk R/W:"
-msgstr "Disque Lecture/Ecriture "
+msgstr "Disque Lecture/Ecriture"
 
 msgid "Prevent all writes to disk"
 msgstr "Empêcher toute écriture sur le disque"

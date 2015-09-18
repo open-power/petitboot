@@ -197,7 +197,7 @@ msgid "Waiting for configuration data..."
 msgstr "正在等待配置資料..."
 
 msgid "Add Device"
-msgstr "新增裝置："
+msgstr "新增裝置"
 
 msgid "Clear"
 msgstr "清除"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "清除並啟動任意項"
 
 msgid "Boot Order:"
-msgstr "開機順序"
+msgstr "開機順序："
 
 msgid "(None)"
 msgstr "（無）"
@@ -220,7 +220,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "網路：%s [MAC：%s]"
 
 msgid "Any Device"
-msgstr "任何裝置："
+msgstr "任何裝置"
 
 #, c-format
 msgid "Any %s device"
@@ -401,11 +401,11 @@ msgstr "儲存裝置"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID：      %s"
+msgstr " UUID：      %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  裝載位置：%s"
+msgstr " 裝載位置：%s"
 
 msgid "Network interfaces"
 msgstr "網路介面"
@@ -418,7 +418,7 @@ msgstr "  MAC：%s"
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  鏈結：%s"
+msgstr " 鏈結：%s"
 
 msgid "up"
 msgstr "向上鏈結"

@@ -197,7 +197,7 @@ msgid "Waiting for configuration data..."
 msgstr "Esperando datos de configuración..."
 
 msgid "Add Device"
-msgstr "Añadir dispositivo:"
+msgstr "Añadir dispositivo"
 
 msgid "Clear"
 msgstr "Borrar"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "Borrar y realizar cualquier arranque"
 
 msgid "Boot Order:"
-msgstr "Orden de arranque"
+msgstr "Orden de arranque:"
 
 msgid "(None)"
 msgstr "(Ninguno)"
@@ -282,7 +282,7 @@ msgid "Selecting 'OK' will exit safe mode"
 msgstr "Si selecciona 'Aceptar' saldrá de la modalidad segura"
 
 msgid "Disk R/W:"
-msgstr "Lectura/Escritura en disco"
+msgstr "Lectura/Escritura en disco:"
 
 msgid "Prevent all writes to disk"
 msgstr "Impide todas las escrituras en disco"
@@ -401,24 +401,24 @@ msgstr "Dispositivos de almacenamiento"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  montado en: %s"
+msgstr " montado en: %s"
 
 msgid "Network interfaces"
 msgstr "Interfaces de red"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
 msgid " link: %s"
-msgstr "  enlace: %s"
+msgstr " enlace: %s"
 
 msgid "up"
 msgstr "activo"
