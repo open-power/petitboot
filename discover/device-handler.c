@@ -897,7 +897,7 @@ out:
 	 * TRANSLATORS: the format specifier in this string is a Linux
 	 * device identifier, like 'sda1'
 	 */
-	status->message = talloc_asprintf(status,_("Processing %s complete\n"),
+	status->message = talloc_asprintf(status,_("Processing %s complete"),
 				dev->device->id);
 	boot_status(handler, status);
 
@@ -936,7 +936,7 @@ int device_handler_dhcp(struct device_handler *handler,
 	 * TRANSLATORS: this format specifier will be the name of a network
 	 * device, like 'eth0'.
 	 */
-	status->message = talloc_asprintf(status,_("Processing %s complete\n"),
+	status->message = talloc_asprintf(status,_("Processing %s complete"),
 				dev->device->id);
 	boot_status(handler, status);
 

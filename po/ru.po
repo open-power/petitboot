@@ -73,8 +73,8 @@ msgstr "Выполняется обработка %s устройства %s"
 #. device, like 'eth0'.
 #.
 #, c-format
-msgid "Processing %s complete\n"
-msgstr "Обработка %s завершена\n"
+msgid "Processing %s complete"
+msgstr "Обработка %s завершена"
 
 #. TRANSLATORS: this format specifier will be the name of a network
 #. device, like 'eth0'.

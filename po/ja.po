@@ -72,8 +72,8 @@ msgstr "処理 %s デバイス %s"
 #. device, like 'eth0'.
 #.
 #, c-format
-msgid "Processing %s complete\n"
-msgstr "処理 %s 完了\n"
+msgid "Processing %s complete"
+msgstr "処理 %s 完了"
 
 #. TRANSLATORS: this format specifier will be the name of a network
 #. device, like 'eth0'.

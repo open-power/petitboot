@@ -72,8 +72,8 @@ msgstr "Processando %s dispositivo %s"
 #. device, like 'eth0'.
 #.
 #, c-format
-msgid "Processing %s complete\n"
-msgstr "Processamento do %s foi concluído\n"
+msgid "Processing %s complete"
+msgstr "Processamento do %s foi concluído"
 
 #. TRANSLATORS: this format specifier will be the name of a network
 #. device, like 'eth0'.

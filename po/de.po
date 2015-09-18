@@ -72,8 +72,8 @@ msgstr "Verarbeitung von %s Einheit %s"
 #. device, like 'eth0'.
 #.
 #, c-format
-msgid "Processing %s complete\n"
-msgstr "Verarbeitung %s abgeschlossen\n"
+msgid "Processing %s complete"
+msgstr "Verarbeitung %s abgeschlossen"
 
 #. TRANSLATORS: this format specifier will be the name of a network
 #. device, like 'eth0'.

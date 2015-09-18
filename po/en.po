@@ -72,7 +72,7 @@ msgstr ""
 #. device, like 'eth0'.
 #.
 #, c-format
-msgid "Processing %s complete\n"
+msgid "Processing %s complete"
 msgstr ""
 
 #. TRANSLATORS: this format specifier will be the name of a network
