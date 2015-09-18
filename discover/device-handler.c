@@ -862,6 +862,12 @@ int device_handler_discover(struct device_handler *handler,
 
 	status = talloc_zero(handler, struct boot_status);
 	status->type = BOOT_STATUS_INFO;
+	/*
+	 * TRANSLATORS: this string will be passed the type and identifier
+	 * of the device. For example, the first parameter could be "Disk",
+	 * (which will be translated accordingly) and the second a Linux device
+	 * identifier like 'sda1' (which will not be translated)
+	 */
 	status->message = talloc_asprintf(status, _("Processing %s device %s"),
 				device_type_display_name(dev->device->type),
 				dev->device->id);
@@ -887,6 +893,10 @@ int device_handler_discover(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 out:
+	/*
+	 * TRANSLATORS: the format specifier in this string is a Linux
+	 * device identifier, like 'sda1'
+	 */
 	status->message = talloc_asprintf(status,_("Processing %s complete\n"),
 				dev->device->id);
 	boot_status(handler, status);
@@ -906,6 +916,10 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	status = talloc_zero(handler, struct boot_status);
 	status->type = BOOT_STATUS_INFO;
+	/*
+	 * TRANSLATORS: this format specifier will be the name of a network
+	 * device, like 'eth0'.
+	 */
 	status->message = talloc_asprintf(status, _("Processing dhcp event on %s"),
 				dev->device->id);
 	boot_status(handler, status);
@@ -918,6 +932,10 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	device_handler_discover_context_commit(handler, ctx);
 
+	/*
+	 * TRANSLATORS: this format specifier will be the name of a network
+	 * device, like 'eth0'.
+	 */
 	status->message = talloc_asprintf(status,_("Processing %s complete\n"),
 				dev->device->id);
 	boot_status(handler, status);

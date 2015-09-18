@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-09-14 10:17+1000\n"
+"POT-Creation-Date: 2015-09-16 10:25+0800\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: English\n"
@@ -56,14 +56,28 @@ msgstr "Boot cancelled"
 msgid "Booting in %d sec: %s"
 msgstr "Booting in %d sec: %s"
 
+#. TRANSLATORS: this string will be passed the type and identifier
+#. of the device. For example, the first parameter could be "Disk",
+#. (which will be translated accordingly) and the second a Linux device
+#. identifier like 'sda1' (which will not be translated)
+#.
 #, c-format
 msgid "Processing %s device %s"
 msgstr ""
 
+#. TRANSLATORS: the format specifier in this string is a Linux
+#. device identifier, like 'sda1'
+#.
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
 #, c-format
 msgid "Processing %s complete\n"
 msgstr ""
 
+#. TRANSLATORS: this format specifier will be the name of a network
+#. device, like 'eth0'.
+#.
 #, c-format
 msgid "Processing dhcp event on %s"
 msgstr ""
