@@ -3,6 +3,7 @@
 
 #include <fcntl.h>
 #include <string.h>
+#include <locale.h>
 
 #include <log/log.h>
 #include <file/file.h>
@@ -102,6 +103,8 @@ static bool config_debug_on_cmdline(void)
 
 void config_set_defaults(struct config *config)
 {
+	const char *lang;
+
 	config->autoboot_enabled = true;
 	config->autoboot_timeout_sec = 10;
 	config->autoboot_enabled = true;
@@ -110,7 +113,6 @@ void config_set_defaults(struct config *config)
 	config->network.dns_servers = NULL;
 	config->network.n_dns_servers = 0;
 	config->safe_mode = false;
-	config->lang = NULL;
 	config->allow_writes = true;
 	config->disable_snapshots = false;
 
@@ -126,6 +128,14 @@ void config_set_defaults(struct config *config)
 	config->ipmi_bootdev_persistent = false;
 
 	config->debug = config_debug_on_cmdline();
+
+	lang = setlocale(LC_ALL, NULL);
+	pb_log("lang: %s\n", lang);
+	if (lang && strlen(lang))
+		config->lang = talloc_strdup(config, lang);
+	else
+		config->lang = NULL;
+
 }
 
 int platform_init(void *ctx)
