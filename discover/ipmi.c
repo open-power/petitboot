@@ -107,11 +107,21 @@ int ipmi_transaction(struct ipmi *ipmi, uint8_t netfn, uint8_t cmd,
 {
 	struct timeval start, now, delta;
 	struct pollfd pollfds[1];
+	struct flock lock;
 	int expired_ms, rc;
+
+	memset(&lock, 0, sizeof(lock));
+	lock.l_type = F_WRLCK;
+	lock.l_whence = SEEK_SET;
+	rc = fcntl(ipmi->fd, F_SETLKW, &lock);
+	if (rc == -1) {
+		pb_log("IPMI: error locking IPMI device: %m\n");
+		return rc;
+	}
 
 	rc = ipmi_send(ipmi, netfn, cmd, req_buf, req_len);
 	if (rc)
-		return rc;
+		goto out;
 
 	pollfds[0].fd = ipmi->fd;
 	pollfds[0].events = POLLIN;
@@ -132,11 +142,13 @@ int ipmi_transaction(struct ipmi *ipmi, uint8_t netfn, uint8_t cmd,
 		if (rc == 0) {
 			pb_log("IPMI: timeout waiting for response "
 					"(netfn %d, cmd %d)\n", netfn, cmd);
+			rc = -1;
 			break;
 		}
 
 		if (!(pollfds[0].revents & POLLIN)) {
 			pb_log("IPMI: unexpected fd status from poll?\n");
+			rc = -1;
 			break;
 		}
 
@@ -156,17 +168,23 @@ int ipmi_transaction(struct ipmi *ipmi, uint8_t netfn, uint8_t cmd,
 				expired_ms = (delta.tv_sec * 1000) +
 						(delta.tv_usec / 1000);
 
-				if (expired_ms >= timeout_ms)
+				if (expired_ms >= timeout_ms) {
+					rc = -1;
 					break;
+				}
 			}
 		} else {
 			pb_debug("IPMI: netfn(%x->%x), cmd(%x->%x)\n",
 					netfn, resp_netfn, cmd, resp_cmd);
-			return 0;
+			rc = 0;
+			goto out;
 		}
 	}
 
-	return -1;
+out:
+	lock.l_type = F_UNLCK;
+	fcntl(ipmi->fd, F_SETLKW, &lock);
+	return rc ? -1 : 0;
 }
 
 static int ipmi_destroy(void *p)
