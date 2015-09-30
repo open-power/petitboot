@@ -65,7 +65,7 @@ struct ramdisk_device {
 	char		*snapshot;
 	char		*origin;
 	char		*base;
-	unsigned int	sectors;
+	uint64_t	sectors;
 };
 
 struct device_handler *device_handler_init(struct discover_server *server,

@@ -11,17 +11,17 @@
 #define MERGE_INTERVAL_US	200000
 
 struct target {
-	long unsigned int	start_sector;
-	long unsigned int	end_sector;
-	char			*ttype;
-	char			*params;
+	uint64_t	start_sector;
+	uint64_t	end_sector;
+	char		*ttype;
+	char		*params;
 };
 
 /* Return the number of sectors on a block device. Zero represents an error */
-static unsigned int get_block_sectors(struct discover_device *device)
+static uint64_t get_block_sectors(struct discover_device *device)
 {
+	unsigned long long sectors;
 	const char *tmp;
-	long unsigned int sectors;
 
 	tmp = discover_device_get_param(device, "ID_PART_ENTRY_SIZE");
 	if (!tmp) {
@@ -31,14 +31,14 @@ static unsigned int get_block_sectors(struct discover_device *device)
 	}
 
 	errno = 0;
-	sectors = strtoul(tmp, NULL, 0);
+	sectors = strtoull(tmp, NULL, 0);
 	if (errno) {
 		pb_debug("Error reading sector count for %s: %s\n",
 		       device->device_path, strerror(errno));
 		sectors = 0;
 	}
 
-	return sectors;
+	return (uint64_t)sectors;
 }
 
 /*
@@ -60,7 +60,7 @@ static inline int set_cookie(struct dm_task *task, uint32_t *cookie)
 
 static bool snapshot_merge_complete(const char *dm_name)
 {
-	long long unsigned int sectors, meta_sectors;
+	uint64_t sectors, meta_sectors;
 	char *params = NULL,  *target_type = NULL;
 	uint64_t start, length;
 	struct dm_task *task;
@@ -97,14 +97,16 @@ static bool snapshot_merge_complete(const char *dm_name)
 
 	/* Merge is complete when metadata sectors are the only sectors
 	 * allocated - see Documentation/device-mapper/snapshot.txt */
-	n = sscanf(params, "%llu/%*u %llu", &sectors, &meta_sectors);
+	n = sscanf(params, "%" SCNu64 "/%*u %" SCNu64,
+			&sectors, &meta_sectors);
 	if (n != 2) {
 		pb_log("%s unexpected status: '%s'\n", dm_name, params);
 		goto out;
 	}
 	result = sectors == meta_sectors;
 
-	pb_debug("%s merging; %llu sectors, %llu metadata sectors\n",
+	pb_debug("%s merging; %" PRIu64 " sectors, %" PRIu64
+			" metadata sectors\n",
 		 dm_name, sectors, meta_sectors);
 
 out:
