@@ -22,7 +22,7 @@
 static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
 static const char *devtree_dir = "/proc/device-tree/";
-static const int ipmi_timeout = 500; /* milliseconds */
+static const int ipmi_timeout = 5000; /* milliseconds. */
 
 struct param {
 	char			*name;
