@@ -179,7 +179,7 @@ static int write_nvram(struct platform_powerpc *platform)
 	struct process *process;
 	struct param *param;
 	const char *argv[6];
-	int rc;
+	int rc = 0;
 
 	argv[0] = "nvram";
 	argv[1] = "--update-config";
