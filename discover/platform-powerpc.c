@@ -759,9 +759,8 @@ static int read_bootdev_sysparam(const char *name, uint8_t *val)
 	char path[50];
 	int fd, rc;
 
-	strcpy(path, sysparams_dir);
-	assert(strlen(name) < sizeof(path) - strlen(path));
-	strcat(path, name);
+	assert(strlen(sysparams_dir) + strlen(name) < sizeof(path));
+	snprintf(path, sizeof(path), "%s%s", sysparams_dir, name);
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
@@ -795,9 +794,8 @@ static int write_bootdev_sysparam(const char *name, uint8_t val)
 	char path[50];
 	int fd, rc;
 
-	strcpy(path, sysparams_dir);
-	assert(strlen(name) < sizeof(path) - strlen(path));
-	strcat(path, name);
+	assert(strlen(sysparams_dir) + strlen(name) < sizeof(path));
+	snprintf(path, sizeof(path), "%s%s", sysparams_dir, name);
 
 	fd = open(path, O_WRONLY);
 	if (fd < 0) {
