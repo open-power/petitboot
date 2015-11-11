@@ -181,7 +181,7 @@ static int discover_client_process(void *arg)
 		rc = pb_protocol_deserialise_device(dev, message);
 		if (rc) {
 			pb_log("%s: no device?\n", __func__);
-			return 0;
+			goto out;
 		}
 
 		device_add(client, dev);
@@ -192,7 +192,7 @@ static int discover_client_process(void *arg)
 		rc = pb_protocol_deserialise_boot_option(opt, message);
 		if (rc) {
 			pb_log("%s: no boot_option?\n", __func__);
-			return 0;
+			goto out;
 		}
 
 		boot_option_add(client, opt);
@@ -201,7 +201,7 @@ static int discover_client_process(void *arg)
 		dev_id = pb_protocol_deserialise_string(ctx, message);
 		if (!dev_id) {
 			pb_log("%s: no device id?\n", __func__);
-			return 0;
+			goto out;
 		}
 		device_remove(client, dev_id);
 		break;
@@ -211,7 +211,7 @@ static int discover_client_process(void *arg)
 		rc = pb_protocol_deserialise_boot_status(status, message);
 		if (rc) {
 			pb_log("%s: invalid status message?\n", __func__);
-			return 0;
+			goto out;
 		}
 		update_status(client, status);
 		break;
@@ -221,7 +221,7 @@ static int discover_client_process(void *arg)
 		rc = pb_protocol_deserialise_system_info(sysinfo, message);
 		if (rc) {
 			pb_log("%s: invalid sysinfo message?\n", __func__);
-			return 0;
+			goto out;
 		}
 		update_sysinfo(client, sysinfo);
 		break;
@@ -231,7 +231,7 @@ static int discover_client_process(void *arg)
 		rc = pb_protocol_deserialise_config(config, message);
 		if (rc) {
 			pb_log("%s: invalid config message?\n", __func__);
-			return 0;
+			goto out;
 		}
 		update_config(client, config);
 		break;
@@ -239,6 +239,7 @@ static int discover_client_process(void *arg)
 		pb_log("%s: unknown action %d\n", __func__, message->action);
 	}
 
+out:
 	talloc_free(ctx);
 
 	return 0;
