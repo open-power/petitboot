@@ -1224,10 +1224,8 @@ void widgetset_post(struct nc_widgetset *set)
 	post_form(set->form);
 	form_driver(set->form, REQ_END_FIELD);
 
-	if (set->cur_field) {
+	if (set->cur_field)
 		set_current_field(set->form, set->cur_field);
-		field = set->cur_field;
-	}
 
 	field = current_field(set->form);
 	widget = field_userptr(field);
