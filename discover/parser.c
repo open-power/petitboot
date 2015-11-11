@@ -62,6 +62,7 @@ int parser_check_dir(struct discover_context *ctx,
 	path = local_path(ctx, dev, dirname);
 
 	rc = stat(path, &statbuf);
+	talloc_free(path);
 	if (!rc)
 		return -1;
 
