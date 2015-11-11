@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <talloc/talloc.h>
 #include <system/system.h>
@@ -49,9 +51,12 @@ char *join_paths(void *alloc_ctx, const char *a, const char *b)
 static char *local_name(void *ctx)
 {
 	char *ret, tmp[] = "/tmp/pb-XXXXXX";
+	mode_t oldmask;
 	int fd;
 
+	oldmask = umask(0644);
 	fd = mkstemp(tmp);
+	umask(oldmask);
 
 	if (fd < 0)
 		return NULL;
