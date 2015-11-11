@@ -438,7 +438,6 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 {
 	struct autoboot_option *opt, *new = NULL;
 	char *pos, *end, *old_dev = NULL;
-	const char delim = ' ';
 	unsigned int n_new = 0;
 	const char *val;
 	bool conflict;
@@ -469,11 +468,9 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 
 		if (read_bootdev(config, &pos, opt)) {
 			pb_log("bootdev config is in an unknown format "
-			       "(expected uuid:... or mac:...)");
+			       "(expected uuid:... or mac:...)\n");
 			talloc_free(opt);
-			if (strchr(pos, delim))
-				continue;
-			return;
+			continue;
 		}
 
 		new = talloc_realloc(config, new, struct autoboot_option,
