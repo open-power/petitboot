@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-09-16 10:25+0800\n"
+"POT-Creation-Date: 2015-11-11 14:01+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: French\n"
@@ -143,7 +143,7 @@ msgid "Retrieve Config"
 msgstr "Extraire la config"
 
 msgid "Configuration URL:"
-msgstr "URL de configuration :"
+msgstr "URL de configuration:"
 
 msgid "OK"
 msgstr "OK"
@@ -167,19 +167,19 @@ msgid "Specify paths/URLs manually"
 msgstr "Indiquer des chemins/adresses URL manuellement"
 
 msgid "Device:"
-msgstr "Unité :"
+msgstr "Unité:"
 
 msgid "Kernel:"
-msgstr "Noyau :"
+msgstr "Noyau:"
 
 msgid "Initrd:"
-msgstr "Initrd :"
+msgstr "Initrd:"
 
 msgid "Device tree:"
-msgstr "Arborescence d'unités :"
+msgstr "Arborescence d'unités:"
 
 msgid "Boot arguments:"
-msgstr "Arguments d'amorçage :"
+msgstr "Arguments d'amorçage:"
 
 msgid "Petitboot Option Editor"
 msgstr "Editeur d'option Petitboot"
@@ -206,7 +206,7 @@ msgid "Clear & Boot Any"
 msgstr "Effacer & amorcer"
 
 msgid "Boot Order:"
-msgstr "Ordre d'amorçage :"
+msgstr "Amorçage:"
 
 msgid "(None)"
 msgstr "(Aucun)"
@@ -227,7 +227,7 @@ msgid "Any %s device"
 msgstr "N'importe quelle unité %s"
 
 msgid "Timeout:"
-msgstr "Délai attente :"
+msgstr "Délai attente:"
 
 msgid "seconds"
 msgstr "secondes"
@@ -237,10 +237,10 @@ msgid "%s IPMI boot option: %s"
 msgstr "%s Option d'amorçage IPMI : %s"
 
 msgid "Clear option:"
-msgstr "Option d'effacement :"
+msgstr "Option d'effacement:"
 
 msgid "Network:"
-msgstr "Réseau :"
+msgstr "Réseau:"
 
 msgid "DHCP on all active interfaces"
 msgstr "DHCP sur toutes les interfaces actives"
@@ -258,19 +258,19 @@ msgid "link down"
 msgstr "liaison vers le bas"
 
 msgid "IP/mask:"
-msgstr "IP/masque :"
+msgstr "IP/masque:"
 
 msgid "(eg. 192.168.0.10 / 24)"
 msgstr "(par exemple 192.168.0.10 / 24)"
 
 msgid "Gateway:"
-msgstr "Passerelle :"
+msgstr "Passerelle:"
 
 msgid "(eg. 192.168.0.1)"
 msgstr "(par exemple 192.168.0.1)"
 
 msgid "DNS Server(s):"
-msgstr "Serveurs DNS :"
+msgstr "Serveurs DNS:"
 
 msgid "(eg. 192.168.0.2)"
 msgstr "(par exemple 192.168.0.2)"
@@ -282,7 +282,7 @@ msgid "Selecting 'OK' will exit safe mode"
 msgstr "Sélectionner 'OK' vous fera sortir du mode sans échec"
 
 msgid "Disk R/W:"
-msgstr "Disque Lecture/Ecriture"
+msgstr "Disque - L/E:"
 
 msgid "Prevent all writes to disk"
 msgstr "Empêcher toute écriture sur le disque"
@@ -392,10 +392,10 @@ msgid "Waiting for system information..."
 msgstr "Attente d'informations système..."
 
 msgid "System type:"
-msgstr "Type de système :"
+msgstr "Type de système:"
 
 msgid "System id:"
-msgstr "ID système :"
+msgstr "ID système:"
 
 msgid "Storage devices"
 msgstr "Unités de stockage"
