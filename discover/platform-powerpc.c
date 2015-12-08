@@ -14,7 +14,9 @@
 #include <list/list.h>
 #include <log/log.h>
 #include <process/process.h>
+#include <types/types.h>
 
+#include "hostboot.h"
 #include "platform.h"
 #include "ipmi.h"
 #include "dt.h"
@@ -43,6 +45,7 @@ struct platform_powerpc {
 				bool persistent);
 	int 		(*set_os_boot_sensor)(
 				struct platform_powerpc *platform);
+	void		(*get_platform_versions)(struct system_info *info);
 };
 
 static const char *known_params[] = {
@@ -1094,6 +1097,9 @@ static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 	if (platform->ipmi)
 		get_ipmi_bmc_mac(p, sysinfo->bmc_mac);
 
+	if (platform->get_platform_versions)
+		platform->get_platform_versions(sysinfo);
+
 	return 0;
 }
 
@@ -1130,6 +1136,10 @@ static bool probe(struct platform *p, void *ctx)
 	} else {
 		pb_log("platform: no IPMI parameter support\n");
 	}
+
+	rc = stat("/proc/device-tree/bmc", &statbuf);
+	if (!rc)
+		platform->get_platform_versions = hostboot_load_versions;
 
 	return true;
 }

@@ -225,6 +225,13 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 		4 + optional_strlen(sysinfo->identifier) +
 		4 + 4;
 
+	len +=	4;
+	for (i = 0; i < sysinfo->n_current; i++)
+		len += 4 + optional_strlen(sysinfo->platform_current[i]);
+	len +=	4;
+	for (i = 0; i < sysinfo->n_other; i++)
+		len += 4 + optional_strlen(sysinfo->platform_other[i]);
+
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *if_info = sysinfo->interfaces[i];
 		len +=	4 + if_info->hwaddr_size +
@@ -394,6 +401,16 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 
 	pos += pb_protocol_serialise_string(pos, sysinfo->type);
 	pos += pb_protocol_serialise_string(pos, sysinfo->identifier);
+
+	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_current);
+	pos += sizeof(uint32_t);
+	for (i = 0; i < sysinfo->n_current; i++)
+		pos += pb_protocol_serialise_string(pos, sysinfo->platform_current[i]);
+
+	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_other);
+	pos += sizeof(uint32_t);
+	for (i = 0; i < sysinfo->n_other; i++)
+		pos += pb_protocol_serialise_string(pos, sysinfo->platform_other[i]);
 
 	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_interfaces);
 	pos += sizeof(uint32_t);
@@ -798,6 +815,7 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 	unsigned int len, i;
 	const char *pos;
 	int rc = -1;
+	char *tmp;
 
 	len = message->payload_len;
 	pos = message->payload;
@@ -808,6 +826,27 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 
 	if (read_string(sysinfo, &pos, &len, &sysinfo->identifier))
 		goto out;
+
+	/* versions strings for openpower platforms */
+	if (read_u32(&pos, &len, &sysinfo->n_current))
+		goto out;
+	sysinfo->platform_current = talloc_array(sysinfo, char *,
+						sysinfo->n_current);
+	for (i = 0; i < sysinfo->n_current; i++) {
+		if (read_string(sysinfo, &pos, &len, &tmp))
+			goto out;
+		sysinfo->platform_current[i] = talloc_strdup(sysinfo, tmp);
+	}
+
+	if (read_u32(&pos, &len, &sysinfo->n_other))
+		goto out;
+	sysinfo->platform_other = talloc_array(sysinfo, char *,
+						sysinfo->n_other);
+	for (i = 0; i < sysinfo->n_other; i++) {
+		if (read_string(sysinfo, &pos, &len, &tmp))
+			goto out;
+		sysinfo->platform_other[i] = talloc_strdup(sysinfo, tmp);
+	}
 
 	/* number of interfaces */
 	if (read_u32(&pos, &len, &sysinfo->n_interfaces))

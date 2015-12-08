@@ -79,7 +79,21 @@ discover_platform_ro_SOURCES = \
 	discover/ipmi.h \
 	discover/dt.c \
 	discover/dt.h \
+	discover/hostboot.h \
 	discover/platform-powerpc.c
+
+discover_platform_ro_CPPFLAGS = \
+	$(AM_CPPFLAGS)
+
+if ENABLE_MTD
+discover_platform_ro_SOURCES += \
+	discover/hostboot.c
+
+discover_platform_ro_LDFLAGS = \
+	$(core_lib) \
+	$(UDEV_LIBS)
+
+endif
 
 discover_platform_ro_LINK = \
 	$(LD) -r -o $@

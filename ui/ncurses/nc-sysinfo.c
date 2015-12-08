@@ -65,6 +65,22 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 	line("%-12s %s", _("System type:"), sysinfo->type ?: "");
 	line("%-12s %s", _("System id:"),   sysinfo->identifier ?: "");
 
+	if (sysinfo->n_current) {
+		line(NULL);
+		line("%s", _("Current platform versions:"));
+		for (i = 0; i < sysinfo->n_current; i++) {
+			line("\t%s", sysinfo->platform_current[i] ?: "");
+		}
+	}
+
+	if (sysinfo->n_other) {
+		line(NULL);
+		line("%s", _("Alternate platform versions:"));
+		for (i = 0; i < sysinfo->n_other; i++) {
+			line("\t%s", sysinfo->platform_other[i] ?: "");
+		}
+	}
+
 	if (sysinfo->n_blockdevs) {
 		line(NULL);
 		line(_("Storage devices"));

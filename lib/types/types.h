@@ -93,6 +93,10 @@ struct blockdev_info {
 struct system_info {
 	char			*type;
 	char			*identifier;
+	char			**platform_current;
+	char			**platform_other;
+	unsigned int		n_current;
+	unsigned int		n_other;
 	uint8_t			*bmc_mac;
 	struct interface_info	**interfaces;
 	unsigned int		n_interfaces;
