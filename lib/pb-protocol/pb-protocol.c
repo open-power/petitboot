@@ -239,6 +239,9 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 			4 + optional_strlen(bd_info->mountpoint);
 	}
 
+	/* BMC MAC */
+	len += HWADDR_SIZE;
+
 	return len;
 }
 
@@ -419,6 +422,9 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 		pos += pb_protocol_serialise_string(pos, bd_info->uuid);
 		pos += pb_protocol_serialise_string(pos, bd_info->mountpoint);
 	}
+
+	memcpy(pos, sysinfo->bmc_mac, HWADDR_SIZE);
+	pos += HWADDR_SIZE;
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -850,8 +856,18 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 
 		sysinfo->blockdevs[i] = bd_info;
 	}
-	rc = 0;
 
+	for (i = 0; i < HWADDR_SIZE; i++) {
+		if (pos[i] != 0) {
+			sysinfo->bmc_mac = talloc_memdup(sysinfo, pos, HWADDR_SIZE);
+			break;
+		}
+	}
+
+	pos += HWADDR_SIZE;
+	len -= HWADDR_SIZE;
+
+	rc = 0;
 out:
 	return rc;
 }
