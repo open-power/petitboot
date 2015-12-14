@@ -48,4 +48,21 @@ lib_libpbcore_la_SOURCES = \
 	lib/url/url.c \
 	lib/url/url.h \
 	lib/util/util.c \
-	lib/util/util.h
+	lib/util/util.h \
+	lib/flash/config.h \
+	lib/flash/flash.h
+
+if ENABLE_MTD
+lib_libpbcore_la_SOURCES += \
+	lib/flash/flash.c
+
+lib_libpbcore_la_CPPFLAGS += \
+	$(AM_CPPFLAGS)
+
+lib_libpbcore_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-l:libflash.so
+
+lib_libpbcore_la_SOURCES += \
+	lib/flash/flash.c
+endif
