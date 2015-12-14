@@ -162,6 +162,21 @@ AC_ARG_ENABLE(
 #AM_CONDITIONAL([ENABLE_BUSYBOX], [test "x$enable_busybox" = "xyes"])
 
 AC_ARG_ENABLE(
+	[mtd],
+	[AS_HELP_STRING(
+		[--enable-mtd],
+		[Add support for MTD devices on certain platforms [default=no]]
+	)],
+	[],
+	[enable_mtd=no]
+)
+AM_CONDITIONAL([ENABLE_MTD], [test "x$enable_mtd" = "xyes"])
+AS_IF([test "x$enable_mtd" = "xyes"],
+      [AC_DEFINE(MTD_SUPPORT, 1, [Enable MTD support])],
+      []
+)
+
+AC_ARG_ENABLE(
 	[ps3],
 	[AS_HELP_STRING(
 		[--enable-ps3],
