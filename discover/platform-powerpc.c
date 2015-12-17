@@ -989,6 +989,31 @@ static int set_ipmi_os_boot_sensor(struct platform_powerpc *platform)
 	return 0;
 }
 
+static void get_ipmi_bmc_mac(struct platform *p, uint8_t *buf)
+{
+	struct platform_powerpc *platform = p->platform_data;
+	uint16_t resp_len = 8;
+	uint8_t resp[8];
+	uint8_t req[] = { 0x1, 0x5, 0x0, 0x0 };
+	int i, rc;
+
+	rc = ipmi_transaction(platform->ipmi, IPMI_NETFN_TRANSPORT,
+			IPMI_CMD_TRANSPORT_GET_LAN_PARAMS,
+			req, sizeof(req),
+			resp, &resp_len,
+			ipmi_timeout);
+
+	pb_debug("BMC MAC resp [%d][%d]:\n", rc, resp_len);
+
+	if (rc == 0 && resp_len > 0) {
+		for (i = 2; i < resp_len; i++) {
+		        pb_debug(" %x", resp[i]);
+			buf[i - 2] = resp[i];
+		}
+		pb_debug("\n");
+	}
+}
+
 static int load_config(struct platform *p, struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
@@ -1057,6 +1082,10 @@ static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 		sysinfo->identifier = talloc_steal(sysinfo, buf);
 	talloc_free(filename);
 
+	sysinfo->bmc_mac = talloc_zero_size(sysinfo, HWADDR_SIZE);
+	if (platform->ipmi)
+		get_ipmi_bmc_mac(p, sysinfo->bmc_mac);
+
 	return 0;
 }
 
@@ -1085,7 +1114,6 @@ static bool probe(struct platform *p, void *ctx)
 		platform->get_ipmi_bootdev = get_ipmi_bootdev_ipmi;
 		platform->clear_ipmi_bootdev = clear_ipmi_bootdev_ipmi;
 		platform->set_os_boot_sensor = set_ipmi_os_boot_sensor;
-
 	} else if (!stat(sysparams_dir, &statbuf)) {
 		pb_debug("platform: using sysparams for IPMI paramters\n");
 		platform->get_ipmi_bootdev = get_ipmi_bootdev_sysparams;

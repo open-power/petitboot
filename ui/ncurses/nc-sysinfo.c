@@ -51,6 +51,7 @@ static void if_info_mac_str(struct interface_info *info,
 static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		const struct system_info *sysinfo)
 {
+	char macbuf[32];
 	unsigned int i;
 
 	text_screen_clear(&screen->text_scr);
@@ -78,6 +79,12 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		line(NULL);
 	}
 
+	if (sysinfo->bmc_mac) {
+		mac_str(sysinfo->bmc_mac, HWADDR_SIZE, macbuf, sizeof(macbuf));
+		line(_("Management (BMC) interface"));
+		line(_(" MAC:  %s"), macbuf);
+	}
+
 	if (sysinfo->n_interfaces) {
 		line(NULL);
 		line(_("Network interfaces"));
@@ -85,7 +92,6 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *info = sysinfo->interfaces[i];
-		char macbuf[32];
 
 		if_info_mac_str(info, macbuf, sizeof(macbuf));
 
