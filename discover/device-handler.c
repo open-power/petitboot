@@ -1099,10 +1099,12 @@ static char *device_from_addr(void *ctx, struct pb_url *url)
 
 	rc = process_run_sync(p);
 
-	if (rc) {
+	if (rc || p->exit_status) {
 		/* ip has complained for some reason; most likely
 		 * there is no route to the host - bail out */
-		pb_debug("%s: No route to %s\n",__func__,url->host);
+		pb_debug("%s: `ip` returns non-zero exit status\n", __func__);
+		pb_debug("ip buf: %s\n", p->stdout_buf);
+		process_release(p);
 		return NULL;
 	}
 
