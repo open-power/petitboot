@@ -245,13 +245,12 @@ static bool udev_handle_cdrom_events(struct pb_udev *udev,
 		struct udev_device *dev, struct discover_device *ddev)
 {
 	const char *node;
+	bool eject = false;
 
 	node = udev_device_get_devnode(dev);
 
 	/* handle CDROM eject requests */
 	if (udev_device_get_property_value(dev, "DISK_EJECT_REQUEST")) {
-		bool eject = false;
-
 		pb_debug("udev: eject request\n");
 
 		/* If the device is mounted, cdrom_id's own eject request may
@@ -260,7 +259,6 @@ static bool udev_handle_cdrom_events(struct pb_udev *udev,
 		if (ddev) {
 			eject = ddev->mounted;
 			udev_handle_dev_remove(udev, dev);
-			return false;
 		}
 
 		if (eject)
