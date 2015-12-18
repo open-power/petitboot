@@ -98,8 +98,8 @@ struct pjs *pjs_init(void *ctx, int (*map)(const struct js_event *))
 	return pjs;
 
 out_err:
-	close(pjs->fd);
-	pjs->fd = 0;
+	if (pjs->fd >= 0)
+		close(pjs->fd);
 	talloc_free(pjs);
 	return NULL;
 }
