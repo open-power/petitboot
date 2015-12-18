@@ -1032,13 +1032,15 @@ static char *talloc_vasprintf_append(char *s, const char *fmt, va_list ap)
 	len = vsnprintf(NULL, 0, fmt, ap2);
 
 	s = talloc_realloc(NULL, s, char, s_len + len+1);
-	if (!s) return NULL;
+	if (!s)
+		goto out;
 
 	VA_COPY(ap2, ap);
 
 	vsnprintf(s+s_len, len+1, fmt, ap2);
 	talloc_set_name_const(s, s);
 
+out:
 	va_end(ap2);
 	return s;
 }
