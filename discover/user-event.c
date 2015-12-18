@@ -488,10 +488,10 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 static int user_event_process(void *arg)
 {
 	struct user_event *uev = arg;
-	char buf[PBOOT_USER_EVENT_SIZE];
+	char buf[PBOOT_USER_EVENT_SIZE + 1];
 	int len;
 
-	len = recvfrom(uev->socket, buf, sizeof(buf), 0, NULL, NULL);
+	len = recvfrom(uev->socket, buf, PBOOT_USER_EVENT_SIZE, 0, NULL, NULL);
 
 	if (len < 0) {
 		pb_log("%s: socket read failed: %s", __func__, strerror(errno));
@@ -502,6 +502,8 @@ static int user_event_process(void *arg)
 		pb_log("%s: empty", __func__);
 		return 0;
 	}
+
+	buf[len] = '\0';
 
 	pb_debug("%s: %u bytes\n", __func__, len);
 

@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <talloc/talloc.h>
 #include <system/system.h>
@@ -49,9 +51,12 @@ char *join_paths(void *alloc_ctx, const char *a, const char *b)
 static char *local_name(void *ctx)
 {
 	char *ret, tmp[] = "/tmp/pb-XXXXXX";
+	mode_t oldmask;
 	int fd;
 
+	oldmask = umask(0644);
 	fd = mkstemp(tmp);
+	umask(oldmask);
 
 	if (fd < 0)
 		return NULL;
@@ -220,15 +225,16 @@ static enum tftp_type check_tftp_type(void *ctx)
 	const char *argv[] = { pb_system_apps.tftp, "-V", NULL };
 	struct process *process;
 	enum tftp_type type;
+	int rc;
 
 	process = process_create(ctx);
 	process->path = pb_system_apps.tftp;
 	process->argv = argv;
 	process->keep_stdout = true;
 	process->add_stderr = true;
-	process_run_sync(process);
+	rc = process_run_sync(process);
 
-	if (!process->stdout_buf || process->stdout_len == 0) {
+	if (rc || !process->stdout_buf || process->stdout_len == 0) {
 		pb_log("Can't check TFTP client type!\n");
 		type = TFTP_TYPE_BROKEN;
 

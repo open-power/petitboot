@@ -183,7 +183,8 @@ int ipmi_transaction(struct ipmi *ipmi, uint8_t netfn, uint8_t cmd,
 
 out:
 	lock.l_type = F_UNLCK;
-	fcntl(ipmi->fd, F_SETLKW, &lock);
+	if (fcntl(ipmi->fd, F_SETLKW, &lock) == -1)
+		pb_log("IPMI: error unlocking IPMI device: %m\n");
 	return rc ? -1 : 0;
 }
 

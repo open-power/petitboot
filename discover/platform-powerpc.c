@@ -179,7 +179,7 @@ static int write_nvram(struct platform_powerpc *platform)
 	struct process *process;
 	struct param *param;
 	const char *argv[6];
-	int rc;
+	int rc = 0;
 
 	argv[0] = "nvram";
 	argv[1] = "--update-config";
@@ -438,7 +438,6 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 {
 	struct autoboot_option *opt, *new = NULL;
 	char *pos, *end, *old_dev = NULL;
-	const char delim = ' ';
 	unsigned int n_new = 0;
 	const char *val;
 	bool conflict;
@@ -469,11 +468,9 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 
 		if (read_bootdev(config, &pos, opt)) {
 			pb_log("bootdev config is in an unknown format "
-			       "(expected uuid:... or mac:...)");
+			       "(expected uuid:... or mac:...)\n");
 			talloc_free(opt);
-			if (strchr(pos, delim))
-				continue;
-			return;
+			continue;
 		}
 
 		new = talloc_realloc(config, new, struct autoboot_option,
@@ -759,9 +756,8 @@ static int read_bootdev_sysparam(const char *name, uint8_t *val)
 	char path[50];
 	int fd, rc;
 
-	strcpy(path, sysparams_dir);
-	assert(strlen(name) < sizeof(path) - strlen(path));
-	strcat(path, name);
+	assert(strlen(sysparams_dir) + strlen(name) < sizeof(path));
+	snprintf(path, sizeof(path), "%s%s", sysparams_dir, name);
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
@@ -795,9 +791,8 @@ static int write_bootdev_sysparam(const char *name, uint8_t val)
 	char path[50];
 	int fd, rc;
 
-	strcpy(path, sysparams_dir);
-	assert(strlen(name) < sizeof(path) - strlen(path));
-	strcat(path, name);
+	assert(strlen(sysparams_dir) + strlen(name) < sizeof(path));
+	snprintf(path, sizeof(path), "%s%s", sysparams_dir, name);
 
 	fd = open(path, O_WRONLY);
 	if (fd < 0) {

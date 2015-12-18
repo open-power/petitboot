@@ -1472,7 +1472,6 @@ mount_ro:
 void device_release_write(struct discover_device *dev, bool release)
 {
 	const char *fstype, *device_path;
-	int rc = 0;
 
 	if (!release)
 		return;
@@ -1495,10 +1494,9 @@ void device_release_write(struct discover_device *dev, bool release)
 		device_path = get_device_path(dev);
 	}
 
-	mount(device_path, dev->mount_path, fstype,
+	if (mount(device_path, dev->mount_path, fstype,
 			MS_RDONLY | MS_SILENT,
-			fs_parameters(dev, MS_RDONLY));
-	if (rc)
+			fs_parameters(dev, MS_RDONLY)))
 		pb_log("Failed to remount %s read-only: %s\n",
 		       device_path, strerror(errno));
 	else

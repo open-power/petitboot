@@ -56,6 +56,7 @@ int get_ipmi_sensor(void *t, enum ipmi_sensor_ids sensor_id)
 	rc = __be32_to_cpu(*(uint32_t *)buf);
 
 out:
+	talloc_free(buf);
 	free(namelist);
 	return rc;
 }

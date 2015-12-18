@@ -984,6 +984,7 @@ char *talloc_vasprintf(const void *t, const char *fmt, va_list ap)
 		talloc_set_name_const(ret, ret);
 	}
 
+	va_end(ap2);
 	return ret;
 }
 
@@ -1038,6 +1039,7 @@ static char *talloc_vasprintf_append(char *s, const char *fmt, va_list ap)
 	vsnprintf(s+s_len, len+1, fmt, ap2);
 	talloc_set_name_const(s, s);
 
+	va_end(ap2);
 	return s;
 }
 

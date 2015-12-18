@@ -322,9 +322,10 @@ static int pmenu_item_get_index(const struct pmenu_item *item)
 {
 	unsigned int i;
 
-	for (i = 0; i < item->pmenu->item_count; i++)
-		if (item->pmenu->items[i] == item->nci)
-			return i;
+	if (item)
+		for (i = 0; i < item->pmenu->item_count; i++)
+			if (item->pmenu->items[i] == item->nci)
+				return i;
 
 	pb_log("%s: not found: %p %s\n", __func__, item,
 		(item ? item->nci->name.str : "(null)"));
