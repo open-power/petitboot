@@ -424,7 +424,10 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 		pos += pb_protocol_serialise_string(pos, bd_info->mountpoint);
 	}
 
-	memcpy(pos, sysinfo->bmc_mac, HWADDR_SIZE);
+	if (sysinfo->bmc_mac)
+		memcpy(pos, sysinfo->bmc_mac, HWADDR_SIZE);
+	else
+		memset(pos, 0, HWADDR_SIZE);
 	pos += HWADDR_SIZE;
 
 	assert(pos <= buf + buf_len);
