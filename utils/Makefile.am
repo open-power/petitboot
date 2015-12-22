@@ -19,6 +19,15 @@ sbin_PROGRAMS += utils/pb-event utils/pb-config
 utils_pb_config_LDADD = $(top_builddir)/lib/libpbcore.la \
 		  $(top_builddir)/discover/platform.ro
 
+utils_hooks_30_add_offb_SOURCES = utils/hooks/30-add-offb.c
+utils_hooks_30_add_offb_LDADD = $(top_builddir)/lib/libpbcore.la \
+		$(FDT_LIBS)
+
+if HAVE_LIBFDT
+noinst_PROGRAMS = \
+	utils/hooks/30-add-offb
+endif
+
 dist_pkgdata_DATA = \
 	utils/kboot.conf.sample \
 	utils/bb-kexec-reboot \

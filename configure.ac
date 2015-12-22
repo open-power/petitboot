@@ -57,6 +57,16 @@ AC_CHECK_LIB([udev], [udev_new],
 	[AC_MSG_FAILURE([The libudev development library is required by petitboot.  Try installing the package libudev-dev or libudev-devel.])]
 )
 
+AC_ARG_WITH([fdt],
+	AS_HELP_STRING([--without-fdt],
+		[Build without libfdt (default: no)]))
+
+AS_IF([test "x$with_fdt" != "xno"],
+	AC_CHECK_LIB([fdt], [fdt_check_header],
+		[FDT_LIBS=-lfdt; have_libfdt=yes]))
+
+AM_CONDITIONAL([HAVE_LIBFDT], [test x"$have_libfdt" = xyes])
+
 AC_CHECK_HEADERS([stdarg.h])
 AC_CHECK_HEADERS([varargs.h])
 
@@ -275,6 +285,7 @@ AS_IF(
 )
  
 AC_SUBST([UDEV_LIBS])
+AC_SUBST([FDT_LIBS])
 AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([DESTDIR])
 AC_SUBST([pkgsysconfdir], ["${sysconfdir}/${package}"])
