@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 {
 	struct waitset *waitset;
 	struct process *process;
-	const char *child_argv[3];
+	const char *child_argv[4];
 	void *ctx;
 
 	if (argc == 3 && !strcmp(argv[1], "child"))
