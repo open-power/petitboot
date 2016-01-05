@@ -25,6 +25,7 @@ struct discover_device {
 	const char		*label;
 
 	char			*mount_path;
+	char			*root_path;
 	const char		*device_path;
 	struct ramdisk_device	*ramdisk;
 	bool			mounted;

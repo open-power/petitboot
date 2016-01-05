@@ -25,7 +25,7 @@ static char *local_path(struct discover_context *ctx,
 		struct discover_device *dev,
 		const char *filename)
 {
-	return join_paths(ctx, dev->mount_path, filename);
+	return join_paths(ctx, dev->root_path, filename);
 }
 
 int parser_request_file(struct discover_context *ctx,

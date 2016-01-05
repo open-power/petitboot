@@ -1285,6 +1285,28 @@ static inline const char *get_device_path(struct discover_device *dev)
 	return dev->ramdisk ? dev->ramdisk->snapshot : dev->device_path;
 }
 
+static char *check_subvols(struct discover_device *dev)
+{
+	const char *fstype = discover_device_get_param(dev, "ID_FS_TYPE");
+	struct stat sb;
+	char *path;
+	int rc;
+
+	if (strncmp(fstype, "btrfs", strlen("btrfs")))
+		return dev->mount_path;
+
+	/* On btrfs a device's root may be under a subvolume path */
+	path = join_paths(dev, dev->mount_path, "@");
+	rc = stat(path, &sb);
+	if (!rc && S_ISDIR(sb.st_mode)) {
+		pb_debug("Using '%s' for btrfs root path\n", path);
+		return path;
+	}
+
+	talloc_free(path);
+	return dev->mount_path;
+}
+
 static bool check_existing_mount(struct discover_device *dev)
 {
 	struct stat devstat, mntstat;
@@ -1326,6 +1348,7 @@ static bool check_existing_mount(struct discover_device *dev)
 
 		if (mntstat.st_rdev == devstat.st_rdev) {
 			dev->mount_path = talloc_strdup(dev, mnt->mnt_dir);
+			dev->root_path = check_subvols(dev);
 			dev->mounted_rw = !!hasmntopt(mnt, "rw");
 			dev->mounted = true;
 			dev->unmount = false;
@@ -1388,6 +1411,7 @@ static int mount_device(struct discover_device *dev)
 		dev->mounted = true;
 		dev->mounted_rw = false;
 		dev->unmount = true;
+		dev->root_path = check_subvols(dev);
 		return 0;
 	}
 
@@ -1426,6 +1450,7 @@ static int umount_device(struct discover_device *dev)
 
 	talloc_free(dev->mount_path);
 	dev->mount_path = NULL;
+	dev->root_path = NULL;
 
 	return 0;
 }
