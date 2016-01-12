@@ -20,6 +20,9 @@ menuentry "test.8" {
 menuentry "test.9" {
  linux /vmlinux
  }
+menuentry "" {
+ linux /vmlinux
+ }
 #endif
 
 void run_test(struct parser_test *test)
@@ -32,7 +35,7 @@ void run_test(struct parser_test *test)
 
 	test_run_parser(test, "grub2");
 
-	check_boot_option_count(test->ctx, 10);
+	check_boot_option_count(test->ctx, 11);
 	for (i = 0; i < 8; i++) {
 		opt = get_boot_option(test->ctx, i);
 		str[5] = i + '0';

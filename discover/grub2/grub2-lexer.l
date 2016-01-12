@@ -23,6 +23,7 @@ void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 
 WORD	[^{}|&$;<> \t\n'"#]+
 DELIM	[ \t]+
+BLANK	["]{2}|[']{2}
 VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 
 %%
@@ -52,6 +53,12 @@ VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
 "until"      return TOKEN_UTIL;
 "while"      return TOKEN_WHILE;
 
+ /* ignore quoted empty strings */
+{BLANK} {
+		yylval->word = create_word_text(yyget_extra(yyscanner), "");
+		yyget_extra(yyscanner)->inter_word = true;
+		return TOKEN_WORD;
+	}
  /* anything that's not a metachar: return as a plain word */
 {WORD}	{
 		yylval->word = create_word_text(yyget_extra(yyscanner), yytext);
