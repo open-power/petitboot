@@ -214,6 +214,7 @@ int builtin_save_env(struct grub2_script *script,
 	int i, rc, len, siglen;
 	char *buf, *envpath;
 	const char *envfile;
+	bool using_dash_f = false;
 
 	/* we only support local filesystems */
 	if (!dev->mounted) {
@@ -222,9 +223,15 @@ int builtin_save_env(struct grub2_script *script,
 		return -1;
 	}
 
-	if (argc == 3 && !strcmp(argv[1], "-f"))
+	if (argc >= 2 && !strcmp(argv[1], "-f")) {
+		if (argc < 3) {
+			pb_log("save_env: for -f, need argument\n");
+			return -1;
+		}
+
 		envfile = argv[2];
-	else
+		using_dash_f = true;
+	} else
 		envfile = default_envfile;
 
 	envpath = talloc_asprintf(script, "%s/%s",
@@ -241,7 +248,11 @@ int builtin_save_env(struct grub2_script *script,
 	if (rc || len < siglen || memcmp(buf, signature, siglen))
 		goto err;
 
-	for (i = 1; i < argc; i++) {
+	/* For "-f", skip the "-f <file>" arguments in picking the
+	 * variables to save. */
+	i = (using_dash_f ? 3 : 1);
+
+	for (; i < argc; i++) {
 		const char *name, *value;
 
 		name = argv[i];

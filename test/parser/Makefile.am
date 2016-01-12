@@ -28,6 +28,7 @@ parser_TESTS = \
 	test/parser/test-grub2-single-line-if \
 	test/parser/test-grub2-load-env \
 	test/parser/test-grub2-save-env \
+	test/parser/test-grub2-save-env-dash-f \
 	test/parser/test-grub2-saved-default \
 	test/parser/test-grub2-nondefault-prefix \
 	test/parser/test-grub2-f18-ppc64 \
