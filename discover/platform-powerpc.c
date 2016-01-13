@@ -923,6 +923,11 @@ static int get_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
 		return -1;
 	}
 
+	pb_debug("IPMI get_bootdev response:\n");
+	for (int i = 0; i < resp_len; i++)
+		pb_debug("%x ", resp[i]);
+	pb_debug("\n");
+
 	if (resp[0] != 0) {
 		pb_log("platform: non-zero completion code %d from IPMI req\n",
 				resp[0]);
