@@ -232,6 +232,13 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 	for (i = 0; i < sysinfo->n_other; i++)
 		len += 4 + optional_strlen(sysinfo->platform_other[i]);
 
+	len +=	4;
+	for (i = 0; i < sysinfo->n_bmc_current; i++)
+		len += 4 + optional_strlen(sysinfo->bmc_current[i]);
+	len +=	4;
+	for (i = 0; i < sysinfo->n_bmc_golden; i++)
+		len += 4 + optional_strlen(sysinfo->bmc_golden[i]);
+
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *if_info = sysinfo->interfaces[i];
 		len +=	4 + if_info->hwaddr_size +
@@ -411,6 +418,16 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 	pos += sizeof(uint32_t);
 	for (i = 0; i < sysinfo->n_other; i++)
 		pos += pb_protocol_serialise_string(pos, sysinfo->platform_other[i]);
+
+	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_bmc_current);
+	pos += sizeof(uint32_t);
+	for (i = 0; i < sysinfo->n_bmc_current; i++)
+		pos += pb_protocol_serialise_string(pos, sysinfo->bmc_current[i]);
+
+	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_bmc_golden);
+	pos += sizeof(uint32_t);
+	for (i = 0; i < sysinfo->n_bmc_golden; i++)
+		pos += pb_protocol_serialise_string(pos, sysinfo->bmc_golden[i]);
 
 	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_interfaces);
 	pos += sizeof(uint32_t);
@@ -827,7 +844,7 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 	if (read_string(sysinfo, &pos, &len, &sysinfo->identifier))
 		goto out;
 
-	/* versions strings for openpower platforms */
+	/* Platform version strings for openpower platforms */
 	if (read_u32(&pos, &len, &sysinfo->n_current))
 		goto out;
 	sysinfo->platform_current = talloc_array(sysinfo, char *,
@@ -846,6 +863,27 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 		if (read_string(sysinfo, &pos, &len, &tmp))
 			goto out;
 		sysinfo->platform_other[i] = talloc_strdup(sysinfo, tmp);
+	}
+
+	/* BMC version strings for openpower platforms */
+	if (read_u32(&pos, &len, &sysinfo->n_bmc_current))
+		goto out;
+	sysinfo->bmc_current = talloc_array(sysinfo, char *,
+						sysinfo->n_bmc_current);
+	for (i = 0; i < sysinfo->n_bmc_current; i++) {
+		if (read_string(sysinfo, &pos, &len, &tmp))
+			goto out;
+		sysinfo->bmc_current[i] = talloc_strdup(sysinfo, tmp);
+	}
+
+	if (read_u32(&pos, &len, &sysinfo->n_bmc_golden))
+		goto out;
+	sysinfo->bmc_golden = talloc_array(sysinfo, char *,
+						sysinfo->n_bmc_golden);
+	for (i = 0; i < sysinfo->n_bmc_golden; i++) {
+		if (read_string(sysinfo, &pos, &len, &tmp))
+			goto out;
+		sysinfo->bmc_golden[i] = talloc_strdup(sysinfo, tmp);
 	}
 
 	/* number of interfaces */

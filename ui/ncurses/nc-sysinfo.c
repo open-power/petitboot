@@ -81,6 +81,22 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		}
 	}
 
+	if (sysinfo->n_bmc_current) {
+		line(NULL);
+		line("%s", _("BMC current side:"));
+		for (i = 0; i < sysinfo->n_bmc_current; i++) {
+			line("\t%s", sysinfo->bmc_current[i] ?: "");
+		}
+	}
+
+	if (sysinfo->n_bmc_golden) {
+		line(NULL);
+		line("%s", _("BMC golden side:"));
+		for (i = 0; i < sysinfo->n_bmc_golden; i++) {
+			line("\t%s", sysinfo->bmc_golden[i] ?: "");
+		}
+	}
+
 	if (sysinfo->n_blockdevs) {
 		line(NULL);
 		line(_("Storage devices"));

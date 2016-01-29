@@ -97,6 +97,10 @@ struct system_info {
 	char			**platform_other;
 	unsigned int		n_current;
 	unsigned int		n_other;
+	char			**bmc_current;
+	char			**bmc_golden;
+	unsigned int		n_bmc_current;
+	unsigned int		n_bmc_golden;
 	uint8_t			*bmc_mac;
 	struct interface_info	**interfaces;
 	unsigned int		n_interfaces;

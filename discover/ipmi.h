@@ -9,7 +9,9 @@
 enum ipmi_netfn {
 	IPMI_NETFN_CHASSIS	= 0x0,
 	IPMI_NETFN_SE		= 0x04,
+	IPMI_NETFN_APP		= 0x06,
 	IPMI_NETFN_TRANSPORT	= 0x0c,
+	IPMI_NETFN_AMI		= 0x3a,
 };
 
 enum ipmi_cmd {
@@ -17,6 +19,8 @@ enum ipmi_cmd {
 	IPMI_CMD_CHASSIS_GET_SYSTEM_BOOT_OPTIONS	= 0x09,
 	IPMI_CMD_SENSOR_SET				= 0x30,
 	IPMI_CMD_TRANSPORT_GET_LAN_PARAMS		= 0x02,
+	IPMI_CMD_APP_GET_DEVICE_ID			= 0x01,
+	IPMI_CMD_APP_GET_DEVICE_ID_GOLDEN		= 0x1a,
 };
 
 enum ipmi_sensor_ids {
