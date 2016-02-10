@@ -112,6 +112,7 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 	}
 
 	if (sysinfo->bmc_mac) {
+		line(NULL);
 		mac_str(sysinfo->bmc_mac, HWADDR_SIZE, macbuf, sizeof(macbuf));
 		line(_("Management (BMC) interface"));
 		line(_(" MAC:  %s"), macbuf);
