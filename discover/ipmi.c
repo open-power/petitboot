@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include <sys/ioctl.h>
 #include <sys/time.h>
@@ -220,3 +221,99 @@ bool ipmi_present(void)
 	return !access(ipmi_devnode, R_OK | W_OK);
 }
 
+/* Reads and applies an IPMI interface config override, which closely follows
+ * the format of an interface config struct as described in lib/types */
+void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
+				uint16_t len)
+{
+	struct interface_config *ifconf;
+	char *ipstr, *gatewaystr;
+	uint8_t hwsize, ipsize;
+	int addr_type, i = 0;
+	socklen_t addr_len;
+
+	/* Get 1-byte hardware address size and ip address size */
+	memcpy(&hwsize, &buf[i], sizeof(hwsize));
+	i += sizeof(hwsize);
+	memcpy(&ipsize, &buf[i], sizeof(ipsize));
+	i += sizeof(ipsize);
+
+	if (!hwsize || !ipsize) {
+		pb_log("%s: Empty response\n", __func__);
+		return;
+	}
+
+	/* At the moment only support 6-byte MAC addresses */
+	if (hwsize != sizeof(ifconf->hwaddr)) {
+		pb_log("Unsupported HW address size in network override: %u\n",
+		       hwsize);
+		return;
+	}
+
+	/* Sanity check the IP address size */
+	if (ipsize == 4) {
+		addr_type = AF_INET;
+		addr_len = INET_ADDRSTRLEN;
+	} else if (ipsize == 16) {
+		addr_type = AF_INET6;
+		addr_len = INET6_ADDRSTRLEN;
+	} else {
+		pb_log("Unsupported IP address size: %u\n", ipsize);
+		return;
+	}
+
+	/* Everything past here is the interface config */
+	ifconf = talloc_zero(config, struct interface_config);
+	if (!ifconf) {
+		pb_log("Failed to allocate network override\n");
+		return;
+	}
+
+	/* Hardware Address */
+	memcpy(ifconf->hwaddr, &buf[i], hwsize);
+	i += hwsize;
+
+	/* Check 1-byte ignore and method flags */
+	ifconf->ignore = !!buf[i++];
+	ifconf->method = !!buf[i++];
+
+	if (ifconf->method == CONFIG_METHOD_STATIC) {
+		if (ipsize + ipsize  + 1 > len - i) {
+			pb_log("Expected data greater than buffer size\n");
+			talloc_free(ifconf);
+			return;
+		}
+
+		/* IP address */
+		ipstr = talloc_array(ifconf, char, addr_len);
+		if (!inet_ntop(addr_type, &buf[i], ipstr, addr_len)) {
+			pb_log("Failed to convert ipaddr: %m\n");
+			talloc_free(ifconf);
+			return;
+		}
+		i += ipsize;
+
+		/* IP address subnet */
+		ifconf->static_config.address = talloc_asprintf(ifconf,
+						"%s/%u", ipstr, buf[i]);
+		i++;
+
+		/* Gateway address */
+		gatewaystr = talloc_array(ifconf, char, addr_len);
+		if (!inet_ntop(addr_type, &buf[i], gatewaystr, addr_len)) {
+			pb_log("Failed to convert gateway: %m\n");
+			talloc_free(ifconf);
+			return;
+		}
+		ifconf->static_config.gateway = gatewaystr;
+		i += ipsize;
+	}
+
+	pb_log("Applying IPMI network config\n");
+
+	/* Replace any existing interface config */
+	talloc_free(config->network.interfaces);
+	config->network.n_interfaces = 1;
+	config->network.interfaces = talloc(config, struct interface_config *);
+	config->network.interfaces[0] = ifconf;
+}

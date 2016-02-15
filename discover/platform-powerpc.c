@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
+#include <asm/byteorder.h>
 
 #include <file/file.h>
 #include <talloc/talloc.h>
@@ -1113,6 +1114,97 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 		pb_log("Failed to retrieve Golden Device ID from IPMI\n");
 }
 
+static void get_ipmi_network_override(struct platform_powerpc *platform,
+			struct config *config)
+{
+	uint16_t min_len = 12, resp_len = 53, version;
+	const uint32_t magic_value = 0x21706221;
+	uint8_t resp[resp_len];
+	uint32_t cookie;
+	int i, rc;
+	uint8_t req[] = {
+		0x61, /* parameter selector: OEM section (network) */
+		0x00, /* no set selector */
+		0x00, /* no block selector */
+	};
+
+	rc = ipmi_transaction(platform->ipmi, IPMI_NETFN_CHASSIS,
+			IPMI_CMD_CHASSIS_GET_SYSTEM_BOOT_OPTIONS,
+			req, sizeof(req),
+			resp, &resp_len,
+			ipmi_timeout);
+
+	pb_debug("IPMI net override resp [%d][%d]:\n", rc, resp_len);
+	if (resp_len > 0) {
+		for (i = 0; i < resp_len; i++) {
+		        pb_debug(" %02x", resp[i]);
+			if (i && (i + 1) % 16 == 0 && i != resp_len - 1)
+				pb_debug("\n");
+			else if (i && (i + 1) % 8 == 0)
+				pb_debug(" ");
+		}
+		pb_debug("\n");
+	}
+
+	if (rc) {
+		pb_debug("IPMI network config option unavailable\n");
+		return;
+	}
+
+	if (resp_len < min_len) {
+		pb_debug("IPMI net response too small\n");
+		return;
+	}
+
+	if (resp[0] != 0) {
+		pb_log("platform: non-zero completion code %d from IPMI network req\n",
+		       resp[0]);
+		return;
+	}
+
+	/* Check for correct parameter version */
+	if ((resp[1] & 0xf) != 0x1) {
+		pb_log("platform: unexpected version (0x%x) in network override response\n",
+		       resp[0]);
+		return;
+	}
+
+	/* Check for valid parameters. For now ignore the persistent flag */
+	if (resp[2] & 0x80) {
+		pb_debug("platform: network override is invalid/locked\n");
+		return;
+	}
+
+	/* Check for valid parameters in the boot flags section, ignoring the
+	 * persistent bit */
+	if (!(resp[3] & 0x80)) {
+		pb_debug("platform: network override valid flag not set\n");
+		return;
+	}
+
+	/* Check 4-byte cookie value */
+	i = 4;
+	memcpy(&cookie, &resp[i], sizeof(cookie));
+	cookie = __be32_to_cpu(cookie);
+	if (cookie != magic_value) {
+		pb_log("%s: Incorrect cookie %x\n", __func__, cookie);
+		return;
+	}
+	i += sizeof(cookie);
+
+	/* Check 2-byte version number */
+	memcpy(&version, &resp[i], sizeof(version));
+	version = __be16_to_cpu(version);
+	i += sizeof(version);
+	if (version != 1) {
+		pb_debug("Unexpected version: %u\n", version);
+		return;
+	}
+
+	/* Interpret the rest of the interface config */
+	parse_ipmi_interface_override(config, &resp[i], resp_len - i);
+}
+
 static int load_config(struct platform *p, struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
@@ -1133,6 +1225,9 @@ static int load_config(struct platform *p, struct config *config)
 			set_ipmi_bootdev(config, bootdev, bootdev_persistent);
 		}
 	}
+
+	if (platform->ipmi)
+		get_ipmi_network_override(platform, config);
 
 	return 0;
 }
