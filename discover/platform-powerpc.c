@@ -1066,7 +1066,7 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 		bcd += 10 * (resp[4] >> 4);
 		memcpy(&aux_version, &resp[12], sizeof(aux_version));
 		info->bmc_current[2] = talloc_asprintf(info,
-						"Firmware version: %u.%u.%u",
+						"Firmware version: %u.%02u.%u",
 						resp[3], bcd, aux_version);
 		bcd = resp[5] & 0x0f;
 		bcd += 10 * (resp[5] >> 4);
@@ -1104,7 +1104,7 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 		bcd += 10 * (resp[4] >> 4);
 		memcpy(&aux_version, &resp[12], sizeof(aux_version));
 		info->bmc_golden[2] = talloc_asprintf(info,
-						"Firmware version: %u.%u.%u",
+						"Firmware version: %u.%02u.%u",
 						resp[3], bcd, aux_version);
 		bcd = resp[5] & 0x0f;
 		bcd += 10 * (resp[5] >> 4);
