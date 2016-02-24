@@ -1,8 +1,6 @@
 
 #include <fcntl.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #include "types/types.h"
 #include <file/file.h>
@@ -49,24 +47,30 @@ int parser_request_file(struct discover_context *ctx,
 	return rc;
 }
 
-int parser_check_dir(struct discover_context *ctx,
-		struct discover_device *dev, const char *dirname)
+int parser_stat_path(struct discover_context *ctx,
+		struct discover_device *dev, const char *path,
+		struct stat *statbuf)
 {
-	struct stat statbuf;
-	char *path;
-	int rc;
+	int rc = -1;
+	char *full_path;
 
+	/* we only support local files at present */
 	if (!dev->mount_path)
 		return -1;
 
-	path = local_path(ctx, dev, dirname);
+	full_path = local_path(ctx, dev, path);
 
-	rc = stat(path, &statbuf);
-	talloc_free(path);
-	if (!rc)
-		return -1;
+	rc = stat(full_path, statbuf);
+	if (rc) {
+		rc = -1;
+		goto out;
+	}
 
-	return S_ISDIR(statbuf.st_mode) ? 0 : -1;
+	rc = 0;
+out:
+	talloc_free(full_path);
+
+	return rc;
 }
 
 int parser_replace_file(struct discover_context *ctx,

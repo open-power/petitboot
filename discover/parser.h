@@ -2,6 +2,9 @@
 #define _PARSER_H
 
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "device-handler.h"
 
@@ -51,8 +54,9 @@ int parse_user_event(struct discover_context *ctx, struct event *event);
 /* File IO functions for parsers; these should be the only interface that
  * parsers use to access a device's filesystem.
  *
- * These are intended for small amounts of data, typically text configuration
- * and state files.
+ * These are intended for small amounts of data, typically text
+ * configuration and state files.  Note that parser_request_file,
+ * and parser_replace_file work only on non-directories.
  */
 int parser_request_file(struct discover_context *ctx,
 		struct discover_device *dev, const char *filename,
@@ -62,7 +66,15 @@ int parser_replace_file(struct discover_context *ctx,
 		char *buf, int len);
 int parser_request_url(struct discover_context *ctx, struct pb_url *url,
 		char **buf, int *len);
-int parser_check_dir(struct discover_context *ctx,
-		struct discover_device *dev, const char *dirname);
+/* parser_stat_path returns 0 if path can be stated on dev by the
+ * running user.  Note that this function follows symlinks, like the
+ * stat system call.  When the function returns 0, also fills in
+ * statbuf for the path.  Returns non-zero on error.  This function
+ * does not have the limitations on file size that the functions above
+ * do.  Unlike some of the functions above, this function also works
+ * on directories. */
+int parser_stat_path(struct discover_context *ctx,
+		struct discover_device *dev, const char *path,
+		struct stat *statbuf);
 
 #endif /* _PARSER_H */

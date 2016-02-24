@@ -124,43 +124,58 @@ static int builtin_search(struct grub2_script *script,
 	return 0;
 }
 
+/* Note that GRUB does not follow symlinks in evaluating all file
+ * tests but -s, unlike below. However, it seems like a bad idea to
+ * emulate GRUB's behavior (e.g., it would take extra work), so we
+ * implement the behavior that coreutils' test binary has. */
 static bool builtin_test_op_file(struct grub2_script *script, char op,
 		const char *file)
 {
 	bool result;
-	int len, rc;
-	char *buf;
+	int rc;
+	struct stat statbuf;
 
-	rc = parser_request_file(script->ctx, script->ctx->device,
-			file, &buf, &len);
+	rc = parser_stat_path(script->ctx, script->ctx->device,
+			file, &statbuf);
 	if (rc)
 		return false;
 
 	switch (op) {
 	case 's':
 		/* -s: return true if file exists and has non-zero size */
-		result = len > 0;
+		result = statbuf.st_size > 0;
 		break;
 	case 'f':
-		/* -f: return true if file exists */
-		result = true;
+		/* -f: return true if file exists and is not a directory. This is
+		 * different than the behavior of "test", but is what GRUB does
+		 * (though note as above that we follow symlinks unlike GRUB). */
+		result = !S_ISDIR(statbuf.st_mode);
 		break;
 	default:
 		result = false;
 
 	}
 
-	talloc_free(buf);
 	return result;
 }
 
+/* See comment at builtin_test_op_file for differences between how
+ * GRUB implements file tests versus Petitboot's GRUB parser. */
 static bool builtin_test_op_dir(struct grub2_script *script, char op,
 		const char *dir)
 {
+	int rc;
+	struct stat statbuf;
+
 	if (op != 'd')
 		return false;
 
-	return parser_check_dir(script->ctx, script->ctx->device, dir) == 0;
+	rc = parser_stat_path(script->ctx, script->ctx->device, dir, &statbuf);
+	if (rc) {
+		return false;
+	}
+
+	return S_ISDIR(statbuf.st_mode);
 }
 
 static bool builtin_test_op(struct grub2_script *script,

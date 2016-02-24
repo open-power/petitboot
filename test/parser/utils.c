@@ -193,6 +193,9 @@ void test_add_dir(struct parser_test *test, struct discover_device *dev,
 	file->type = TEST_DIR;
 	file->dev = dev;
 	file->name = dirname;
+	/* Pick a non-zero size for directories so that "[ -s <dir
+	 * path> ]" sees that the file has non-zero size. */
+	file->size = 1;
 	list_add(&test->files, &file->list);
 }
 
@@ -241,20 +244,34 @@ int parser_request_file(struct discover_context *ctx,
 	return -1;
 }
 
-int parser_check_dir(struct discover_context *ctx,
-		struct discover_device *dev, const char *dirname)
+int parser_stat_path(struct discover_context *ctx,
+		struct discover_device *dev, const char *path,
+		struct stat *statbuf)
 {
 	struct parser_test *test = ctx->test_data;
 	struct test_file *file;
 
-	printf("%s: %s\n", __func__, dirname);
-
 	list_for_each_entry(&test->files, file, list) {
 		if (file->dev != dev)
 			continue;
-		if (strcmp(file->name, dirname))
+		if (strcmp(file->name, path))
 			continue;
-		return file->type == TEST_DIR ? 0 : -1;
+
+		statbuf->st_size = (off_t)file->size;
+		switch (file->type) {
+		case TEST_FILE:
+			statbuf->st_mode = S_IFREG;
+			break;
+		case TEST_DIR:
+			statbuf->st_mode = S_IFDIR;
+			break;
+		default:
+			fprintf(stderr, "%s: bad test file mode %d!", __func__,
+				file->type);
+			exit(EXIT_FAILURE);
+		}
+
+		return 0;
 	}
 
 	return -1;

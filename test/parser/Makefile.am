@@ -37,6 +37,7 @@ parser_TESTS = \
 	test/parser/test-grub2-sles-btrfs-snapshot \
 	test/parser/test-grub2-lexer-error \
 	test/parser/test-grub2-parser-error \
+	test/parser/test-grub2-test-file-ops \
 	test/parser/test-kboot-single \
 	test/parser/test-yaboot-empty \
 	test/parser/test-yaboot-single \
