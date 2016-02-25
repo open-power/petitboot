@@ -226,8 +226,8 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 		4 + 4;
 
 	len +=	4;
-	for (i = 0; i < sysinfo->n_current; i++)
-		len += 4 + optional_strlen(sysinfo->platform_current[i]);
+	for (i = 0; i < sysinfo->n_primary; i++)
+		len += 4 + optional_strlen(sysinfo->platform_primary[i]);
 	len +=	4;
 	for (i = 0; i < sysinfo->n_other; i++)
 		len += 4 + optional_strlen(sysinfo->platform_other[i]);
@@ -409,10 +409,10 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 	pos += pb_protocol_serialise_string(pos, sysinfo->type);
 	pos += pb_protocol_serialise_string(pos, sysinfo->identifier);
 
-	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_current);
+	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_primary);
 	pos += sizeof(uint32_t);
-	for (i = 0; i < sysinfo->n_current; i++)
-		pos += pb_protocol_serialise_string(pos, sysinfo->platform_current[i]);
+	for (i = 0; i < sysinfo->n_primary; i++)
+		pos += pb_protocol_serialise_string(pos, sysinfo->platform_primary[i]);
 
 	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_other);
 	pos += sizeof(uint32_t);
@@ -845,14 +845,14 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 		goto out;
 
 	/* Platform version strings for openpower platforms */
-	if (read_u32(&pos, &len, &sysinfo->n_current))
+	if (read_u32(&pos, &len, &sysinfo->n_primary))
 		goto out;
-	sysinfo->platform_current = talloc_array(sysinfo, char *,
-						sysinfo->n_current);
-	for (i = 0; i < sysinfo->n_current; i++) {
+	sysinfo->platform_primary = talloc_array(sysinfo, char *,
+						sysinfo->n_primary);
+	for (i = 0; i < sysinfo->n_primary; i++) {
 		if (read_string(sysinfo, &pos, &len, &tmp))
 			goto out;
-		sysinfo->platform_current[i] = talloc_strdup(sysinfo, tmp);
+		sysinfo->platform_primary[i] = talloc_strdup(sysinfo, tmp);
 	}
 
 	if (read_u32(&pos, &len, &sysinfo->n_other))

@@ -93,9 +93,9 @@ struct blockdev_info {
 struct system_info {
 	char			*type;
 	char			*identifier;
-	char			**platform_current;
+	char			**platform_primary;
 	char			**platform_other;
-	unsigned int		n_current;
+	unsigned int		n_primary;
 	unsigned int		n_other;
 	char			**bmc_current;
 	char			**bmc_golden;

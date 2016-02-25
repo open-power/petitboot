@@ -12,11 +12,11 @@ void hostboot_load_versions(struct system_info *info)
 {
 	int n = 0;
 
-	n = flash_parse_version(info, &info->platform_current, true);
+	n = flash_parse_version(info, &info->platform_primary, true);
 	if (n < 0)
 		pb_log("Failed to read platform versions for current side\n");
 	else
-		info->n_current = n;
+		info->n_primary = n;
 
 	n = flash_parse_version(info, &info->platform_other, false);
 	if (n < 0)

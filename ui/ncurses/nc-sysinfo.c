@@ -65,11 +65,11 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 	line("%-12s %s", _("System type:"), sysinfo->type ?: "");
 	line("%-12s %s", _("System id:"),   sysinfo->identifier ?: "");
 
-	if (sysinfo->n_current) {
+	if (sysinfo->n_primary) {
 		line(NULL);
-		line("%s", _("Current platform versions:"));
-		for (i = 0; i < sysinfo->n_current; i++) {
-			line("\t%s", sysinfo->platform_current[i] ?: "");
+		line("%s", _("Primary platform versions:"));
+		for (i = 0; i < sysinfo->n_primary; i++) {
+			line("\t%s", sysinfo->platform_primary[i] ?: "");
 		}
 	}
 
