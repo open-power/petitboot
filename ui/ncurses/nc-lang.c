@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 #include <talloc/talloc.h>
 #include <types/types.h>
@@ -265,8 +266,14 @@ static void lang_screen_setup_widgets(struct lang_screen *screen,
 
 		len = wcstombs(NULL, lang->label, 0);
 		assert(len >= 0);
-		label = talloc_array(screen, char, len + 1);
-		wcstombs(label, lang->label, len + 1);
+		if (len < 0) {
+			label = talloc_asprintf(screen,
+				"Unable to display text in this locale (%s)\n",
+				setlocale(LC_ALL, NULL));
+		} else {
+			label = talloc_array(screen, char, len + 1);
+			wcstombs(label, lang->label, len + 1);
+		}
 
 		selected = config->lang && !strcmp(lang->name, config->lang);
 		found |= selected;
