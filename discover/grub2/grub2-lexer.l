@@ -24,7 +24,8 @@ void yyerror(struct grub2_parser *parser, const char *fmt, ...);
 WORD	[^{}|&$;<> \t\n'"#]+
 DELIM	[ \t]+
 BLANK	["]{2}|[']{2}
-VARNAME ([[:alpha:]][_[:alnum:]]*|[0-9]|[\?@\*#])
+NUMBER	0|[1-9][0-9]*
+VARNAME ([[:alpha:]][_[:alnum:]]*|{NUMBER}|[\?@\*#])
 
 %%
 

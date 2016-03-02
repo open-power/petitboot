@@ -4,10 +4,10 @@
 #if 0 /* PARSER_EMBEDDED_CONFIG */
 
 function set_params_var {
-	params="$1 $2"
+	params="$1 $2 $10"
 }
 menuentry 'Linux' {
-	set_params_var abc 123
+	set_params_var abc 123 3 4 5 6 7 8 9 bingo
 	linux   test_kernel $params
 }
 
@@ -31,5 +31,5 @@ void run_test(struct parser_test *test)
 	/* The linux command, $params is expected to have been set when
 	 * set_params was called in menuentry.
 	 */
-	check_args(opt, "abc 123");
+	check_args(opt, "abc 123 bingo");
 }
