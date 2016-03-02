@@ -384,7 +384,7 @@ struct lang_screen *lang_screen_init(struct cui *cui,
 			_("Petitboot Language Selection"));
 	screen->scr.frame.rtitle = NULL;
 	screen->scr.frame.help = talloc_strdup(screen,
-			_("tab=next, shift+tab=previous, x=exit, h=help"));
+			_("tab=next, shift+tab=previous, x=exit"));
 	nc_scr_frame_draw(&screen->scr);
 
 	scrollok(screen->scr.sub_ncw, true);
