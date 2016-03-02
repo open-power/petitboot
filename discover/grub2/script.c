@@ -380,7 +380,7 @@ static int function_invoke(struct grub2_script *script,
 
 	/* set positional parameters */
 	for (i = 0; i < argc; i++) {
-		name = talloc_asprintf(script, "$%d", i);
+		name = talloc_asprintf(script, "%d", i);
 		script_env_set(script, name, argv[i]);
 	}
 
