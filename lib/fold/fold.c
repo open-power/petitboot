@@ -36,9 +36,10 @@ void fold_text(const char *text,
 
 		assert(bytes != (size_t)-1);
 
-		/* we'll get a zero size for the nul terminator, or (size_t) -2
-		 * if we've reached the end of the buffer */
-		if (!bytes || bytes == (size_t) -2) {
+		/* we'll get a zero size for the nul terminator, (size_t) -2
+		 * if we've reached the end of the buffer, or (size_t) -1 on
+		 * error */
+		if (!bytes || bytes == (size_t) -2 || bytes == (size_t) -1) {
 			line_cb(arg, start, end - start);
 			break;
 		}
