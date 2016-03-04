@@ -163,7 +163,7 @@ int flash_parse_version(void *ctx, char ***versions, bool current)
 	if (!current && !info->other_side)
 		return 0;
 
-	cur_info = current ? info->other_side : info;
+	cur_info = !current ? info->other_side : info;
 
 	len = cur_info->attr_data_len -  ecc_size(cur_info->attr_data_len);
 	buffer = talloc_array(cur_info, char, len);
