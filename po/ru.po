@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-11-11 14:01+1100\n"
+"POT-Creation-Date: 2016-03-07 10:02+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Russian\n"
@@ -270,6 +270,12 @@ msgstr "Шлюз:"
 msgid "(eg. 192.168.0.1)"
 msgstr "(eg. 192.168.0.1)"
 
+msgid "URL:"
+msgstr ""
+
+msgid "(eg. tftp://)"
+msgstr ""
+
 msgid "DNS Server(s):"
 msgstr "Серверы DNS:"
 
@@ -381,6 +387,9 @@ msgstr "Неизвестный язык '%s'"
 msgid "Petitboot Language Selection"
 msgstr "Выбор языка в Petitboot"
 
+msgid "tab=next, shift+tab=previous, x=exit"
+msgstr "tab=далее, shift+tab=назад, x=выход"
+
 #, c-format
 msgid "!Invalid option %d"
 msgstr "Недопустимая опция %d"
@@ -397,6 +406,18 @@ msgstr "Тип системы:"
 msgid "System id:"
 msgstr "ИД системы:"
 
+msgid "Primary platform versions:"
+msgstr ""
+
+msgid "Alternate platform versions:"
+msgstr ""
+
+msgid "BMC current side:"
+msgstr ""
+
+msgid "BMC golden side:"
+msgstr ""
+
 msgid "Storage devices"
 msgstr "Устройства хранения"
 
@@ -408,12 +429,15 @@ msgstr " UUID:       %s"
 msgid " mounted at: %s"
 msgstr " точка монтирования: %s"
 
-msgid "Network interfaces"
-msgstr "Сетевые интерфейсы"
+msgid "Management (BMC) interface"
+msgstr ""
 
 #, c-format
 msgid " MAC:  %s"
 msgstr " MAC:  %s"
+
+msgid "Network interfaces"
+msgstr "Сетевые интерфейсы"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.

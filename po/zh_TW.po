@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-11-11 14:01+1100\n"
+"POT-Creation-Date: 2016-03-07 10:02+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Traditional Chinese\n"
@@ -269,6 +269,12 @@ msgstr "閘道："
 msgid "(eg. 192.168.0.1)"
 msgstr "（例如：192.168.0.1）"
 
+msgid "URL:"
+msgstr ""
+
+msgid "(eg. tftp://)"
+msgstr ""
+
 msgid "DNS Server(s):"
 msgstr "DNS 伺服器："
 
@@ -380,6 +386,9 @@ msgstr "不明語言 '%s'"
 msgid "Petitboot Language Selection"
 msgstr "選取 Petitboot 語言"
 
+msgid "tab=next, shift+tab=previous, x=exit"
+msgstr "tab = 下一個，shift+tab = 前一個，x = 結束"
+
 #, c-format
 msgid "!Invalid option %d"
 msgstr "!無效選項 %d"
@@ -396,6 +405,18 @@ msgstr "系統類型："
 msgid "System id:"
 msgstr "系統 ID："
 
+msgid "Primary platform versions:"
+msgstr ""
+
+msgid "Alternate platform versions:"
+msgstr ""
+
+msgid "BMC current side:"
+msgstr ""
+
+msgid "BMC golden side:"
+msgstr ""
+
 msgid "Storage devices"
 msgstr "儲存裝置"
 
@@ -407,12 +428,15 @@ msgstr " UUID：      %s"
 msgid " mounted at: %s"
 msgstr " 裝載位置：%s"
 
-msgid "Network interfaces"
-msgstr "網路介面"
+msgid "Management (BMC) interface"
+msgstr ""
 
 #, c-format
 msgid " MAC:  %s"
 msgstr "  MAC：%s"
+
+msgid "Network interfaces"
+msgstr "網路介面"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.

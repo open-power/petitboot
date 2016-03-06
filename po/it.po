@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-11-11 14:01+1100\n"
+"POT-Creation-Date: 2016-03-07 10:02+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Italian\n"
@@ -270,6 +270,12 @@ msgstr "Gateway:"
 msgid "(eg. 192.168.0.1)"
 msgstr "(ad es. 192.168.0.1)"
 
+msgid "URL:"
+msgstr ""
+
+msgid "(eg. tftp://)"
+msgstr ""
+
 msgid "DNS Server(s):"
 msgstr "Server DNS:"
 
@@ -381,6 +387,9 @@ msgstr "Lingua sconosciuta '%s'"
 msgid "Petitboot Language Selection"
 msgstr "Selezione lingua di Petitboot"
 
+msgid "tab=next, shift+tab=previous, x=exit"
+msgstr "tabulazione=successivo, maiusc+tabulazione=precedente, x=uscita"
+
 #, c-format
 msgid "!Invalid option %d"
 msgstr "!Opzione non valida %d"
@@ -397,6 +406,18 @@ msgstr "Tipo di sistema:"
 msgid "System id:"
 msgstr "ID sistema:"
 
+msgid "Primary platform versions:"
+msgstr ""
+
+msgid "Alternate platform versions:"
+msgstr ""
+
+msgid "BMC current side:"
+msgstr ""
+
+msgid "BMC golden side:"
+msgstr ""
+
 msgid "Storage devices"
 msgstr "Dispositivi di memoria"
 
@@ -408,12 +429,15 @@ msgstr " UUID:       %s"
 msgid " mounted at: %s"
 msgstr " montato in: %s"
 
-msgid "Network interfaces"
-msgstr "Interfacce di rete"
+msgid "Management (BMC) interface"
+msgstr ""
 
 #, c-format
 msgid " MAC:  %s"
 msgstr " MAC:  %s"
+
+msgid "Network interfaces"
+msgstr "Interfacce di rete"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2015-11-11 14:01+1100\n"
+"POT-Creation-Date: 2016-03-07 10:02+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Korean\n"
@@ -269,6 +269,12 @@ msgstr "게이트웨이: "
 msgid "(eg. 192.168.0.1)"
 msgstr "(예: 192.168.0.1)"
 
+msgid "URL:"
+msgstr ""
+
+msgid "(eg. tftp://)"
+msgstr ""
+
 msgid "DNS Server(s):"
 msgstr "DNS 서버:"
 
@@ -380,6 +386,9 @@ msgstr "알 수 없는 언어 '%s'"
 msgid "Petitboot Language Selection"
 msgstr "Petitboot 언어 선택"
 
+msgid "tab=next, shift+tab=previous, x=exit"
+msgstr "tab=다음, shift+tab=이전, x=종료"
+
 #, c-format
 msgid "!Invalid option %d"
 msgstr "!올바르지 않은 옵션 %d"
@@ -396,6 +405,18 @@ msgstr "시스템 유형:"
 msgid "System id:"
 msgstr "시스템 ID:"
 
+msgid "Primary platform versions:"
+msgstr ""
+
+msgid "Alternate platform versions:"
+msgstr ""
+
+msgid "BMC current side:"
+msgstr ""
+
+msgid "BMC golden side:"
+msgstr ""
+
 msgid "Storage devices"
 msgstr "스토리지 장치"
 
@@ -407,12 +428,15 @@ msgstr " UUID:       %s"
 msgid " mounted at: %s"
 msgstr " 마운트 위치: %s"
 
-msgid "Network interfaces"
-msgstr "네트워크 인터페이스"
+msgid "Management (BMC) interface"
+msgstr ""
 
 #, c-format
 msgid " MAC:  %s"
 msgstr " MAC:  %s"
+
+msgid "Network interfaces"
+msgstr "네트워크 인터페이스"
 
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
