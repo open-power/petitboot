@@ -196,6 +196,15 @@ msgstr ""
 msgid "Waiting for configuration data..."
 msgstr "Waiting for configuration data..."
 
+msgid "Autoboot:"
+msgstr "Autoboot:"
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "Add Device:"
 
@@ -620,9 +629,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "Usage"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

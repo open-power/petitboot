@@ -196,6 +196,15 @@ msgstr "追加するブート・デバイスの選択"
 msgid "Waiting for configuration data..."
 msgstr "構成データを待っています..."
 
+msgid "Autoboot:"
+msgstr "自動ブート:"
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "デバイスの追加"
 
@@ -674,9 +683,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "使用法"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

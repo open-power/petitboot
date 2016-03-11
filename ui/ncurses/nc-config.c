@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	37
+#define N_FIELDS	39
 
 extern struct help_text config_help_text;
 
@@ -69,6 +69,8 @@ struct config_screen {
 	bool			ipmi_override;
 
 	struct {
+		struct nc_widget_label		*autoboot_l;
+		struct nc_widget_select		*autoboot_f;
 		struct nc_widget_label		*boot_order_l;
 		struct nc_widget_subset		*boot_order_f;
 		struct nc_widget_label		*boot_empty_l;
@@ -191,11 +193,11 @@ static int screen_process_form(struct config_screen *screen)
 	const struct system_info *sysinfo = screen->cui->sysinfo;
 	enum net_conf_type net_conf_type;
 	struct interface_config *iface;
+	bool allow_write, autoboot;
 	char *str, *end;
 	struct config *config;
 	int i, n_boot_opts, rc, idx;
 	unsigned int *order;
-	bool allow_write;
 	char mac[20];
 
 	config = config_copy(screen, screen->cui->config);
@@ -206,7 +208,8 @@ static int screen_process_form(struct config_screen *screen)
 	n_boot_opts = widget_subset_get_order(config, &order,
 					      screen->widgets.boot_order_f);
 
-	config->autoboot_enabled = n_boot_opts > 0;
+	autoboot = widget_select_get_value(screen->widgets.autoboot_f);
+	config->autoboot_enabled = autoboot || (autoboot && n_boot_opts);
 
 	config->n_autoboot_opts = n_boot_opts;
 	config->autoboot_opts = talloc_array(config, struct autoboot_option,
@@ -387,8 +390,21 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	help_x = screen->field_x + 2 +
 		widget_width(widget_textbox_base(screen->widgets.dns_f));
 
-	wl = widget_label_base(screen->widgets.boot_order_l);
+	wl = widget_label_base(screen->widgets.autoboot_l);
 	widget_set_visible(wl, true);
+	widget_move(wl, y, screen->label_x);
+
+	wf = widget_select_base(screen->widgets.autoboot_f);
+	widget_move(wf, y, screen->field_x);
+	y += widget_height(wf);
+
+	show = screen->autoboot_enabled;
+
+	if (show)
+		y += 1;
+
+	wl = widget_label_base(screen->widgets.boot_order_l);
+	widget_set_visible(wl, show);
 	widget_move(wl, y, screen->label_x);
 
 	wf = widget_subset_base(screen->widgets.boot_order_f);
@@ -397,31 +413,36 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	widget_move(wl, y, screen->field_x);
 
 	if (widget_subset_height(screen->widgets.boot_order_f)) {
-		widget_set_visible(wf, true);
 		widget_set_visible(wl, false);
-		y += widget_height(wf);
+		widget_set_visible(wf, show);
+		y += show ? widget_height(wf) : 0;
 	} else {
-		widget_set_visible(wl, true);
+		widget_set_visible(wl, show);
 		widget_set_visible(wf, false);
-		y += 1;
+		y += show ? 1 : 0;
 	}
 
-	y += 1;
-
-	widget_move(widget_button_base(screen->widgets.boot_add_b),
-			y++, screen->field_x);
-	widget_move(widget_button_base(screen->widgets.boot_any_b),
-			y++, screen->field_x);
-	widget_move(widget_button_base(screen->widgets.boot_none_b),
-			y, screen->field_x);
+	if (show) {
+		y += 1;
+		widget_move(widget_button_base(screen->widgets.boot_add_b),
+				y++, screen->field_x);
+		widget_move(widget_button_base(screen->widgets.boot_any_b),
+				y++, screen->field_x);
+		widget_move(widget_button_base(screen->widgets.boot_none_b),
+				y, screen->field_x);
+	}
 
 	wf = widget_button_base(screen->widgets.boot_add_b);
-	if (widget_subset_n_inactive(screen->widgets.boot_order_f))
+	if (widget_subset_n_inactive(screen->widgets.boot_order_f) && show)
 		widget_set_visible(wf, true);
 	else
 		widget_set_visible(wf, false);
 
-	y += 2;
+	if (show)
+		y += 2;
+
+	widget_set_visible(widget_button_base(screen->widgets.boot_any_b), show);
+	widget_set_visible(widget_button_base(screen->widgets.boot_none_b), show);
 
 	wf = widget_textbox_base(screen->widgets.timeout_f);
 	wl = widget_label_base(screen->widgets.timeout_l);
@@ -584,6 +605,15 @@ static void config_screen_boot_order_change(void *arg, int value)
 	widgetset_post(screen->widgetset);
 }
 
+static void config_screen_autoboot_change(void *arg, int value)
+{
+	struct config_screen *screen = arg;
+	screen->autoboot_enabled = !!value;
+	widgetset_unpost(screen->widgetset);
+	config_screen_layout_widgets(screen);
+	widgetset_post(screen->widgetset);
+}
+
 static void config_screen_add_device(void *arg)
 {
 	struct config_screen *screen = arg;
@@ -722,6 +752,21 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	type = screen->net_conf_type;
 	ifcfg = first_active_interface(config);
 
+	screen->autoboot_enabled = config->autoboot_enabled;
+
+	screen->widgets.autoboot_l = widget_new_label(set, 0, 0,
+					_("Autoboot:"));
+	screen->widgets.autoboot_f = widget_new_select(set, 0, 0,
+					COLS - screen->field_x - 1);
+
+	widget_select_add_option(screen->widgets.autoboot_f, 0, _("Disabled"),
+				 !screen->autoboot_enabled);
+	widget_select_add_option(screen->widgets.autoboot_f, 1, _("Enabled"),
+				 screen->autoboot_enabled);
+
+	widget_select_on_change(screen->widgets.autoboot_f,
+			config_screen_autoboot_change, screen);
+
 	add_len = max(min_len, strncols(_("Add Device")));
 	clear_len = max(min_len, strncols(_("Clear")));
 	any_len = max(min_len, strncols(_("Clear & Boot Any")));
@@ -783,7 +828,6 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		widget_subset_add_option(screen->widgets.boot_order_f, label);
 	}
 
-	screen->autoboot_enabled = config->n_autoboot_opts;
 	for (i = 0; i < config->n_autoboot_opts; i++) {
 		struct autoboot_option *opt = &config->autoboot_opts[i];
 		int idx;

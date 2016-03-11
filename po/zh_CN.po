@@ -196,6 +196,15 @@ msgstr "选择要添加的引导设备"
 msgid "Waiting for configuration data..."
 msgstr "正在等待配置数据..."
 
+msgid "Autoboot:"
+msgstr "自动引导："
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "添加设备"
 
@@ -644,9 +653,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "用法"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

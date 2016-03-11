@@ -197,6 +197,15 @@ msgstr "Выберите загрузочное устройство для до
 msgid "Waiting for configuration data..."
 msgstr "Ожидание данных конфигурации..."
 
+msgid "Autoboot:"
+msgstr "Автоматическая загрузка:"
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "Добавить устройство"
 
@@ -669,9 +678,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "Использование"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

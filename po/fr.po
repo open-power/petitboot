@@ -196,6 +196,15 @@ msgstr "Sélectionner une unité d'amorçage à ajouter"
 msgid "Waiting for configuration data..."
 msgstr "Attente de données de configuration..."
 
+msgid "Autoboot:"
+msgstr "Amorçage auto:"
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "Ajouter une unité"
 
@@ -675,9 +684,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "Utilisation"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

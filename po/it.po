@@ -197,6 +197,15 @@ msgstr "Selezionare un dispositivo di avvio da aggiungere"
 msgid "Waiting for configuration data..."
 msgstr "In attesa dei dati di configurazione..."
 
+msgid "Autoboot:"
+msgstr "Avvio automatico:"
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "Aggiungi dispositivo"
 
@@ -677,9 +686,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "Utilizzo"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

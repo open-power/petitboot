@@ -196,6 +196,15 @@ msgstr "추가할 부트 장치를 선택하십시오. "
 msgid "Waiting for configuration data..."
 msgstr "구성 데이터 대기 중..."
 
+msgid "Autoboot:"
+msgstr "자동 부트:"
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "장치 추가"
 
@@ -659,9 +668,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "사용법"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

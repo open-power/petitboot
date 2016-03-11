@@ -198,6 +198,15 @@ msgstr "Wählen Sie eine Booteinheit aus, die hinzugefügt werden soll"
 msgid "Waiting for configuration data..."
 msgstr "Warten auf Konfigurationsdaten..."
 
+msgid "Autoboot:"
+msgstr "Autom. Booten:"
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "Einheit hinzufügen"
 
@@ -685,9 +694,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "Verwendung"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

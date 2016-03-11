@@ -196,6 +196,15 @@ msgstr "選取要新增的啟動裝置"
 msgid "Waiting for configuration data..."
 msgstr "正在等待配置資料..."
 
+msgid "Autoboot:"
+msgstr "自動啟動："
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
 msgid "Add Device"
 msgstr "新增裝置"
 
@@ -647,9 +656,6 @@ msgstr ""
 
 msgid "Usage"
 msgstr "用法"
-
-#~ msgid "Autoboot:"
-#~ msgstr "Autoboot:"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"
