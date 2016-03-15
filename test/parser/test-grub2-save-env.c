@@ -74,6 +74,12 @@ struct env_test {
 		"a=xxx\nsave_env a\n",
 		"q=q\na=x\nr=r\n#",
 	},
+	{
+		"unset-var",
+		"##############",
+		"save_env an_unset_var\n",
+		"an_unset_var=\n"
+	}
 };
 
 static void run_env_test(struct parser_test *test, struct env_test *envtest)

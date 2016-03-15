@@ -257,6 +257,10 @@ int builtin_save_env(struct grub2_script *script,
 
 		name = argv[i];
 		value = script_env_get(script, name);
+		if (!value) {
+			pb_log("Saved unset environment variable %s!\n", name);
+			value = "";
+		}
 
 		update_env(buf + siglen, len - siglen, name, value);
 	}
