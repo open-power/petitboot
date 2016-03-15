@@ -486,9 +486,10 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	  || start_url_load(boot_task, "initrd", initrd, &boot_task->initrd)
 	  || start_url_load(boot_task, "dtb", dtb, &boot_task->dtb);
 
-	/* If all URLs are local, we may be done. */
 	if (rc) {
-		talloc_free(boot_task);
+		/* Don't call boot_cancel() to preserve the status update */
+		boot_task->cancelled = true;
+		cleanup_cancellations(boot_task, NULL);
 		return NULL;
 	}
 
