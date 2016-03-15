@@ -1258,30 +1258,6 @@ static void device_handler_reinit_sources(struct device_handler *handler)
 			handler->dry_run);
 }
 
-static const char *fs_parameters(struct discover_device *dev,
-				 unsigned int rw_flags)
-{
-	const char *fstype = discover_device_get_param(dev, "ID_FS_TYPE");
-
-	/* XFS journals are not cross-endian compatible; don't try recovery
-	 * even if we have a snapshot */
-	if (!strncmp(fstype, "xfs", strlen("xfs")))
-		return "norecovery";
-
-	/* If we have a snapshot available allow touching the filesystem */
-	if (dev->ramdisk)
-		return "";
-
-	if ((rw_flags | MS_RDONLY) != MS_RDONLY)
-		return "";
-
-	/* Avoid writes due to journal replay if we don't have a snapshot */
-	if (!strncmp(fstype, "ext4", strlen("ext4")))
-		return "norecovery";
-
-	return "";
-}
-
 static inline const char *get_device_path(struct discover_device *dev)
 {
 	return dev->ramdisk ? dev->ramdisk->snapshot : dev->device_path;
@@ -1368,6 +1344,52 @@ static bool check_existing_mount(struct discover_device *dev)
 	return mnt != NULL;
 }
 
+/*
+ * Attempt to mount a filesystem safely, while handling certain filesytem-
+ * specific options
+ */
+static int try_mount(const char *device_path, const char *mount_path,
+			     const char *fstype, unsigned long flags,
+			     bool have_snapshot)
+{
+	const char *fs, *safe_opts;
+	int rc;
+
+	/* Mount ext3 as ext4 instead so 'norecovery' can be used */
+	if (strncmp(fstype, "ext3", strlen("ext3")) == 0) {
+		pb_debug("Mounting ext3 filesystem as ext4\n");
+		fs = "ext4";
+	} else
+		fs = fstype;
+
+	if (strncmp(fs, "xfs", strlen("xfs")) == 0 ||
+	    strncmp(fs, "ext4", strlen("ext4")) == 0)
+		safe_opts = "norecovery";
+	else
+		safe_opts = NULL;
+
+	errno = 0;
+	/* If no snapshot is available don't attempt recovery */
+	if (!have_snapshot)
+		return mount(device_path, mount_path, fs, flags, safe_opts);
+
+	rc = mount(device_path, mount_path, fs, flags, NULL);
+
+	if (!rc)
+		return rc;
+
+	/* Mounting failed; some filesystems will fail to mount if a recovery
+	 * journal exists (eg. cross-endian XFS), so try again with norecovery
+	 * where that option is available.
+	 * If mounting read-write just return the error as norecovery is not a
+	 * valid option */
+	if ((flags & MS_RDONLY) != MS_RDONLY || !safe_opts)
+		return rc;
+
+	errno = 0;
+	return mount(device_path, mount_path, fs, flags, safe_opts);
+}
+
 static int mount_device(struct discover_device *dev)
 {
 	const char *fstype, *device_path;
@@ -1386,13 +1408,6 @@ static int mount_device(struct discover_device *dev)
 	if (!fstype)
 		return 0;
 
-	/* ext3 treats the norecovery option as an error, so mount the device
-	 * as an ext4 filesystem instead */
-	if (!strncmp(fstype, "ext3", strlen("ext3"))) {
-		pb_debug("Mounting ext3 filesystem as ext4\n");
-		fstype = talloc_asprintf(dev, "ext4");
-	}
-
 	dev->mount_path = join_paths(dev, mount_base(),
 					dev->device_path);
 
@@ -1405,10 +1420,9 @@ static int mount_device(struct discover_device *dev)
 	device_path = get_device_path(dev);
 
 	pb_log("mounting device %s read-only\n", dev->device_path);
-	errno = 0;
-	rc = mount(device_path, dev->mount_path, fstype,
-			MS_RDONLY | MS_SILENT,
-			fs_parameters(dev, MS_RDONLY));
+	rc = try_mount(device_path, dev->mount_path, fstype,
+		       MS_RDONLY | MS_SILENT, dev->ramdisk);
+
 	if (!rc) {
 		dev->mounted = true;
 		dev->mounted_rw = false;
@@ -1488,9 +1502,8 @@ int device_request_write(struct discover_device *dev, bool *release)
 		return -1;
 	}
 
-	rc = mount(device_path, dev->mount_path, fstype,
-			MS_SILENT,
-			fs_parameters(dev, MS_REMOUNT));
+	rc = try_mount(device_path, dev->mount_path, fstype,
+		       MS_SILENT, dev->ramdisk);
 	if (rc)
 		goto mount_ro;
 
@@ -1501,9 +1514,9 @@ int device_request_write(struct discover_device *dev, bool *release)
 mount_ro:
 	pb_log("Unable to remount device %s read-write: %s\n",
 	       device_path, strerror(errno));
-	if (mount(device_path, dev->mount_path, fstype,
-			MS_RDONLY | MS_SILENT,
-			fs_parameters(dev, MS_RDONLY)))
+	rc = try_mount(device_path, dev->mount_path, fstype,
+		       MS_RDONLY | MS_SILENT, dev->ramdisk);
+	if (rc)
 		pb_log("Unable to recover mount for %s: %s\n",
 		       device_path, strerror(errno));
 	return -1;
@@ -1534,9 +1547,8 @@ void device_release_write(struct discover_device *dev, bool release)
 		device_path = get_device_path(dev);
 	}
 
-	if (mount(device_path, dev->mount_path, fstype,
-			MS_RDONLY | MS_SILENT,
-			fs_parameters(dev, MS_RDONLY)))
+	if (try_mount(device_path, dev->mount_path, fstype,
+		       MS_RDONLY | MS_SILENT, dev->ramdisk))
 		pb_log("Failed to remount %s read-only: %s\n",
 		       device_path, strerror(errno));
 	else
