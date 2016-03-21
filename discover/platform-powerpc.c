@@ -1121,6 +1121,7 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 	const uint32_t magic_value = 0x21706221;
 	uint8_t resp[resp_len];
 	uint32_t cookie;
+	bool persistent;
 	int i, rc;
 	uint8_t req[] = {
 		0x61, /* parameter selector: OEM section (network) */
@@ -1169,18 +1170,21 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 		return;
 	}
 
-	/* Check for valid parameters. For now ignore the persistent flag */
+	/* Check that the parameters are valid */
 	if (resp[2] & 0x80) {
 		pb_debug("platform: network override is invalid/locked\n");
 		return;
 	}
 
-	/* Check for valid parameters in the boot flags section, ignoring the
-	 * persistent bit */
+	/* Check for valid parameters in the boot flags section */
 	if (!(resp[3] & 0x80)) {
 		pb_debug("platform: network override valid flag not set\n");
 		return;
 	}
+	/* Read the persistent flag; if it is set we need to save this config */
+	persistent = resp[3] & 0x40;
+	if (persistent)
+		pb_debug("platform: network override is persistent\n");
 
 	/* Check 4-byte cookie value */
 	i = 4;
@@ -1202,7 +1206,15 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 	}
 
 	/* Interpret the rest of the interface config */
-	parse_ipmi_interface_override(config, &resp[i], resp_len - i);
+	rc = parse_ipmi_interface_override(config, &resp[i], resp_len - i);
+
+	if (!rc && persistent) {
+		/* Write this new config to NVRAM */
+		update_network_config(platform, config);
+		rc = write_nvram(platform);
+		if (rc)
+			pb_log("platform: Failed to save persistent interface override\n");
+	}
 }
 
 static int load_config(struct platform *p, struct config *config)

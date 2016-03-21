@@ -223,7 +223,7 @@ bool ipmi_present(void)
 
 /* Reads and applies an IPMI interface config override, which closely follows
  * the format of an interface config struct as described in lib/types */
-void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
+int parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 				uint16_t len)
 {
 	struct interface_config *ifconf;
@@ -240,14 +240,14 @@ void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 
 	if (!hwsize || !ipsize) {
 		pb_log("%s: Empty response\n", __func__);
-		return;
+		return -1;
 	}
 
 	/* At the moment only support 6-byte MAC addresses */
 	if (hwsize != sizeof(ifconf->hwaddr)) {
 		pb_log("Unsupported HW address size in network override: %u\n",
 		       hwsize);
-		return;
+		return -1;
 	}
 
 	/* Sanity check the IP address size */
@@ -259,14 +259,14 @@ void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 		addr_len = INET6_ADDRSTRLEN;
 	} else {
 		pb_log("Unsupported IP address size: %u\n", ipsize);
-		return;
+		return -1;
 	}
 
 	/* Everything past here is the interface config */
 	ifconf = talloc_zero(config, struct interface_config);
 	if (!ifconf) {
 		pb_log("Failed to allocate network override\n");
-		return;
+		return -1;
 	}
 
 	/* Hardware Address */
@@ -281,7 +281,7 @@ void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 		if (ipsize + ipsize  + 1 > len - i) {
 			pb_log("Expected data greater than buffer size\n");
 			talloc_free(ifconf);
-			return;
+			return -1;
 		}
 
 		/* IP address */
@@ -289,7 +289,7 @@ void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 		if (!inet_ntop(addr_type, &buf[i], ipstr, addr_len)) {
 			pb_log("Failed to convert ipaddr: %m\n");
 			talloc_free(ifconf);
-			return;
+			return -1;
 		}
 		i += ipsize;
 
@@ -303,17 +303,19 @@ void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 		if (!inet_ntop(addr_type, &buf[i], gatewaystr, addr_len)) {
 			pb_log("Failed to convert gateway: %m\n");
 			talloc_free(ifconf);
-			return;
+			return -1;
 		}
 		ifconf->static_config.gateway = gatewaystr;
 		i += ipsize;
 	}
 
-	pb_log("Applying IPMI network config\n");
+	pb_log("Applying IPMI network interface override\n");
 
 	/* Replace any existing interface config */
 	talloc_free(config->network.interfaces);
 	config->network.n_interfaces = 1;
 	config->network.interfaces = talloc(config, struct interface_config *);
 	config->network.interfaces[0] = ifconf;
+
+	return 0;
 }

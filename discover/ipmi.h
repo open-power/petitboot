@@ -38,7 +38,7 @@ int ipmi_transaction(struct ipmi *ipmi, uint8_t netfn, uint8_t cmd,
 		uint8_t *resp_buf, uint16_t *resp_len,
 		int timeout_ms);
 
-void parse_ipmi_interface_override(struct config *config, uint8_t *buf,
+int parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 				uint16_t len);
 
 
