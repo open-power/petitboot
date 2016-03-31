@@ -75,10 +75,14 @@ static void cui_start(void)
 	 * Petitboot to exit if they're left undefined */
 	define_key("\x1b\x5b\x35\x7e", KEY_PPAGE);
 	define_key("\x1b\x5b\x36\x7e", KEY_NPAGE);
+	define_key("\x1b\x5b\x31\x7e", KEY_HOME);
+	define_key("\x1b\x5b\x34\x7e", KEY_END);
 	define_key("\x1b\x4f\x48", KEY_HOME);
 	define_key("\x1b\x4f\x46", KEY_END);
 	define_key("OH", KEY_HOME);
 	define_key("OF", KEY_END);
+	define_key("\x1b\x5b\x41", KEY_UP);
+	define_key("\x1b\x5b\x42", KEY_DOWN);
 
 	while (getch() != ERR)		/* flush stdin */
 		(void)0;
