@@ -52,6 +52,6 @@ discover/grub2/grub2-lexer.h discover/grub2/grub2-lexer.c: \
 # We need to loosen our warnings for the generated lexer code.
 discover/grub2/%grub2-lexer.o discover/grub2/grub2-lexer.o: \
 		AM_CFLAGS += -Wno-unused-parameter -Wno-missing-prototypes \
-			       -Wno-missing-declarations
+			       -Wno-missing-declarations -Wno-sign-compare
 
 $(discover_grub2_grub2_parser_ro_OBJECTS): discover/grub2/grub2-parser.h
