@@ -5,7 +5,7 @@
 version=
 datefmt='%Y%m%d'
 
-export GIT_DIR=$(basename $0)/.git/
+export GIT_DIR=$(dirname $0)/.git/
 
 if head=$(git rev-parse --short=8 --verify HEAD 2>/dev/null); then
 
@@ -26,8 +26,21 @@ if head=$(git rev-parse --short=8 --verify HEAD 2>/dev/null); then
 		version=$(printf "%($datefmt)T.g%s%s" ${date} ${head} ${suffix})
 	fi
 else
-	# Default to current date and time.
-	version="$(date +dev.$datefmt)"
+	# Check if a specific version is set, eg: by buildroot
+	if [ ! -z "$PETITBOOT_VERSION" ];
+	then
+		# Full git hash
+		len=$(echo -n "${PETITBOOT_VERSION}" | wc -c)
+		if [[ ${len} == 40 ]]; then
+			version=`echo -n ${PETITBOOT_VERSION} | \
+				sed "s/^\([0-9a-f]\{7\}\).*/\1/;"`
+		else
+			version="$PETITBOOT_VERSION"
+		fi
+	else
+		# Default to current date and time.
+		version="$(date +dev.$datefmt)"
+	fi
 fi
 
 echo $version
