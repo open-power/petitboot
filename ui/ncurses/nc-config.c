@@ -209,7 +209,7 @@ static int screen_process_form(struct config_screen *screen)
 					      screen->widgets.boot_order_f);
 
 	autoboot = widget_select_get_value(screen->widgets.autoboot_f);
-	config->autoboot_enabled = autoboot || (autoboot && n_boot_opts);
+	config->autoboot_enabled = autoboot && n_boot_opts;
 
 	config->n_autoboot_opts = n_boot_opts;
 	config->autoboot_opts = talloc_array(config, struct autoboot_option,
@@ -629,7 +629,6 @@ static void config_screen_autoboot_none(void *arg)
 	struct nc_widget_subset *subset = screen->widgets.boot_order_f;
 
 	widget_subset_clear_active(subset);
-	screen->autoboot_enabled = false;
 
 	widgetset_unpost(screen->widgetset);
 	config_screen_layout_widgets(screen);
