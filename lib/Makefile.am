@@ -61,7 +61,7 @@ lib_libpbcore_la_CPPFLAGS += \
 
 lib_libpbcore_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-l:libflash.so
+	$(LIBFLASH_LIBS)
 
 lib_libpbcore_la_SOURCES += \
 	lib/flash/flash.c

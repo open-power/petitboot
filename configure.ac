@@ -57,6 +57,11 @@ AC_CHECK_LIB([udev], [udev_new],
 	[AC_MSG_FAILURE([The libudev development library is required by petitboot.  Try installing the package libudev-dev or libudev-devel.])]
 )
 
+AC_CHECK_LIB([devmapper], [dm_task_create],
+	[DEVMAPPER_LIBS=-ldevmapper],
+	[AC_MSG_FAILURE([The libdevmapper development library is required by petitboot.  Try installing the package libdevmapper-dev or libdevmapper-devel.])]
+)
+
 AC_ARG_WITH([fdt],
 	AS_HELP_STRING([--without-fdt],
 		[Build without libfdt (default: no)]))
@@ -186,6 +191,25 @@ AS_IF([test "x$enable_mtd" = "xyes"],
       []
 )
 
+AS_IF(
+	[test "x$enable_mtd" = "xyes"],
+		AC_CHECK_LIB([flash], [arch_flash_init],
+			[LIBFLASH_LIBS=-lflash],
+			[AC_MSG_FAILURE([--enable-mtd requires the libflash library])]
+		)
+)
+AS_IF(
+	[test "x$enable_mtd" = "xyes"],
+	[SAVE_CPPFLAGS="$CPPFLAGS" CPPFLAGS="$CPPFLAGS $libflash_CFLAGS"
+		AC_CHECK_HEADERS(
+			[libflash/libflash.h],
+			[],
+			[AC_MSG_FAILURE([--enable-mtd given but libflash/libflash.h not found])]
+		)
+		CPPFLAGS="$SAVE_CPPFLAGS"
+	]
+)
+
 AC_ARG_ENABLE(
 	[ps3],
 	[AS_HELP_STRING(
@@ -285,7 +309,9 @@ AS_IF(
 )
  
 AC_SUBST([UDEV_LIBS])
+AC_SUBST([DEVMAPPER_LIBS])
 AC_SUBST([FDT_LIBS])
+AC_SUBST([LIBFLASH_LIBS])
 AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([DESTDIR])
 AC_SUBST([pkgsysconfdir], ["${sysconfdir}/${package}"])

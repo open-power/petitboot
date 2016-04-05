@@ -62,7 +62,7 @@ discover_pb_discover_LDADD = \
 
 discover_pb_discover_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-ldevmapper
+	$(DEVMAPPER_LIBS)
 
 discover_pb_discover_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
