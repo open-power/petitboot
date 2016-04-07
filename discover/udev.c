@@ -176,10 +176,9 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 
 	udev_setup_device_params(dev, ddev);
 
-	/* Create a snapshot for all disks, unless it is an assembled RAID array */
+	/* Create a snapshot for all disk devices */
 	if ((ddev->device->type == DEVICE_TYPE_DISK ||
-	     ddev->device->type == DEVICE_TYPE_USB) &&
-	    !udev_device_get_property_value(dev, "MD_LEVEL"))
+	     ddev->device->type == DEVICE_TYPE_USB))
 		devmapper_init_snapshot(udev->handler, ddev);
 
 	device_handler_discover(udev->handler, ddev);

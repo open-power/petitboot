@@ -4,6 +4,10 @@
 #include <errno.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "libdevmapper.h"
 #include "devmapper.h"
 #include "platform.h"
@@ -17,27 +21,91 @@ struct target {
 	char		*params;
 };
 
+static unsigned long read_param_uint(struct discover_device *device,
+				const char *param)
+{
+	unsigned long value = 0;
+	const char *tmp;
+
+	tmp = discover_device_get_param(device, param);
+	if (!tmp) {
+		pb_debug("Could not retrieve parameter '%s' for %s\n",
+			 param, device->device_path);
+		errno = EINVAL;
+	} else {
+		errno = 0;
+		value = strtoul(tmp, NULL, 0);
+	}
+
+	/* Return errno and result directly */
+	return value;
+}
+
 /* Return the number of sectors on a block device. Zero represents an error */
 static uint64_t get_block_sectors(struct discover_device *device)
 {
-	unsigned long long sectors;
-	const char *tmp;
+	unsigned long major, minor, sectors = 0;
+	char *attr, *buf = NULL;
+	struct stat sb;
+	int fd = -1;
+	ssize_t sz;
 
-	tmp = discover_device_get_param(device, "ID_PART_ENTRY_SIZE");
-	if (!tmp) {
-		pb_debug("Could not retrieve ID_PART_ENTRY_SIZE for %s\n",
+	sectors = read_param_uint(device, "ID_PART_ENTRY_SIZE");
+	if (!errno)
+		return (uint64_t)sectors;
+	else
+		pb_debug("Error reading sector count for %s: %m\n",
 		       device->device_path);
+
+	/* Either the udev property is missing or we failed to parse it.
+	 * Instead try to directly read the size attribute out of sysfs */
+	major = read_param_uint(device, "MAJOR");
+	if (errno) {
+		pb_debug("Error reading %s major number\n", device->device_path);
+		return 0;
+	}
+	minor = read_param_uint(device, "MINOR");
+	if (errno) {
+		pb_debug("Error reading %s minor number\n", device->device_path);
 		return 0;
 	}
 
-	errno = 0;
-	sectors = strtoull(tmp, NULL, 0);
+	attr = talloc_asprintf(device, "/sys/dev/block/%lu:%lu/size",
+			       major, minor);
+	if (stat(attr, &sb)) {
+		pb_debug("Failed to stat %s, %m\n", attr);
+		goto out;
+	}
+
+	fd = open(attr, O_RDONLY);
+	if (fd < 0) {
+		pb_debug("Failed to open sysfs attribute for %s\n",
+			 device->device_path);
+		goto out;
+	}
+
+	buf = talloc_array(device, char, sb.st_size);
+	if (!buf) {
+		pb_debug("Failed to allocate space for attr\n");
+		goto out;
+	}
+
+	sz = read(fd, buf, sb.st_size);
+	if (sz <= 0) {
+		pb_debug("Failed to read sysfs attr: %m\n");
+		goto out;
+	}
+
+	sectors = strtoul(buf, NULL, 0);
 	if (errno) {
-		pb_debug("Error reading sector count for %s: %s\n",
-		       device->device_path, strerror(errno));
+		pb_debug("Failed to read sectors from sysfs: %m\n");
 		sectors = 0;
 	}
 
+out:
+	close(fd);
+	talloc_free(buf);
+	talloc_free(attr);
 	return (uint64_t)sectors;
 }
 
