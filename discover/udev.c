@@ -448,6 +448,7 @@ static int udev_process(void *arg)
 	return 0;
 }
 
+#ifdef UDEV_LOGGING
 static void udev_log_fn(struct udev __attribute__((unused)) *udev,
 	int __attribute__((unused)) priority, const char *file, int line,
 	const char *fn, const char *format, va_list args)
@@ -455,6 +456,7 @@ static void udev_log_fn(struct udev __attribute__((unused)) *udev,
       pb_log("libudev: %s %s:%d: ", fn, file, line);
       vfprintf(pb_log_get_stream(), format, args);
 }
+#endif
 
 struct pb_udev *udev_init(struct device_handler *handler,
 		struct waitset *waitset)
@@ -475,7 +477,9 @@ struct pb_udev *udev_init(struct device_handler *handler,
 
 	udev_set_userdata(udev->udev, udev);
 
+#ifdef UDEV_LOGGING
 	udev_set_log_fn(udev->udev, udev_log_fn);
+#endif
 
 	result = udev_setup_monitor(udev->udev, &udev->monitor);
 	if (result)

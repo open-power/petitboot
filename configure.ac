@@ -57,6 +57,11 @@ AC_CHECK_LIB([udev], [udev_new],
 	[AC_MSG_FAILURE([The libudev development library is required by petitboot.  Try installing the package libudev-dev or libudev-devel.])]
 )
 
+PKG_CHECK_EXISTS(libudev >= 218, [old_udev=no], [old_udev=yes])
+if test "$old_udev" = "yes" ; then
+      AC_DEFINE(UDEV_LOGGING, 1, [Support old udev logging interface])],
+fi
+
 AC_CHECK_LIB([devmapper], [dm_task_create],
 	[DEVMAPPER_LIBS=-ldevmapper],
 	[AC_MSG_FAILURE([The libdevmapper development library is required by petitboot.  Try installing the package libdevmapper-dev or libdevmapper-devel.])]
