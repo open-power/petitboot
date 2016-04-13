@@ -445,6 +445,8 @@ static int default_timeout(void *arg)
 
 	pb_log("Timeout expired, booting default option %s\n", opt->option->id);
 
+	platform_pre_boot();
+
 	handler->pending_boot = boot(handler, handler->default_boot_option,
 			NULL, handler->dry_run, boot_status, handler);
 	handler->pending_boot_is_default = true;
