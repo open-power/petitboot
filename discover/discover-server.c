@@ -286,7 +286,7 @@ static int discover_server_process_connection(void *arg)
 	struct client *client;
 
 	/* accept the incoming connection */
-	fd = accept(server->socket, NULL, 0);
+	fd = accept(server->socket, NULL, NULL);
 	if (fd < 0) {
 		pb_log("accept: %s\n", strerror(errno));
 		return 0;

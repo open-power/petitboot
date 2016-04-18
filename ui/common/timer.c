@@ -49,7 +49,7 @@ static int timer_cb(void *arg)
 	struct ui_timer *timer = arg;
 
 	timer->handle_timeout(timer);
-	timer->waiter = 0;
+	timer->waiter = NULL;
 	return 0;
 }
 

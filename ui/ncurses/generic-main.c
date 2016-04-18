@@ -149,7 +149,7 @@ static char *default_log_filename(void)
 	return name;
 }
 
-struct cui *cui;
+static struct cui *cui;
 
 /*
  * struct pb_cui - Main cui program instance.

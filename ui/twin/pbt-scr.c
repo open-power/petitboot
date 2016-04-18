@@ -402,8 +402,8 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx,
 #if !defined(HAVE_LIBTWIN_TWIN_X11_H)
 		assert(0);
 #else
-		scr->twin_ctx.x11 = twin_x11_create_ext(XOpenDisplay(0), width,
-			height, 0);
+		scr->twin_ctx.x11 = twin_x11_create_ext(XOpenDisplay(NULL),
+			width, height, 0);
 
 		if (!scr->twin_ctx.x11) {
 			pb_log("%s: twin_x11_create_ext failed.\n", __func__);
