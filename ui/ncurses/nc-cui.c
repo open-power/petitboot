@@ -926,7 +926,7 @@ struct cui *cui_init(void* platform_info,
 	/* Loop here for scripts that just started the server. */
 
 retry_start:
-	for (i = start_deamon ? 2 : 10; i; i--) {
+	for (i = start_deamon ? 2 : 15; i; i--) {
 		cui->client = discover_client_init(cui->waitset,
 				&cui_client_ops, cui);
 		if (cui->client || !i)
