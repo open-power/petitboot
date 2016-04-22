@@ -58,6 +58,8 @@ static const char *event_action_name(enum event_action action)
 		return "url";
 	case EVENT_ACTION_DHCP:
 		return "dhcp";
+	case EVENT_ACTION_BOOT:
+		return "boot";
 	default:
 		break;
 	}
@@ -444,6 +446,24 @@ static int user_event_url(struct user_event *uev, struct event *event)
 	return 0;
 }
 
+static int user_event_boot(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	struct boot_command *cmd = talloc(handler, struct boot_command);
+
+	cmd->option_id = talloc_strdup(cmd, event_get_param(event, "id"));
+	cmd->boot_image_file = talloc_strdup(cmd, event_get_param(event, "image"));
+	cmd->initrd_file = talloc_strdup(cmd, event_get_param(event, "initrd"));
+	cmd->dtb_file = talloc_strdup(cmd, event_get_param(event, "dtb"));
+	cmd->boot_args = talloc_strdup(cmd, event_get_param(event, "args"));
+
+	device_handler_boot(handler, cmd);
+
+	talloc_free(cmd);
+
+	return 0;
+}
+
 static void user_event_handle_message(struct user_event *uev, char *buf,
 	int len)
 {
@@ -475,6 +495,9 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	case EVENT_ACTION_DHCP:
 		result = user_event_dhcp(uev, event);
+		break;
+	case EVENT_ACTION_BOOT:
+		result = user_event_boot(uev, event);
 		break;
 	default:
 		break;

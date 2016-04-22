@@ -55,7 +55,7 @@ static void print_usage(void)
 "       Events can be read from stdin, or provided on the command line.\n"
 "       User events must have the following format:\n"
 "\n"
-"         (add|remove)@device-id [name=value] [image=value] [args=value]\n"
+"         (add|remove|boot)@device-id [name=value] [image=value] [args=value]\n"
 "\n"
 "       When read from stdin, components are separated by NUL chars\n"
 "\n"
