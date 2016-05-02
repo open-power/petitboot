@@ -118,6 +118,10 @@ then
 	verbose_opt=--verbose
 fi
 
+# kernel messages may write over the ncurses ui - change log level to only
+# show particularly important messages
+dmesg -n 1
+
 while :
 do
 	$ui $verbose_opt
