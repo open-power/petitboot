@@ -905,7 +905,7 @@ static struct discover_client_ops cui_client_ops = {
  */
 
 struct cui *cui_init(void* platform_info,
-	int (*js_map)(const struct js_event *e), int start_deamon)
+	int (*js_map)(const struct js_event *e), int start_daemon)
 {
 	struct cui *cui;
 	unsigned int i;
@@ -926,7 +926,7 @@ struct cui *cui_init(void* platform_info,
 	/* Loop here for scripts that just started the server. */
 
 retry_start:
-	for (i = start_deamon ? 2 : 15; i; i--) {
+	for (i = start_daemon ? 2 : 15; i; i--) {
 		cui->client = discover_client_init(cui->waitset,
 				&cui_client_ops, cui);
 		if (cui->client || !i)
@@ -935,10 +935,10 @@ retry_start:
 		sleep(1);
 	}
 
-	if (!cui->client && start_deamon) {
+	if (!cui->client && start_daemon) {
 		int result;
 
-		start_deamon = 0;
+		start_daemon = 0;
 
 		result = pb_start_daemon(cui);
 

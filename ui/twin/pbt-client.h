@@ -50,7 +50,7 @@ struct pbt_client {
 };
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
-	unsigned int width, unsigned int height, int start_deamon);
+	unsigned int width, unsigned int height, int start_daemon);
 void pbt_client_destroy(struct pbt_client *client);
 void pbt_client_resize(struct pbt_client *client);
 

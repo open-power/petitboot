@@ -252,7 +252,7 @@ static void pbt_client_destructor(struct pbt_client *client)
 }
 
 struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
-	unsigned int width, unsigned int height, int start_deamon)
+	unsigned int width, unsigned int height, int start_daemon)
 {
 	struct pbt_client *pbt_client;
 	unsigned int i;
@@ -282,7 +282,7 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 	/* Loop here for scripts that just started the server. */
 
 retry_start:
-	for (i = start_deamon ? 2 : 10; i; i--) {
+	for (i = start_daemon ? 2 : 10; i; i--) {
 		pbt_client->discover_client
 			= discover_client_init(pbt_client->waitset,
 					&pbt_client_ops, pbt_client);
@@ -292,10 +292,10 @@ retry_start:
 		sleep(1);
 	}
 
-	if (!pbt_client->discover_client && start_deamon) {
+	if (!pbt_client->discover_client && start_daemon) {
 		int result;
 
-		start_deamon = 0;
+		start_daemon = 0;
 
 		result = pb_start_daemon(pbt_client);
 
