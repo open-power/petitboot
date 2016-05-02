@@ -423,7 +423,7 @@ static int cui_process_key(void *arg)
 		if (c == ERR)
 			break;
 
-		if (!cui->has_input) {
+		if (!cui->has_input && cui->client) {
 			pb_log("UI input received (key = %d), aborting "
 					"default boot\n", c);
 			discover_client_cancel_default(cui->client);
@@ -798,13 +798,15 @@ static int menu_lang_execute(struct pmenu_item *item)
 
 static int menu_reinit_execute(struct pmenu_item *item)
 {
-	cui_send_reinit(cui_from_item(item));
+	if (cui_from_item(item)->client)
+		cui_send_reinit(cui_from_item(item));
 	return 0;
 }
 
 static int menu_add_url_execute(struct pmenu_item *item)
 {
-	cui_show_add_url(cui_from_item(item));
+	if (cui_from_item(item)->client)
+		cui_show_add_url(cui_from_item(item));
 	return 0;
 }
 
@@ -894,6 +896,42 @@ static struct discover_client_ops cui_client_ops = {
 	.update_config = cui_update_config,
 };
 
+/* cui_server_wait - Connect to the discover server.
+ * @arg: Pointer to the cui instance.
+ *
+ * A timeout callback that attempts to connect to the discover server; on
+ * failure it registers itself with a one second timeout to try again.
+ * On success the cui->client struct will be set.
+ *
+ * Since this updates the status line when called it must not be called
+ * before the UI is ready.
+ */
+static int cui_server_wait(void *arg)
+{
+	struct cui *cui = cui_from_arg(arg);
+
+	if (cui->client) {
+		pb_debug("We already have a server!\n");
+		return 0;
+	}
+
+	/* We haven't yet connected to the server */
+	pb_log("Trying to connect...\n");
+	cui->client = discover_client_init(cui->waitset,
+			&cui_client_ops, cui);
+
+	if (!cui->client) {
+		waiter_register_timeout(cui->waitset, 1000, cui_server_wait,
+					cui);
+		nc_scr_status_printf(cui->current, "Info: Waiting for server");
+	} else {
+		nc_scr_status_printf(cui->current, "Info: Connected to server!");
+		talloc_steal(cui, cui->client);
+	}
+
+	return 0;
+}
+
 /**
  * cui_init - Setup the cui instance.
  * @platform_info: A value for the struct cui platform_info member.
@@ -905,7 +943,7 @@ static struct discover_client_ops cui_client_ops = {
  */
 
 struct cui *cui_init(void* platform_info,
-	int (*js_map)(const struct js_event *e), int start_daemon)
+	int (*js_map)(const struct js_event *e), int start_daemon, int timeout)
 {
 	struct cui *cui;
 	unsigned int i;
@@ -926,7 +964,7 @@ struct cui *cui_init(void* platform_info,
 	/* Loop here for scripts that just started the server. */
 
 retry_start:
-	for (i = start_daemon ? 2 : 15; i; i--) {
+	for (i = start_daemon ? 2 : 15; i && timeout; i--) {
 		cui->client = discover_client_init(cui->waitset,
 				&cui_client_ops, cui);
 		if (cui->client || !i)
@@ -953,7 +991,12 @@ retry_start:
 		goto fail_client_init;
 	}
 
-	if (!cui->client) {
+	if (!cui->client && !timeout) {
+		/* Have the first timeout fire immediately so we can check
+		 * for the server as soon as the UI is ready */
+		waiter_register_timeout(cui->waitset, 0,
+					cui_server_wait, cui);
+	} else if (!cui->client) {
 		pb_log("%s: discover_client_init failed.\n", __func__);
 		fprintf(stderr, _("%s: error: discover_client_init failed.\n"),
 			__func__);
