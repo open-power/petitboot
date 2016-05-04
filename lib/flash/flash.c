@@ -82,26 +82,26 @@ static struct flash_info *flash_setup_buffer(void *ctx, const char *partition)
 	rc = arch_flash_init(&info->bl, NULL, true);
 	if (rc) {
 		pb_log("Failed to init mtd device\n");
-		return NULL;
+		goto out;
 	}
 
 	rc = blocklevel_get_info(info->bl, &info->path, &info->size,
 				 &info->erase_granule);
 	if (rc) {
 		pb_log("Failed to retrieve blocklevel info\n");
-		return NULL;
+	        goto out_flash;
 	}
 
 	rc = ffs_init(0, info->size, info->bl, &info->ffs, 1);
 	if (rc) {
 		pb_log("%s: Failed to init ffs\n", __func__);
-		goto out;
+		goto out_flash;
 	}
 
 	rc = partition_info(info, partition);
 	if (rc) {
 		pb_log("Failed to retrieve partition info\n");
-		goto out;
+		goto out_ffs;
 	}
 
 	/* Check if there is a second flash side. If there is not, or
@@ -139,8 +139,11 @@ static struct flash_info *flash_setup_buffer(void *ctx, const char *partition)
 	}
 
 	return info;
-out:
+out_ffs:
+	ffs_close(info->ffs);
+out_flash:
 	arch_flash_close(info->bl, NULL);
+out:
 	talloc_free(info);
 	return NULL;
 }
