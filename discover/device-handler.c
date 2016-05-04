@@ -1177,13 +1177,17 @@ void device_handler_process_url(struct device_handler *handler,
 	}
 
 	pb_url = pb_url_parse(event, event->params->value);
-	if (!pb_url || !pb_url->host) {
+	if (!pb_url || (pb_url->scheme != pb_url_file && !pb_url->host)) {
 		status->message = talloc_asprintf(handler,
 					_("Invalid config URL!"));
 		goto msg;
 	}
 
-	event->device = device_from_addr(event, pb_url);
+	if (pb_url->scheme == pb_url_file)
+		event->device = talloc_asprintf(event, "local");
+	else
+		event->device = device_from_addr(event, pb_url);
+
 	if (!event->device) {
 		status->message = talloc_asprintf(status,
 					_("Unable to route to host %s"),
@@ -1192,6 +1196,8 @@ void device_handler_process_url(struct device_handler *handler,
 	}
 
 	dev = discover_device_create(handler, event->device);
+	if (pb_url->scheme == pb_url_file)
+		dev->device->type = DEVICE_TYPE_ANY;
 	ctx = device_handler_discover_context_create(handler, dev);
 	ctx->event = event;
 

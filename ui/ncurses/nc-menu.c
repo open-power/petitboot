@@ -285,6 +285,12 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 				_("Network"), intf->name, hwaddr);
 		}
 		break;
+	case DEVICE_TYPE_ANY:
+		/* This is an option found from a file:// url, not associated
+		 * with any device */
+		snprintf(buf, sizeof(buf), "[Custom Local Options]");
+		matched = true;
+		break;
 
 	default:
 		/* Assume the device may be able to boot */
