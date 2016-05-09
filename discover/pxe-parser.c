@@ -189,6 +189,10 @@ static void pxe_process_pair(struct conf_context *ctx,
 		type = strtoul(value, &end, 10);
 		if (end != value && !(*end))
 			pxe_process_sysappend(ctx->dc, opt, type);
+
+	} else if (streq(name, "DTB") || streq(name, "FDT")) {
+		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
+		opt->dtb = create_url_resource(opt, url);
 	}
 
 }

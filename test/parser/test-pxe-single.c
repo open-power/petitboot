@@ -8,6 +8,7 @@ label linux
 kernel ./pxe/de-ad-de-ad-be-ef.vmlinuz
 append command line
 initrd=./pxe/de-ad-de-ad-be-ef.initrd
+dtb ./pxe/de-ad-de-ad-be-ef.dtb
 #endif
 
 void run_test(struct parser_test *test)
@@ -35,4 +36,6 @@ void run_test(struct parser_test *test)
 			"tftp://host/dir/./pxe/de-ad-de-ad-be-ef.vmlinuz");
 	check_resolved_url_resource(opt->initrd,
 			"tftp://host/dir/./pxe/de-ad-de-ad-be-ef.initrd");
+	check_resolved_url_resource(opt->dtb,
+			"tftp://host/dir/./pxe/de-ad-de-ad-be-ef.dtb");
 }
