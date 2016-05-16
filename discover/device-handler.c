@@ -861,7 +861,7 @@ out:
 	device_handler_boot_status(handler, status);
 
 	talloc_free(status);
-	talloc_free(ctx);
+	talloc_unlink(handler, ctx);
 
 	return 0;
 }
@@ -900,7 +900,7 @@ int device_handler_dhcp(struct device_handler *handler,
 	device_handler_boot_status(handler, status);
 
 	talloc_free(status);
-	talloc_free(ctx);
+	talloc_unlink(handler, ctx);
 
 	return 0;
 }
@@ -930,7 +930,7 @@ int device_handler_conf(struct device_handler *handler,
 	device_handler_boot_status(handler, status);
 
 	talloc_free(status);
-	talloc_free(ctx);
+	talloc_unlink(handler, ctx);
 
 	return 0;
 }
@@ -1162,7 +1162,7 @@ void device_handler_process_url(struct device_handler *handler,
 
 	device_handler_discover_context_commit(handler, ctx);
 
-	talloc_free(ctx);
+	talloc_unlink(handler, ctx);
 
 	status->type = BOOT_STATUS_INFO;
 	status->message = talloc_asprintf(status, _("Config file %s parsed"),

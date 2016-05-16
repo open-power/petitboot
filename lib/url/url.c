@@ -246,7 +246,7 @@ static void pb_url_update_full(struct pb_url *url)
 	url->full = pb_url_to_string(url);
 }
 
-static struct pb_url *pb_url_copy(void *ctx, const struct pb_url *url)
+struct pb_url *pb_url_copy(void *ctx, const struct pb_url *url)
 {
 	struct pb_url *new_url;
 

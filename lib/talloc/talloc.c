@@ -760,7 +760,7 @@ off_t talloc_total_blocks(const void *ptr)
 /*
   return the number of external references to a pointer
 */
-static int talloc_reference_count(const void *ptr)
+int talloc_reference_count(const void *ptr)
 {
 	struct talloc_chunk *tc = talloc_chunk_from_ptr(ptr);
 	struct talloc_reference_handle *h;

@@ -133,6 +133,7 @@ void *_talloc_realloc_array(const void *ctx, void *ptr, size_t el_size, unsigned
 void *talloc_realloc_fn(const void *context, void *ptr, size_t size);
 void *talloc_autofree_context(void);
 size_t talloc_get_size(const void *ctx);
+int talloc_reference_count(const void *ptr);
 
 #endif
 

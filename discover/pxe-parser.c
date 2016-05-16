@@ -8,6 +8,8 @@
 #include <talloc/talloc.h>
 #include <url/url.h>
 #include <log/log.h>
+#include <file/file.h>
+#include <i18n/i18n.h>
 
 #include "parser.h"
 #include "parser-conf.h"
@@ -197,79 +199,161 @@ static void pxe_process_pair(struct conf_context *ctx,
 
 }
 
+/*
+ * Callback for asynchronous loads from pxe_parse()
+ * @param result Result of load_url_async()
+ * @param data   Pointer to associated conf_context
+ */
+static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
+{
+	struct conf_context *conf = data;
+	struct device_handler *handler;
+	struct boot_status status = {0};
+	char *buf = NULL;
+	int len, rc;
+
+	if (!data)
+		return;
+
+	if (!result || result->status != LOAD_OK) {
+		talloc_free(conf);
+		return;
+	}
+
+	rc = read_file(conf, result->local, &buf, &len);
+	if (rc) {
+		pb_log("Read failed during pxe callback for %s\n", result->local);
+		goto out_clean;
+	}
+
+	conf_parse_buf(conf, buf, len);
+
+	/* We may be called well after the original caller of iterate_parsers(),
+	 * commit any new boot options ourselves */
+	handler = talloc_parent(conf);
+	device_handler_discover_context_commit(handler, conf->dc);
+
+	status.type = BOOT_STATUS_INFO;
+	/*
+	 * TRANSLATORS: the format specifier in this string in an IP address,
+	 * eg. 192.168.1.1
+	 */
+	status.message = talloc_asprintf(conf, _("pxe: parsed config for %s"),
+					conf->dc->conf_url->host);
+	device_handler_boot_status(handler, &status);
+
+	talloc_free(buf);
+out_clean:
+	if (result->cleanup_local)
+		unlink(result->local);
+	talloc_free(conf);
+}
+
+/**
+ * Return a new conf_context and increment the talloc reference count on
+ * the discover_context struct.
+ * @param  ctx  Parent talloc context
+ * @param  orig Original discover_context
+ * @return      Pointer to new conf_context
+ */
+static struct conf_context *copy_context(void *ctx, struct discover_context *dc)
+{
+	struct pxe_parser_info *info;
+	struct conf_context *conf;
+
+	conf = talloc_zero(ctx, struct conf_context);
+
+	if (!conf)
+		return NULL;
+
+	conf->get_pair = conf_get_pair_space;
+	conf->process_pair = pxe_process_pair;
+	conf->finish = pxe_finish;
+	info = talloc_zero(conf, struct pxe_parser_info);
+	if (!info) {
+		talloc_free(conf);
+		return NULL;
+	}
+	conf->parser_info = info;
+
+	/*
+	 * The discover_context may be freed once pxe_parse() returns, but the
+	 * callback will still need it. Take a reference so that that it will
+	 * persist until the last callback completes.
+	 */
+	conf->dc = talloc_reference(conf, dc);
+
+	return conf;
+}
+
 static int pxe_parse(struct discover_context *dc)
 {
 	struct pb_url *pxe_base_url, *url;
-	struct pxe_parser_info *parser_info;
 	char **pxe_conf_files, **filename;
-	struct conf_context *conf;
+	struct conf_context *conf = NULL;
+	struct load_url_result *result;
+	void *ctx = talloc_parent(dc);
 	bool complete_url;
-	int len, rc;
-	char *buf;
 
 	/* Expects dhcp event parameters to support network boot */
 	if (!dc->event)
 		return -1;
 
-	conf = talloc_zero(dc, struct conf_context);
-
-	if (!conf)
-		goto out;
-
-	conf->dc = dc;
-	conf->get_pair = conf_get_pair_space;
-	conf->process_pair = pxe_process_pair;
-	conf->finish = pxe_finish;
-
-	parser_info = talloc_zero(conf, struct pxe_parser_info);
-	conf->parser_info = parser_info;
-
 	dc->conf_url = user_event_parse_conf_url(dc, dc->event, &complete_url);
 	if (!dc->conf_url)
-		goto out_conf;
+		return -1;
+
+	/*
+	 * Retrieving PXE configs over the network can take some time depending
+	 * on factors such as slow network, malformed paths, bad DNS, and
+	 * overzealous firewalls. Instead of blocking the discover server while
+	 * we wait for these, spawn an asynchronous job for each URL we can
+	 * parse and process the resulting files in a callback. A separate
+	 * conf_context is created for each job.
+	 */
+	conf = copy_context(ctx, dc);
+	if (!conf)
+		return -1;
 
 	if (complete_url) {
 		/* we have a complete URL; use this and we're done. */
-		rc = parser_request_url(dc, dc->conf_url, &buf, &len);
-		if (rc)
+		result = load_url_async(conf->dc, conf->dc->conf_url,
+					pxe_conf_parse_cb, conf);
+		if (!result) {
+			pb_log("load_url_async fails for %s\n",
+					dc->conf_url->path);
 			goto out_conf;
+		}
 	} else {
 		pxe_conf_files = user_event_parse_conf_filenames(dc, dc->event);
 		if (!pxe_conf_files)
 			goto out_conf;
-
-		rc = -1;
 
 		pxe_base_url = pb_url_join(dc, dc->conf_url, pxelinux_prefix);
 		if (!pxe_base_url)
 			goto out_pxe_conf;
 
 		for (filename = pxe_conf_files; *filename; filename++) {
-			url = pb_url_join(dc, pxe_base_url, *filename);
+			if (!conf) {
+				conf = copy_context(ctx, dc);
+			}
+			url = pb_url_join(conf->dc, pxe_base_url, *filename);
 			if (!url)
 				continue;
-
-			rc = parser_request_url(dc, url, &buf, &len);
-			if (!rc) /* found one, just break */
-				break;
-
-			talloc_free(url);
+			result = load_url_async(conf, url, pxe_conf_parse_cb,
+						conf);
+			if (!result) {
+				pb_log("load_url_async fails for %s\n",
+				       conf->dc->conf_url->path);
+				talloc_free(conf);
+			}
+			/* conf now needed by callback, don't reuse */
+			conf = NULL;
 		}
 
 		talloc_free(pxe_base_url);
-
-		/* No configuration file found on the boot server */
-		if (rc)
-			goto out_pxe_conf;
-
 		talloc_free(pxe_conf_files);
 	}
-
-	/* Call the config file parser with the data read from the file */
-	conf_parse_buf(conf, buf, len);
-
-	talloc_free(buf);
-	talloc_free(conf);
 
 	return 0;
 
@@ -277,7 +361,6 @@ out_pxe_conf:
 	talloc_free(pxe_conf_files);
 out_conf:
 	talloc_free(conf);
-out:
 	return -1;
 }
 
