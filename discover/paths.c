@@ -47,6 +47,7 @@ char *join_paths(void *alloc_ctx, const char *a, const char *b)
 	return full_path;
 }
 
+#ifndef PETITBOOT_TEST
 
 static char *local_name(void *ctx)
 {
@@ -449,3 +450,33 @@ void load_url_async_cancel(struct load_url_result *res)
 	res->status = LOAD_CANCELLED;
 	process_stop_async(task->process);
 }
+
+#else
+
+static void __attribute__((unused)) load_local(
+		struct load_task *task __attribute__((unused)))
+{
+}
+static void __attribute__((unused)) load_wget(
+		struct load_task *task __attribute__((unused)),
+		int flags __attribute__((unused)))
+{
+}
+static void __attribute__((unused)) load_tftp(
+		struct load_task *task __attribute__((unused)))
+{
+}
+static void __attribute__((unused)) load_sftp(
+		struct load_task *task __attribute__((unused)))
+{
+}
+static void __attribute__((unused)) load_nfs(
+		struct load_task *task __attribute__((unused)))
+{
+}
+static void __attribute__((unused)) load_url_process_exit(
+		struct process *process __attribute__((unused)))
+{
+}
+
+#endif

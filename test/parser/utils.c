@@ -17,6 +17,8 @@
 #include "resource.h"
 #include "event.h"
 #include "platform.h"
+#include "paths.h"
+#include "parser-conf.h"
 
 #include "parser-test.h"
 
@@ -304,6 +306,61 @@ int parser_replace_file(struct discover_context *ctx,
 	file->data = talloc_memdup(test, buf, len);
 	file->size = len;
 	return 0;
+}
+
+struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
+		load_url_complete async_cb, void *async_data)
+{
+	struct conf_context *conf = async_data;
+	struct parser_test *test = conf->dc->test_data;
+	struct load_url_result *result;
+	char tmp[] = "/tmp/pb-XXXXXX";
+	ssize_t rc = -1, sz = 0;
+	struct test_file *file;
+	int fd;
+
+	fd = mkstemp(tmp);
+
+	if (fd < 0)
+		return NULL;
+
+	/* Some parsers will expect to need to read a file, so write the
+	 * specified file to a temporary file */
+	list_for_each_entry(&test->files, file, list) {
+		if (file->dev)
+			continue;
+
+		if (strcmp(file->name, url->full))
+			continue;
+
+		while (sz < file->size) {
+			rc = write(fd, file->data, file->size);
+			if (rc < 0) {
+				fprintf(stderr,
+					"Failed to write to tmpfile, %m\n");
+				break;
+			}
+			sz += rc;
+		}
+		break;
+	}
+
+	close(fd);
+
+	result = talloc_zero(ctx, struct load_url_result);
+	if (!result)
+		return NULL;
+
+	result->local = talloc_strdup(result, tmp);
+	if (rc < 0)
+		result->status = LOAD_ERROR;
+	else
+		result->status = result->local ? LOAD_OK : LOAD_ERROR;
+	result->cleanup_local = true;
+
+	async_cb(result, conf);
+
+	return result;
 }
 
 int parser_request_url(struct discover_context *ctx, struct pb_url *url,

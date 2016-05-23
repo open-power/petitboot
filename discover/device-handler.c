@@ -708,50 +708,6 @@ struct discover_context *device_handler_discover_context_create(
 	return ctx;
 }
 
-/**
- * context_commit - Commit a temporary discovery context to the handler,
- * and notify the clients about any new options / devices
- */
-void device_handler_discover_context_commit(struct device_handler *handler,
-		struct discover_context *ctx)
-{
-	struct discover_device *dev = ctx->device;
-	struct discover_boot_option *opt, *tmp;
-
-	if (!device_lookup_by_id(handler, dev->device->id))
-		device_handler_add_device(handler, dev);
-
-	/* move boot options from the context to the device */
-	list_for_each_entry_safe(&ctx->boot_options, opt, tmp, list) {
-		list_remove(&opt->list);
-
-		if (boot_option_resolve(opt, handler)) {
-			pb_log("boot option %s is resolved, "
-					"sending to clients\n",
-					opt->option->id);
-			list_add_tail(&dev->boot_options, &opt->list);
-			talloc_steal(dev, opt);
-			boot_option_finalise(handler, opt);
-			notify_boot_option(handler, opt);
-		} else {
-			if (!opt->source->resolve_resource) {
-				pb_log("parser %s gave us an unresolved "
-					"resource (%s), but no way to "
-					"resolve it\n",
-					opt->source->name, opt->option->id);
-				talloc_free(opt);
-			} else {
-				pb_log("boot option %s is unresolved, "
-						"adding to queue\n",
-						opt->option->id);
-				list_add(&handler->unresolved_boot_options,
-						&opt->list);
-				talloc_steal(handler, opt);
-			}
-		}
-	}
-}
-
 void device_handler_add_device(struct device_handler *handler,
 		struct discover_device *device)
 {
@@ -1218,6 +1174,50 @@ msg:
 
 #ifndef PETITBOOT_TEST
 
+/**
+ * context_commit - Commit a temporary discovery context to the handler,
+ * and notify the clients about any new options / devices
+ */
+void device_handler_discover_context_commit(struct device_handler *handler,
+		struct discover_context *ctx)
+{
+	struct discover_device *dev = ctx->device;
+	struct discover_boot_option *opt, *tmp;
+
+	if (!device_lookup_by_id(handler, dev->device->id))
+		device_handler_add_device(handler, dev);
+
+	/* move boot options from the context to the device */
+	list_for_each_entry_safe(&ctx->boot_options, opt, tmp, list) {
+		list_remove(&opt->list);
+
+		if (boot_option_resolve(opt, handler)) {
+			pb_log("boot option %s is resolved, "
+					"sending to clients\n",
+					opt->option->id);
+			list_add_tail(&dev->boot_options, &opt->list);
+			talloc_steal(dev, opt);
+			boot_option_finalise(handler, opt);
+			notify_boot_option(handler, opt);
+		} else {
+			if (!opt->source->resolve_resource) {
+				pb_log("parser %s gave us an unresolved "
+					"resource (%s), but no way to "
+					"resolve it\n",
+					opt->source->name, opt->option->id);
+				talloc_free(opt);
+			} else {
+				pb_log("boot option %s is unresolved, "
+						"adding to queue\n",
+						opt->option->id);
+				list_add(&handler->unresolved_boot_options,
+						&opt->list);
+				talloc_steal(handler, opt);
+			}
+		}
+	}
+}
+
 static void device_handler_update_lang(const char *lang)
 {
 	const char *cur_lang;
@@ -1566,6 +1566,13 @@ void device_release_write(struct discover_device *dev, bool release)
 
 #else
 
+void device_handler_discover_context_commit(
+		struct device_handler *handler __attribute__((unused)),
+		struct discover_context *ctx __attribute__((unused)))
+{
+	pb_log("%s stubbed out for test cases\n", __func__);
+}
+
 static void device_handler_update_lang(const char *lang __attribute__((unused)))
 {
 }
@@ -1605,4 +1612,3 @@ void device_release_write(struct discover_device *dev __attribute__((unused)),
 }
 
 #endif
-
