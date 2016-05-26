@@ -423,11 +423,16 @@ static int cui_process_key(void *arg)
 		if (c == ERR)
 			break;
 
-		if (!cui->has_input && cui->client) {
-			pb_log("UI input received (key = %d), aborting "
-					"default boot\n", c);
-			discover_client_cancel_default(cui->client);
+		if (!cui->has_input) {
 			cui->has_input = true;
+			if (cui->client) {
+				pb_log("UI input received (key = %d), aborting "
+					"default boot\n", c);
+				discover_client_cancel_default(cui->client);
+			} else {
+				pb_log("UI input received (key = %d), aborting "
+					"once server connects\n", c);
+			}
 		}
 
 		if (process_global_keys(cui, c))
@@ -927,6 +932,11 @@ static int cui_server_wait(void *arg)
 	} else {
 		nc_scr_status_printf(cui->current, "Info: Connected to server!");
 		talloc_steal(cui, cui->client);
+
+		if (cui->has_input) {
+			pb_log("Aborting default boot on server connect\n");
+			discover_client_cancel_default(cui->client);
+		}
 	}
 
 	return 0;
