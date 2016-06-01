@@ -956,7 +956,7 @@ static int get_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
 	/* check for valid flags */
 	if (!(resp[3] & 0x80)) {
 		pb_debug("platform: boot flags are invalid, ignoring\n");
-		return 0;
+		return -1;
 	}
 
 	*persistent = resp[3] & 0x40;
@@ -1230,7 +1230,7 @@ static int load_config(struct platform *p, struct config *config)
 
 	if (platform->get_ipmi_bootdev) {
 		bool bootdev_persistent;
-		uint8_t bootdev;
+		uint8_t bootdev = IPMI_BOOTDEV_INVALID;
 		rc = platform->get_ipmi_bootdev(platform, &bootdev,
 				&bootdev_persistent);
 		if (!rc && ipmi_bootdev_is_valid(bootdev)) {
