@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <inttypes.h>
+#include <errno.h>
 
 #include <linux/fb.h>
 
@@ -441,6 +442,121 @@ static int populate_devicetree(struct offb_ctx *ctx)
 	return 0;
 }
 
+/*
+ * Find the device tree path assoicated with a hvc device.
+ * On OPAL all hvc consoles have a 'serial@X' node under ibm,opal/consoles,
+ * so we make a simplifying assumption that a hvcX is associated with a
+ * serial@X node.
+ */
+static char *get_hvc_path(struct offb_ctx *ctx, unsigned int termno)
+{
+	char *serial;
+	int node;
+
+	serial = talloc_asprintf(ctx, "serial@%u", termno);
+	if (!serial)
+		return NULL;
+
+	node = fdt_subnode_offset(ctx->dtb, 0, "ibm,opal");
+	if (node <= 0) {
+		fprintf(stderr, "Couldn't find ibm,opal\n");
+		return NULL;
+	}
+	node = fdt_subnode_offset(ctx->dtb, node, "consoles");
+	if (node <= 0) {
+		fprintf(stderr, "Couldn't find ibm,opal/consoles\n");
+		return NULL;
+	}
+
+	node = fdt_subnode_offset(ctx->dtb, node, serial);
+	if (node <= 0) {
+		fprintf(stderr, "Could not locate hvc%u\n", termno);
+		return NULL;
+	}
+
+	return talloc_asprintf(ctx, "ibm,opal/consoles/%s", serial);
+}
+
+/*
+ * Find the device tree path of the vga device. On OPAL we assume there is only
+ * one of these that represents any 'tty' console.
+ */
+static char *get_vga_path(struct offb_ctx *ctx)
+{
+	char *root, *vga_path;
+
+	root = strstr(ctx->path, "/pciex@");
+	if (!root) {
+		fprintf(stderr, "Can't find root path for vga device in below:\n");
+		fprintf(stderr, "%s\n", ctx->path);
+		return NULL;
+	}
+
+	vga_path = talloc_strdup(ctx, root);
+	fprintf(stderr, "VGA target at '%s'\n", vga_path);
+
+	return vga_path;
+}
+
+static int set_stdout(struct offb_ctx *ctx)
+{
+	const char *boot_tty, *ptr;
+	long unsigned int termno;
+	const fdt32_t *prop;
+	int node, prop_len;
+	char *stdout_path;
+
+	boot_tty = getenv("boot_tty");
+	if (!boot_tty) {
+		fprintf(stderr, "boot_tty not set, using default stdout for boot\n");
+		return 0;
+	}
+
+	if (strstr(boot_tty, "tty") != NULL) {
+		fprintf(stderr, "TTY recognised: %s\n", boot_tty);
+		stdout_path = get_vga_path(ctx);
+	} else {
+		ptr = strstr(boot_tty, "hvc");
+		if (!ptr || strlen(ptr) <= strlen("hvc")) {
+			fprintf(stderr, "Unrecognised console: %s\n", boot_tty);
+			return 0;
+		}
+		ptr += strlen("hvc");
+		errno = 0;
+		termno = strtoul(ptr, NULL, 0);
+		if (errno) {
+			fprintf(stderr, "Couldn't parse termno from %s\n", boot_tty);
+			return 0;
+		}
+		fprintf(stderr, "HVC recognised: %s\n", boot_tty);
+		stdout_path = get_hvc_path(ctx, termno);
+	}
+
+	if (!stdout_path) {
+		fprintf(stderr, "Couldn't parse %s into a path\n", boot_tty);
+		return -1;
+	}
+
+	fprintf(stderr, "stdout-path: %s\n", stdout_path);
+
+	node = fdt_subnode_offset(ctx->dtb, 0, "chosen");
+	if (node <= 0) {
+		fprintf(stderr, "Failed to find chosen\n");
+		return -1;
+	}
+
+	prop = fdt_getprop(ctx->dtb, node, "linux,stdout-path", &prop_len);
+	if (!prop) {
+		fprintf(stderr, "Failed to find linux,stdout-path\n");
+		return -1;
+	}
+
+	fdt_set_check(ctx->dtb, node, fdt_setprop_string, "linux,stdout-path",
+			stdout_path);
+
+	return 0;
+}
+
 static int write_devicetree(struct offb_ctx *ctx)
 {
 	int rc;
@@ -481,6 +597,10 @@ int main(void)
 		goto out;
 
 	rc = populate_devicetree(ctx);
+	if (rc)
+		goto out;
+
+	rc = set_stdout(ctx);
 	if (rc)
 		goto out;
 
