@@ -42,7 +42,7 @@ struct config *config_copy(void *ctx, const struct config *src)
 	struct config *dest;
 	unsigned int i;
 
-	dest = talloc(ctx, struct config);
+	dest = talloc_zero(ctx, struct config);
 	dest->autoboot_enabled = src->autoboot_enabled;
 	dest->autoboot_timeout_sec = src->autoboot_timeout_sec;
 	dest->safe_mode = src->safe_mode;
@@ -81,6 +81,16 @@ struct config *config_copy(void *ctx, const struct config *src)
 	dest->ipmi_bootdev_persistent = src->ipmi_bootdev_persistent;
 
 	dest->allow_writes = src->allow_writes;
+
+	dest->n_tty = src->n_tty;
+	if (src->tty_list)
+		dest->tty_list = talloc_array(dest, char *, src->n_tty);
+	for (i = 0; i < src->n_tty && src->n_tty; i++)
+		dest->tty_list[i] = talloc_strdup(dest->tty_list,
+						src->tty_list[i]);
+
+	if (src->boot_tty)
+		dest->boot_tty = talloc_strdup(dest, src->boot_tty);
 
 	if (src->lang && strlen(src->lang))
 		dest->lang = talloc_strdup(dest, src->lang);

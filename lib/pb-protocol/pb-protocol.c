@@ -206,7 +206,8 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 		4 + optional_strlen(boot->boot_image_file) +
 		4 + optional_strlen(boot->initrd_file) +
 		4 + optional_strlen(boot->dtb_file) +
-		4 + optional_strlen(boot->boot_args);
+		4 + optional_strlen(boot->boot_args) +
+		4 + optional_strlen(boot->tty);
 }
 
 int pb_protocol_boot_status_len(const struct boot_status *status)
@@ -310,6 +311,12 @@ int pb_protocol_config_len(const struct config *config)
 
 	len += 4; /* allow_writes */
 
+	len += 4; /* n_tty */
+	for (i = 0; i < config->n_tty; i++)
+		len += 4 + optional_strlen(config->tty_list[i]);
+
+	len += 4 + optional_strlen(config->boot_tty);
+
 	len += 4 + optional_strlen(config->lang);
 
 	return len;
@@ -373,6 +380,7 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 	pos += pb_protocol_serialise_string(pos, boot->initrd_file);
 	pos += pb_protocol_serialise_string(pos, boot->dtb_file);
 	pos += pb_protocol_serialise_string(pos, boot->boot_args);
+	pos += pb_protocol_serialise_string(pos, boot->tty);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -552,6 +560,13 @@ int pb_protocol_serialise_config(const struct config *config,
 
 	*(uint32_t *)pos = config->allow_writes;
 	pos += 4;
+
+	*(uint32_t *)pos = __cpu_to_be32(config->n_tty);
+	pos += 4;
+	for (i = 0; i < config->n_tty; i++)
+		pos += pb_protocol_serialise_string(pos, config->tty_list[i]);
+
+	pos += pb_protocol_serialise_string(pos, config->boot_tty);
 
 	pos += pb_protocol_serialise_string(pos, config->lang);
 
@@ -768,6 +783,9 @@ int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->boot_args))
+		goto out;
+
+	if (read_string(cmd, &pos, &len, &cmd->tty))
 		goto out;
 
 	rc = 0;
@@ -1068,6 +1086,21 @@ int pb_protocol_deserialise_config(struct config *config,
 	if (read_u32(&pos, &len, &tmp))
 		goto out;
 	config->allow_writes = !!tmp;
+
+	if (read_u32(&pos, &len, &config->n_tty))
+		goto out;
+
+	config->tty_list = talloc_array(config, char *, config->n_tty);
+	for (i = 0; i < config->n_tty; i++) {
+		if (read_string(config->tty_list, &pos, &len, &str))
+			goto out;
+		config->tty_list[i] = str;
+	}
+
+	if (read_string(config, &pos, &len, &str))
+		goto out;
+
+	config->boot_tty = str;
 
 	if (read_string(config, &pos, &len, &str))
 		goto out;
