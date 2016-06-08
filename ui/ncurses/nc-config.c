@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	39
+#define N_FIELDS	42
 
 extern struct help_text config_help_text;
 
@@ -108,6 +108,9 @@ struct config_screen {
 
 		struct nc_widget_label		*allow_write_l;
 		struct nc_widget_select		*allow_write_f;
+		struct nc_widget_label		*boot_tty_l;
+		struct nc_widget_select		*boot_tty_f;
+		struct nc_widget_label		*current_tty_l;
 
 		struct nc_widget_label		*safe_mode;
 		struct nc_widget_button		*ok_b;
@@ -197,7 +200,7 @@ static int screen_process_form(struct config_screen *screen)
 	char *str, *end;
 	struct config *config;
 	int i, n_boot_opts, rc, idx;
-	unsigned int *order;
+	unsigned int *order, tty;
 	char mac[20];
 
 	config = config_copy(screen, screen->cui->config);
@@ -332,6 +335,19 @@ static int screen_process_form(struct config_screen *screen)
 	allow_write = widget_select_get_value(screen->widgets.allow_write_f);
 	if (allow_write != config->allow_writes)
 		config->allow_writes = allow_write;
+
+	if (config->n_tty) {
+		tty = widget_select_get_value(screen->widgets.boot_tty_f);
+		if (!config->boot_tty) {
+			config->boot_tty = talloc_strdup(config,
+							config->tty_list[tty]);
+		} else if (strncmp(config->boot_tty, config->tty_list[tty],
+				strlen(config->boot_tty)) != 0) {
+			talloc_free(config->boot_tty);
+			config->boot_tty = talloc_strdup(config,
+							config->tty_list[tty]);
+		}
+	}
 
 	config->safe_mode = false;
 	rc = cui_send_config(screen->cui, config);
@@ -579,6 +595,22 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 
 	y += 1;
 
+	if (widget_height(widget_select_base(screen->widgets.boot_tty_f))) {
+		layout_pair(screen, y, screen->widgets.boot_tty_l,
+			    widget_select_base(screen->widgets.boot_tty_f));
+		y += widget_height(widget_select_base(screen->widgets.boot_tty_f));
+		widget_move(widget_label_base(screen->widgets.current_tty_l),
+			y, screen->field_x);
+		y += 2;
+	} else {
+		widget_set_visible(widget_label_base(
+					screen->widgets.boot_tty_l), false);
+		widget_set_visible(widget_select_base(
+					screen->widgets.boot_tty_f), false);
+		widget_set_visible(widget_label_base(
+					screen->widgets.current_tty_l), false);
+	}
+
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.help_b),
@@ -740,10 +772,11 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 {
 	struct nc_widgetset *set = screen->widgetset;
 	struct interface_config *ifcfg;
-	char *str, *ip, *mask, *gw, *url;
+	char *str, *ip, *mask, *gw, *url, *tty;
 	enum net_conf_type type;
 	unsigned int i;
 	int add_len, clear_len, any_len, min_len = 20;
+	bool found;
 
 	build_assert(sizeof(screen->widgets) / sizeof(struct widget *)
 			== N_FIELDS);
@@ -985,6 +1018,23 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	widget_select_add_option(screen->widgets.allow_write_f, 1,
 				_("Allow bootloader scripts to modify disks"),
 				config->allow_writes);
+
+	screen->widgets.boot_tty_l = widget_new_label(set, 0, 0,
+			_("Default tty:"));
+	screen->widgets.boot_tty_f = widget_new_select(set, 0, 0,
+						COLS - screen->field_x - 1);
+
+	for (i = 0; i < config->n_tty; i++){
+		found = config->boot_tty &&
+			strncmp(config->boot_tty, config->tty_list[i],
+				strlen(config->boot_tty)) == 0;
+		widget_select_add_option(screen->widgets.boot_tty_f, i,
+					config->tty_list[i], found);
+	}
+
+	tty = talloc_asprintf(screen, _("Current interface: %s"),
+				ttyname(STDIN_FILENO));
+	screen->widgets.current_tty_l = widget_new_label(set, 0 , 0, tty);
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 10, _("OK"),
 			ok_click, screen);
