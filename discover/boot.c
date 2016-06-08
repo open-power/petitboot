@@ -24,6 +24,7 @@
 #include "boot.h"
 #include "paths.h"
 #include "resource.h"
+#include "platform.h"
 
 static const char *boot_hook_dir = PKG_SYSCONF_DIR "/boot.d";
 enum {
@@ -39,6 +40,7 @@ struct boot_task {
 	const char *local_initrd;
 	const char *local_dtb;
 	const char *args;
+	const char *boot_tty;
 	boot_status_fn status_fn;
 	void *status_arg;
 	bool dry_run;
@@ -206,6 +208,7 @@ static void boot_hook_setenv(struct boot_task *task)
 	unsetenv("boot_initrd");
 	unsetenv("boot_dtb");
 	unsetenv("boot_args");
+	unsetenv("boot_tty");
 
 	setenv("boot_image", task->local_image, 1);
 	if (task->local_initrd)
@@ -214,6 +217,8 @@ static void boot_hook_setenv(struct boot_task *task)
 		setenv("boot_dtb", task->local_dtb, 1);
 	if (task->args)
 		setenv("boot_args", task->args, 1);
+	if (task->boot_tty)
+		setenv("boot_tty", task->boot_tty, 1);
 }
 
 static int hook_filter(const struct dirent *dirent)
@@ -430,6 +435,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		boot_status_fn status_fn, void *status_arg)
 {
 	struct pb_url *image = NULL, *initrd = NULL, *dtb = NULL;
+	const struct config *config;
 	struct boot_task *boot_task;
 	const char *boot_desc;
 	int rc;
@@ -479,6 +485,13 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 						opt->option->boot_args);
 	} else {
 		boot_task->args = NULL;
+	}
+
+	if (cmd && cmd->tty)
+		boot_task->boot_tty = talloc_strdup(boot_task, cmd->tty);
+	else {
+		config = config_get();
+		boot_task->boot_tty = config ? config->boot_tty : NULL;
 	}
 
 	/* start async loads for boot resources */
