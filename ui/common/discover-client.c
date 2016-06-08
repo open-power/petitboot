@@ -312,6 +312,7 @@ static void create_boot_command(struct boot_command *command,
 	command->initrd_file = data->initrd;
 	command->dtb_file = data->dtb;
 	command->boot_args = data->args;
+	command->tty = ttyname(STDIN_FILENO);
 }
 
 int discover_client_boot(struct discover_client *client,
