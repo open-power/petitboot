@@ -79,6 +79,12 @@ static void dump_config(struct config *config)
 	pb_log("  IPMI boot device 0x%02x%s\n", config->ipmi_bootdev,
 			config->ipmi_bootdev_persistent ? " (persistent)" : "");
 
+	pb_log("  Modifications allowed to disks: %s\n",
+			config->allow_writes ? "yes" : "no");
+
+	pb_log("  Default UI to boot on: %s\n",
+		config->boot_tty ?: "none set");
+
 
 	pb_log(" language: %s\n", config->lang ?: "");
 }
@@ -116,6 +122,10 @@ void config_set_defaults(struct config *config)
 	config->safe_mode = false;
 	config->allow_writes = true;
 	config->disable_snapshots = false;
+
+	config->n_tty = 0;
+	config->tty_list = NULL;
+	config->boot_tty = NULL;
 
 	config->n_autoboot_opts = 2;
 	config->autoboot_opts = talloc_array(config, struct autoboot_option,
