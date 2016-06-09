@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include <list/list.h>
+#include <types/types.h>
 
 struct device_handler;
 struct discover_device;
@@ -95,6 +96,8 @@ int device_handler_conf(struct device_handler *handler,
 		struct discover_device *dev, struct pb_url *url);
 void device_handler_remove(struct device_handler *handler,
 		struct discover_device *device);
+
+void device_handler_boot_status(void *arg, struct boot_status *status);
 
 struct discover_context *device_handler_discover_context_create(
 		struct device_handler *handler,
