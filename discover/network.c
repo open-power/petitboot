@@ -398,8 +398,11 @@ static void configure_interface(struct network *network,
 			interface->state = IFSTATE_NEW;
 		else if (!link)
 			interface->state = IFSTATE_UP_WAITING_LINK;
-		else
+		else {
+			pb_debug("network: skipping configured interface %s\n",
+					interface->name);
 			return;
+		}
 	}
 
 	/* always up the lookback, no other handling required */
@@ -451,6 +454,8 @@ static void configure_interface(struct network *network,
 	} else if (config->method == CONFIG_METHOD_STATIC) {
 		configure_interface_static(network, interface, config);
 	}
+
+	interface->state = IFSTATE_CONFIGURED;
 }
 
 static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
