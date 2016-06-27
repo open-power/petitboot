@@ -10,7 +10,8 @@
 static struct interface_config *config_copy_interface(struct config *ctx,
 		struct interface_config *src)
 {
-	struct interface_config *dest = talloc(ctx, struct interface_config);
+	struct interface_config *dest = talloc_zero(ctx,
+						struct interface_config);
 
 	memcpy(dest->hwaddr, src->hwaddr, sizeof(src->hwaddr));
 	dest->ignore = src->ignore;
@@ -28,6 +29,8 @@ static struct interface_config *config_copy_interface(struct config *ctx,
 			talloc_strdup(dest, src->static_config.address);
 		dest->static_config.gateway =
 			talloc_strdup(dest, src->static_config.gateway);
+		dest->static_config.url =
+			talloc_strdup(dest, src->static_config.url);
 		break;
 	}
 
