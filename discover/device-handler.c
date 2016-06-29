@@ -359,6 +359,15 @@ void device_handler_remove(struct device_handler *handler,
 	struct discover_boot_option *opt, *tmp;
 	unsigned int i;
 
+	list_for_each_entry_safe(&device->boot_options, opt, tmp, list) {
+		if (opt == handler->default_boot_option) {
+			pb_log("Default option %s cancelled since device removed",
+					opt->option->name);
+			device_handler_cancel_default(handler);
+			break;
+		}
+	}
+
 	for (i = 0; i < handler->n_devices; i++)
 		if (handler->devices[i] == device)
 			break;
