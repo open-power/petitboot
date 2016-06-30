@@ -515,6 +515,9 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		return 0;
 	}
 
+	/* ignore the default tun device in some environments */
+	if (strncmp(ifname, "tun", strlen("tun")) == 0)
+		return 0;
 
 	interface = find_interface_by_ifindex(network, info->ifi_index);
 	if (!interface) {
