@@ -1191,6 +1191,14 @@ void device_handler_discover_context_commit(struct device_handler *handler,
 	list_for_each_entry_safe(&ctx->boot_options, opt, tmp, list) {
 		list_remove(&opt->list);
 
+		/* All boot options need at least a kernel image */
+		if (!opt->boot_image || !opt->boot_image->url) {
+			pb_log("boot option %s is missing boot image, ignoring\n",
+				opt->option->id);
+			talloc_free(opt);
+			continue;
+		}
+
 		if (boot_option_resolve(opt, handler)) {
 			pb_log("boot option %s is resolved, "
 					"sending to clients\n",
