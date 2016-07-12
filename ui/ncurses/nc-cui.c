@@ -83,6 +83,7 @@ static void cui_start(void)
 	define_key("OF", KEY_END);
 	define_key("\x1b\x5b\x41", KEY_UP);
 	define_key("\x1b\x5b\x42", KEY_DOWN);
+	define_key("\x1b\x5b\x33\x7e", KEY_DC);
 
 	while (getch() != ERR)		/* flush stdin */
 		(void)0;
