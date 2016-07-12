@@ -5,8 +5,10 @@ Autoboot: Specify which devices to autoboot from.\n"
 "\n"
 "By selecting the 'Add Device' button new devices can be added to the autoboot \
 list, either by UUID, MAC address, or device type. Once added to the boot \
-order, the priority of devices can be changed with the 'left' and 'right' keys \
-Devices can be individually removed from the boot order with the minus key. \
+order, the priority of devices can be changed with the '-' (minus) and \
+'+' (plus) keys. \
+Devices can be individually removed from the boot order with the 'delete' or \
+'backspace' keys. \
 Use this option if you have multiple operating system images installed.\n"
 "\n"
 "To autoboot from any device, select the 'Clear & Boot Any' button. \

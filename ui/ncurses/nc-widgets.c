@@ -162,21 +162,6 @@ static bool key_is_select(int key)
 	return key == ' ' || key == '\r' || key == '\n' || key == KEY_ENTER;
 }
 
-static bool key_is_minus(int key)
-{
-	return key == 055;
-}
-
-static bool key_is_left(int key)
-{
-	return key == KEY_LEFT;
-}
-
-static bool key_is_right(int key)
-{
-	return key == KEY_RIGHT;
-}
-
 static bool process_key_nop(struct nc_widget *widget __attribute__((unused)),
 		FORM *form __attribute((unused)),
 		int key __attribute__((unused)))
@@ -522,7 +507,7 @@ static bool subset_process_key(struct nc_widget *w, FORM *form, int key)
 	int i, val, opt_idx = -1;
 	FIELD *field;
 
-	if (!key_is_minus(key) && !key_is_left(key) && !key_is_right(key))
+	if (key != '-' && key != '+' && key != KEY_DC && key != KEY_BACKSPACE)
 		return false;
 
 	field = current_field(form);
@@ -538,10 +523,10 @@ static bool subset_process_key(struct nc_widget *w, FORM *form, int key)
 	if (opt_idx < 0)
 		return false;
 
-	if (key_is_minus(key))
+	if (key == KEY_DC || key == KEY_BACKSPACE)
 		subset_delete_active(subset, opt_idx);
 
-	if (key_is_left(key)){
+	if (key == '-') {
 		if (opt_idx == 0)
 			return true;
 
@@ -550,7 +535,7 @@ static bool subset_process_key(struct nc_widget *w, FORM *form, int key)
 		subset->active[opt_idx - 1] = val;
 	}
 
-	if (key_is_right(key)){
+	if (key == '+') {
 		if (opt_idx >= subset->n_active - 1)
 			return true;
 
