@@ -1348,6 +1348,7 @@ static bool probe(struct platform *p, void *ctx)
 {
 	struct platform_powerpc *platform;
 	struct stat statbuf;
+	bool bmc_present;
 	int rc;
 
 	/* we need a device tree */
@@ -1363,7 +1364,9 @@ static bool probe(struct platform *p, void *ctx)
 
 	p->platform_data = platform;
 
-	if (ipmi_present()) {
+	bmc_present = stat("/proc/device-tree/bmc", &statbuf) == 0;
+
+	if (ipmi_present() && bmc_present) {
 		pb_debug("platform: using direct IPMI for IPMI paramters\n");
 		platform->ipmi = ipmi_open(platform);
 		platform->get_ipmi_bootdev = get_ipmi_bootdev_ipmi;
@@ -1378,8 +1381,7 @@ static bool probe(struct platform *p, void *ctx)
 		pb_log("platform: no IPMI parameter support\n");
 	}
 
-	rc = stat("/proc/device-tree/bmc", &statbuf);
-	if (!rc)
+	if (bmc_present)
 		platform->get_platform_versions = hostboot_load_versions;
 
 	return true;
