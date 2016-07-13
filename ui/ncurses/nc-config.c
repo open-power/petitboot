@@ -411,6 +411,7 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 	widget_move(wl, y, screen->label_x);
 
 	wf = widget_select_base(screen->widgets.autoboot_f);
+	widget_set_visible(wf, true);
 	widget_move(wf, y, screen->field_x);
 	y += widget_height(wf);
 

@@ -466,6 +466,7 @@ static void subset_delete_active(struct nc_widget_subset *subset, int idx)
 	struct nc_widget *widget;
 	size_t rem;
 	int i, val;
+	uint32_t opts;
 
 	/* Shift field focus to nearest active option or next visible field */
 	if (subset->n_active > 1) {
@@ -477,8 +478,11 @@ static void subset_delete_active(struct nc_widget_subset *subset, int idx)
 	} else {
 		for (i = 0; i < set->n_fields; i++)
 			if (field_visible(set->fields[i])) {
-				set->cur_field = set->fields[i];
-				break;
+				opts = field_opts(set->fields[i]);
+				if ((opts & O_ACTIVE) == O_ACTIVE) {
+					set->cur_field = set->fields[i];
+					break;
+				}
 			}
 	}
 
