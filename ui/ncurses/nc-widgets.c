@@ -337,6 +337,14 @@ static bool textbox_process_key(
 	case KEY_DC:
 		form_driver(form, REQ_DEL_CHAR);
 		break;
+	case '\t':
+	case KEY_BTAB:
+	case KEY_UP:
+	case KEY_DOWN:
+	case KEY_PPAGE:
+	case KEY_NPAGE:
+		/* Don't catch navigational keys */
+		return false;
 	default:
 		form_driver(form, key);
 		break;
@@ -1110,6 +1118,12 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 	field = current_field(set->form);
 	assert(field);
 
+	widget = field_userptr(field);
+
+	if (widget->process_key)
+		if (widget->process_key(widget, set->form, key))
+			return true;
+
 	tab = false;
 
 	/* handle field change events */
@@ -1136,7 +1150,6 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 		break;
 	}
 
-	widget = field_userptr(field);
 	if (req) {
 		widget_focus_change(widget, field, false);
 		form_driver(set->form, req);
@@ -1161,10 +1174,7 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 		return true;
 	}
 
-	if (!widget->process_key)
-		return false;
-
-	return widget->process_key(widget, set->form, key);
+	return false;
 }
 
 static int widgetset_destructor(void *ptr)
