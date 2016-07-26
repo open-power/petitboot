@@ -1581,6 +1581,41 @@ void device_release_write(struct discover_device *dev, bool release)
 		dev->mounted = true;
 }
 
+void device_sync_snapshots(struct device_handler *handler, const char *device)
+{
+	struct discover_device *dev = NULL;
+	unsigned int i;
+
+	if (device) {
+		/* Find matching device and sync */
+		dev = device_lookup_by_name(handler, device);
+		if (!dev) {
+			pb_log("%s: device name '%s' unrecognised\n",
+				__func__, device);
+			return;
+		}
+		if (dev->ramdisk)
+			device_release_write(dev, true);
+		else
+			pb_log("%s has no snapshot to merge, skipping\n",
+				dev->device->id);
+		return;
+	}
+
+	/* Otherwise sync all relevant devices */
+	for (i = 0; i < handler->n_devices; i++) {
+		dev = handler->devices[i];
+		if (dev->device->type != DEVICE_TYPE_DISK &&
+			dev->device->type != DEVICE_TYPE_USB)
+			continue;
+		if (dev->ramdisk)
+			device_release_write(dev, true);
+		else
+			pb_log("%s has no snapshot to merge, skipping\n",
+				dev->device->id);
+	}
+}
+
 #else
 
 void device_handler_discover_context_commit(
@@ -1625,6 +1660,12 @@ int device_request_write(struct discover_device *dev __attribute__((unused)),
 
 void device_release_write(struct discover_device *dev __attribute__((unused)),
 	bool release __attribute__((unused)))
+{
+}
+
+void device_sync_snapshots(
+		struct device_handler *handler __attribute__((unused)),
+		const char *device __attribute__((unused)))
 {
 }
 

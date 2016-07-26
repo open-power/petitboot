@@ -142,5 +142,6 @@ void device_handler_reinit(struct device_handler *handler);
 
 int device_request_write(struct discover_device *dev, bool *release);
 void device_release_write(struct discover_device *dev, bool release);
+void device_sync_snapshots(struct device_handler *handler, const char *device);
 
 #endif /* _DEVICE_HANDLER_H */

@@ -60,6 +60,8 @@ static const char *event_action_name(enum event_action action)
 		return "dhcp";
 	case EVENT_ACTION_BOOT:
 		return "boot";
+	case EVENT_ACTION_SYNC:
+		return "sync";
 	default:
 		break;
 	}
@@ -464,6 +466,18 @@ static int user_event_boot(struct user_event *uev, struct event *event)
 	return 0;
 }
 
+static int user_event_sync(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+
+	if (strncasecmp(event->device, "all", strlen("all")) != 0)
+		device_sync_snapshots(handler, event->device);
+	else
+		device_sync_snapshots(handler, NULL);
+
+	return 0;
+}
+
 static void user_event_handle_message(struct user_event *uev, char *buf,
 	int len)
 {
@@ -498,6 +512,9 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	case EVENT_ACTION_BOOT:
 		result = user_event_boot(uev, event);
+		break;
+	case EVENT_ACTION_SYNC:
+		result = user_event_sync(uev, event);
 		break;
 	default:
 		break;
