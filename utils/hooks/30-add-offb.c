@@ -474,7 +474,7 @@ static char *get_hvc_path(struct offb_ctx *ctx, unsigned int termno)
 		return NULL;
 	}
 
-	return talloc_asprintf(ctx, "ibm,opal/consoles/%s", serial);
+	return talloc_asprintf(ctx, "/ibm,opal/consoles/%s", serial);
 }
 
 /*
