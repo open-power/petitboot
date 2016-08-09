@@ -67,7 +67,7 @@ struct boot_command {
 	char *dtb_file;
 	char *boot_args;
 	char *args_sig_file;
-	char *tty;
+	char *console;
 };
 
 struct boot_status {
@@ -163,12 +163,12 @@ struct config {
 
 	bool			allow_writes;
 
-	char			*boot_tty;
+	char			*boot_console;
 	char			*lang;
 
 	/* not user-settable */
-	unsigned int		n_tty;
-	char			**tty_list;
+	unsigned int		n_consoles;
+	char			**consoles;
 	bool			disable_snapshots;
 	bool			safe_mode;
 	bool			debug;

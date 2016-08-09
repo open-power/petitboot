@@ -212,7 +212,7 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 		4 + optional_strlen(boot->dtb_file) +
 		4 + optional_strlen(boot->boot_args) +
 		4 + optional_strlen(boot->args_sig_file) +
-		4 + optional_strlen(boot->tty);
+		4 + optional_strlen(boot->console);
 }
 
 int pb_protocol_boot_status_len(const struct boot_status *status)
@@ -318,11 +318,11 @@ int pb_protocol_config_len(const struct config *config)
 
 	len += 4; /* allow_writes */
 
-	len += 4; /* n_tty */
-	for (i = 0; i < config->n_tty; i++)
-		len += 4 + optional_strlen(config->tty_list[i]);
+	len += 4; /* n_consoles */
+	for (i = 0; i < config->n_consoles; i++)
+		len += 4 + optional_strlen(config->consoles[i]);
 
-	len += 4 + optional_strlen(config->boot_tty);
+	len += 4 + optional_strlen(config->boot_console);
 
 	len += 4 + optional_strlen(config->lang);
 
@@ -389,7 +389,7 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 	pos += pb_protocol_serialise_string(pos, boot->dtb_file);
 	pos += pb_protocol_serialise_string(pos, boot->boot_args);
 	pos += pb_protocol_serialise_string(pos, boot->args_sig_file);
-	pos += pb_protocol_serialise_string(pos, boot->tty);
+	pos += pb_protocol_serialise_string(pos, boot->console);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -573,12 +573,12 @@ int pb_protocol_serialise_config(const struct config *config,
 	*(uint32_t *)pos = config->allow_writes;
 	pos += 4;
 
-	*(uint32_t *)pos = __cpu_to_be32(config->n_tty);
+	*(uint32_t *)pos = __cpu_to_be32(config->n_consoles);
 	pos += 4;
-	for (i = 0; i < config->n_tty; i++)
-		pos += pb_protocol_serialise_string(pos, config->tty_list[i]);
+	for (i = 0; i < config->n_consoles; i++)
+		pos += pb_protocol_serialise_string(pos, config->consoles[i]);
 
-	pos += pb_protocol_serialise_string(pos, config->boot_tty);
+	pos += pb_protocol_serialise_string(pos, config->boot_console);
 
 	pos += pb_protocol_serialise_string(pos, config->lang);
 
@@ -803,7 +803,7 @@ int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 	if (read_string(cmd, &pos, &len, &cmd->args_sig_file))
 		goto out;
 
-	if (read_string(cmd, &pos, &len, &cmd->tty))
+	if (read_string(cmd, &pos, &len, &cmd->console))
 		goto out;
 
 	rc = 0;
@@ -1109,20 +1109,20 @@ int pb_protocol_deserialise_config(struct config *config,
 		goto out;
 	config->allow_writes = !!tmp;
 
-	if (read_u32(&pos, &len, &config->n_tty))
+	if (read_u32(&pos, &len, &config->n_consoles))
 		goto out;
 
-	config->tty_list = talloc_array(config, char *, config->n_tty);
-	for (i = 0; i < config->n_tty; i++) {
-		if (read_string(config->tty_list, &pos, &len, &str))
+	config->consoles = talloc_array(config, char *, config->n_consoles);
+	for (i = 0; i < config->n_consoles; i++) {
+		if (read_string(config->consoles, &pos, &len, &str))
 			goto out;
-		config->tty_list[i] = str;
+		config->consoles[i] = str;
 	}
 
 	if (read_string(config, &pos, &len, &str))
 		goto out;
 
-	config->boot_tty = str;
+	config->boot_console = str;
 
 	if (read_string(config, &pos, &len, &str))
 		goto out;

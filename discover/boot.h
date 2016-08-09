@@ -26,7 +26,7 @@ struct boot_task {
 	char *local_initrd_override;
 	char *local_dtb_override;
 	const char *args;
-	const char *boot_tty;
+	const char *boot_console;
 	boot_status_fn status_fn;
 	void *status_arg;
 	bool dry_run;

@@ -500,40 +500,43 @@ static char *get_vga_path(struct offb_ctx *ctx)
 
 static int set_stdout(struct offb_ctx *ctx)
 {
-	const char *boot_tty, *ptr;
+	const char *boot_console, *ptr;
 	long unsigned int termno;
 	const fdt32_t *prop;
 	int node, prop_len;
 	char *stdout_path;
 
-	boot_tty = getenv("boot_tty");
-	if (!boot_tty) {
-		fprintf(stderr, "boot_tty not set, using default stdout for boot\n");
+	boot_console = getenv("boot_console");
+	if (!boot_console) {
+		fprintf(stderr, "boot_console not set, using default stdout for boot\n");
 		return 0;
 	}
 
-	if (strstr(boot_tty, "tty") != NULL) {
-		fprintf(stderr, "TTY recognised: %s\n", boot_tty);
+	if (strstr(boot_console, "tty") != NULL) {
+		fprintf(stderr, "TTY recognised: %s\n", boot_console);
 		stdout_path = get_vga_path(ctx);
 	} else {
-		ptr = strstr(boot_tty, "hvc");
+		ptr = strstr(boot_console, "hvc");
 		if (!ptr || strlen(ptr) <= strlen("hvc")) {
-			fprintf(stderr, "Unrecognised console: %s\n", boot_tty);
+			fprintf(stderr, "Unrecognised console: %s\n",
+					boot_console);
 			return 0;
 		}
 		ptr += strlen("hvc");
 		errno = 0;
 		termno = strtoul(ptr, NULL, 0);
 		if (errno) {
-			fprintf(stderr, "Couldn't parse termno from %s\n", boot_tty);
+			fprintf(stderr, "Couldn't parse termno from %s\n",
+					boot_console);
 			return 0;
 		}
-		fprintf(stderr, "HVC recognised: %s\n", boot_tty);
+		fprintf(stderr, "HVC recognised: %s\n", boot_console);
 		stdout_path = get_hvc_path(ctx, termno);
 	}
 
 	if (!stdout_path) {
-		fprintf(stderr, "Couldn't parse %s into a path\n", boot_tty);
+		fprintf(stderr, "Couldn't parse %s into a path\n",
+				boot_console);
 		return -1;
 	}
 

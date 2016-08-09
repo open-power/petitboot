@@ -569,7 +569,7 @@ static void populate_config(struct platform_powerpc *platform,
 
 	val = get_param(platform, "petitboot,tty");
 	if (val)
-		config->boot_tty = talloc_strdup(config, val);
+		config->boot_console = talloc_strdup(config, val);
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)
@@ -746,7 +746,7 @@ static int update_config(struct platform_powerpc *platform,
 		val = config->allow_writes ? "true" : "false";
 	update_string_config(platform, "petitboot,write?", val);
 
-	val = config->boot_tty ?: "";
+	val = config->boot_console ?: "";
 	update_string_config(platform, "petitboot,tty", val);
 
 	update_network_config(platform, config);
@@ -1239,32 +1239,32 @@ static void get_active_consoles(struct config *config)
 	struct stat sbuf;
 	char *fsp_prop = NULL;
 
-	config->n_tty = 2;
-	config->tty_list = talloc_array(config, char *, config->n_tty);
-	if (!config->tty_list)
+	config->n_consoles = 2;
+	config->consoles = talloc_array(config, char *, config->n_consoles);
+	if (!config->consoles)
 		goto err;
 
-	config->tty_list[0] = talloc_asprintf(config->tty_list,
+	config->consoles[0] = talloc_asprintf(config->consoles,
 					"/dev/hvc0 [IPMI / Serial]");
-	config->tty_list[1] = talloc_asprintf(config->tty_list,
+	config->consoles[1] = talloc_asprintf(config->consoles,
 					"/dev/tty1 [VGA]");
 
 	fsp_prop = talloc_asprintf(config, "%sfsps", devtree_dir);
 	if (stat(fsp_prop, &sbuf) == 0) {
 		/* FSP based machines also have a separate serial console */
-		config->tty_list = talloc_realloc(config, config->tty_list,
-						char *,	config->n_tty + 1);
-		if (!config->tty_list)
+		config->consoles = talloc_realloc(config, config->consoles,
+						char *,	config->n_consoles + 1);
+		if (!config->consoles)
 			goto err;
-		config->tty_list[config->n_tty++] = talloc_asprintf(
-						config->tty_list,
+		config->consoles[config->n_consoles++] = talloc_asprintf(
+						config->consoles,
 						"/dev/hvc1 [Serial]");
 	}
 
 	return;
 err:
-	config->n_tty = 0;
-	pb_log("Failed to allocate memory for tty_list\n");
+	config->n_consoles = 0;
+	pb_log("Failed to allocate memory for consoles\n");
 }
 
 static int load_config(struct platform *p, struct config *config)

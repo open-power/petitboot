@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	43
+#define N_FIELDS	44
 
 extern struct help_text config_help_text;
 
@@ -109,9 +109,9 @@ struct config_screen {
 
 		struct nc_widget_label		*allow_write_l;
 		struct nc_widget_select		*allow_write_f;
-		struct nc_widget_label		*boot_tty_l;
-		struct nc_widget_select		*boot_tty_f;
-		struct nc_widget_label		*current_tty_l;
+		struct nc_widget_label		*boot_console_l;
+		struct nc_widget_select		*boot_console_f;
+		struct nc_widget_label		*current_console_l;
 
 		struct nc_widget_label		*net_override_l;
 		struct nc_widget_label		*safe_mode;
@@ -201,8 +201,8 @@ static int screen_process_form(struct config_screen *screen)
 	bool allow_write, autoboot;
 	char *str, *end;
 	struct config *config;
-	int i, n_boot_opts, rc, idx;
-	unsigned int *order, tty;
+	int i, n_boot_opts, rc;
+	unsigned int *order, idx;
 	char mac[20];
 
 	config = config_copy(screen, screen->cui->config);
@@ -338,16 +338,16 @@ static int screen_process_form(struct config_screen *screen)
 	if (allow_write != config->allow_writes)
 		config->allow_writes = allow_write;
 
-	if (config->n_tty) {
-		tty = widget_select_get_value(screen->widgets.boot_tty_f);
-		if (!config->boot_tty) {
-			config->boot_tty = talloc_strdup(config,
-							config->tty_list[tty]);
-		} else if (strncmp(config->boot_tty, config->tty_list[tty],
-				strlen(config->boot_tty)) != 0) {
-			talloc_free(config->boot_tty);
-			config->boot_tty = talloc_strdup(config,
-							config->tty_list[tty]);
+	if (config->n_consoles) {
+		idx = widget_select_get_value(screen->widgets.boot_console_f);
+		if (!config->boot_console) {
+			config->boot_console = talloc_strdup(config,
+							config->consoles[idx]);
+		} else if (strncmp(config->boot_console, config->consoles[idx],
+				strlen(config->boot_console)) != 0) {
+			talloc_free(config->boot_console);
+			config->boot_console = talloc_strdup(config,
+							config->consoles[idx]);
 		}
 	}
 
@@ -592,20 +592,20 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 
 	y += 1;
 
-	if (widget_height(widget_select_base(screen->widgets.boot_tty_f))) {
-		layout_pair(screen, y, screen->widgets.boot_tty_l,
-			    widget_select_base(screen->widgets.boot_tty_f));
-		y += widget_height(widget_select_base(screen->widgets.boot_tty_f));
-		widget_move(widget_label_base(screen->widgets.current_tty_l),
+	if (widget_height(widget_select_base(screen->widgets.boot_console_f))) {
+		layout_pair(screen, y, screen->widgets.boot_console_l,
+			    widget_select_base(screen->widgets.boot_console_f));
+		y += widget_height(widget_select_base(screen->widgets.boot_console_f));
+		widget_move(widget_label_base(screen->widgets.current_console_l),
 			y, screen->field_x);
 		y += 2;
 	} else {
 		widget_set_visible(widget_label_base(
-					screen->widgets.boot_tty_l), false);
+					screen->widgets.boot_console_l), false);
 		widget_set_visible(widget_select_base(
-					screen->widgets.boot_tty_f), false);
+					screen->widgets.boot_console_f), false);
 		widget_set_visible(widget_label_base(
-					screen->widgets.current_tty_l), false);
+					screen->widgets.current_console_l), false);
 	}
 
 	if (screen->net_override) {
@@ -1038,22 +1038,22 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 				_("Allow bootloader scripts to modify disks"),
 				config->allow_writes);
 
-	screen->widgets.boot_tty_l = widget_new_label(set, 0, 0,
-			_("Default tty:"));
-	screen->widgets.boot_tty_f = widget_new_select(set, 0, 0,
+	screen->widgets.boot_console_l = widget_new_label(set, 0, 0,
+			_("Boot console:"));
+	screen->widgets.boot_console_f = widget_new_select(set, 0, 0,
 						COLS - screen->field_x - 1);
 
-	for (i = 0; i < config->n_tty; i++){
-		found = config->boot_tty &&
-			strncmp(config->boot_tty, config->tty_list[i],
-				strlen(config->boot_tty)) == 0;
-		widget_select_add_option(screen->widgets.boot_tty_f, i,
-					config->tty_list[i], found);
+	for (i = 0; i < config->n_consoles; i++){
+		found = config->boot_console &&
+			strncmp(config->boot_console, config->consoles[i],
+				strlen(config->boot_console)) == 0;
+		widget_select_add_option(screen->widgets.boot_console_f, i,
+					config->consoles[i], found);
 	}
 
 	tty = talloc_asprintf(screen, _("Current interface: %s"),
 				ttyname(STDIN_FILENO));
-	screen->widgets.current_tty_l = widget_new_label(set, 0 , 0, tty);
+	screen->widgets.current_console_l = widget_new_label(set, 0 , 0, tty);
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 10, _("OK"),
 			ok_click, screen);

@@ -220,7 +220,7 @@ static void boot_hook_setenv(struct boot_task *task)
 	unsetenv("boot_initrd");
 	unsetenv("boot_dtb");
 	unsetenv("boot_args");
-	unsetenv("boot_tty");
+	unsetenv("boot_console");
 
 	setenv("boot_image", task->local_image, 1);
 	if (task->local_initrd)
@@ -229,8 +229,8 @@ static void boot_hook_setenv(struct boot_task *task)
 		setenv("boot_dtb", task->local_dtb, 1);
 	if (task->args)
 		setenv("boot_args", task->args, 1);
-	if (task->boot_tty)
-		setenv("boot_tty", task->boot_tty, 1);
+	if (task->boot_console)
+		setenv("boot_console", task->boot_console, 1);
 }
 
 static int hook_filter(const struct dirent *dirent)
@@ -574,11 +574,11 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		boot_task->args = NULL;
 	}
 
-	if (cmd && cmd->tty)
-		boot_task->boot_tty = talloc_strdup(boot_task, cmd->tty);
+	if (cmd && cmd->console)
+		boot_task->boot_console = talloc_strdup(boot_task, cmd->console);
 	else {
 		config = config_get();
-		boot_task->boot_tty = config ? config->boot_tty : NULL;
+		boot_task->boot_console = config ? config->boot_console : NULL;
 	}
 
 	if (boot_task->verify_signature || boot_task->decrypt_files) {

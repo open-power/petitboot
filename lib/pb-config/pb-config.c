@@ -83,15 +83,15 @@ struct config *config_copy(void *ctx, const struct config *src)
 
 	dest->allow_writes = src->allow_writes;
 
-	dest->n_tty = src->n_tty;
-	if (src->tty_list)
-		dest->tty_list = talloc_array(dest, char *, src->n_tty);
-	for (i = 0; i < src->n_tty && src->n_tty; i++)
-		dest->tty_list[i] = talloc_strdup(dest->tty_list,
-						src->tty_list[i]);
+	dest->n_consoles = src->n_consoles;
+	if (src->consoles)
+		dest->consoles = talloc_array(dest, char *, src->n_consoles);
+	for (i = 0; i < src->n_consoles && src->n_consoles; i++)
+		dest->consoles[i] = talloc_strdup(dest->consoles,
+						src->consoles[i]);
 
-	if (src->boot_tty)
-		dest->boot_tty = talloc_strdup(dest, src->boot_tty);
+	if (src->boot_console)
+		dest->boot_console = talloc_strdup(dest, src->boot_console);
 
 	if (src->lang && strlen(src->lang))
 		dest->lang = talloc_strdup(dest, src->lang);
