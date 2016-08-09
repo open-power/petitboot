@@ -34,5 +34,4 @@ dist_pkgdata_DATA = \
 	utils/logrotate.conf \
 	utils/hooks/01-create-default-dtb \
 	utils/hooks/20-update-dtb-sample \
-	utils/hooks/90-sort-dtb \
-	utils/hooks/80-set-stdout
+	utils/hooks/90-sort-dtb

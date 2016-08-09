@@ -517,7 +517,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	struct pb_url *image = NULL, *initrd = NULL, *dtb = NULL;
 	struct pb_url *image_sig = NULL, *initrd_sig = NULL, *dtb_sig = NULL,
 		*cmdline_sig = NULL;
-	const struct config *config;
+	const struct config *config = config_get();
 	struct boot_task *boot_task;
 	const char *boot_desc;
 	int rc;
@@ -574,12 +574,10 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		boot_task->args = NULL;
 	}
 
-	if (cmd && cmd->console)
+	if (cmd && cmd->console && !config->manual_console)
 		boot_task->boot_console = talloc_strdup(boot_task, cmd->console);
-	else {
-		config = config_get();
+	else
 		boot_task->boot_console = config ? config->boot_console : NULL;
-	}
 
 	if (boot_task->verify_signature || boot_task->decrypt_files) {
 		if (cmd && cmd->args_sig_file) {

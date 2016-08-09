@@ -164,6 +164,7 @@ struct config {
 	bool			allow_writes;
 
 	char			*boot_console;
+	bool			manual_console;
 	char			*lang;
 
 	/* not user-settable */

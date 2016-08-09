@@ -92,6 +92,7 @@ struct config *config_copy(void *ctx, const struct config *src)
 
 	if (src->boot_console)
 		dest->boot_console = talloc_strdup(dest, src->boot_console);
+	dest->manual_console = src->manual_console;
 
 	if (src->lang && strlen(src->lang))
 		dest->lang = talloc_strdup(dest, src->lang);

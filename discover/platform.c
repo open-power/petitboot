@@ -84,6 +84,8 @@ static void dump_config(struct config *config)
 
 	pb_log("  Default UI to boot on: %s\n",
 		config->boot_console ?: "none set");
+	if (config->manual_console)
+		pb_log("    (Manually set)\n");
 
 
 	pb_log(" language: %s\n", config->lang ?: "");

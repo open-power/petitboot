@@ -323,6 +323,7 @@ int pb_protocol_config_len(const struct config *config)
 		len += 4 + optional_strlen(config->consoles[i]);
 
 	len += 4 + optional_strlen(config->boot_console);
+	len += 4; /* manual_console */
 
 	len += 4 + optional_strlen(config->lang);
 
@@ -579,6 +580,8 @@ int pb_protocol_serialise_config(const struct config *config,
 		pos += pb_protocol_serialise_string(pos, config->consoles[i]);
 
 	pos += pb_protocol_serialise_string(pos, config->boot_console);
+	*(uint32_t *)pos = config->manual_console;
+	pos += 4;
 
 	pos += pb_protocol_serialise_string(pos, config->lang);
 
@@ -1123,6 +1126,10 @@ int pb_protocol_deserialise_config(struct config *config,
 		goto out;
 
 	config->boot_console = str;
+
+	if (read_u32(&pos, &len, &tmp))
+		goto out;
+	config->manual_console = !!tmp;
 
 	if (read_string(config, &pos, &len, &str))
 		goto out;

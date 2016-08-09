@@ -111,6 +111,7 @@ struct config_screen {
 		struct nc_widget_select		*allow_write_f;
 		struct nc_widget_label		*boot_console_l;
 		struct nc_widget_select		*boot_console_f;
+		struct nc_widget_label		*manual_console_l;
 		struct nc_widget_label		*current_console_l;
 
 		struct nc_widget_label		*net_override_l;
@@ -338,7 +339,7 @@ static int screen_process_form(struct config_screen *screen)
 	if (allow_write != config->allow_writes)
 		config->allow_writes = allow_write;
 
-	if (config->n_consoles) {
+	if (config->n_consoles && !config->manual_console) {
 		idx = widget_select_get_value(screen->widgets.boot_console_f);
 		if (!config->boot_console) {
 			config->boot_console = talloc_strdup(config,
@@ -592,7 +593,15 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 
 	y += 1;
 
-	if (widget_height(widget_select_base(screen->widgets.boot_console_f))) {
+	if (screen->widgets.manual_console_l) {
+		layout_pair(screen, y++, screen->widgets.boot_console_l,
+			widget_label_base(screen->widgets.manual_console_l));
+		widget_move(widget_label_base(screen->widgets.current_console_l),
+			y, screen->field_x);
+		widget_set_visible(widget_select_base(
+			screen->widgets.boot_console_f), false);
+		y += 2;
+	} else if (widget_height(widget_select_base(screen->widgets.boot_console_f))) {
 		layout_pair(screen, y, screen->widgets.boot_console_l,
 			    widget_select_base(screen->widgets.boot_console_f));
 		y += widget_height(widget_select_base(screen->widgets.boot_console_f));
@@ -785,7 +794,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 {
 	struct nc_widgetset *set = screen->widgetset;
 	struct interface_config *ifcfg;
-	char *str, *ip, *mask, *gw, *url, *tty;
+	char *str, *ip, *mask, *gw, *url, *tty, *label;
 	enum net_conf_type type;
 	unsigned int i;
 	int add_len, clear_len, any_len, min_len = 20;
@@ -841,7 +850,6 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	for (i = 0; i < sysinfo->n_blockdevs; i++) {
 		struct blockdev_info *bd = sysinfo->blockdevs[i];
-		char *label;
 
 		label = talloc_asprintf(screen, _("disk: %s [uuid: %s]"),
 				bd->name, bd->uuid);
@@ -851,7 +859,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *info = sysinfo->interfaces[i];
-		char *label, mac[20];
+		char mac[20];
 
 		mac_str(info->hwaddr, info->hwaddr_size, mac, sizeof(mac));
 
@@ -862,7 +870,6 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	}
 
 	for (i = DEVICE_TYPE_NETWORK; i < DEVICE_TYPE_UNKNOWN; i++) {
-		char *label;
 
 		if (i == DEVICE_TYPE_ANY)
 			label = talloc_asprintf(screen, _("Any Device"));
@@ -903,7 +910,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	widget_textbox_set_validator_integer(screen->widgets.timeout_f, 0, 999);
 
 	if (config->ipmi_bootdev) {
-		char *label = talloc_asprintf(screen,
+		label = talloc_asprintf(screen,
 				_("%s IPMI boot option: %s"),
 				config->ipmi_bootdev_persistent ?
 				"Persistent" : "Temporary",
@@ -1049,6 +1056,12 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 				strlen(config->boot_console)) == 0;
 		widget_select_add_option(screen->widgets.boot_console_f, i,
 					config->consoles[i], found);
+	}
+
+	if (config->manual_console) {
+		label = talloc_asprintf(screen, _("Manually set: '%s'"),
+					config->boot_console);
+		screen->widgets.manual_console_l = widget_new_label(set, 0, 0, label);
 	}
 
 	tty = talloc_asprintf(screen, _("Current interface: %s"),

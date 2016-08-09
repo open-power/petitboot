@@ -59,7 +59,7 @@ static const char *known_params[] = {
 	"petitboot,debug?",
 	"petitboot,write?",
 	"petitboot,snapshots?",
-	"petitboot,tty",
+	"petitboot,console",
 	NULL,
 };
 
@@ -567,9 +567,12 @@ static void populate_config(struct platform_powerpc *platform,
 	if (val)
 		config->disable_snapshots = !strcmp(val, "false");
 
-	val = get_param(platform, "petitboot,tty");
+	val = get_param(platform, "petitboot,console");
 	if (val)
 		config->boot_console = talloc_strdup(config, val);
+	/* If a full path is already set we don't want to override it */
+	config->manual_console = config->boot_console &&
+					!strchr(config->boot_console, '[');
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)
@@ -746,8 +749,10 @@ static int update_config(struct platform_powerpc *platform,
 		val = config->allow_writes ? "true" : "false";
 	update_string_config(platform, "petitboot,write?", val);
 
-	val = config->boot_console ?: "";
-	update_string_config(platform, "petitboot,tty", val);
+	if (!config->manual_console) {
+		val = config->boot_console ?: "";
+		update_string_config(platform, "petitboot,console", val);
+	}
 
 	update_network_config(platform, config);
 
