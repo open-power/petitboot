@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/reboot.h>
 
 #include "log/log.h"
 #include "pb-protocol/pb-protocol.h"
@@ -46,6 +47,14 @@
 extern const struct help_text main_menu_help_text;
 
 static struct pmenu *main_menu_init(struct cui *cui);
+
+static bool lockdown_active(void)
+{
+	bool lockdown = false;
+	if (access(LOCKDOWN_FILE, F_OK) != -1)
+		lockdown = true;
+	return lockdown;
+}
 
 static void cui_start(void)
 {
@@ -94,6 +103,13 @@ static void cui_atexit(void)
 	clear();
 	refresh();
 	endwin();
+
+	bool lockdown = lockdown_active();
+
+	while (lockdown) {
+		sync();
+		reboot(RB_AUTOBOOT);
+	}
 }
 
 /**
@@ -826,6 +842,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	struct pmenu_item *i;
 	struct pmenu *m;
 	int result;
+	bool lockdown = lockdown_active();
 
 	m = pmenu_init(cui, 7, cui_on_exit);
 	if (!m) {
@@ -869,7 +886,10 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	i->on_execute = menu_add_url_execute;
 	pmenu_item_insert(m, i, 5);
 
-	i = pmenu_item_create(m, _("Exit to shell"));
+	if (lockdown)
+		i = pmenu_item_create(m, _("Reboot"));
+	else
+		i = pmenu_item_create(m, _("Exit to shell"));
 	i->on_execute = pmenu_exit_cb;
 	pmenu_item_insert(m, i, 6);
 
