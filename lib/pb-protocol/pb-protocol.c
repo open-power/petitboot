@@ -37,6 +37,7 @@
  *    4-byte len, initrd_file
  *    4-byte len, dtb_file
  *    4-byte len, boot_args
+ *    4-byte len, args_sig_file
  *
  * action = 0x2: device remove message
  *  payload:
@@ -49,6 +50,7 @@
  *   4-byte len, initrd_file
  *   4-byte len, dtb_file
  *   4-byte len, boot_args
+ *   4-byte len, args_sig_file
  *
  */
 
@@ -72,6 +74,7 @@ void pb_protocol_dump_device(const struct device *dev, const char *text,
 		fprintf(stream, "%s\t\tinit: %s\n", text, opt->initrd_file);
 		fprintf(stream, "%s\t\tdtb:  %s\n", text, opt->dtb_file);
 		fprintf(stream, "%s\t\targs: %s\n", text, opt->boot_args);
+		fprintf(stream, "%s\t\tasig: %s\n", text, opt->args_sig_file);
 	}
 }
 
@@ -197,6 +200,7 @@ int pb_protocol_boot_option_len(const struct boot_option *opt)
 		4 + optional_strlen(opt->initrd_file) +
 		4 + optional_strlen(opt->dtb_file) +
 		4 + optional_strlen(opt->boot_args) +
+		4 + optional_strlen(opt->args_sig_file) +
 		sizeof(opt->is_default);
 }
 
@@ -207,6 +211,7 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 		4 + optional_strlen(boot->initrd_file) +
 		4 + optional_strlen(boot->dtb_file) +
 		4 + optional_strlen(boot->boot_args) +
+		4 + optional_strlen(boot->args_sig_file) +
 		4 + optional_strlen(boot->tty);
 }
 
@@ -360,6 +365,7 @@ int pb_protocol_serialise_boot_option(const struct boot_option *opt,
 	pos += pb_protocol_serialise_string(pos, opt->initrd_file);
 	pos += pb_protocol_serialise_string(pos, opt->dtb_file);
 	pos += pb_protocol_serialise_string(pos, opt->boot_args);
+	pos += pb_protocol_serialise_string(pos, opt->args_sig_file);
 
 	*(bool *)pos = opt->is_default;
 	pos += sizeof(bool);
@@ -380,6 +386,7 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 	pos += pb_protocol_serialise_string(pos, boot->initrd_file);
 	pos += pb_protocol_serialise_string(pos, boot->dtb_file);
 	pos += pb_protocol_serialise_string(pos, boot->boot_args);
+	pos += pb_protocol_serialise_string(pos, boot->args_sig_file);
 	pos += pb_protocol_serialise_string(pos, boot->tty);
 
 	assert(pos <= buf + buf_len);
@@ -750,6 +757,9 @@ int pb_protocol_deserialise_boot_option(struct boot_option *opt,
 	if (read_string(opt, &pos, &len, &opt->boot_args))
 		goto out;
 
+	if (read_string(opt, &pos, &len, &opt->args_sig_file))
+		goto out;
+
 	if (len < sizeof(bool))
 		goto out;
 	opt->is_default = *(bool *)(pos);
@@ -783,6 +793,9 @@ int pb_protocol_deserialise_boot_command(struct boot_command *cmd,
 		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->boot_args))
+		goto out;
+
+	if (read_string(cmd, &pos, &len, &cmd->args_sig_file))
 		goto out;
 
 	if (read_string(cmd, &pos, &len, &cmd->tty))

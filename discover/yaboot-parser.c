@@ -114,6 +114,13 @@ static void yaboot_finish(struct conf_context *conf)
 	/* populate the boot option from state data */
 	state->opt->boot_image = create_yaboot_devpath_resource(state,
 				conf, state->boot_image);
+
+	char* args_sigfile_default = talloc_asprintf(opt,
+		"%s.cmdline.sig", state->boot_image);
+	state->opt->args_sig_file = create_yaboot_devpath_resource(state,
+				conf, args_sigfile_default);
+	talloc_free(args_sigfile_default);
+
 	if (state->initrd) {
 		state->opt->initrd = create_yaboot_devpath_resource(state,
 				conf, state->initrd);

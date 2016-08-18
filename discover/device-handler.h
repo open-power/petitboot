@@ -48,6 +48,7 @@ struct discover_boot_option {
 	struct resource		*boot_image;
 	struct resource		*initrd;
 	struct resource		*dtb;
+	struct resource		*args_sig_file;
 	struct resource		*icon;
 };
 

@@ -6,7 +6,9 @@
 #include <types/types.h>
 #include <talloc/talloc.h>
 #include <util/util.h>
+#include <url/url.h>
 
+#include "discover/resource.h"
 #include "discover/parser.h"
 #include "grub2.h"
 
@@ -69,6 +71,12 @@ static int builtin_linux(struct grub2_script *script,
 		opt->option->boot_args = talloc_asprintf_append(
 						opt->option->boot_args,
 						" %s", argv[i]);
+
+	char* args_sigfile_default = talloc_asprintf(opt,
+		"%s.cmdline.sig", argv[1]);
+	opt->args_sig_file = create_grub2_resource(opt, script->ctx->device,
+						root, args_sigfile_default);
+	talloc_free(args_sigfile_default);
 	return 0;
 }
 

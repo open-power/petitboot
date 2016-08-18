@@ -96,6 +96,12 @@ out_add:
 	d_opt->boot_image = create_devpath_resource(d_opt,
 				conf->dc->device, value);
 
+	char* args_sigfile_default = talloc_asprintf(d_opt,
+		"%s.cmdline.sig", value);
+	d_opt->args_sig_file = create_devpath_resource(d_opt,
+				conf->dc->device, args_sigfile_default);
+	talloc_free(args_sigfile_default);
+
 	if (root) {
 		opt->boot_args = talloc_asprintf(opt, "root=%s %s", root, args);
 		talloc_free(args);

@@ -26,25 +26,12 @@
 #include "resource.h"
 #include "platform.h"
 
+#include <security/gpg.h>
+
 static const char *boot_hook_dir = PKG_SYSCONF_DIR "/boot.d";
 enum {
 	BOOT_HOOK_EXIT_OK	= 0,
 	BOOT_HOOK_EXIT_UPDATE	= 2,
-};
-
-struct boot_task {
-	struct load_url_result *image;
-	struct load_url_result *initrd;
-	struct load_url_result *dtb;
-	const char *local_image;
-	const char *local_initrd;
-	const char *local_dtb;
-	const char *args;
-	const char *boot_tty;
-	boot_status_fn status_fn;
-	void *status_arg;
-	bool dry_run;
-	bool cancelled;
 };
 
 /**
@@ -59,20 +46,39 @@ static int kexec_load(struct boot_task *boot_task)
 	char *s_dtb = NULL;
 	char *s_args = NULL;
 
+	boot_task->local_initrd_override = NULL;
+	boot_task->local_dtb_override = NULL;
+	boot_task->local_image_override = NULL;
+
+	if ((result = gpg_validate_boot_files(boot_task))) {
+		if (result == KEXEC_LOAD_SIGNATURE_FAILURE) {
+			pb_log("%s: Aborting kexec due to"
+				" signature verification failure\n", __func__);
+			goto abort_kexec;
+		}
+	}
+
+	const char* local_initrd = (boot_task->local_initrd_override) ?
+		boot_task->local_initrd_override : boot_task->local_initrd;
+	const char* local_dtb = (boot_task->local_dtb_override) ?
+		boot_task->local_dtb_override : boot_task->local_dtb;
+	const char* local_image = (boot_task->local_image_override) ?
+		boot_task->local_image_override : boot_task->local_image;
+
 	p = argv;
 	*p++ = pb_system_apps.kexec;	/* 1 */
 	*p++ = "-l";			/* 2 */
 
-	if (boot_task->local_initrd) {
+	if (local_initrd) {
 		s_initrd = talloc_asprintf(boot_task, "--initrd=%s",
-				boot_task->local_initrd);
+				local_initrd);
 		assert(s_initrd);
 		*p++ = s_initrd;	 /* 3 */
 	}
 
-	if (boot_task->local_dtb) {
+	if (local_dtb) {
 		s_dtb = talloc_asprintf(boot_task, "--dtb=%s",
-						boot_task->local_dtb);
+						local_dtb);
 		assert(s_dtb);
 		*p++ = s_dtb;		 /* 4 */
 	}
@@ -82,13 +88,16 @@ static int kexec_load(struct boot_task *boot_task)
 	assert(s_args);
 	*p++ = s_args;		/* 5 */
 
-	*p++ = boot_task->local_image;	/* 6 */
+	*p++ = local_image;		/* 6 */
 	*p++ = NULL;			/* 7 */
 
 	result = process_run_simple_argv(boot_task, argv);
 
 	if (result)
 		pb_log("%s: failed: (%d)\n", __func__, result);
+
+abort_kexec:
+	gpg_validate_boot_files_cleanup(boot_task);
 
 	return result;
 }
@@ -376,11 +385,40 @@ static void boot_process(struct load_url_result *result, void *data)
 			check_load(task, "dtb", task->dtb))
 		goto no_load;
 
+	if (task->verify_signature) {
+		if (load_pending(task->image_signature) ||
+				load_pending(task->initrd_signature) ||
+				load_pending(task->dtb_signature) ||
+				load_pending(task->cmdline_signature))
+			return;
+
+		if (check_load(task, "kernel image signature",
+					task->image_signature) ||
+				check_load(task, "initrd signature",
+					task->initrd_signature) ||
+				check_load(task, "dtb signature",
+					task->dtb_signature) ||
+				check_load(task, "command line signature",
+					task->cmdline_signature))
+			goto no_sig_load;
+	}
+
 	/* we make a copy of the local paths, as the boot hooks might update
 	 * and/or create these */
 	task->local_image = task->image ? task->image->local : NULL;
 	task->local_initrd = task->initrd ? task->initrd->local : NULL;
 	task->local_dtb = task->dtb ? task->dtb->local : NULL;
+
+	if (task->verify_signature) {
+		task->local_image_signature = task->image_signature ?
+			task->image_signature->local : NULL;
+		task->local_initrd_signature = task->initrd_signature ?
+			task->initrd_signature->local : NULL;
+		task->local_dtb_signature = task->dtb_signature ?
+			task->dtb_signature->local : NULL;
+		task->local_cmdline_signature = task->cmdline_signature ?
+			task->cmdline_signature->local : NULL;
+	}
 
 	run_boot_hooks(task);
 
@@ -388,10 +426,27 @@ static void boot_process(struct load_url_result *result, void *data)
 			_("performing kexec_load"));
 
 	rc = kexec_load(task);
-	if (rc) {
+	if (rc == KEXEC_LOAD_SIGNATURE_FAILURE) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_ERROR, _("kexec load failed"));
+				BOOT_STATUS_ERROR,
+				_("signature verification failed"));
 	}
+	else if (rc == KEXEC_LOAD_SIG_SETUP_INVALID) {
+		update_status(task->status_fn, task->status_arg,
+				BOOT_STATUS_ERROR,
+				_("invalid signature configuration"));
+	}
+	else if (rc) {
+		update_status(task->status_fn, task->status_arg,
+				BOOT_STATUS_ERROR,
+				_("kexec load failed"));
+	}
+
+no_sig_load:
+	cleanup_load(task->image_signature);
+	cleanup_load(task->initrd_signature);
+	cleanup_load(task->dtb_signature);
+	cleanup_load(task->cmdline_signature);
 
 no_load:
 	cleanup_load(task->image);
@@ -433,6 +488,8 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		boot_status_fn status_fn, void *status_arg)
 {
 	struct pb_url *image = NULL, *initrd = NULL, *dtb = NULL;
+	struct pb_url *image_sig = NULL, *initrd_sig = NULL, *dtb_sig = NULL,
+		*cmdline_sig = NULL;
 	const struct config *config;
 	struct boot_task *boot_task;
 	const char *boot_desc;
@@ -476,6 +533,8 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	boot_task->status_fn = status_fn;
 	boot_task->status_arg = status_arg;
 
+	boot_task->verify_signature = (lockdown_status() == PB_LOCKDOWN_SIGN);
+
 	if (cmd && cmd->boot_args) {
 		boot_task->args = talloc_strdup(boot_task, cmd->boot_args);
 	} else if (opt && opt->option->boot_args) {
@@ -492,11 +551,52 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		boot_task->boot_tty = config ? config->boot_tty : NULL;
 	}
 
+	if (boot_task->verify_signature) {
+		if (cmd && cmd->args_sig_file) {
+			cmdline_sig = pb_url_parse(opt, cmd->args_sig_file);
+		} else if (opt && opt->args_sig_file) {
+			cmdline_sig = opt->args_sig_file->url;
+		} else {
+			pb_log("%s: no command line signature file"
+				" specified\n", __func__);
+			update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+					_("Boot failed: no command line"
+						" signature file specified"));
+			talloc_free(boot_task);
+			return NULL;
+		}
+	}
+
 	/* start async loads for boot resources */
 	rc = start_url_load(boot_task, "kernel image", image, &boot_task->image)
 	  || start_url_load(boot_task, "initrd", initrd, &boot_task->initrd)
 	  || start_url_load(boot_task, "dtb", dtb, &boot_task->dtb);
 
+	if (boot_task->verify_signature) {
+		/* Generate names of associated signature files and load */
+		if (image) {
+			image_sig = gpg_get_signature_url(ctx, image);
+			rc |= start_url_load(boot_task,
+				"kernel image signature", image_sig,
+				&boot_task->image_signature);
+		}
+		if (initrd) {
+			initrd_sig = gpg_get_signature_url(ctx, initrd);
+			rc |= start_url_load(boot_task, "initrd signature",
+				initrd_sig, &boot_task->initrd_signature);
+		}
+		if (dtb) {
+			dtb_sig = gpg_get_signature_url(ctx, dtb);
+			rc |= start_url_load(boot_task, "dtb signature",
+				dtb_sig, &boot_task->dtb_signature);
+		}
+
+		rc |= start_url_load(boot_task,
+			"kernel command line signature", cmdline_sig,
+			&boot_task->cmdline_signature);
+	}
+
+	/* If all URLs are local, we may be done. */
 	if (rc) {
 		/* Don't call boot_cancel() to preserve the status update */
 		boot_task->cancelled = true;

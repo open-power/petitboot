@@ -170,6 +170,69 @@ AS_IF(
 	]
 )
 
+AC_ARG_WITH(
+	[signed-boot],
+	[AS_HELP_STRING([--with-signed-boot],
+		[build kernel signature checking support [default=no]]
+	)],
+	[],
+	[with_signed_boot=no]
+)
+
+AM_CONDITIONAL(
+	[WITH_SIGNED_BOOT],
+	[test "x$with_signed_boot" = "xyes"])
+
+AS_IF(
+	[test "x$with_signed_boot" = "xyes"],
+	[PKG_CHECK_MODULES(
+		[GPGME],
+		[gpgme >= 1.0.0],
+		[SAVE_LIBS="$LIBS" LIBS="$LIBS $gpgme_LIBS"
+			AC_CHECK_LIB(
+				[gpgme],
+				[gpgme_op_verify],
+				[],
+				[AC_MSG_FAILURE([--with-signed-boot was given but the test for gpgme failed.])]
+			)
+			LIBS="$SAVE_LIBS"
+		],
+		[AM_PATH_GPGME([1.0.0], [SAVE_LIBS="$LIBS" LIBS="$LIBS $gpgme_LIBS"
+			AC_CHECK_LIB(
+				[gpgme],
+				[gpgme_op_verify],
+				[],
+				[AC_MSG_FAILURE([--with-signed-boot was given but the test for gpgme failed.])]
+			)
+			LIBS="$SAVE_LIBS"],
+			[AC_MSG_RESULT([$gpgme_PKG_ERRORS])
+				AC_MSG_FAILURE([ Consider adjusting PKG_CONFIG_PATH environment variable])
+			])
+		]
+	)]
+)
+
+AS_IF(
+	[test "x$with_signed_boot" = "xyes"],
+	[SAVE_CPPFLAGS="$CPPFLAGS" CPPFLAGS="$CPPFLAGS $gpgme_CFLAGS"
+		AC_CHECK_HEADERS(
+			[gpgme.h],
+			[],
+			[AC_MSG_FAILURE([ --with-signed-boot given but gpgme.h not found])]
+		)
+		CPPFLAGS="$SAVE_CPPFLAGS"
+	]
+)
+
+AM_CONDITIONAL([WITH_GPGME], [test "x$with_signed_boot" = "xyes"])
+
+AC_ARG_VAR(
+	[lockdown_file],
+	[Location of authorized signature file [default = "/etc/pb-lockdown"]]
+)
+AS_IF([test "x$lockdown_file" = x], [lockdown_file="/etc/pb-lockdown"])
+AC_DEFINE_UNQUOTED(LOCKDOWN_FILE, "$lockdown_file", [Lockdown file location])
+
 AC_ARG_ENABLE(
 	[busybox],
 	[AS_HELP_STRING(

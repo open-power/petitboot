@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2013 Jeremy Kerr <jk@ozlabs.org>
+ *  Copyright (C) 2016 Raptor Engineering, LLC
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,10 +24,86 @@
 #include <sys/types.h>
 
 #include <talloc/talloc.h>
+#include <log/log.h>
 
 #include "file.h"
 
+#define MAX_FILENAME_SIZE	8192
+#define FILE_XFER_BUFFER_SIZE	8192
+
 static const int max_file_size = 1024 * 1024;
+
+int copy_file_secure_dest(void *ctx,
+	const char *source_file, char **destination_file) {
+	int result = 0;
+	char template[] = "/tmp/petitbootXXXXXX";
+	char dest_filename[MAX_FILENAME_SIZE] = "";
+	FILE *source_handle = fopen(source_file, "r");
+	int destination_fd = mkstemp(template);
+	FILE *destination_handle = fdopen(destination_fd, "w");
+	if (!source_handle || !(destination_handle)) {
+		// handle open error
+		pb_log("%s: failed: unable to open source file '%s'\n",
+			__func__, source_file);
+		return -1;
+	}
+
+	size_t l1;
+	unsigned char *buffer;
+	buffer = talloc_array(ctx, unsigned char, FILE_XFER_BUFFER_SIZE);
+	if (!buffer) {
+		pb_log("%s: failed: unable to allocate file transfer buffer\n",
+			__func__);
+		return -1;
+	}
+
+	/* Copy data */
+	while ((l1 = fread(buffer, 1, sizeof buffer, source_handle)) > 0) {
+		size_t l2 = fwrite(buffer, 1, l1, destination_handle);
+		if (l2 < l1) {
+			if (ferror(destination_handle)) {
+				/* General error */
+				result = -1;
+				pb_log("%s: failed: unknown fault\n", __func__);
+			}
+			else {
+				/* No space on destination device */
+				result = -1;
+				pb_log("%s: failed: temporary storage full\n",
+					__func__);
+			}
+			break;
+		}
+	}
+
+	talloc_free(buffer);
+
+	if (result) {
+		dest_filename[0] = '\0';
+	}
+	else {
+		ssize_t r;
+		char readlink_buffer[MAX_FILENAME_SIZE];
+		snprintf(readlink_buffer, MAX_FILENAME_SIZE, "/proc/self/fd/%d",
+			destination_fd);
+		r = readlink(readlink_buffer, dest_filename,
+			MAX_FILENAME_SIZE);
+		if (r < 0) {
+			/* readlink failed */
+			result = -1;
+			pb_log("%s: failed: unable to obtain temporary filename"
+				"\n", __func__);
+		}
+		dest_filename[r] = '\0';
+	}
+
+	fclose(source_handle);
+	fclose(destination_handle);
+
+	*destination_file = talloc_strdup(ctx, dest_filename);
+
+	return result;
+}
 
 int read_file(void *ctx, const char *filename, char **bufp, int *lenp)
 {

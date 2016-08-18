@@ -613,6 +613,7 @@ static bool __attribute__((used)) boot_option_is_resolved(
 	return resource_is_resolved(opt->boot_image) &&
 		resource_is_resolved(opt->initrd) &&
 		resource_is_resolved(opt->dtb) &&
+		resource_is_resolved(opt->args_sig_file) &&
 		resource_is_resolved(opt->icon);
 }
 
@@ -638,6 +639,8 @@ static bool boot_option_resolve(struct discover_boot_option *opt,
 	return resource_resolve(opt->boot_image, "boot_image", opt, handler) &&
 		resource_resolve(opt->initrd, "initrd", opt, handler) &&
 		resource_resolve(opt->dtb, "dtb", opt, handler) &&
+		resource_resolve(opt->args_sig_file, "args_sig_file", opt,
+			handler) &&
 		resource_resolve(opt->icon, "icon", opt, handler);
 }
 
@@ -652,6 +655,7 @@ static void boot_option_finalise(struct device_handler *handler,
 	assert(!opt->option->dtb_file);
 	assert(!opt->option->icon_file);
 	assert(!opt->option->device_id);
+	assert(!opt->option->args_sig_file);
 
 	if (opt->boot_image)
 		opt->option->boot_image_file = opt->boot_image->url->full;
@@ -661,6 +665,8 @@ static void boot_option_finalise(struct device_handler *handler,
 		opt->option->dtb_file = opt->dtb->url->full;
 	if (opt->icon)
 		opt->option->icon_file = opt->icon->url->full;
+	if (opt->args_sig_file)
+		opt->option->args_sig_file = opt->args_sig_file->url->full;
 
 	opt->option->device_id = opt->device->device->id;
 

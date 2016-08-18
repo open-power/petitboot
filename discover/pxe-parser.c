@@ -166,6 +166,13 @@ static void pxe_process_pair(struct conf_context *ctx,
 		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
 		opt->boot_image = create_url_resource(opt, url);
 
+		char* args_sigfile_default = talloc_asprintf(opt,
+			"%s.cmdline.sig", value);
+		url = pxe_url_join(ctx->dc, ctx->dc->conf_url,
+			args_sigfile_default);
+		opt->args_sig_file = create_url_resource(opt, url);
+		talloc_free(args_sigfile_default);
+
 	} else if (streq(name, "INITRD")) {
 		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
 		opt->initrd = create_url_resource(opt, url);

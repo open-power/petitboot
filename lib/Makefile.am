@@ -20,6 +20,13 @@ lib_libpbcore_la_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-DPREFIX='"$(prefix)"'
 
+if WITH_GPGME
+gpg_int_SOURCES = lib/security/gpg..h \
+	lib/security/gpg.c
+else
+gpg_int_SOURCES =
+endif
+
 lib_libpbcore_la_SOURCES = \
 	lib/file/file.h \
 	lib/file/file.c \
@@ -50,7 +57,8 @@ lib_libpbcore_la_SOURCES = \
 	lib/util/util.c \
 	lib/util/util.h \
 	lib/flash/config.h \
-	lib/flash/flash.h
+	lib/flash/flash.h \
+	$(gpg_int_SOURCES)
 
 if ENABLE_MTD
 lib_libpbcore_la_SOURCES += \

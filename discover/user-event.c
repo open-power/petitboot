@@ -82,7 +82,7 @@ static void user_event_print_event(struct event __attribute__((unused)) *event)
 }
 
 static struct resource *user_event_resource(struct discover_boot_option *opt,
-		struct event *event)
+		struct event *event, bool gen_boot_args_sigfile)
 {
 	const char *siaddr, *boot_file;
 	struct resource *res;
@@ -101,7 +101,16 @@ static struct resource *user_event_resource(struct discover_boot_option *opt,
 		return NULL;
 	}
 
-	url_str = talloc_asprintf(opt, "%s%s/%s", "tftp://", siaddr, boot_file);
+	if (gen_boot_args_sigfile) {
+		char* args_sigfile_default = talloc_asprintf(opt,
+			"%s.cmdline.sig", boot_file);
+		url_str = talloc_asprintf(opt, "%s%s/%s", "tftp://", siaddr,
+			args_sigfile_default);
+		talloc_free(args_sigfile_default);
+	}
+	else
+		url_str = talloc_asprintf(opt, "%s%s/%s", "tftp://", siaddr,
+			boot_file);
 	url = pb_url_parse(opt, url_str);
 	talloc_free(url_str);
 
@@ -143,12 +152,13 @@ static int parse_user_event(struct discover_context *ctx, struct event *event)
 	opt->id = talloc_asprintf(opt, "%s#%s", dev->id, val);
 	opt->name = talloc_strdup(opt, val);
 
-	d_opt->boot_image = user_event_resource(d_opt, event);
+	d_opt->boot_image = user_event_resource(d_opt, event, false);
 	if (!d_opt->boot_image) {
 		pb_log("%s: no boot image found for %s!\n", __func__,
 				opt->name);
 		goto fail_opt;
 	}
+	d_opt->args_sig_file = user_event_resource(d_opt, event, true);
 
 	val = event_get_param(event, "rootpath");
 	if (val) {

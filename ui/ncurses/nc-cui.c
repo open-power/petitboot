@@ -543,6 +543,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
 	cod->bd->dtb = talloc_strdup(cod->bd, opt->dtb_file);
 	cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
+	cod->bd->args_sig_file = talloc_strdup(cod->bd, opt->args_sig_file);
 
 	/* This disconnects items array from menu. */
 	result = set_menu_items(cui->main->ncm, NULL);
@@ -566,6 +567,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	pb_log("   image  '%s'\n", cod->bd->image);
 	pb_log("   initrd '%s'\n", cod->bd->initrd);
 	pb_log("   args   '%s'\n", cod->bd->args);
+	pb_log("   argsig '%s'\n", cod->bd->args_sig_file);
 
 	/* Re-attach the items array. */
 	result = set_menu_items(cui->main->ncm, cui->main->items);

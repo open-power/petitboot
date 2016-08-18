@@ -11,6 +11,7 @@ struct pb_boot_data {
 	char *initrd;
 	char *dtb;
 	char *args;
+	char *args_sig_file;
 };
 
 /**
