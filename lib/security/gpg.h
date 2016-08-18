@@ -23,6 +23,7 @@
 enum {
 	PB_LOCKDOWN_NONE	= 0,
 	PB_LOCKDOWN_SIGN	= 1,
+	PB_LOCKDOWN_DECRYPT	= 2,
 };
 
 #if defined(HAVE_LIBGPGME)
@@ -36,6 +37,9 @@ struct pb_url * gpg_get_signature_url(void *ctx, struct pb_url *base_file);
 int verify_file_signature(const char *plaintext_filename,
 	const char *signature_filename, FILE *authorized_signatures_handle,
 	const char *keyring_path);
+
+int decrypt_file(const char * filename,
+	FILE * authorized_signatures_handle, const char * keyring_path);
 
 int gpg_validate_boot_files(struct boot_task *boot_task);
 
@@ -55,6 +59,13 @@ int verify_file_signature(const char *plaintext_filename __attribute__((unused))
 	const char *signature_filename __attribute__((unused)),
 	FILE *authorized_signatures_handle __attribute__((unused)),
 	const char *keyring_path __attribute__((unused)))
+{
+	return -1;
+}
+
+int decrypt_file(const char * filename __attribute__((unused)),
+	FILE * authorized_signatures_handle __attribute__((unused)),
+	const char * keyring_path __attribute__((unused)))
 {
 	return -1;
 }

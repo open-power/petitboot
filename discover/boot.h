@@ -32,6 +32,7 @@ struct boot_task {
 	bool dry_run;
 	bool cancelled;
 	bool verify_signature;
+	bool decrypt_files;
 	struct load_url_result *image_signature;
 	struct load_url_result *initrd_signature;
 	struct load_url_result *dtb_signature;
@@ -43,6 +44,7 @@ struct boot_task {
 };
 
 enum {
+	KEXEC_LOAD_DECRYPTION_FALURE = 252,
 	KEXEC_LOAD_SIG_SETUP_INVALID = 253,
 	KEXEC_LOAD_SIGNATURE_FAILURE = 254,
 };

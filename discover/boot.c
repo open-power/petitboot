@@ -51,9 +51,14 @@ static int kexec_load(struct boot_task *boot_task)
 	boot_task->local_image_override = NULL;
 
 	if ((result = gpg_validate_boot_files(boot_task))) {
-		if (result == KEXEC_LOAD_SIGNATURE_FAILURE) {
+		if (result == KEXEC_LOAD_DECRYPTION_FALURE) {
 			pb_log("%s: Aborting kexec due to"
-				" signature verification failure\n", __func__);
+				" decryption failure\n", __func__);
+			goto abort_kexec;
+		}
+		if (result == KEXEC_LOAD_SIGNATURE_FAILURE) {
+			pb_log("%s: Aborting kexec due to signature"
+				" verification failure\n", __func__);
 			goto abort_kexec;
 		}
 	}
@@ -391,7 +396,13 @@ static void boot_process(struct load_url_result *result, void *data)
 				load_pending(task->dtb_signature) ||
 				load_pending(task->cmdline_signature))
 			return;
+	}
+	if (task->decrypt_files) {
+		if (load_pending(task->cmdline_signature))
+			return;
+	}
 
+	if (task->verify_signature) {
 		if (check_load(task, "kernel image signature",
 					task->image_signature) ||
 				check_load(task, "initrd signature",
@@ -401,6 +412,14 @@ static void boot_process(struct load_url_result *result, void *data)
 				check_load(task, "command line signature",
 					task->cmdline_signature))
 			goto no_sig_load;
+	}
+	if (task->decrypt_files) {
+		if (load_pending(task->cmdline_signature))
+			return;
+
+		if (check_load(task, "command line signature",
+					task->cmdline_signature))
+			goto no_decrypt_sig_load;
 	}
 
 	/* we make a copy of the local paths, as the boot hooks might update
@@ -416,6 +435,8 @@ static void boot_process(struct load_url_result *result, void *data)
 			task->initrd_signature->local : NULL;
 		task->local_dtb_signature = task->dtb_signature ?
 			task->dtb_signature->local : NULL;
+	}
+	if (task->verify_signature || task->decrypt_files) {
 		task->local_cmdline_signature = task->cmdline_signature ?
 			task->cmdline_signature->local : NULL;
 	}
@@ -426,7 +447,11 @@ static void boot_process(struct load_url_result *result, void *data)
 			_("performing kexec_load"));
 
 	rc = kexec_load(task);
-	if (rc == KEXEC_LOAD_SIGNATURE_FAILURE) {
+	if (rc == KEXEC_LOAD_DECRYPTION_FALURE) {
+		update_status(task->status_fn, task->status_arg,
+				BOOT_STATUS_ERROR, _("decryption failed"));
+	}
+	else if (rc == KEXEC_LOAD_SIGNATURE_FAILURE) {
 		update_status(task->status_fn, task->status_arg,
 				BOOT_STATUS_ERROR,
 				_("signature verification failed"));
@@ -446,6 +471,8 @@ no_sig_load:
 	cleanup_load(task->image_signature);
 	cleanup_load(task->initrd_signature);
 	cleanup_load(task->dtb_signature);
+
+no_decrypt_sig_load:
 	cleanup_load(task->cmdline_signature);
 
 no_load:
@@ -494,6 +521,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	struct boot_task *boot_task;
 	const char *boot_desc;
 	int rc;
+	int lockdown_type;
 
 	if (opt && opt->option->name)
 		boot_desc = opt->option->name;
@@ -533,7 +561,9 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	boot_task->status_fn = status_fn;
 	boot_task->status_arg = status_arg;
 
-	boot_task->verify_signature = (lockdown_status() == PB_LOCKDOWN_SIGN);
+	lockdown_type = lockdown_status();
+	boot_task->verify_signature = (lockdown_type == PB_LOCKDOWN_SIGN);
+	boot_task->decrypt_files = (lockdown_type == PB_LOCKDOWN_DECRYPT);
 
 	if (cmd && cmd->boot_args) {
 		boot_task->args = talloc_strdup(boot_task, cmd->boot_args);
@@ -551,7 +581,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		boot_task->boot_tty = config ? config->boot_tty : NULL;
 	}
 
-	if (boot_task->verify_signature) {
+	if (boot_task->verify_signature || boot_task->decrypt_files) {
 		if (cmd && cmd->args_sig_file) {
 			cmdline_sig = pb_url_parse(opt, cmd->args_sig_file);
 		} else if (opt && opt->args_sig_file) {
@@ -590,7 +620,9 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 			rc |= start_url_load(boot_task, "dtb signature",
 				dtb_sig, &boot_task->dtb_signature);
 		}
+	}
 
+	if (boot_task->verify_signature || boot_task->decrypt_files) {
 		rc |= start_url_load(boot_task,
 			"kernel command line signature", cmdline_sig,
 			&boot_task->cmdline_signature);
