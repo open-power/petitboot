@@ -1132,14 +1132,12 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 		tab = true;
 		/* fall through */
 	case KEY_UP:
-	case KEY_LEFT:
 		req = REQ_SPREV_FIELD;
 		break;
 	case '\t':
 		tab = true;
 		/* fall through */
 	case KEY_DOWN:
-	case KEY_RIGHT:
 		req = REQ_SNEXT_FIELD;
 		break;
 	case KEY_PPAGE:
@@ -1147,6 +1145,12 @@ bool widgetset_process_key(struct nc_widgetset *set, int key)
 		break;
 	case KEY_NPAGE:
 		req = REQ_SLAST_FIELD;
+		break;
+	case KEY_LEFT:
+		req = REQ_LEFT_FIELD;
+		break;
+	case KEY_RIGHT:
+		req = REQ_RIGHT_FIELD;
 		break;
 	}
 
