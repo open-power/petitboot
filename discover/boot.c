@@ -77,12 +77,10 @@ static int kexec_load(struct boot_task *boot_task)
 		*p++ = s_dtb;		 /* 4 */
 	}
 
-	if (boot_task->args) {
-		s_args = talloc_asprintf(boot_task, "--append=%s",
-						boot_task->args);
-		assert(s_args);
-		*p++ = s_args;		/* 5 */
-	}
+	s_args = talloc_asprintf(boot_task, "--append=%s",
+				boot_task->args ?: "\"\"");
+	assert(s_args);
+	*p++ = s_args;		/* 5 */
 
 	*p++ = boot_task->local_image;	/* 6 */
 	*p++ = NULL;			/* 7 */
