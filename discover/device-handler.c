@@ -894,6 +894,7 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
+	talloc_steal(ctx, event);
 	ctx->event = event;
 
 	iterate_parsers(ctx);
@@ -1165,6 +1166,7 @@ void device_handler_process_url(struct device_handler *handler,
 	if (pb_url->scheme == pb_url_file)
 		dev->device->type = DEVICE_TYPE_ANY;
 	ctx = device_handler_discover_context_create(handler, dev);
+	talloc_steal(ctx, event);
 	ctx->event = event;
 
 	iterate_parsers(ctx);

@@ -503,13 +503,13 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	case EVENT_ACTION_URL:
 		result = user_event_url(uev, event);
-		break;
+		goto out;
 	case EVENT_ACTION_CONF:
 		result = user_event_conf(uev, event);
 		break;
 	case EVENT_ACTION_DHCP:
 		result = user_event_dhcp(uev, event);
-		break;
+		goto out;
 	case EVENT_ACTION_BOOT:
 		result = user_event_boot(uev, event);
 		break;
@@ -520,8 +520,10 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	}
 
+	/* user_event_url() and user_event_dhcp() will steal the event context,
+	 * but all others still need to free */
 	talloc_free(event);
-
+out:
 	return;
 }
 
