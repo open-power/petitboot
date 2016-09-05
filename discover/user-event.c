@@ -392,28 +392,6 @@ static int user_event_dhcp(struct user_event *uev, struct event *event)
 	return 0;
 }
 
-static int user_event_conf(struct user_event *uev, struct event *event)
-{
-	struct device_handler *handler = uev->handler;
-	struct discover_device *dev;
-	struct pb_url *url;
-	const char *val;
-
-	val = event_get_param(event, "url");
-	if (!val)
-		return 0;
-
-	url = pb_url_parse(event, val);
-	if (!url)
-		return 0;
-
-	dev = discover_device_create(handler, event->device);
-
-	device_handler_conf(handler, dev, url);
-
-	return 0;
-}
-
 static int user_event_add(struct user_event *uev, struct event *event)
 {
 	struct device_handler *handler = uev->handler;
@@ -514,9 +492,6 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 	case EVENT_ACTION_URL:
 		result = user_event_url(uev, event);
 		goto out;
-	case EVENT_ACTION_CONF:
-		result = user_event_conf(uev, event);
-		break;
 	case EVENT_ACTION_DHCP:
 		result = user_event_dhcp(uev, event);
 		goto out;
