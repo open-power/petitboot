@@ -158,7 +158,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		}
 	}
 
-	ddev = discover_device_create(udev->handler, name);
+	ddev = discover_device_create(udev->handler, uuid, name);
 
 	ddev->device_path = talloc_strdup(ddev, node);
 

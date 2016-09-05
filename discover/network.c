@@ -197,13 +197,15 @@ static char *mac_bytes_to_string(void *ctx, uint8_t *addr, int len)
 static void add_interface(struct network *network,
 		struct interface *interface)
 {
+	char *uuid = mac_bytes_to_string(interface, interface->hwaddr,
+						sizeof(interface->hwaddr));
+
 	list_add(&network->interfaces, &interface->list);
-	interface->dev = discover_device_create(network->handler,
-					interface->name);
+	interface->dev = discover_device_create(network->handler, uuid,
+						interface->name);
 	interface->dev->device->type = DEVICE_TYPE_NETWORK;
-	interface->dev->uuid = mac_bytes_to_string(interface->dev,
-			interface->hwaddr, sizeof(interface->hwaddr));
 	device_handler_add_device(network->handler, interface->dev);
+	talloc_free(uuid);
 }
 
 static void remove_interface(struct network *network,
