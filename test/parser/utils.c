@@ -73,7 +73,7 @@ struct discover_device *test_create_device(struct parser_test *test,
 {
 	struct discover_device *dev;
 
-	dev = discover_device_create(test->handler, name);
+	dev = discover_device_create(test->handler, NULL, name);
 
 	dev->device->id = talloc_strdup(dev, name);
 	dev->device_path = talloc_asprintf(dev, "/dev/%s", name);

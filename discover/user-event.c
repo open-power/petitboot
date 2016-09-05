@@ -385,7 +385,8 @@ static int user_event_dhcp(struct user_event *uev, struct event *event)
 	struct device_handler *handler = uev->handler;
 	struct discover_device *dev;
 
-	dev = discover_device_create(handler, event->device);
+	dev = discover_device_create(handler, event_get_param(event, "mac"),
+					event->device);
 
 	device_handler_dhcp(handler, dev, event);
 
@@ -398,7 +399,10 @@ static int user_event_add(struct user_event *uev, struct event *event)
 	struct discover_context *ctx;
 	struct discover_device *dev;
 
-	dev = discover_device_create(handler, event->device);
+	/* In case this is a network interface, try to refer to it by UUID */
+	dev = discover_device_create(handler, event_get_param(event, "mac"),
+					event->device);
+	dev->device->id = talloc_strdup(dev, event->device);
 	ctx = device_handler_discover_context_create(handler, dev);
 
 	parse_user_event(ctx, event);
@@ -414,8 +418,13 @@ static int user_event_remove(struct user_event *uev, struct event *event)
 {
 	struct device_handler *handler = uev->handler;
 	struct discover_device *dev;
+	const char *mac = event_get_param(event, "mac");
 
-	dev = device_lookup_by_id(handler, event->device);
+	if (mac)
+		dev = device_lookup_by_uuid(handler, event_get_param(event, "mac"));
+	else
+		dev = device_lookup_by_id(handler, event->device);
+
 	if (!dev)
 		return 0;
 

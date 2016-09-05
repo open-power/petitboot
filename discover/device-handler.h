@@ -81,7 +81,7 @@ const struct discover_device *device_handler_get_device(
 	const struct device_handler *handler, unsigned int index);
 
 struct discover_device *discover_device_create(struct device_handler *handler,
-		const char *id);
+		const char *uuid, const char *id);
 void device_handler_add_device(struct device_handler *handler,
 		struct discover_device *device);
 void device_handler_add_ramdisk(struct device_handler *handler,

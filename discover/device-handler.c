@@ -221,17 +221,22 @@ static int destroy_device(void *arg)
 }
 
 struct discover_device *discover_device_create(struct device_handler *handler,
-		const char *id)
+		const char *uuid, const char *id)
 {
 	struct discover_device *dev;
 
-	dev = device_lookup_by_id(handler, id);
+	if (uuid)
+		dev = device_lookup_by_uuid(handler, uuid);
+	else
+		dev = device_lookup_by_id(handler, id);
+
 	if (dev)
 		return dev;
 
 	dev = talloc_zero(handler, struct discover_device);
 	dev->device = talloc_zero(dev, struct device);
 	dev->device->id = talloc_strdup(dev->device, id);
+	dev->uuid = talloc_strdup(dev, uuid);
 	list_init(&dev->params);
 	list_init(&dev->boot_options);
 
@@ -1138,7 +1143,7 @@ void device_handler_process_url(struct device_handler *handler,
 		goto msg;
 	}
 
-	dev = discover_device_create(handler, event->device);
+	dev = discover_device_create(handler, mac, event->device);
 	if (pb_url->scheme == pb_url_file)
 		dev->device->type = DEVICE_TYPE_ANY;
 	ctx = device_handler_discover_context_create(handler, dev);
@@ -1171,7 +1176,7 @@ void device_handler_discover_context_commit(struct device_handler *handler,
 	struct discover_device *dev = ctx->device;
 	struct discover_boot_option *opt, *tmp;
 
-	if (!device_lookup_by_id(handler, dev->device->id))
+	if (!device_lookup_by_uuid(handler, dev->uuid))
 		device_handler_add_device(handler, dev);
 
 	/* move boot options from the context to the device */
