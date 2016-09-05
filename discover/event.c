@@ -49,8 +49,6 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 		*action = EVENT_ACTION_REMOVE;
 	else if (streq(buf, "url"))
 		*action = EVENT_ACTION_URL;
-	else if (streq(buf, "conf"))
-		*action = EVENT_ACTION_CONF;
 	else if (streq(buf, "dhcp"))
 		*action = EVENT_ACTION_DHCP;
 	else if (streq(buf, "boot"))

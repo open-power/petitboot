@@ -915,36 +915,6 @@ int device_handler_dhcp(struct device_handler *handler,
 	return 0;
 }
 
-/* incoming conf event */
-int device_handler_conf(struct device_handler *handler,
-		struct discover_device *dev, struct pb_url *url)
-{
-	struct discover_context *ctx;
-	struct boot_status *status;
-
-	status = talloc_zero(handler, struct boot_status);
-	status->type = BOOT_STATUS_INFO;
-	status->message = talloc_asprintf(status, _("Processing user config"));
-	device_handler_boot_status(handler, status);
-
-	/* create our context */
-	ctx = device_handler_discover_context_create(handler, dev);
-	ctx->conf_url = url;
-
-	iterate_parsers(ctx);
-
-	device_handler_discover_context_commit(handler, ctx);
-
-	status->message = talloc_asprintf(status,
-				_("Processing user config complete"));
-	device_handler_boot_status(handler, status);
-
-	talloc_free(status);
-	talloc_unlink(handler, ctx);
-
-	return 0;
-}
-
 static struct discover_boot_option *find_boot_option_by_id(
 		struct device_handler *handler, const char *id)
 {
@@ -1121,7 +1091,7 @@ void device_handler_process_url(struct device_handler *handler,
 
 	event = talloc(handler, struct event);
 	event->type = EVENT_TYPE_USER;
-	event->action = EVENT_ACTION_CONF;
+	event->action = EVENT_ACTION_URL;
 
 	if (url[strlen(url) - 1] == '/') {
 		event->params = talloc_array(event, struct param, 3);

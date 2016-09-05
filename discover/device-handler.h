@@ -92,8 +92,6 @@ int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev);
 int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event);
-int device_handler_conf(struct device_handler *handler,
-		struct discover_device *dev, struct pb_url *url);
 void device_handler_remove(struct device_handler *handler,
 		struct discover_device *device);
 
