@@ -40,7 +40,7 @@ pb_add () {
 
 	# Collect relevant parameters to add an option to the bootfile
 	# parameter
-	for name in rootpath siaddr bootfile
+	for name in rootpath siaddr bootfile mac
         do
                 value=$(eval "echo \${$name}")
                 [ -n "$value" ] || continue;
@@ -53,7 +53,8 @@ pb_add () {
 }
 
 pb_remove () {
-	pb-event remove@${interface}
+	mac=$(cat /sys/class/net/$interface/address)
+	pb-event remove@${interface} mac=$mac
 }
 
 case "$1" in
