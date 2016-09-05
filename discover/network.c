@@ -65,6 +65,25 @@ struct network {
 	bool			dry_run;
 };
 
+static char *mac_bytes_to_string(void *ctx, uint8_t *addr, int len)
+{
+	const int l = strlen("xx:");
+	char *buf;
+	int i;
+
+	if (len <= 0)
+		return talloc_strdup(ctx, "");
+
+	buf = talloc_array(ctx, char, (len * l) + 1);
+
+	for (i = 0; i < len; i++)
+		sprintf(buf + (l * i), "%02x:", addr[i]);
+
+	*(buf + (l * len) - 1) = '\0';
+
+	return buf;
+}
+
 static const struct interface_config *find_config_by_hwaddr(
 		uint8_t *hwaddr)
 {
@@ -105,6 +124,25 @@ static struct interface *find_interface_by_name(struct network *network,
 	list_for_each_entry(&network->interfaces, interface, list)
 		if (!strcmp(interface->name, name))
 			return interface;
+
+	return NULL;
+}
+
+static struct interface *find_interface_by_uuid(struct network *network,
+		const char *uuid)
+{
+	struct interface *interface;
+	char *mac;
+
+	list_for_each_entry(&network->interfaces, interface, list) {
+		mac = mac_bytes_to_string(interface, interface->hwaddr,
+					sizeof(interface->hwaddr));
+		if (!strcmp(mac, uuid)) {
+			talloc_free(mac);
+			return interface;
+		}
+		talloc_free(mac);
+	}
 
 	return NULL;
 }
@@ -175,25 +213,6 @@ static int network_send_link_query(struct network *network)
 	return 0;
 }
 
-static char *mac_bytes_to_string(void *ctx, uint8_t *addr, int len)
-{
-	const int l = strlen("xx:");
-	char *buf;
-	int i;
-
-	if (len <= 0)
-		return talloc_strdup(ctx, "");
-
-	buf = talloc_array(ctx, char, (len * l) + 1);
-
-	for (i = 0; i < len; i++)
-		sprintf(buf + (l * i), "%02x:", addr[i]);
-
-	*(buf + (l * len) - 1) = '\0';
-
-	return buf;
-}
-
 static void add_interface(struct network *network,
 		struct interface *interface)
 {
@@ -222,7 +241,7 @@ void network_register_device(struct network *network,
 {
 	struct interface *iface;
 
-	iface = find_interface_by_name(network, dev->device->id);
+	iface = find_interface_by_uuid(network, dev->uuid);
 	if (!iface)
 		return;
 
@@ -236,7 +255,7 @@ void network_unregister_device(struct network *network,
 {
 	struct interface *iface;
 
-	iface = find_interface_by_name(network, dev->device->id);
+	iface = find_interface_by_uuid(network, dev->uuid);
 	if (!iface)
 		return;
 
