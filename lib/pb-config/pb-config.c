@@ -33,6 +33,7 @@ static struct interface_config *config_copy_interface(struct config *ctx,
 			talloc_strdup(dest, src->static_config.url);
 		break;
 	}
+	dest->override = src->override;
 
 	return dest;
 }

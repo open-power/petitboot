@@ -283,6 +283,8 @@ static int pb_protocol_interface_config_len(struct interface_config *conf)
 		len += 4 + optional_strlen(conf->static_config.url);
 	}
 
+	len += 4 /* conf->override */;
+
 	return len;
 }
 
@@ -510,6 +512,9 @@ static int pb_protocol_serialise_config_interface(char *buf,
 		pos += pb_protocol_serialise_string(pos,
 				conf->static_config.url);
 	}
+
+	*(uint32_t *)pos = conf->override;
+	pos += 4;
 
 	return pos - buf;
 }
@@ -1018,6 +1023,10 @@ static int pb_protocol_deserialise_config_interface(const char **buf,
 		if (read_string(iface, buf, len, &iface->static_config.url))
 			return -1;
 	}
+
+	if (read_u32(buf, len, &tmp))
+		return -1;
+	iface->override = !!tmp;
 
 	return 0;
 }

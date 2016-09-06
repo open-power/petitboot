@@ -129,6 +129,7 @@ struct interface_config {
 			char *url;
 		} static_config;
 	};
+	bool	override;
 };
 
 struct network_config {

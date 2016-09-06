@@ -309,6 +309,7 @@ int parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 		i += ipsize;
 	}
 
+	ifconf->override = true;
 	pb_log("Applying IPMI network interface override\n");
 
 	/* Replace any existing interface config */

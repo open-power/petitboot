@@ -635,6 +635,15 @@ static void update_network_config(struct platform_powerpc *platform,
 	unsigned int i;
 	char *val;
 
+	/*
+	 * Don't store IPMI overrides to NVRAM. If this was a persistent
+	 * override it was already stored in NVRAM by
+	 * get_ipmi_network_override()
+	 */
+	if (config->network.n_interfaces &&
+		config->network.interfaces[0]->override)
+		return;
+
 	val = talloc_strdup(platform, "");
 
 	for (i = 0; i < config->network.n_interfaces; i++) {
