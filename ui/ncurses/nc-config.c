@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	42
+#define N_FIELDS	43
 
 extern struct help_text config_help_text;
 
@@ -67,6 +67,7 @@ struct config_screen {
 
 	bool			autoboot_enabled;
 	bool			ipmi_override;
+	bool			net_override;
 
 	struct {
 		struct nc_widget_label		*autoboot_l;
@@ -112,6 +113,7 @@ struct config_screen {
 		struct nc_widget_select		*boot_tty_f;
 		struct nc_widget_label		*current_tty_l;
 
+		struct nc_widget_label		*net_override_l;
 		struct nc_widget_label		*safe_mode;
 		struct nc_widget_button		*ok_b;
 		struct nc_widget_button		*help_b;
@@ -473,7 +475,8 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		widget_move(wf, y, screen->field_x);
 		widget_move(wh, y, screen->field_x + widget_width(wf) + 1);
 		y += 2;
-	}
+	} else
+		y += 1;
 
 	if (screen->ipmi_override) {
 		wl = widget_label_base(screen->widgets.ipmi_type_l);
@@ -583,13 +586,6 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 
 	y += 1;
 
-	show = screen->cui->config->safe_mode;
-	if (show) {
-		widget_move(widget_label_base(screen->widgets.safe_mode),
-			y, screen->field_x);
-		y += 1;
-	}
-
 	layout_pair(screen, y, screen->widgets.allow_write_l,
 		    widget_select_base(screen->widgets.allow_write_f));
 	y += widget_height(widget_select_base(screen->widgets.allow_write_f));
@@ -610,6 +606,22 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 					screen->widgets.boot_tty_f), false);
 		widget_set_visible(widget_label_base(
 					screen->widgets.current_tty_l), false);
+	}
+
+	if (screen->net_override) {
+		widget_move(widget_label_base(screen->widgets.net_override_l),
+				y, screen->label_x);
+		widget_set_visible(widget_label_base(screen->widgets.net_override_l),
+					true);
+		y += 1;
+	}
+
+	if (screen->cui->config->safe_mode) {
+		widget_move(widget_label_base(screen->widgets.safe_mode),
+			y, screen->label_x);
+		widget_set_visible(widget_label_base(screen->widgets.safe_mode),
+					true);
+		y += 1;
 	}
 
 	widget_move(widget_button_base(screen->widgets.ok_b),
@@ -958,6 +970,12 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		}
 		gw = ifcfg->static_config.gateway;
 		url = ifcfg->static_config.url;
+	}
+
+	screen->net_override = ifcfg && ifcfg->override;
+	if (screen->net_override) {
+		screen->widgets.net_override_l = widget_new_label(set, 0, 0,
+			_("Network Override Active! 'OK' will overwrite interface config"));
 	}
 
 	screen->widgets.ip_addr_l = widget_new_label(set, 0, 0, _("IP/mask:"));
