@@ -33,32 +33,52 @@
 
 static const int max_file_size = 1024 * 1024;
 
-int copy_file_secure_dest(void *ctx,
-	const char *source_file, char **destination_file) {
-	int result = 0;
-	char template[] = "/tmp/petitbootXXXXXX";
+int copy_file_secure_dest(void *ctx, const char *source_file,
+		char **destination_file)
+{
+	char readlink_buffer[MAX_FILENAME_SIZE + 1];
 	char dest_filename[MAX_FILENAME_SIZE] = "";
-	FILE *source_handle = fopen(source_file, "r");
-	int destination_fd = mkstemp(template);
-	FILE *destination_handle = fdopen(destination_fd, "w");
-	if (!source_handle || !(destination_handle)) {
-		// handle open error
-		pb_log("%s: failed: unable to open source file '%s'\n",
+	char template[] = "/tmp/petitbootXXXXXX";
+	FILE *destination_handle, *source_handle;
+	int destination_fd, result = 0;
+	unsigned char *buffer;
+	ssize_t r;
+	size_t l1;
+	mode_t oldmask;
+
+	source_handle = fopen(source_file, "r");
+	if (!source_handle) {
+		pb_log("%s: unable to open source file '%s': %m\n",
 			__func__, source_file);
+			return -1;
+	}
+
+	oldmask = umask(0644);
+	destination_fd = mkstemp(template);
+	umask(oldmask);
+	if (destination_fd < 0) {
+		pb_log("%s: unable to create temp file, %m\n", __func__);
+		fclose(source_handle);
+		return -1;
+	}
+	destination_handle = fdopen(destination_fd, "w");
+	if (!destination_handle) {
+		pb_log("%s: unable to open destination file, %m\n", __func__);
+		fclose(source_handle);
+		close(destination_fd);
 		return -1;
 	}
 
-	size_t l1;
-	unsigned char *buffer;
 	buffer = talloc_array(ctx, unsigned char, FILE_XFER_BUFFER_SIZE);
 	if (!buffer) {
 		pb_log("%s: failed: unable to allocate file transfer buffer\n",
 			__func__);
-		return -1;
+		result = -1;
+		goto out;
 	}
 
 	/* Copy data */
-	while ((l1 = fread(buffer, 1, sizeof buffer, source_handle)) > 0) {
+	while ((l1 = fread(buffer, 1, FILE_XFER_BUFFER_SIZE, source_handle)) > 0) {
 		size_t l2 = fwrite(buffer, 1, l1, destination_handle);
 		if (l2 < l1) {
 			if (ferror(destination_handle)) {
@@ -76,32 +96,29 @@ int copy_file_secure_dest(void *ctx,
 		}
 	}
 
-	talloc_free(buffer);
-
 	if (result) {
-		dest_filename[0] = '\0';
-	}
-	else {
-		ssize_t r;
-		char readlink_buffer[MAX_FILENAME_SIZE];
-		snprintf(readlink_buffer, MAX_FILENAME_SIZE, "/proc/self/fd/%d",
-			destination_fd);
-		r = readlink(readlink_buffer, dest_filename,
-			MAX_FILENAME_SIZE);
-		if (r < 0) {
-			/* readlink failed */
-			result = -1;
-			pb_log("%s: failed: unable to obtain temporary filename"
-				"\n", __func__);
-		}
-		dest_filename[r] = '\0';
+		*destination_file = NULL;
+		goto out;
 	}
 
-	fclose(source_handle);
-	fclose(destination_handle);
+	snprintf(readlink_buffer, MAX_FILENAME_SIZE, "/proc/self/fd/%d",
+		destination_fd);
+	r = readlink(readlink_buffer, dest_filename, MAX_FILENAME_SIZE);
+	if (r < 0) {
+		/* readlink failed */
+		result = -1;
+		r = 0;
+		pb_log("%s: failed: unable to obtain temporary filename\n",
+			__func__);
+	}
+	dest_filename[r] = '\0';
 
 	*destination_file = talloc_strdup(ctx, dest_filename);
-
+out:
+	talloc_free(buffer);
+	fclose(source_handle);
+	fclose(destination_handle);
+	close(destination_fd);
 	return result;
 }
 
