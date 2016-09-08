@@ -19,13 +19,13 @@ sbin_PROGRAMS += utils/pb-event utils/pb-config
 utils_pb_config_LDADD = $(top_builddir)/lib/libpbcore.la \
 		  $(top_builddir)/discover/platform.ro
 
-utils_hooks_30_add_offb_SOURCES = utils/hooks/30-add-offb.c
-utils_hooks_30_add_offb_LDADD = $(top_builddir)/lib/libpbcore.la \
+utils_hooks_30_dtb_updates_SOURCES = utils/hooks/30-dtb-updates.c
+utils_hooks_30_dtb_updates_LDADD = $(top_builddir)/lib/libpbcore.la \
 		$(FDT_LIBS)
 
 if HAVE_LIBFDT
 noinst_PROGRAMS = \
-	utils/hooks/30-add-offb
+	utils/hooks/30-dtb_updates
 endif
 
 dist_pkgdata_DATA = \
