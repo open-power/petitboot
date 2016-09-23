@@ -22,9 +22,14 @@
 
 static const char *pxelinux_prefix = "pxelinux.cfg/";
 
+static void pxe_conf_parse_cb(struct load_url_result *result, void *data);
+
 struct pxe_parser_info {
-	struct discover_boot_option *opt;
-	const char *default_name;
+	struct discover_boot_option	*opt;
+	const char			*default_name;
+	char				**pxe_conf_files;
+	struct pb_url			*pxe_base_url;
+	int				current;
 };
 
 static void pxe_finish(struct conf_context *conf)
@@ -199,6 +204,27 @@ static void pxe_process_pair(struct conf_context *ctx,
 
 }
 
+static void pxe_load_next_filename(struct conf_context *conf)
+{
+	struct pxe_parser_info *info = conf->parser_info;
+	struct pb_url *url;
+
+	if (!info->pxe_conf_files)
+		return;
+
+	for (; info->pxe_conf_files[info->current]; info->current++) {
+		url = pb_url_join(conf->dc, info->pxe_base_url,
+				  info->pxe_conf_files[info->current]);
+		if (!url)
+			continue;
+
+		if (load_url_async(conf, url, pxe_conf_parse_cb, conf))
+			break;
+	}
+
+	return;
+}
+
 /*
  * Callback for asynchronous loads from pxe_parse()
  * @param result Result of load_url_async()
@@ -209,22 +235,35 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	struct conf_context *conf = data;
 	struct device_handler *handler;
 	struct boot_status status = {0};
+	struct pxe_parser_info *info;
 	char *buf = NULL;
-	int len, rc;
+	int len, rc = 0;
 
 	if (!data)
 		return;
 
-	if (!result || result->status != LOAD_OK) {
-		talloc_free(conf);
+	if (result && result->status == LOAD_OK)
+		rc = read_file(conf, result->local, &buf, &len);
+	if (!result || result->status != LOAD_OK || rc) {
+		/* This load failed so try the next available filename */
+		info = conf->parser_info;
+		if (!info->pxe_conf_files)
+			return;
+
+		info->current++;
+		pxe_load_next_filename(conf);
+		if (info->pxe_conf_files[info->current] == NULL) {
+			/* Nothing left to try */
+			goto out_clean;
+		}
 		return;
 	}
 
-	rc = read_file(conf, result->local, &buf, &len);
-	if (rc) {
-		pb_log("Read failed during pxe callback for %s\n", result->local);
-		goto out_clean;
-	}
+	/*
+	 * Parse the first successfully downloaded file. We only want to parse
+	 * the first because otherwise we could parse options from both a
+	 * machine-specific config and a 'fallback' default config
+	 */
 
 	conf_parse_buf(conf, buf, len);
 
@@ -288,11 +327,12 @@ static struct conf_context *copy_context(void *ctx, struct discover_context *dc)
 
 static int pxe_parse(struct discover_context *dc)
 {
-	struct pb_url *pxe_base_url, *url;
-	char **pxe_conf_files, **filename;
+	struct pb_url *pxe_base_url;
 	struct conf_context *conf = NULL;
 	struct load_url_result *result;
 	void *ctx = talloc_parent(dc);
+	struct pxe_parser_info *info;
+	char **pxe_conf_files;
 	bool complete_url;
 
 	/* Expects dhcp event parameters to support network boot */
@@ -307,9 +347,9 @@ static int pxe_parse(struct discover_context *dc)
 	 * Retrieving PXE configs over the network can take some time depending
 	 * on factors such as slow network, malformed paths, bad DNS, and
 	 * overzealous firewalls. Instead of blocking the discover server while
-	 * we wait for these, spawn an asynchronous job for each URL we can
-	 * parse and process the resulting files in a callback. A separate
-	 * conf_context is created for each job.
+	 * we wait for these, spawn an asynchronous job that will attempt to
+	 * retrieve each possible URL until it successfully finds one, and
+	 * parse and process the resulting file in a callback.
 	 */
 	conf = copy_context(ctx, dc);
 	if (!conf)
@@ -333,26 +373,11 @@ static int pxe_parse(struct discover_context *dc)
 		if (!pxe_base_url)
 			goto out_pxe_conf;
 
-		for (filename = pxe_conf_files; *filename; filename++) {
-			if (!conf) {
-				conf = copy_context(ctx, dc);
-			}
-			url = pb_url_join(conf->dc, pxe_base_url, *filename);
-			if (!url)
-				continue;
-			result = load_url_async(conf, url, pxe_conf_parse_cb,
-						conf);
-			if (!result) {
-				pb_log("load_url_async fails for %s\n",
-				       conf->dc->conf_url->path);
-				talloc_free(conf);
-			}
-			/* conf now needed by callback, don't reuse */
-			conf = NULL;
-		}
+		info = conf->parser_info;
+		info->pxe_conf_files = pxe_conf_files;
+		info->pxe_base_url = pxe_base_url;
 
-		talloc_free(pxe_base_url);
-		talloc_free(pxe_conf_files);
+		pxe_load_next_filename(conf);
 	}
 
 	return 0;
