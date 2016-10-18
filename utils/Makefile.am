@@ -25,7 +25,7 @@ utils_hooks_30_dtb_updates_LDADD = $(top_builddir)/lib/libpbcore.la \
 
 if HAVE_LIBFDT
 noinst_PROGRAMS = \
-	utils/hooks/30-dtb_updates
+	utils/hooks/30-dtb-updates
 endif
 
 dist_pkgdata_DATA = \
