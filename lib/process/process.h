@@ -23,6 +23,7 @@
 
 struct process;
 struct procset;
+struct process_info;
 
 typedef void	(*process_exit_cb)(struct process *);
 
@@ -34,6 +35,8 @@ struct process {
 	bool			add_stderr;
 	process_exit_cb		exit_cb;
 	void			*data;
+	waiter_cb		stdout_cb;
+	void			*stdout_data;
 
 	/* runtime data */
 	pid_t			pid;
@@ -78,5 +81,9 @@ void process_stop_async(struct process *process);
 /* helper function to determine if a process exited cleanly, with a non-zero
  * exit status */
 bool process_exit_ok(struct process *process);
+
+/* Functions to assist callers using a custom stdout callback */
+struct process *procinfo_get_process(struct process_info *procinfo);
+int process_stdout_custom(struct process_info *procinfo, char **line);
 
 #endif /* PROCESS_H */

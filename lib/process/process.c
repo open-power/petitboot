@@ -60,15 +60,22 @@ static struct process_info *get_info(struct process *process)
 	return container_of(process, struct process_info, process);
 }
 
+struct process *procinfo_get_process(struct process_info *procinfo)
+{
+	return &procinfo->process;
+}
+
 /* Read as much as possible into the currently-allocated stdout buffer, and
  * possibly realloc it for the next read
+ * If the line pointer is not NULL, it is set to the start of the latest
+ * output.
  *
  * Returns:
  *  > 0 on success (even though no bytes may have been read)
  *    0 on EOF (no error, but no more reads can be performed)
  *  < 0 on error
  **/
-static int process_read_stdout_once(struct process_info *procinfo)
+static int process_read_stdout_once(struct process_info *procinfo, char **line)
 {
 	struct process *process = &procinfo->process;
 	int rc, fd, max_len;
@@ -88,6 +95,9 @@ static int process_read_stdout_once(struct process_info *procinfo)
 		pb_log("%s: read failed: %s\n", __func__, strerror(errno));
 		return rc;
 	}
+
+	if (line)
+		*line = process->stdout_buf + process->stdout_len;
 
 	process->stdout_len += rc;
 	if (process->stdout_len == procinfo->stdout_buf_len - 1) {
@@ -157,7 +167,7 @@ static int process_read_stdout(struct process_info *procinfo)
 		return 0;
 
 	do {
-		rc = process_read_stdout_once(procinfo);
+		rc = process_read_stdout_once(procinfo, NULL);
 	} while (rc > 0);
 
 	process_finish_stdout(procinfo);
@@ -170,7 +180,27 @@ static int process_stdout_cb(void *arg)
 	struct process_info *procinfo = arg;
 	int rc;
 
-	rc = process_read_stdout_once(procinfo);
+	rc = process_read_stdout_once(procinfo, NULL);
+
+	/* if we're going to signal to the waitset that we're done (ie, non-zero
+	 * return value), then the waiters will remove us, so we drop the
+	 * reference */
+	if (rc < 0) {
+		talloc_unlink(procset, procinfo);
+		procinfo->stdout_waiter = NULL;
+		rc = -1;
+	} else {
+		rc = 0;
+	}
+
+	return rc;
+}
+
+int process_stdout_custom(struct process_info *procinfo, char **line)
+{
+	int rc;
+
+	rc = process_read_stdout_once(procinfo, line);
 
 	/* if we're going to signal to the waitset that we're done (ie, non-zero
 	 * return value), then the waiters will remove us, so we drop the
@@ -387,6 +417,7 @@ int process_run_sync(struct process *process)
 int process_run_async(struct process *process)
 {
 	struct process_info *procinfo = get_info(process);
+	waiter_cb stdout_cb;
 	int rc;
 
 	rc = process_run_common(procinfo);
@@ -394,10 +425,10 @@ int process_run_async(struct process *process)
 		return rc;
 
 	if (process->keep_stdout) {
+		stdout_cb = process->stdout_cb ?: process_stdout_cb;
 		procinfo->stdout_waiter = waiter_register_io(procset->waitset,
 						procinfo->stdout_pipe[0],
-						WAIT_IN, process_stdout_cb,
-						procinfo);
+						WAIT_IN, stdout_cb, procinfo);
 		talloc_reference(procset, procinfo);
 	}
 
