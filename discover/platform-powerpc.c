@@ -68,9 +68,6 @@ static const char *known_params[] = {
 #define to_platform_powerpc(p) \
 	(struct platform_powerpc *)(p->platform_data)
 
-/* a partition max a max size of 64k * 16bytes = 1M */
-static const int max_partition_size = 64 * 1024 * 16;
-
 static bool param_is_known(const char *param, unsigned int len)
 {
 	const char *known_param;
