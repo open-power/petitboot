@@ -161,6 +161,9 @@ struct config {
 	unsigned int		ipmi_bootdev;
 	bool			ipmi_bootdev_persistent;
 
+	char			*http_proxy;
+	char			*https_proxy;
+
 	bool			allow_writes;
 
 	char			*boot_console;

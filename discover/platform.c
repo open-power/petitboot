@@ -87,6 +87,11 @@ static void dump_config(struct config *config)
 	if (config->manual_console)
 		pb_log("    (Manually set)\n");
 
+	if (config->http_proxy)
+		pb_log("  HTTP Proxy: %s\n", config->http_proxy);
+	if (config->https_proxy)
+		pb_log("  HTTPS Proxy: %s\n", config->https_proxy);
+
 
 	pb_log(" language: %s\n", config->lang ?: "");
 }
@@ -121,6 +126,8 @@ void config_set_defaults(struct config *config)
 	config->network.n_interfaces = 0;
 	config->network.dns_servers = NULL;
 	config->network.n_dns_servers = 0;
+	config->http_proxy = NULL;
+	config->https_proxy = NULL;
 	config->safe_mode = false;
 	config->allow_writes = true;
 	config->disable_snapshots = false;

@@ -33,7 +33,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	44
+#define N_FIELDS	48
 
 extern struct help_text config_help_text;
 
@@ -106,6 +106,10 @@ struct config_screen {
 		struct nc_widget_textbox	*dns_f;
 		struct nc_widget_label		*dns_dhcp_help_l;
 		struct nc_widget_label		*dns_help_l;
+		struct nc_widget_label		*http_proxy_l;
+		struct nc_widget_textbox	*http_proxy_f;
+		struct nc_widget_label		*https_proxy_l;
+		struct nc_widget_textbox	*https_proxy_f;
 
 		struct nc_widget_label		*allow_write_l;
 		struct nc_widget_select		*allow_write_f;
@@ -334,6 +338,13 @@ static int screen_process_form(struct config_screen *screen)
 			str = NULL;
 		}
 	}
+
+	talloc_free(config->http_proxy);
+	talloc_free(config->https_proxy);
+	str = widget_textbox_get_value(screen->widgets.http_proxy_f);
+	config->http_proxy = talloc_strdup(config, str);
+	str = widget_textbox_get_value(screen->widgets.https_proxy_f);
+	config->https_proxy = talloc_strdup(config, str);
 
 	allow_write = widget_select_get_value(screen->widgets.allow_write_f);
 	if (allow_write != config->allow_writes)
@@ -584,6 +595,13 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		widget_move(wl, y, screen->field_x);
 		y += 1;
 	}
+
+	wf = widget_textbox_base(screen->widgets.http_proxy_f);
+	layout_pair(screen, y, screen->widgets.http_proxy_l, wf);
+	y++;
+	wf = widget_textbox_base(screen->widgets.https_proxy_f);
+	layout_pair(screen, y, screen->widgets.https_proxy_l, wf);
+	y++;
 
 	y += 1;
 
@@ -1027,6 +1045,15 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	screen->widgets.dns_dhcp_help_l = widget_new_label(set, 0, 0,
 			_("(if not provided by DHCP server)"));
+
+	screen->widgets.http_proxy_l = widget_new_label(set, 0, 0,
+					_("HTTP Proxy:"));
+	screen->widgets.http_proxy_f = widget_new_textbox(set, 0, 0, 32,
+						config->http_proxy);
+	screen->widgets.https_proxy_l = widget_new_label(set, 0, 0,
+					_("HTTPS Proxy:"));
+	screen->widgets.https_proxy_f = widget_new_textbox(set, 0, 0, 32,
+						config->https_proxy);
 
 	if (config->safe_mode)
 		screen->widgets.safe_mode = widget_new_label(set, 0, 0,

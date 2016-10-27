@@ -305,6 +305,9 @@ int pb_protocol_config_len(const struct config *config)
 	for (i = 0; i < config->network.n_dns_servers; i++)
 		len += 4 + optional_strlen(config->network.dns_servers[i]);
 
+	len += 4 + optional_strlen(config->http_proxy);
+	len += 4 + optional_strlen(config->https_proxy);
+
 	len += 4;
 	for (i = 0; i < config->n_autoboot_opts; i++) {
 		if (config->autoboot_opts[i].boot_type == BOOT_DEVICE_TYPE)
@@ -549,6 +552,9 @@ int pb_protocol_serialise_config(const struct config *config,
 		pos += pb_protocol_serialise_string(pos,
 				config->network.dns_servers[i]);
 	}
+
+	pos += pb_protocol_serialise_string(pos, config->http_proxy);
+	pos += pb_protocol_serialise_string(pos, config->https_proxy);
 
 	*(uint32_t *)pos = __cpu_to_be32(config->n_autoboot_opts);
 	pos += 4;
@@ -1081,6 +1087,13 @@ int pb_protocol_deserialise_config(struct config *config,
 			goto out;
 		config->network.dns_servers[i] = str;
 	}
+
+	if (read_string(config, &pos, &len, &str))
+		goto out;
+	config->http_proxy = str;
+	if (read_string(config, &pos, &len, &str))
+		goto out;
+	config->https_proxy = str;
 
 	if (read_u32(&pos, &len, &config->n_autoboot_opts))
 		goto out;

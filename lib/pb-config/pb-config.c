@@ -63,6 +63,9 @@ struct config *config_copy(void *ctx, const struct config *src)
 		dest->network.dns_servers[i] = talloc_strdup(dest,
 				src->network.dns_servers[i]);
 
+	dest->http_proxy = talloc_strdup(dest, src->http_proxy);
+	dest->https_proxy = talloc_strdup(dest, src->https_proxy);
+
 	dest->n_autoboot_opts = src->n_autoboot_opts;
 	dest->autoboot_opts = talloc_array(dest, struct autoboot_option,
 					dest->n_autoboot_opts);

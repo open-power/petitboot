@@ -60,6 +60,8 @@ static const char *known_params[] = {
 	"petitboot,write?",
 	"petitboot,snapshots?",
 	"petitboot,console",
+	"petitboot,http_proxy",
+	"petitboot,https_proxy",
 	NULL,
 };
 
@@ -525,6 +527,19 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 	config->n_autoboot_opts = 1;
 }
 
+static void set_proxy_variables(struct config *config)
+{
+	if (config->http_proxy)
+		setenv("http_proxy", config->http_proxy, 1);
+	else
+		unsetenv("http_proxy");
+
+	if (config->https_proxy)
+		setenv("https_proxy", config->https_proxy, 1);
+	else
+		unsetenv("https_proxy");
+}
+
 static void populate_config(struct platform_powerpc *platform,
 		struct config *config)
 {
@@ -573,6 +588,14 @@ static void populate_config(struct platform_powerpc *platform,
 	/* If a full path is already set we don't want to override it */
 	config->manual_console = config->boot_console &&
 					!strchr(config->boot_console, '[');
+
+	val = get_param(platform, "petitboot,http_proxy");
+	if (val)
+		config->http_proxy = talloc_strdup(config, val);
+	val = get_param(platform, "petitboot,https_proxy");
+	if (val)
+		config->https_proxy = talloc_strdup(config, val);
+	set_proxy_variables(config);
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)
@@ -753,6 +776,12 @@ static int update_config(struct platform_powerpc *platform,
 		val = config->boot_console ?: "";
 		update_string_config(platform, "petitboot,console", val);
 	}
+
+	val = config->http_proxy ?: "";
+	update_string_config(platform, "petitboot,http_proxy", val);
+	val = config->https_proxy ?: "";
+	update_string_config(platform, "petitboot,https_proxy", val);
+	set_proxy_variables(config);
 
 	update_network_config(platform, config);
 

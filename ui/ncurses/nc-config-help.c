@@ -44,6 +44,10 @@ mask, gateway, and a DNS server or servers for a network interface. Select \
 this option if you do not have a DHCP server, or want explicit control of \
 network settings.\n"
 "\n"
+"HTTP(S) Proxy: Allows you to specify an optional HTTP or HTTPS proxy server \
+if required, for example: \"http://proxy:3128\". Any HTTP(S) requests made by \
+the pb-discover server will use these details.\n"
+"\n"
 "Disk R/W: Certain bootloader configurations may request write access to \
 disks to save information or update parameters (eg. GRUB2). "
 "Use this option to control access to disks.\n");
