@@ -981,13 +981,15 @@ static int cui_server_wait(void *arg)
 	if (!cui->client) {
 		waiter_register_timeout(cui->waitset, 1000, cui_server_wait,
 					cui);
-		nc_scr_status_printf(cui->current, "Info: Waiting for server");
+		nc_scr_status_printf(cui->current,
+				     "Info: Waiting for device discovery");
 	} else {
-		nc_scr_status_printf(cui->current, "Info: Connected to server!");
+		nc_scr_status_printf(cui->current,
+				     "Info: Connected to pb-discover!");
 		talloc_steal(cui, cui->client);
 
 		if (cui->has_input) {
-			pb_log("Aborting default boot on server connect\n");
+			pb_log("Aborting default boot on pb-discover connect\n");
 			discover_client_cancel_default(cui->client);
 		}
 	}
