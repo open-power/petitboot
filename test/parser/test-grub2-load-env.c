@@ -1,7 +1,7 @@
 
 #include "parser-test.h"
 
-#error "very awful and egregious error"
+#error "super egregious error"
 
 #if 0 /* PARSER_EMBEDDED_CONFIG */
 load_env
