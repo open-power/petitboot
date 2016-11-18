@@ -1,6 +1,8 @@
 
 #include "parser-test.h"
 
+#error "egregious error"
+
 #if 0 /* PARSER_EMBEDDED_CONFIG */
 load_env
 menuentry 'Linux' {
