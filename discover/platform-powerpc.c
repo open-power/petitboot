@@ -412,11 +412,9 @@ static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
 	if (!strncmp(*pos, "uuid:", strlen("uuid:"))) {
 		prefix = strlen("uuid:");
 		opt->boot_type = BOOT_DEVICE_UUID;
-		rc = 0;
 	} else if (!strncmp(*pos, "mac:", strlen("mac:"))) {
 		prefix = strlen("mac:");
 		opt->boot_type = BOOT_DEVICE_UUID;
-		rc = 0;
 	} else {
 		type = find_device_type(*pos);
 		if (type != DEVICE_TYPE_UNKNOWN) {
@@ -430,9 +428,12 @@ static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
 		if (delim)
 			len = (int)(delim - *pos) - prefix;
 		else
-			len = strlen(*pos);
+			len = strlen(*pos) - prefix;
 
-		opt->uuid = talloc_strndup(ctx, *pos + prefix, len);
+		if (len) {
+			opt->uuid = talloc_strndup(ctx, *pos + prefix, len);
+			rc = 0;
+		}
 	}
 
 	/* Always advance pointer to next option or end */
@@ -452,17 +453,19 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 	unsigned int n_new = 0;
 	const char *val;
 	bool conflict;
+	size_t len = 0;
 
 	/* Check for old-style bootdev */
 	val = get_param(platform, "petitboot,bootdev");
 	if (val && strlen(val)) {
 		pos = talloc_strdup(config, val);
 		if (!strncmp(val, "uuid:", strlen("uuid:")))
-			old_dev = talloc_strdup(config,
-						val + strlen("uuid:"));
+			len = strlen("uuid:");
 		else if (!strncmp(val, "mac:", strlen("mac:")))
-			old_dev = talloc_strdup(config,
-						val + strlen("mac:"));
+			len = strlen("mac:");
+		/* Make sure someone hasn't set a blank UUID */
+		if (len && *(val + len) != '\0')
+			old_dev = talloc_strdup(config, val + len);
 	}
 
 	/* Check for ordered bootdevs */
