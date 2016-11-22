@@ -410,11 +410,9 @@ static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
 	if (!strncmp(*pos, "uuid:", strlen("uuid:"))) {
 		prefix = strlen("uuid:");
 		opt->boot_type = BOOT_DEVICE_UUID;
-		rc = 0;
 	} else if (!strncmp(*pos, "mac:", strlen("mac:"))) {
 		prefix = strlen("mac:");
 		opt->boot_type = BOOT_DEVICE_UUID;
-		rc = 0;
 	} else {
 		type = find_device_type(*pos);
 		if (type != DEVICE_TYPE_UNKNOWN) {
@@ -428,9 +426,12 @@ static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
 		if (delim)
 			len = (int)(delim - *pos) - prefix;
 		else
-			len = strlen(*pos);
+			len = strlen(*pos) - prefix;
 
-		opt->uuid = talloc_strndup(ctx, *pos + prefix, len);
+		if (len) {
+			opt->uuid = talloc_strndup(ctx, *pos + prefix, len);
+			rc = 0;
+		}
 	}
 
 	/* Always advance pointer to next option or end */
