@@ -34,17 +34,38 @@ enum {
 	BOOT_HOOK_EXIT_UPDATE	= 2,
 };
 
+static void __attribute__((format(__printf__, 4, 5))) update_status(
+		boot_status_fn fn, void *arg, int type, char *fmt, ...)
+{
+	struct status status;
+	va_list ap;
+
+	va_start(ap, fmt);
+	status.message = talloc_vasprintf(NULL, fmt, ap);
+	va_end(ap);
+
+	status.type = type;
+
+	pb_debug("boot status: [%d] %s\n", type, status.message);
+
+	fn(arg, &status);
+
+	talloc_free(status.message);
+}
+
 /**
  * kexec_load - kexec load helper.
  */
 static int kexec_load(struct boot_task *boot_task)
 {
-	int result;
-	const char *argv[7];
-	const char **p;
+	struct process *process;
 	char *s_initrd = NULL;
-	char *s_dtb = NULL;
 	char *s_args = NULL;
+	const char *argv[7];
+	char *s_dtb = NULL;
+	const char **p;
+	int result;
+
 
 	boot_task->local_initrd_override = NULL;
 	boot_task->local_dtb_override = NULL;
@@ -69,6 +90,17 @@ static int kexec_load(struct boot_task *boot_task)
 		boot_task->local_dtb_override : boot_task->local_dtb;
 	const char* local_image = (boot_task->local_image_override) ?
 		boot_task->local_image_override : boot_task->local_image;
+
+	process = process_create(boot_task);
+	if (!process) {
+		pb_log("%s: failed to create process\n", __func__);
+		return -1;
+	}
+
+	process->path = pb_system_apps.kexec;
+	process->argv = argv;
+	process->keep_stdout = true;
+	process->add_stderr = true;
 
 	p = argv;
 	*p++ = pb_system_apps.kexec;	/* 1 */
@@ -96,10 +128,19 @@ static int kexec_load(struct boot_task *boot_task)
 	*p++ = local_image;		/* 6 */
 	*p++ = NULL;			/* 7 */
 
-	result = process_run_simple_argv(boot_task, argv);
+	result = process_run_sync(process);
+	if (result) {
+		pb_log("%s: failed to run process\n", __func__);
+		goto abort_kexec;
+	}
 
-	if (result)
+	result = process->exit_status;
+
+	if (result) {
 		pb_log("%s: failed: (%d)\n", __func__, result);
+		update_status(boot_task->status_fn, boot_task->status_arg,
+				STATUS_ERROR, "%s", process->stdout_buf);
+	}
 
 abort_kexec:
 	gpg_validate_boot_files_cleanup(boot_task);
@@ -141,25 +182,6 @@ static int kexec_reboot(struct boot_task *task)
 
 
 	return result;
-}
-
-static void __attribute__((format(__printf__, 4, 5))) update_status(
-		boot_status_fn fn, void *arg, int type, char *fmt, ...)
-{
-	struct status status;
-	va_list ap;
-
-	va_start(ap, fmt);
-	status.message = talloc_vasprintf(NULL, fmt, ap);
-	va_end(ap);
-
-	status.type = type;
-
-	pb_debug("boot status: [%d] %s\n", type, status.message);
-
-	fn(arg, &status);
-
-	talloc_free(status.message);
 }
 
 static void boot_hook_update_param(void *ctx, struct boot_task *task,
@@ -452,6 +474,7 @@ static void boot_process(struct load_url_result *result, void *data)
 			_("Performing kexec load"));
 
 	rc = kexec_load(task);
+	pb_log("%s: kexec_load returned %d\n", __func__, rc);
 	if (rc == KEXEC_LOAD_DECRYPTION_FALURE) {
 		update_status(task->status_fn, task->status_arg,
 				STATUS_ERROR, _("Decryption failed"));
@@ -465,10 +488,6 @@ static void boot_process(struct load_url_result *result, void *data)
 		update_status(task->status_fn, task->status_arg,
 				STATUS_ERROR,
 				_("Invalid signature configuration"));
-	}
-	else if (rc) {
-		update_status(task->status_fn, task->status_arg,
-				STATUS_ERROR, _("kexec load failed"));
 	}
 
 no_sig_load:
