@@ -56,6 +56,7 @@ struct cui {
 	struct waitset *waitset;
 	struct discover_client *client;
 	struct system_info *sysinfo;
+	struct statuslog *statuslog;
 	struct sysinfo_screen *sysinfo_screen;
 	struct config *config;
 	struct config_screen *config_screen;
@@ -64,6 +65,7 @@ struct cui {
 	struct lang_screen *lang_screen;
 	struct help_screen *help_screen;
 	struct subset_screen *subset_screen;
+	struct statuslog_screen *statuslog_screen;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
@@ -80,6 +82,7 @@ void cui_item_new(struct pmenu *menu);
 void cui_show_sysinfo(struct cui *cui);
 void cui_show_config(struct cui *cui);
 void cui_show_lang(struct cui *cui);
+void cui_show_statuslog(struct cui *cui);
 void cui_show_help(struct cui *cui, const char *title,
 		const struct help_text *text);
 void cui_show_subset(struct cui *cui, const char *title,

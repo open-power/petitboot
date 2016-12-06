@@ -18,6 +18,8 @@ To make changes to the system configuration, type C (configure).\n\
 \n\
 To set the language for the petitboot interface, type L (language).\n\
 \n\
+To view the log of status messages from the discovery process, type G (log).\n\
+\n\
 To find new or updated boot options on the system, select the 'Rescan devices' \
 option.\n\
 \n\

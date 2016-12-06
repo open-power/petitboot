@@ -418,6 +418,9 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 	case 'l':
 		cui_show_lang(cui_from_arg(scr->ui_ctx));
 		break;
+	case 'g':
+		cui_show_statuslog(cui_from_arg(scr->ui_ctx));
+		break;
 	case KEY_F(1):
 	case 'h':
 		if (menu->help_text)

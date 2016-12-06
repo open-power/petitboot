@@ -42,6 +42,7 @@
 #include "nc-sysinfo.h"
 #include "nc-lang.h"
 #include "nc-helpscreen.h"
+#include "nc-statuslog.h"
 #include "nc-subset.h"
 
 extern const struct help_text main_menu_help_text;
@@ -333,6 +334,19 @@ void cui_show_lang(struct cui *cui)
 {
 	cui->lang_screen = lang_screen_init(cui, cui->config, cui_lang_exit);
 	cui_set_current(cui, lang_screen_scr(cui->lang_screen));
+}
+
+static void cui_statuslog_exit(struct cui *cui)
+{
+	cui_set_current(cui, &cui->main->scr);
+	talloc_free(cui->statuslog_screen);
+	cui->statuslog_screen = NULL;
+}
+
+void cui_show_statuslog(struct cui *cui)
+{
+	cui->statuslog_screen = statuslog_screen_init(cui, cui_statuslog_exit);
+	cui_set_current(cui, statuslog_screen_scr(cui->statuslog_screen));
 }
 
 static void cui_add_url_exit(struct cui *cui)
@@ -698,6 +712,8 @@ static void cui_update_status(struct status *status, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
 
+	statuslog_append_steal(cui, cui->statuslog, status);
+
 	nc_scr_status_printf(cui->current,
 			"%s: %s",
 			status->type == STATUS_ERROR ?
@@ -825,6 +841,12 @@ static int menu_lang_execute(struct pmenu_item *item)
 	return 0;
 }
 
+static int menu_statuslog_execute(struct pmenu_item *item)
+{
+	cui_show_statuslog(cui_from_item(item));
+	return 0;
+}
+
 static int menu_reinit_execute(struct pmenu_item *item)
 {
 	if (cui_from_item(item)->client)
@@ -849,7 +871,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	int result;
 	bool lockdown = lockdown_active();
 
-	m = pmenu_init(cui, 7, cui_on_exit);
+	m = pmenu_init(cui, 8, cui_on_exit);
 	if (!m) {
 		pb_log("%s: failed\n", __func__);
 		return NULL;
@@ -861,7 +883,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 		"Petitboot (" PACKAGE_VERSION ")");
 	m->scr.frame.rtitle = NULL;
 	m->scr.frame.help = talloc_strdup(m,
-		_("Enter=accept, e=edit, n=new, x=exit, l=language, h=help"));
+		_("Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"));
 	m->scr.frame.status = talloc_strdup(m, _("Welcome to Petitboot"));
 
 	/* add a separator */
@@ -878,25 +900,29 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	i->on_execute = menu_config_execute;
 	pmenu_item_insert(m, i, 2);
 
+	i = pmenu_item_create(m, _("System status log"));
+	i->on_execute = menu_statuslog_execute;
+	pmenu_item_insert(m, i, 3);
+
 	/* this label isn't translated, so we don't want a gettext() here */
 	i = pmenu_item_create(m, "Language");
 	i->on_execute = menu_lang_execute;
-	pmenu_item_insert(m, i, 3);
+	pmenu_item_insert(m, i, 4);
 
 	i = pmenu_item_create(m, _("Rescan devices"));
 	i->on_execute = menu_reinit_execute;
-	pmenu_item_insert(m, i, 4);
+	pmenu_item_insert(m, i, 5);
 
 	i = pmenu_item_create(m, _("Retrieve config from URL"));
 	i->on_execute = menu_add_url_execute;
-	pmenu_item_insert(m, i, 5);
+	pmenu_item_insert(m, i, 6);
 
 	if (lockdown)
 		i = pmenu_item_create(m, _("Reboot"));
 	else
 		i = pmenu_item_create(m, _("Exit to shell"));
 	i->on_execute = pmenu_exit_cb;
-	pmenu_item_insert(m, i, 6);
+	pmenu_item_insert(m, i, 7);
 
 	result = pmenu_setup(m);
 
@@ -1023,6 +1049,7 @@ struct cui *cui_init(void* platform_info,
 	cui->c_sig = pb_cui_sig;
 	cui->platform_info = platform_info;
 	cui->waitset = waitset_create(cui);
+	cui->statuslog = statuslog_init(cui);
 
 	process_init(cui, cui->waitset, false);
 
