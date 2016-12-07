@@ -410,7 +410,7 @@ void device_handler_remove(struct device_handler *handler,
 	talloc_free(device);
 }
 
-void device_handler_boot_status(void *arg, struct boot_status *status)
+void device_handler_boot_status(void *arg, struct status *status)
 {
 	struct device_handler *handler = arg;
 
@@ -420,9 +420,9 @@ void device_handler_boot_status(void *arg, struct boot_status *status)
 static void countdown_status(struct device_handler *handler,
 		struct discover_boot_option *opt, unsigned int sec)
 {
-	struct boot_status status;
+	struct status status;
 
-	status.type = BOOT_STATUS_INFO;
+	status.type = STATUS_INFO;
 	status.progress = -1;
 	status.detail = NULL;
 	status.message = talloc_asprintf(handler,
@@ -836,11 +836,11 @@ int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev)
 {
 	struct discover_context *ctx;
-	struct boot_status *status;
+	struct status *status;
 	int rc;
 
-	status = talloc_zero(handler, struct boot_status);
-	status->type = BOOT_STATUS_INFO;
+	status = talloc_zero(handler, struct status);
+	status->type = STATUS_INFO;
 	/*
 	 * TRANSLATORS: this string will be passed the type and identifier
 	 * of the device. For example, the first parameter could be "Disk",
@@ -891,10 +891,10 @@ int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event)
 {
 	struct discover_context *ctx;
-	struct boot_status *status;
+	struct status *status;
 
-	status = talloc_zero(handler, struct boot_status);
-	status->type = BOOT_STATUS_INFO;
+	status = talloc_zero(handler, struct status);
+	status->type = STATUS_INFO;
 	/*
 	 * TRANSLATORS: this format specifier will be the name of a network
 	 * device, like 'eth0'.
@@ -963,7 +963,7 @@ void device_handler_boot(struct device_handler *handler,
 
 void device_handler_cancel_default(struct device_handler *handler)
 {
-	struct boot_status status;
+	struct status status;
 
 	if (handler->timeout_waiter)
 		waiter_remove(handler->timeout_waiter);
@@ -985,7 +985,7 @@ void device_handler_cancel_default(struct device_handler *handler)
 
 	handler->default_boot_option = NULL;
 
-	status.type = BOOT_STATUS_INFO;
+	status.type = STATUS_INFO;
 	status.progress = -1;
 	status.detail = NULL;
 	status.message = _("Default boot cancelled");
@@ -1082,14 +1082,14 @@ void device_handler_process_url(struct device_handler *handler,
 {
 	struct discover_context *ctx;
 	struct discover_device *dev;
-	struct boot_status *status;
+	struct status *status;
 	struct pb_url *pb_url;
 	struct event *event;
 	struct param *param;
 
-	status = talloc(handler, struct boot_status);
+	status = talloc(handler, struct status);
 
-	status->type = BOOT_STATUS_ERROR;
+	status->type = STATUS_ERROR;
 	status->progress = 0;
 	status->detail = talloc_asprintf(status,
 			_("Received config URL %s"), url);
@@ -1156,7 +1156,7 @@ void device_handler_process_url(struct device_handler *handler,
 
 	talloc_unlink(handler, ctx);
 
-	status->type = BOOT_STATUS_INFO;
+	status->type = STATUS_INFO;
 	status->message = talloc_asprintf(status, _("Config file %s parsed"),
 					pb_url->file);
 msg:

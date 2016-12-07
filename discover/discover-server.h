@@ -6,7 +6,7 @@
 struct discover_server;
 struct device_handler;
 struct boot_option;
-struct boot_status;
+struct status;
 struct system_info;
 struct device;
 struct config;
@@ -25,7 +25,7 @@ void discover_server_notify_boot_option_add(struct discover_server *server,
 void discover_server_notify_device_remove(struct discover_server *server,
 		struct device *device);
 void discover_server_notify_boot_status(struct discover_server *server,
-		struct boot_status *status);
+		struct status *status);
 void discover_server_notify_system_info(struct discover_server *server,
 		const struct system_info *sysinfo);
 void discover_server_notify_config(struct discover_server *server,

@@ -241,7 +241,7 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 {
 	struct conf_context *conf = data;
 	struct device_handler *handler;
-	struct boot_status status = {0};
+	struct status status = {0};
 	struct pxe_parser_info *info;
 	char *buf = NULL;
 	int len, rc = 0;
@@ -279,7 +279,7 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	handler = talloc_parent(conf);
 	device_handler_discover_context_commit(handler, conf->dc);
 
-	status.type = BOOT_STATUS_INFO;
+	status.type = STATUS_INFO;
 	/*
 	 * TRANSLATORS: the format specifier in this string in an IP address,
 	 * eg. 192.168.1.1

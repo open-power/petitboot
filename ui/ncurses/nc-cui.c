@@ -694,13 +694,13 @@ static void cui_device_remove(struct device *dev, void *arg)
 		nc_scr_post(cui->current);
 }
 
-static void cui_update_status(struct boot_status *status, void *arg)
+static void cui_update_status(struct status *status, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
 
 	nc_scr_status_printf(cui->current,
 			"%s: %s",
-			status->type == BOOT_STATUS_ERROR ?
+			status->type == STATUS_ERROR ?
 				_("Error") : _("Info"),
 			status->message);
 

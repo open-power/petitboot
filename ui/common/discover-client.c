@@ -131,7 +131,7 @@ void discover_client_enumerate(struct discover_client *client)
 }
 
 static void update_status(struct discover_client *client,
-		struct boot_status *status)
+		struct status *status)
 {
 	if (client->ops.update_status)
 		client->ops.update_status(status, client->ops.cb_arg);
@@ -156,8 +156,8 @@ static int discover_client_process(void *arg)
 	struct discover_client *client = arg;
 	struct pb_protocol_message *message;
 	struct system_info *sysinfo;
-	struct boot_status *status;
 	struct boot_option *opt;
+	struct status *status;
 	struct config *config;
 	struct device *dev;
 	char *dev_id;
@@ -206,7 +206,7 @@ static int discover_client_process(void *arg)
 		device_remove(client, dev_id);
 		break;
 	case PB_PROTOCOL_ACTION_STATUS:
-		status = talloc_zero(ctx, struct boot_status);
+		status = talloc_zero(ctx, struct status);
 
 		rc = pb_protocol_deserialise_boot_status(status, message);
 		if (rc) {

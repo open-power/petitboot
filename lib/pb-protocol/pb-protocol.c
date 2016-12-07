@@ -215,7 +215,7 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 		4 + optional_strlen(boot->console);
 }
 
-int pb_protocol_boot_status_len(const struct boot_status *status)
+int pb_protocol_boot_status_len(const struct status *status)
 {
 	return  4 +
 		4 + optional_strlen(status->message) +
@@ -401,7 +401,7 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 	return 0;
 }
 
-int pb_protocol_serialise_boot_status(const struct boot_status *status,
+int pb_protocol_serialise_boot_status(const struct status *status,
 		char *buf, int buf_len)
 {
 	char *pos = buf;
@@ -821,7 +821,7 @@ out:
 	return rc;
 }
 
-int pb_protocol_deserialise_boot_status(struct boot_status *status,
+int pb_protocol_deserialise_boot_status(struct status *status,
 		const struct pb_protocol_message *message)
 {
 	unsigned int len;
@@ -838,8 +838,8 @@ int pb_protocol_deserialise_boot_status(struct boot_status *status,
 	status->type = __be32_to_cpu(*(uint32_t *)(pos));
 
 	switch (status->type) {
-	case BOOT_STATUS_ERROR:
-	case BOOT_STATUS_INFO:
+	case STATUS_ERROR:
+	case STATUS_INFO:
 		break;
 	default:
 		goto out;

@@ -157,7 +157,7 @@ static int write_device_remove_message(struct discover_server *server,
 }
 
 static int write_boot_status_message(struct discover_server *server,
-		struct client *client, const struct boot_status *status)
+		struct client *client, const struct status *status)
 {
 	struct pb_protocol_message *message;
 	int len;
@@ -366,7 +366,7 @@ void discover_server_notify_device_remove(struct discover_server *server,
 }
 
 void discover_server_notify_boot_status(struct discover_server *server,
-		struct boot_status *status)
+		struct status *status)
 {
 	struct client *client;
 

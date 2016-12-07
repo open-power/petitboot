@@ -8,7 +8,7 @@
 
 struct network;
 
-typedef void (*boot_status_fn)(void *arg, struct boot_status *);
+typedef void (*boot_status_fn)(void *arg, struct status *);
 
 void discover_server_notify_device_add(struct discover_server *server,
 		struct device *device)
@@ -32,7 +32,7 @@ void discover_server_notify_device_remove(struct discover_server *server,
 }
 
 void discover_server_notify_boot_status(struct discover_server *server,
-		struct boot_status *status)
+		struct status *status)
 {
 	(void)server;
 	(void)status;

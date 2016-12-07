@@ -24,7 +24,7 @@ struct pb_boot_data {
  * devices' boot options), so callbacks may store boot options and devices
  * as long as the client remains allocated.
  *
- * The boot_status and system_info structs are allocated by the client,
+ * The status and system_info structs are allocated by the client,
  * and will be free()ed after the callback is invoked. If the callback
  * stores these structures for usage beyond the duration of the callback,
  * it must talloc_steal() them.
@@ -35,7 +35,7 @@ struct discover_client_ops {
 	int (*boot_option_add)(struct device *dev, struct boot_option *option,
 			void *arg);
 	void (*device_remove)(struct device *device, void *arg);
-	void (*update_status)(struct boot_status *status, void *arg);
+	void (*update_status)(struct status *status, void *arg);
 	void (*update_sysinfo)(struct system_info *sysinfo, void *arg);
 	void (*update_config)(struct config *sysinfo, void *arg);
 	void *cb_arg;

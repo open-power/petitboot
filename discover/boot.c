@@ -146,7 +146,7 @@ static int kexec_reboot(struct boot_task *task)
 static void __attribute__((format(__printf__, 4, 5))) update_status(
 		boot_status_fn fn, void *arg, int type, char *fmt, ...)
 {
-	struct boot_status status;
+	struct status status;
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -252,7 +252,7 @@ static void run_boot_hooks(struct boot_task *task)
 	if (n < 1)
 		return;
 
-	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
+	update_status(task->status_fn, task->status_arg, STATUS_INFO,
 			_("running boot hooks"));
 
 	boot_hook_setenv(task);
@@ -315,7 +315,7 @@ static int check_load(struct boot_task *task, const char *name,
 		return 0;
 
 	update_status(task->status_fn, task->status_arg,
-			BOOT_STATUS_ERROR,
+			STATUS_ERROR,
 			_("Couldn't load %s"), name);
 	return -1;
 }
@@ -443,28 +443,27 @@ static void boot_process(struct load_url_result *result, void *data)
 
 	run_boot_hooks(task);
 
-	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
+	update_status(task->status_fn, task->status_arg, STATUS_INFO,
 			_("performing kexec_load"));
 
 	rc = kexec_load(task);
 	if (rc == KEXEC_LOAD_DECRYPTION_FALURE) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_ERROR, _("decryption failed"));
+				STATUS_ERROR, _("decryption failed"));
 	}
 	else if (rc == KEXEC_LOAD_SIGNATURE_FAILURE) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_ERROR,
+				STATUS_ERROR,
 				_("signature verification failed"));
 	}
 	else if (rc == KEXEC_LOAD_SIG_SETUP_INVALID) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_ERROR,
+				STATUS_ERROR,
 				_("invalid signature configuration"));
 	}
 	else if (rc) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_ERROR,
-				_("kexec load failed"));
+				STATUS_ERROR, _("kexec load failed"));
 	}
 
 no_sig_load:
@@ -482,13 +481,12 @@ no_load:
 
 	if (!rc) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_INFO,
-				_("performing kexec reboot"));
+				STATUS_INFO, _("performing kexec reboot"));
 
 		rc = kexec_reboot(task);
 		if (rc) {
 			update_status(task->status_fn, task->status_arg,
-					BOOT_STATUS_ERROR,
+					STATUS_ERROR,
 					_("kexec reboot failed"));
 		}
 	}
@@ -503,8 +501,7 @@ static int start_url_load(struct boot_task *task, const char *name,
 	*result = load_url_async(task, url, boot_process, task);
 	if (!*result) {
 		update_status(task->status_fn, task->status_arg,
-				BOOT_STATUS_ERROR,
-				_("Error loading %s"), name);
+				STATUS_ERROR, _("Error loading %s"), name);
 		return -1;
 	}
 	return 0;
@@ -530,7 +527,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	else
 		boot_desc = _("(unknown)");
 
-	update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+	update_status(status_fn, status_arg, STATUS_INFO,
 			_("Booting %s."), boot_desc);
 
 	if (cmd && cmd->boot_image_file) {
@@ -539,7 +536,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		image = opt->boot_image->url;
 	} else {
 		pb_log("%s: no image specified\n", __func__);
-		update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+		update_status(status_fn, status_arg, STATUS_INFO,
 				_("Boot failed: no image specified"));
 		return NULL;
 	}
@@ -587,7 +584,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		} else {
 			pb_log("%s: no command line signature file"
 				" specified\n", __func__);
-			update_status(status_fn, status_arg, BOOT_STATUS_INFO,
+			update_status(status_fn, status_arg, STATUS_INFO,
 					_("Boot failed: no command line"
 						" signature file specified"));
 			talloc_free(boot_task);
@@ -643,7 +640,7 @@ void boot_cancel(struct boot_task *task)
 {
 	task->cancelled = true;
 
-	update_status(task->status_fn, task->status_arg, BOOT_STATUS_INFO,
+	update_status(task->status_fn, task->status_arg, STATUS_INFO,
 			_("Boot cancelled"));
 
 	cleanup_cancellations(task, NULL);

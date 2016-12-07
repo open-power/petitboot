@@ -70,10 +70,10 @@ struct boot_command {
 	char *console;
 };
 
-struct boot_status {
-	enum {
-		BOOT_STATUS_INFO,
-		BOOT_STATUS_ERROR,
+struct status {
+	enum status_type {
+		STATUS_INFO,
+		STATUS_ERROR,
 	} type;
 	char	*message;
 	char	*detail;

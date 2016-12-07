@@ -75,7 +75,7 @@ static void print_device_remove(struct device *device,
 	printf("\tname: %s\n", device->name);
 }
 
-static void print_status(struct boot_status *status,
+static void print_status(struct status *status,
 	void __attribute__((unused)) *arg)
 {
 	printf("status:\n");
