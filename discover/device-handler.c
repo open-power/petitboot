@@ -423,8 +423,6 @@ static void countdown_status(struct device_handler *handler,
 	struct status status;
 
 	status.type = STATUS_INFO;
-	status.progress = -1;
-	status.detail = NULL;
 	status.message = talloc_asprintf(handler,
 			_("Booting in %d sec: %s"), sec, opt->option->name);
 
@@ -986,8 +984,6 @@ void device_handler_cancel_default(struct device_handler *handler)
 	handler->default_boot_option = NULL;
 
 	status.type = STATUS_INFO;
-	status.progress = -1;
-	status.detail = NULL;
 	status.message = _("Default boot cancelled");
 
 	discover_server_notify_boot_status(handler->server, &status);
@@ -1088,11 +1084,7 @@ void device_handler_process_url(struct device_handler *handler,
 	struct param *param;
 
 	status = talloc(handler, struct status);
-
 	status->type = STATUS_ERROR;
-	status->progress = 0;
-	status->detail = talloc_asprintf(status,
-			_("Received config URL %s"), url);
 
 	if (!handler->network) {
 		status->message = talloc_asprintf(handler,

@@ -81,8 +81,6 @@ static void print_status(struct status *status,
 	printf("status:\n");
 	printf("\ttype:     %d\n", status->type);
 	printf("\tmessage:  %s\n", status->message);
-	printf("\tdetail:   %s\n", status->detail);
-	printf("\tprogress: %d\n", status->progress);
 
 }
 

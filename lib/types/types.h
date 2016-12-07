@@ -76,8 +76,6 @@ struct status {
 		STATUS_ERROR,
 	} type;
 	char	*message;
-	char	*detail;
-	int	progress;
 };
 
 struct interface_info {

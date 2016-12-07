@@ -219,7 +219,6 @@ int pb_protocol_boot_status_len(const struct status *status)
 {
 	return  4 +
 		4 + optional_strlen(status->message) +
-		4 + optional_strlen(status->detail) +
 		4;
 }
 
@@ -410,10 +409,6 @@ int pb_protocol_serialise_boot_status(const struct status *status,
 	pos += sizeof(uint32_t);
 
 	pos += pb_protocol_serialise_string(pos, status->message);
-	pos += pb_protocol_serialise_string(pos, status->detail);
-
-	*(uint32_t *)pos = __cpu_to_be32(status->type);
-	pos += sizeof(uint32_t);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -848,22 +843,9 @@ int pb_protocol_deserialise_boot_status(struct status *status,
 	pos += sizeof(uint32_t);
 	len -= sizeof(uint32_t);
 
-	/* message and detail strings */
+	/* message string */
 	if (read_string(status, &pos, &len, &status->message))
 		goto out;
-
-	if (read_string(status, &pos, &len, &status->detail))
-		goto out;
-
-	/* and finally, progress */
-	if (len < sizeof(uint32_t))
-		goto out;
-
-	status->progress = __be32_to_cpu(*(uint32_t *)(pos));
-
-	/* clamp to 100% */
-	if (status->progress > 100)
-		status->progress = 100;
 
 	rc = 0;
 
