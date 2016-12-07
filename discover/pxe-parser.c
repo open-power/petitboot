@@ -286,7 +286,7 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	 */
 	status.message = talloc_asprintf(conf, _("pxe: parsed config for %s"),
 					conf->dc->conf_url->host);
-	device_handler_boot_status(handler, &status);
+	device_handler_status(handler, &status);
 
 	talloc_free(buf);
 out_clean:

@@ -96,7 +96,8 @@ int device_handler_dhcp(struct device_handler *handler,
 void device_handler_remove(struct device_handler *handler,
 		struct discover_device *device);
 
-void device_handler_boot_status(void *arg, struct status *status);
+void device_handler_status(struct device_handler *handler,
+		struct status *status);
 
 struct discover_context *device_handler_discover_context_create(
 		struct device_handler *handler,

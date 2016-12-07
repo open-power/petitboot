@@ -410,11 +410,15 @@ void device_handler_remove(struct device_handler *handler,
 	talloc_free(device);
 }
 
-void device_handler_boot_status(void *arg, struct status *status)
+void device_handler_status(struct device_handler *handler,
+		struct status *status)
 {
-	struct device_handler *handler = arg;
-
 	discover_server_notify_boot_status(handler->server, status);
+}
+
+static void device_handler_boot_status_cb(void *arg, struct status *status)
+{
+	device_handler_status(arg, status);
 }
 
 static void countdown_status(struct device_handler *handler,
@@ -426,7 +430,7 @@ static void countdown_status(struct device_handler *handler,
 	status.message = talloc_asprintf(handler,
 			_("Booting in %d sec: %s"), sec, opt->option->name);
 
-	discover_server_notify_boot_status(handler->server, &status);
+	device_handler_status(handler, &status);
 
 	talloc_free(status.message);
 }
@@ -460,7 +464,7 @@ static int default_timeout(void *arg)
 	platform_pre_boot();
 
 	handler->pending_boot = boot(handler, handler->default_boot_option,
-			NULL, handler->dry_run, device_handler_boot_status,
+			NULL, handler->dry_run, device_handler_boot_status_cb,
 			handler);
 	handler->pending_boot_is_default = true;
 	return 0;
@@ -848,7 +852,7 @@ int device_handler_discover(struct device_handler *handler,
 	status->message = talloc_asprintf(status, _("Processing %s device %s"),
 				device_type_display_name(dev->device->type),
 				dev->device->id);
-	device_handler_boot_status(handler, status);
+	device_handler_status(handler, status);
 
 	process_boot_option_queue(handler);
 
@@ -876,7 +880,7 @@ out:
 	 */
 	status->message = talloc_asprintf(status,_("Processing %s complete"),
 				dev->device->id);
-	device_handler_boot_status(handler, status);
+	device_handler_status(handler, status);
 
 	talloc_free(status);
 	talloc_unlink(handler, ctx);
@@ -899,7 +903,7 @@ int device_handler_dhcp(struct device_handler *handler,
 	 */
 	status->message = talloc_asprintf(status, _("Processing dhcp event on %s"),
 				dev->device->id);
-	device_handler_boot_status(handler, status);
+	device_handler_status(handler, status);
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
@@ -916,7 +920,7 @@ int device_handler_dhcp(struct device_handler *handler,
 	 */
 	status->message = talloc_asprintf(status,_("Processing %s complete"),
 				dev->device->id);
-	device_handler_boot_status(handler, status);
+	device_handler_status(handler, status);
 
 	talloc_free(status);
 	talloc_unlink(handler, ctx);
@@ -955,7 +959,7 @@ void device_handler_boot(struct device_handler *handler,
 	platform_pre_boot();
 
 	handler->pending_boot = boot(handler, opt, cmd, handler->dry_run,
-			device_handler_boot_status, handler);
+			device_handler_boot_status_cb, handler);
 	handler->pending_boot_is_default = false;
 }
 
@@ -986,7 +990,7 @@ void device_handler_cancel_default(struct device_handler *handler)
 	status.type = STATUS_INFO;
 	status.message = _("Default boot cancelled");
 
-	discover_server_notify_boot_status(handler->server, &status);
+	device_handler_status(handler, &status);
 }
 
 void device_handler_update_config(struct device_handler *handler,
@@ -1152,7 +1156,7 @@ void device_handler_process_url(struct device_handler *handler,
 	status->message = talloc_asprintf(status, _("Config file %s parsed"),
 					pb_url->file);
 msg:
-	device_handler_boot_status(handler, status);
+	device_handler_status(handler, status);
 	talloc_free(status);
 }
 
