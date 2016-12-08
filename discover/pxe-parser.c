@@ -241,7 +241,6 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 {
 	struct conf_context *conf = data;
 	struct device_handler *handler;
-	struct status status = {0};
 	struct pxe_parser_info *info;
 	char *buf = NULL;
 	int len, rc = 0;
@@ -279,14 +278,12 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	handler = talloc_parent(conf);
 	device_handler_discover_context_commit(handler, conf->dc);
 
-	status.type = STATUS_INFO;
 	/*
 	 * TRANSLATORS: the format specifier in this string in an IP address,
 	 * eg. 192.168.1.1
 	 */
-	status.message = talloc_asprintf(conf, _("pxe: parsed config for %s"),
+	device_handler_status_info(handler, _("pxe: parsed config for %s"),
 					conf->dc->conf_url->host);
-	device_handler_status(handler, &status);
 
 	talloc_free(buf);
 out_clean:

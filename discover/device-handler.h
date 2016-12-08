@@ -98,6 +98,10 @@ void device_handler_remove(struct device_handler *handler,
 
 void device_handler_status(struct device_handler *handler,
 		struct status *status);
+void device_handler_status_info(struct device_handler *handler,
+		const char *fmt, ...);
+void device_handler_status_err(struct device_handler *handler,
+		const char *fmt, ...);
 
 struct discover_context *device_handler_discover_context_create(
 		struct device_handler *handler,

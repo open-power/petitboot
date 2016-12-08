@@ -416,6 +416,39 @@ void device_handler_status(struct device_handler *handler,
 	discover_server_notify_boot_status(handler->server, status);
 }
 
+static void _device_handler_vstatus(struct device_handler *handler,
+		enum status_type type, const char *fmt, va_list ap)
+{
+	struct status status;
+
+	status.type = type;
+	status.message = talloc_vasprintf(handler, fmt, ap);
+
+	device_handler_status(handler, &status);
+
+	talloc_free(status.message);
+}
+
+void device_handler_status_info(struct device_handler *handler,
+		const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	_device_handler_vstatus(handler, STATUS_INFO, fmt, ap);
+	va_end(ap);
+}
+
+void device_handler_status_err(struct device_handler *handler,
+		const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	_device_handler_vstatus(handler, STATUS_ERROR, fmt, ap);
+	va_end(ap);
+}
+
 static void device_handler_boot_status_cb(void *arg, struct status *status)
 {
 	device_handler_status(arg, status);
