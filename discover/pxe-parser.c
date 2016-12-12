@@ -281,12 +281,12 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	device_handler_discover_context_commit(handler, conf->dc);
 
 	/*
-	 * TRANSLATORS: the format specifier in this string in an IP address,
-	 * eg. 192.168.1.1
+	 * TRANSLATORS: the format specifier in this string is a URL
+	 * eg. tftp://192.168.1.1/pxelinux.cfg
 	 */
 	device_handler_status_dev_info(handler, conf->dc->device,
 			_("Parsed PXE config from %s"),
-			conf->dc->conf_url->host);
+			pb_url_to_string(conf->dc->conf_url));
 
 	talloc_free(buf);
 out_clean:
@@ -363,6 +363,11 @@ static int pxe_parse(struct discover_context *dc)
 		return -1;
 
 	if (complete_url) {
+		device_handler_status_dev_info(conf->dc->handler,
+			dc->device,
+			_("Requesting config %s"),
+			pb_url_to_string(conf->dc->conf_url));
+
 		/* we have a complete URL; use this and we're done. */
 		result = load_url_async(conf->dc, conf->dc->conf_url,
 					pxe_conf_parse_cb, conf);
@@ -383,6 +388,11 @@ static int pxe_parse(struct discover_context *dc)
 		info = conf->parser_info;
 		info->pxe_conf_files = pxe_conf_files;
 		info->pxe_base_url = pxe_base_url;
+
+		device_handler_status_dev_info(conf->dc->handler,
+			conf->dc->device,
+			_("Probing from base %s"),
+			pb_url_to_string(pxe_base_url));
 
 		pxe_load_next_filename(conf);
 	}
