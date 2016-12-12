@@ -952,7 +952,8 @@ int device_handler_dhcp(struct device_handler *handler,
 	struct discover_context *ctx;
 
 	device_handler_status_dev_info(handler, dev,
-			_("Processing dhcp event"));
+			_("Processing DHCP lease response (ip: %s)"),
+			event_get_param(event, "ip"));
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
