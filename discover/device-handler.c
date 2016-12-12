@@ -871,21 +871,17 @@ int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev)
 {
 	struct discover_context *ctx;
-	struct status *status;
 	int rc;
 
-	status = talloc_zero(handler, struct status);
-	status->type = STATUS_INFO;
 	/*
 	 * TRANSLATORS: this string will be passed the type and identifier
 	 * of the device. For example, the first parameter could be "Disk",
 	 * (which will be translated accordingly) and the second a Linux device
 	 * identifier like 'sda1' (which will not be translated)
 	 */
-	status->message = talloc_asprintf(status, _("Processing %s device %s"),
+	device_handler_status_info(handler, _("Processing %s device %s"),
 				device_type_display_name(dev->device->type),
 				dev->device->id);
-	device_handler_status(handler, status);
 
 	process_boot_option_queue(handler);
 
@@ -911,11 +907,9 @@ out:
 	 * TRANSLATORS: the format specifier in this string is a Linux
 	 * device identifier, like 'sda1'
 	 */
-	status->message = talloc_asprintf(status,_("Processing %s complete"),
+	device_handler_status_info(handler, _("Processing %s complete"),
 				dev->device->id);
-	device_handler_status(handler, status);
 
-	talloc_free(status);
 	talloc_unlink(handler, ctx);
 
 	return 0;
@@ -926,17 +920,13 @@ int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event)
 {
 	struct discover_context *ctx;
-	struct status *status;
 
-	status = talloc_zero(handler, struct status);
-	status->type = STATUS_INFO;
 	/*
 	 * TRANSLATORS: this format specifier will be the name of a network
 	 * device, like 'eth0'.
 	 */
-	status->message = talloc_asprintf(status, _("Processing dhcp event on %s"),
+	device_handler_status_info(handler, _("Processing dhcp event on %s"),
 				dev->device->id);
-	device_handler_status(handler, status);
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
@@ -951,11 +941,9 @@ int device_handler_dhcp(struct device_handler *handler,
 	 * TRANSLATORS: this format specifier will be the name of a network
 	 * device, like 'eth0'.
 	 */
-	status->message = talloc_asprintf(status,_("Processing %s complete"),
+	device_handler_status_info(handler, _("Processing %s complete"),
 				dev->device->id);
-	device_handler_status(handler, status);
 
-	talloc_free(status);
 	talloc_unlink(handler, ctx);
 
 	return 0;
@@ -998,8 +986,6 @@ void device_handler_boot(struct device_handler *handler,
 
 void device_handler_cancel_default(struct device_handler *handler)
 {
-	struct status status;
-
 	if (handler->timeout_waiter)
 		waiter_remove(handler->timeout_waiter);
 
@@ -1020,10 +1006,7 @@ void device_handler_cancel_default(struct device_handler *handler)
 
 	handler->default_boot_option = NULL;
 
-	status.type = STATUS_INFO;
-	status.message = _("Default boot cancelled");
-
-	device_handler_status(handler, &status);
+	device_handler_status_info(handler, _("Default boot cancelled"));
 }
 
 void device_handler_update_config(struct device_handler *handler,
@@ -1115,18 +1098,13 @@ void device_handler_process_url(struct device_handler *handler,
 {
 	struct discover_context *ctx;
 	struct discover_device *dev;
-	struct status *status;
 	struct pb_url *pb_url;
 	struct event *event;
 	struct param *param;
 
-	status = talloc(handler, struct status);
-	status->type = STATUS_ERROR;
-
 	if (!handler->network) {
-		status->message = talloc_asprintf(handler,
-					_("No network configured"));
-		goto msg;
+		device_handler_status_err(handler, _("No network configured"));
+		return;
 	}
 
 	event = talloc(handler, struct event);
@@ -1155,9 +1133,8 @@ void device_handler_process_url(struct device_handler *handler,
 
 	pb_url = pb_url_parse(event, event->params->value);
 	if (!pb_url || (pb_url->scheme != pb_url_file && !pb_url->host)) {
-		status->message = talloc_asprintf(handler,
-					_("Invalid config URL!"));
-		goto msg;
+		device_handler_status_err(handler, _("Invalid config URL!"));
+		return;
 	}
 
 	if (pb_url->scheme == pb_url_file)
@@ -1166,10 +1143,10 @@ void device_handler_process_url(struct device_handler *handler,
 		event->device = device_from_addr(event, pb_url);
 
 	if (!event->device) {
-		status->message = talloc_asprintf(status,
+		device_handler_status_err(handler,
 					_("Unable to route to host %s"),
 					pb_url->host);
-		goto msg;
+		return;
 	}
 
 	dev = discover_device_create(handler, mac, event->device);
@@ -1184,13 +1161,6 @@ void device_handler_process_url(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 	talloc_unlink(handler, ctx);
-
-	status->type = STATUS_INFO;
-	status->message = talloc_asprintf(status, _("Config file %s parsed"),
-					pb_url->file);
-msg:
-	device_handler_status(handler, status);
-	talloc_free(status);
 }
 
 #ifndef PETITBOOT_TEST
