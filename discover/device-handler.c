@@ -940,8 +940,6 @@ int device_handler_discover(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 out:
-	device_handler_status_dev_info(handler, dev, _("Processing complete"));
-
 	talloc_unlink(handler, ctx);
 
 	return 0;
@@ -964,8 +962,6 @@ int device_handler_dhcp(struct device_handler *handler,
 	iterate_parsers(ctx);
 
 	device_handler_discover_context_commit(handler, ctx);
-
-	device_handler_status_dev_info(handler, dev, _("Processing complete"));
 
 	talloc_unlink(handler, ctx);
 
