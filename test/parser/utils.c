@@ -93,6 +93,7 @@ static struct discover_context *test_create_context(struct parser_test *test)
 	list_init(&ctx->boot_options);
 	ctx->device = test_create_device_simple(test);
 	ctx->test_data = test;
+	ctx->handler = test->handler;
 	device_handler_add_device(test->handler, ctx->device);
 
 	return ctx;

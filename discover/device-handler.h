@@ -54,12 +54,12 @@ struct discover_boot_option {
 
 
 struct discover_context {
+	struct device_handler	*handler;
 	struct parser		*parser;
 	struct event		*event;
 	struct discover_device	*device;
 	struct list		boot_options;
 	struct pb_url		*conf_url;
-	struct network		*network;
 	void			*test_data;
 };
 
@@ -79,6 +79,8 @@ void device_handler_destroy(struct device_handler *devices);
 int device_handler_get_device_count(const struct device_handler *handler);
 const struct discover_device *device_handler_get_device(
 	const struct device_handler *handler, unsigned int index);
+struct network *device_handler_get_network(
+		const struct device_handler *handler);
 
 struct discover_device *discover_device_create(struct device_handler *handler,
 		const char *uuid, const char *id);

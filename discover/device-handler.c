@@ -114,6 +114,12 @@ const struct discover_device *device_handler_get_device(
 	return handler->devices[index];
 }
 
+struct network *device_handler_get_network(
+		const struct device_handler *handler)
+{
+	return handler->network;
+}
+
 struct discover_boot_option *discover_boot_option_create(
 		struct discover_context *ctx,
 		struct discover_device *device)
@@ -788,8 +794,8 @@ struct discover_context *device_handler_discover_context_create(
 	struct discover_context *ctx;
 
 	ctx = talloc_zero(handler, struct discover_context);
+	ctx->handler = handler;
 	ctx->device = device;
-	ctx->network = handler->network;
 	list_init(&ctx->boot_options);
 
 	return ctx;

@@ -11,6 +11,7 @@
 #include <file/file.h>
 #include <i18n/i18n.h>
 
+#include "device-handler.h"
 #include "parser.h"
 #include "parser-conf.h"
 #include "parser-utils.h"
@@ -108,8 +109,9 @@ static void pxe_process_sysappend(struct discover_context *ctx,
 		return;
 
 	if (val & 0x2) {
-		uint8_t *mac = find_mac_by_name(ctx, ctx->network,
-					event->device);
+		uint8_t *mac = find_mac_by_name(ctx,
+				device_handler_get_network(ctx->handler),
+				event->device);
 		str = pxe_sysappend_mac(ctx, mac);
 		if (str) {
 			pxe_append_string(opt, str);
