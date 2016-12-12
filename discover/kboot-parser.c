@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <i18n/i18n.h>
 
 #include "log/log.h"
 #include "talloc/talloc.h"
@@ -188,6 +189,9 @@ static int kboot_parse(struct discover_context *dc)
 			continue;
 
 		conf_parse_buf(conf, buf, len);
+		device_handler_status_dev_info(dc->handler, dc->device,
+				_("Parsed kboot configuration from %s"),
+				*filename);
 		talloc_free(buf);
 	}
 

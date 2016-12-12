@@ -1,6 +1,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <i18n/i18n.h>
 
 #include <talloc/talloc.h>
 #include <url/url.h>
@@ -103,6 +104,9 @@ static int grub2_parse(struct discover_context *dc)
 
 		parser = grub2_parser_create(dc);
 		grub2_parser_parse(parser, *filename, buf, len);
+		device_handler_status_dev_info(dc->handler, dc->device,
+				_("Parsed GRUB configuration from %s"),
+				*filename);
 		talloc_free(buf);
 		talloc_free(parser);
 		break;
