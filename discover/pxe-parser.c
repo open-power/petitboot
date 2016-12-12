@@ -282,8 +282,9 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	 * TRANSLATORS: the format specifier in this string in an IP address,
 	 * eg. 192.168.1.1
 	 */
-	device_handler_status_info(handler, _("pxe: parsed config for %s"),
-					conf->dc->conf_url->host);
+	device_handler_status_dev_info(handler, conf->dc->device,
+			_("Parsed PXE config from %s"),
+			conf->dc->conf_url->host);
 
 	talloc_free(buf);
 out_clean:

@@ -905,15 +905,14 @@ int device_handler_discover(struct device_handler *handler,
 	struct discover_context *ctx;
 	int rc;
 
-	/*
-	 * TRANSLATORS: this string will be passed the type and identifier
-	 * of the device. For example, the first parameter could be "Disk",
-	 * (which will be translated accordingly) and the second a Linux device
-	 * identifier like 'sda1' (which will not be translated)
-	 */
-	device_handler_status_info(handler, _("Processing %s device %s"),
-				device_type_display_name(dev->device->type),
-				dev->device->id);
+	device_handler_status_dev_info(handler, dev,
+		/*
+		 * TRANSLATORS: this string will be passed the type of the
+		 * device (eg "disk" or "network"), which will be translated
+		 * accordingly.
+		 */
+		_("Processing new %s device"),
+		device_type_display_name(dev->device->type));
 
 	process_boot_option_queue(handler);
 
@@ -935,12 +934,7 @@ int device_handler_discover(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 out:
-	/*
-	 * TRANSLATORS: the format specifier in this string is a Linux
-	 * device identifier, like 'sda1'
-	 */
-	device_handler_status_info(handler, _("Processing %s complete"),
-				dev->device->id);
+	device_handler_status_dev_info(handler, dev, _("Processing complete"));
 
 	talloc_unlink(handler, ctx);
 
@@ -953,12 +947,8 @@ int device_handler_dhcp(struct device_handler *handler,
 {
 	struct discover_context *ctx;
 
-	/*
-	 * TRANSLATORS: this format specifier will be the name of a network
-	 * device, like 'eth0'.
-	 */
-	device_handler_status_info(handler, _("Processing dhcp event on %s"),
-				dev->device->id);
+	device_handler_status_dev_info(handler, dev,
+			_("Processing dhcp event"));
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
@@ -969,12 +959,7 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	device_handler_discover_context_commit(handler, ctx);
 
-	/*
-	 * TRANSLATORS: this format specifier will be the name of a network
-	 * device, like 'eth0'.
-	 */
-	device_handler_status_info(handler, _("Processing %s complete"),
-				dev->device->id);
+	device_handler_status_dev_info(handler, dev, _("Processing complete"));
 
 	talloc_unlink(handler, ctx);
 
