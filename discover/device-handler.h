@@ -102,6 +102,10 @@ void device_handler_status_info(struct device_handler *handler,
 		const char *fmt, ...);
 void device_handler_status_err(struct device_handler *handler,
 		const char *fmt, ...);
+void device_handler_status_dev_info(struct device_handler *handler,
+		struct discover_device *dev, const char *fmt, ...);
+void device_handler_status_dev_err(struct device_handler *handler,
+		struct discover_device *dev, const char *fmt, ...);
 
 struct discover_context *device_handler_discover_context_create(
 		struct device_handler *handler,

@@ -429,6 +429,38 @@ static void _device_handler_vstatus(struct device_handler *handler,
 	talloc_free(status.message);
 }
 
+static void _device_handler_vdevstatus(struct device_handler *handler,
+		struct discover_device *device, enum status_type type,
+		const char *fmt, va_list ap)
+{
+	char *msg;
+
+	msg = talloc_asprintf(handler, "[%s] %s",
+			device ? device->device->id : "unknown", fmt);
+	_device_handler_vstatus(handler, type, msg, ap);
+	talloc_free(msg);
+}
+
+void device_handler_status_dev_info(struct device_handler *handler,
+		struct discover_device *dev, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	_device_handler_vdevstatus(handler, dev, STATUS_INFO, fmt, ap);
+	va_end(ap);
+}
+
+void device_handler_status_dev_err(struct device_handler *handler,
+		struct discover_device *dev, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	_device_handler_vdevstatus(handler, dev, STATUS_ERROR, fmt, ap);
+	va_end(ap);
+}
+
 void device_handler_status_info(struct device_handler *handler,
 		const char *fmt, ...)
 {
