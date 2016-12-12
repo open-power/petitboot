@@ -251,7 +251,7 @@ static void run_boot_hooks(struct boot_task *task)
 		return;
 
 	update_status(task->status_fn, task->status_arg, STATUS_INFO,
-			_("running boot hooks"));
+			_("Running boot hooks"));
 
 	boot_hook_setenv(task);
 
@@ -442,22 +442,22 @@ static void boot_process(struct load_url_result *result, void *data)
 	run_boot_hooks(task);
 
 	update_status(task->status_fn, task->status_arg, STATUS_INFO,
-			_("performing kexec_load"));
+			_("Performing kexec load"));
 
 	rc = kexec_load(task);
 	if (rc == KEXEC_LOAD_DECRYPTION_FALURE) {
 		update_status(task->status_fn, task->status_arg,
-				STATUS_ERROR, _("decryption failed"));
+				STATUS_ERROR, _("Decryption failed"));
 	}
 	else if (rc == KEXEC_LOAD_SIGNATURE_FAILURE) {
 		update_status(task->status_fn, task->status_arg,
 				STATUS_ERROR,
-				_("signature verification failed"));
+				_("Signature verification failed"));
 	}
 	else if (rc == KEXEC_LOAD_SIG_SETUP_INVALID) {
 		update_status(task->status_fn, task->status_arg,
 				STATUS_ERROR,
-				_("invalid signature configuration"));
+				_("Invalid signature configuration"));
 	}
 	else if (rc) {
 		update_status(task->status_fn, task->status_arg,
@@ -479,7 +479,7 @@ no_load:
 
 	if (!rc) {
 		update_status(task->status_fn, task->status_arg,
-				STATUS_INFO, _("performing kexec reboot"));
+				STATUS_INFO, _("Performing kexec reboot"));
 
 		rc = kexec_reboot(task);
 		if (rc) {
@@ -526,7 +526,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		boot_desc = _("(unknown)");
 
 	update_status(status_fn, status_arg, STATUS_INFO,
-			_("Booting %s."), boot_desc);
+			_("Booting %s"), boot_desc);
 
 	if (cmd && cmd->boot_image_file) {
 		image = pb_url_parse(opt, cmd->boot_image_file);
@@ -591,33 +591,34 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	}
 
 	/* start async loads for boot resources */
-	rc = start_url_load(boot_task, "kernel image", image, &boot_task->image)
-	  || start_url_load(boot_task, "initrd", initrd, &boot_task->initrd)
-	  || start_url_load(boot_task, "dtb", dtb, &boot_task->dtb);
+	rc = start_url_load(boot_task, _("kernel image"),
+			image, &boot_task->image)
+	  || start_url_load(boot_task, _("initrd"), initrd, &boot_task->initrd)
+	  || start_url_load(boot_task, _("dtb"), dtb, &boot_task->dtb);
 
 	if (boot_task->verify_signature) {
 		/* Generate names of associated signature files and load */
 		if (image) {
 			image_sig = gpg_get_signature_url(ctx, image);
 			rc |= start_url_load(boot_task,
-				"kernel image signature", image_sig,
+				_("kernel image signature"), image_sig,
 				&boot_task->image_signature);
 		}
 		if (initrd) {
 			initrd_sig = gpg_get_signature_url(ctx, initrd);
-			rc |= start_url_load(boot_task, "initrd signature",
+			rc |= start_url_load(boot_task, _("initrd signature"),
 				initrd_sig, &boot_task->initrd_signature);
 		}
 		if (dtb) {
 			dtb_sig = gpg_get_signature_url(ctx, dtb);
-			rc |= start_url_load(boot_task, "dtb signature",
+			rc |= start_url_load(boot_task, _("dtb signature"),
 				dtb_sig, &boot_task->dtb_signature);
 		}
 	}
 
 	if (boot_task->verify_signature || boot_task->decrypt_files) {
 		rc |= start_url_load(boot_task,
-			"kernel command line signature", cmdline_sig,
+			_("kernel command line signature"), cmdline_sig,
 			&boot_task->cmdline_signature);
 	}
 
