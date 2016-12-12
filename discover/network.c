@@ -8,6 +8,7 @@
 #include <linux/if.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#include <i18n/i18n.h>
 
 #include <log/log.h>
 #include <list/list.h>
@@ -313,7 +314,8 @@ static void udhcpc_process_exit(struct process *process)
 	process_release(process);
 }
 
-static void configure_interface_dhcp(struct interface *interface)
+static void configure_interface_dhcp(struct network *network,
+		struct interface *interface)
 {
 	const struct platform *platform;
 	char pidfile[256], id[10];
@@ -330,6 +332,9 @@ static void configure_interface_dhcp(struct interface *interface)
 		"-x", id, /* [11,12] - dhcp client identifier */
 		NULL,
 	};
+
+	device_handler_status_dev_info(network->handler, interface->dev,
+			_("Configuring with DHCP"));
 
 	snprintf(pidfile, sizeof(pidfile), "%s/udhcpc-%s.pid",
 			PIDFILE_BASE, interface->name);
@@ -362,6 +367,10 @@ static void configure_interface_static(struct network *network,
 		const struct interface_config *config)
 {
 	int rc;
+
+	device_handler_status_dev_info(network->handler, interface->dev,
+			_("Configuring with static address (ip: %s)"),
+			config->static_config.address);
 
 	rc = process_run_simple(interface, pb_system_apps.ip,
 			"address", "add", config->static_config.address,
@@ -470,7 +479,7 @@ static void configure_interface(struct network *network,
 	pb_log("network: configuring interface %s\n", interface->name);
 
 	if (!config || config->method == CONFIG_METHOD_DHCP) {
-		configure_interface_dhcp(interface);
+		configure_interface_dhcp(network, interface);
 
 	} else if (config->method == CONFIG_METHOD_STATIC) {
 		configure_interface_static(network, interface, config);
