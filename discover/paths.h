@@ -30,6 +30,7 @@ struct load_url_result {
 
 		LOAD_CANCELLED,
 	} status;
+	struct pb_url		*url;
 	const char		*local;
 	bool			cleanup_local;
 	struct load_task	*task;

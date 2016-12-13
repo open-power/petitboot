@@ -353,6 +353,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		return NULL;
 
 	result->local = talloc_strdup(result, tmp);
+	result->url = url;
 	if (rc < 0)
 		result->status = LOAD_ERROR;
 	else

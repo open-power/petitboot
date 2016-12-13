@@ -383,6 +383,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 	task->async = async_cb != NULL;
 	task->result = talloc_zero(ctx, struct load_url_result);
 	task->result->task = task;
+	task->result->url = url;
 	task->process = process_create(task);
 	if (task->async) {
 		task->async_cb = async_cb;
