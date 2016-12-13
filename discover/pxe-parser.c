@@ -296,7 +296,7 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	 */
 	device_handler_status_dev_info(handler, conf->dc->device,
 			_("Parsed PXE config from %s"),
-			pb_url_to_string(conf->dc->conf_url));
+			pb_url_to_string(result->url));
 
 	talloc_free(buf);
 out_clean:
