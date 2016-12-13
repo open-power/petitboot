@@ -250,18 +250,29 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	if (!data)
 		return;
 
+	handler = talloc_parent(conf);
+
 	if (result && result->status == LOAD_OK)
 		rc = read_file(conf, result->local, &buf, &len);
 	if (!result || result->status != LOAD_OK || rc) {
 		/* This load failed so try the next available filename */
 		info = conf->parser_info;
-		if (!info->pxe_conf_files)
+		if (!info->pxe_conf_files) {
+			device_handler_status_dev_err(handler,
+					conf->dc->device,
+					_("Failed to download %s"),
+					pb_url_to_string(result->url));
+
 			return;
+		}
 
 		info->current++;
 		pxe_load_next_filename(conf);
 		if (info->pxe_conf_files[info->current] == NULL) {
 			/* Nothing left to try */
+			device_handler_status_dev_err(handler,
+					conf->dc->device,
+					_("PXE autoconfiguration failed"));
 			goto out_clean;
 		}
 		return;
@@ -277,7 +288,6 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 
 	/* We may be called well after the original caller of iterate_parsers(),
 	 * commit any new boot options ourselves */
-	handler = talloc_parent(conf);
 	device_handler_discover_context_commit(handler, conf->dc);
 
 	/*
