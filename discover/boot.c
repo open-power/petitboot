@@ -309,12 +309,19 @@ static int check_load(struct boot_task *task, const char *name,
 {
 	if (!result)
 		return 0;
-	if (result->status != LOAD_ERROR)
+
+	if (result->status != LOAD_ERROR) {
+		update_status(task->status_fn, task->status_arg,
+				STATUS_ERROR,
+				_("Loaded %s from %s"), name,
+				pb_url_to_string(result->url));
 		return 0;
+	}
 
 	update_status(task->status_fn, task->status_arg,
 			STATUS_ERROR,
-			_("Couldn't load %s"), name);
+			_("Couldn't load %s from %s"), name,
+			pb_url_to_string(result->url));
 	return -1;
 }
 
