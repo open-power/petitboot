@@ -14,6 +14,7 @@
 #include <process/process.h>
 #include <url/url.h>
 #include <log/log.h>
+#include "i18n/i18n.h"
 
 #include "paths.h"
 #include "device-handler.h"
@@ -108,6 +109,10 @@ static void load_url_process_exit(struct process *process)
 		result->status = LOAD_ERROR;
 		load_url_result_cleanup_local(result);
 	}
+
+	if (result->status == LOAD_OK && process->stdout_data)
+		device_handler_status_info(process->stdout_data,
+				_("Download complete: %s"), task->url->file);
 
 	/* The load callback may well free the ctx, which was the
 	 * talloc parent of the task. Therefore, we want to do our cleanup
