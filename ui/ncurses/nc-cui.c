@@ -1007,8 +1007,7 @@ static int cui_server_wait(void *arg)
 		nc_scr_status_printf(cui->current,
 				     "Info: Waiting for device discovery");
 	} else {
-		nc_scr_status_printf(cui->current,
-				     "Info: Connected to pb-discover!");
+		nc_scr_status_free(cui->current);
 		talloc_steal(cui, cui->client);
 
 		if (cui->has_input) {
