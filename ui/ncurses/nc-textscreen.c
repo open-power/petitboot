@@ -41,14 +41,15 @@ struct text_screen *text_screen_from_scr(struct nc_scr *scr)
 
 void text_screen_draw(struct text_screen *screen)
 {
-	int max_y, i;
+	int max_y, max_x, i;
 
 	max_y = getmaxy(screen->scr.sub_ncw);
+	max_x = getmaxx(screen->scr.sub_ncw) - 1;
 
 	max_y = min(max_y, screen->scroll_y + screen->n_lines);
 
 	for (i = screen->scroll_y; i < max_y; i++)
-		mvwaddstr(screen->scr.sub_ncw, i, 1, screen->lines[i]);
+		mvwaddnstr(screen->scr.sub_ncw, i, 1, screen->lines[i], max_x);
 
 	wrefresh(screen->scr.sub_ncw);
 }
@@ -56,6 +57,7 @@ void text_screen_draw(struct text_screen *screen)
 static void text_screen_scroll(struct text_screen *screen, int key)
 {
 	int win_lines = getmaxy(screen->scr.sub_ncw);
+	int win_cols = getmaxx(screen->scr.sub_ncw) - 1;
 	int delta;
 
 	if (key == KEY_UP)
@@ -74,11 +76,12 @@ static void text_screen_scroll(struct text_screen *screen, int key)
 	wscrl(screen->scr.sub_ncw, delta);
 
 	if (delta > 0) {
-		mvwaddstr(screen->scr.sub_ncw, win_lines - 1, 1,
-				screen->lines[screen->scroll_y+win_lines-1]);
+		mvwaddnstr(screen->scr.sub_ncw, win_lines - 1, 1,
+				screen->lines[screen->scroll_y+win_lines-1],
+				win_cols);
 	} else if (delta < 0) {
-		mvwaddstr(screen->scr.sub_ncw, 0, 1,
-				screen->lines[screen->scroll_y]);
+		mvwaddnstr(screen->scr.sub_ncw, 0, 1,
+				screen->lines[screen->scroll_y], win_cols);
 	}
 
 	wrefresh(screen->scr.sub_ncw);
@@ -135,7 +138,7 @@ static int text_screen_fold_cb(void *arg, const char *buf, int len)
 
 void text_screen_set_text(struct text_screen *screen, const char *text)
 {
-	fold_text(text, getmaxx(screen->scr.sub_ncw), text_screen_fold_cb,
+	fold_text(text, getmaxx(screen->scr.sub_ncw) - 1, text_screen_fold_cb,
 			screen);
 }
 
