@@ -714,7 +714,9 @@ static void cui_update_status(struct status *status, void *arg)
 
 	statuslog_append_steal(cui, cui->statuslog, status);
 
-	nc_scr_status_printf(cui->current, "%s", status->message);
+	/* Ignore status messages from the backlog */
+	if (!status->backlog)
+		nc_scr_status_printf(cui->current, "%s", status->message);
 }
 
 static void cui_update_mm_title(struct cui *cui)

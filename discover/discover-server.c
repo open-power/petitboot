@@ -28,6 +28,7 @@ struct discover_server {
 	struct waitset *waitset;
 	struct waiter *waiter;
 	struct list clients;
+	struct list status;
 	struct device_handler *device_handler;
 };
 
@@ -282,6 +283,7 @@ static int discover_server_process_message(void *arg)
 static int discover_server_process_connection(void *arg)
 {
 	struct discover_server *server = arg;
+	struct statuslog_entry *entry;
 	int fd, rc, i, n_devices;
 	struct client *client;
 
@@ -333,6 +335,10 @@ static int discover_server_process_connection(void *arg)
 		}
 	}
 
+	/* send status backlog to client */
+	list_for_each_entry(&server->status, entry, list)
+		write_boot_status_message(server, client, entry->status);
+
 	return 0;
 }
 
@@ -368,7 +374,25 @@ void discover_server_notify_device_remove(struct discover_server *server,
 void discover_server_notify_boot_status(struct discover_server *server,
 		struct status *status)
 {
+	struct statuslog_entry *entry;
 	struct client *client;
+
+	/* Duplicate the status struct to add to the backlog */
+	entry = talloc(server, struct statuslog_entry);
+	if (!entry) {
+		pb_log("Failed to allocated saved status!\n");
+	} else {
+		entry->status = talloc(entry, struct status);
+		if (entry->status) {
+			entry->status->type = status->type;
+			entry->status->message = talloc_strdup(entry->status,
+							       status->message);
+			entry->status->backlog = true;
+			list_add_tail(&server->status, &entry->list);
+		} else {
+			talloc_free(entry);
+		}
+	}
 
 	list_for_each_entry(&server->clients, client, list)
 		write_boot_status_message(server, client, status);
@@ -410,6 +434,7 @@ struct discover_server *discover_server_init(struct waitset *waitset)
 	server->waiter = NULL;
 	server->waitset = waitset;
 	list_init(&server->clients);
+	list_init(&server->status);
 
 	unlink(PB_SOCKET_PATH);
 

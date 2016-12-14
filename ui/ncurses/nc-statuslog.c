@@ -33,11 +33,6 @@
 
 static const int max_status_entry = 10000;
 
-struct statuslog_entry {
-	struct status		*status;
-	struct list_item	list;
-};
-
 struct statuslog {
 	struct list		status;
 	int			n_status;

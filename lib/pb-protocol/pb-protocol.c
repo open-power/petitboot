@@ -217,8 +217,9 @@ int pb_protocol_boot_len(const struct boot_command *boot)
 
 int pb_protocol_boot_status_len(const struct status *status)
 {
-	return  4 +
+	return  4 +	/* type */
 		4 + optional_strlen(status->message) +
+		4 +	/* backlog */
 		4;
 }
 
@@ -409,6 +410,9 @@ int pb_protocol_serialise_boot_status(const struct status *status,
 	pos += sizeof(uint32_t);
 
 	pos += pb_protocol_serialise_string(pos, status->message);
+
+	*(bool *)pos = __cpu_to_be32(status->backlog);
+	pos += sizeof(bool);
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -846,6 +850,10 @@ int pb_protocol_deserialise_boot_status(struct status *status,
 	/* message string */
 	if (read_string(status, &pos, &len, &status->message))
 		goto out;
+
+	/* backlog */
+	status->backlog = *(bool *)pos;
+	pos += sizeof(status->backlog);
 
 	rc = 0;
 

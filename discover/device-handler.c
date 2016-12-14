@@ -442,6 +442,7 @@ static void _device_handler_vstatus(struct device_handler *handler,
 
 	status.type = type;
 	status.message = talloc_vasprintf(handler, fmt, ap);
+	status.backlog = false;
 
 	device_handler_status(handler, &status);
 
@@ -617,6 +618,7 @@ static void countdown_status(struct device_handler *handler,
 	status.type = STATUS_INFO;
 	status.message = talloc_asprintf(handler,
 			_("Booting in %d sec: %s"), sec, opt->option->name);
+	status.backlog = false;
 
 	device_handler_status(handler, &status);
 

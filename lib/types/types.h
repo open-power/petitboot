@@ -76,6 +76,12 @@ struct status {
 		STATUS_ERROR,
 	} type;
 	char	*message;
+	bool	backlog;
+};
+
+struct statuslog_entry {
+	struct status		*status;
+	struct list_item	list;
 };
 
 struct interface_info {

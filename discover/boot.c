@@ -45,6 +45,7 @@ static void __attribute__((format(__printf__, 4, 5))) update_status(
 	va_end(ap);
 
 	status.type = type;
+	status.backlog = false;
 
 	pb_debug("boot status: [%d] %s\n", type, status.message);
 
