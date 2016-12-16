@@ -46,6 +46,14 @@ enum default_priority {
 	DEFAULT_PRIORITY_DISABLED	= 0xff,
 };
 
+struct progress_info {
+	unsigned int			percentage;
+	unsigned long			size;		/* size in bytes */
+
+	const struct process_info	*procinfo;
+	struct list_item	list;
+};
+
 struct device_handler {
 	struct discover_server	*server;
 	int			dry_run;
@@ -72,6 +80,9 @@ struct device_handler {
 
 	struct boot_task	*pending_boot;
 	bool			pending_boot_is_default;
+
+	struct list		progress;
+	unsigned int		n_progress;
 };
 
 static int mount_device(struct discover_device *dev);
@@ -314,6 +325,8 @@ struct device_handler *device_handler_init(struct discover_server *server,
 
 	list_init(&handler->unresolved_boot_options);
 
+	list_init(&handler->progress);
+
 	/* set up our mount point base */
 	pb_mkdir_recursive(mount_base());
 
@@ -485,6 +498,110 @@ void device_handler_status_err(struct device_handler *handler,
 	va_start(ap, fmt);
 	_device_handler_vstatus(handler, STATUS_ERROR, fmt, ap);
 	va_end(ap);
+}
+
+void device_handler_status_download(struct device_handler *handler,
+		const struct process_info *procinfo,
+		unsigned int percentage, unsigned int size, char suffix)
+{
+	struct progress_info *p, *progress = NULL;
+	uint64_t current_converted, current = 0;
+	const char *units = " kMGTP";
+	unsigned long size_bytes;
+	char *update = NULL;
+	double total = 0;
+	unsigned int i;
+	int unit = 0;
+
+	list_for_each_entry(&handler->progress, p, list)
+		if (p->procinfo == procinfo)
+			progress = p;
+
+	if (!progress) {
+		pb_log("Registering new progress struct\n");
+		progress = talloc_zero(handler, struct progress_info);
+		if (!progress) {
+			pb_log("Failed to allocate room for progress struct\n");
+			return;
+		}
+		progress->procinfo = procinfo;
+		list_add(&handler->progress, &progress->list);
+		handler->n_progress++;
+	}
+
+	size_bytes = size;
+	for (i = 0; i < strlen(units); i++) {
+		if (units[i] == suffix)
+			break;
+	}
+
+	if (i >= strlen(units)) {
+	    pb_log("Couldn't recognise suffix '%c'\n", suffix);
+	    size_bytes = 0;
+	} else {
+		while (i--)
+			size_bytes <<= 10;
+	}
+
+	progress->percentage = percentage;
+	progress->size = size_bytes;
+
+	/*
+	 * Aggregate the info we have and update status. If a progress struct
+	 * has zero for both percentage and size we assume progress information
+	 * is unavailable and fall back to a generic progress message.
+	 */
+	list_for_each_entry(&handler->progress, p, list) {
+		uint64_t c;
+		double t;
+		if (!p->percentage || !p->size) {
+			update = talloc_asprintf(handler,
+					_("%u downloads in progress..."),
+					handler->n_progress);
+			current = total = 0;
+			break;
+		}
+
+		c = p->size;
+		t = (100 * c) / p->percentage;
+
+		current += c;
+		total += t;
+	}
+
+	if (total) {
+		current_converted = current;
+		while (current_converted >= 1000) {
+			current_converted >>= 10;
+			unit++;
+		}
+		update = talloc_asprintf(handler,
+				_("%u %s downloading: %.0f%% - %lu%cB"),
+				handler->n_progress,
+				ngettext("item", "items", handler->n_progress),
+				(current / total) * 100, current_converted,
+				units[unit]);
+	}
+
+	if (!update) {
+		pb_log("%s: failed to allocate new status\n", __func__);
+	} else {
+		device_handler_status_info(handler, "%s\n", update);
+		talloc_free(update);
+	}
+}
+
+void device_handler_status_download_remove(struct device_handler *handler,
+		struct process_info *procinfo)
+{
+	struct progress_info *p, *tmp;
+
+	list_for_each_entry_safe(&handler->progress, p, tmp, list)
+		if (p->procinfo == procinfo) {
+			list_remove(&p->list);
+			talloc_free(p);
+			handler->n_progress--;
+		}
 }
 
 static void device_handler_boot_status_cb(void *arg, struct status *status)

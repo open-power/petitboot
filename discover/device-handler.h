@@ -11,6 +11,7 @@ struct discover_device;
 struct discover_server;
 struct boot_option;
 struct boot_command;
+struct process_info;
 struct event;
 struct device;
 struct waitset;
@@ -108,6 +109,11 @@ void device_handler_status_dev_info(struct device_handler *handler,
 		struct discover_device *dev, const char *fmt, ...);
 void device_handler_status_dev_err(struct device_handler *handler,
 		struct discover_device *dev, const char *fmt, ...);
+void device_handler_status_download(struct device_handler *handler,
+		const struct process_info *procinfo,
+		unsigned int percentage, unsigned int size, char suffix);
+void device_handler_status_download_remove(struct device_handler *handler,
+		struct process_info *procinfo);
 
 struct discover_context *device_handler_discover_context_create(
 		struct device_handler *handler,
