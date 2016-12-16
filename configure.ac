@@ -242,7 +242,11 @@ AC_ARG_ENABLE(
 	[],
 	[enable_busybox=no]
 )
-#AM_CONDITIONAL([ENABLE_BUSYBOX], [test "x$enable_busybox" = "xyes"])
+AM_CONDITIONAL([ENABLE_BUSYBOX], [test "x$enable_busybox" = "xyes"])
+AS_IF([test "x$enable_busybox" = "xyes"],
+      [AC_DEFINE(WITH_BUSYBOX, 1, [Busybox environment enabled])],
+      []
+)
 
 AC_ARG_ENABLE(
 	[mtd],

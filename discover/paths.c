@@ -16,6 +16,7 @@
 #include <log/log.h>
 
 #include "paths.h"
+#include "device-handler.h"
 
 #define DEVICE_MOUNT_BASE (LOCAL_STATE_DIR "/petitboot/mnt")
 
@@ -27,6 +28,15 @@ struct load_task {
 	load_url_complete	async_cb;
 	void			*async_data;
 };
+
+static inline bool have_busybox(void)
+{
+#ifdef WITH_BUSYBOX
+	return true;
+#else
+	return false;
+#endif
+}
 
 const char *mount_base(void)
 {
@@ -109,6 +119,66 @@ static void load_url_process_exit(struct process *process)
 
 	cb(result, data);
 }
+
+/*
+ * Callback to retrieve progress information from Busybox utilities.
+ * Busybox utilities use a common progress bar format which progress percentage
+ * and current size can be can be parsed from.
+ */
+static int busybox_progress_cb(void *arg)
+{
+	const char *busybox_fmt = "%*s %u%*[%* |]%u%c %*u:%*u:%*u ETA\n";
+	struct process_info *procinfo = arg;
+	char *n, *s, suffix, *line = NULL;
+	struct device_handler *handler;
+	unsigned int percentage, size;
+	struct process *p;
+	int rc;
+
+	if (!arg)
+		return -1;
+
+	p = procinfo_get_process(procinfo);
+	handler = p->stdout_data;
+
+	rc = process_stdout_custom(procinfo, &line);
+
+	if (rc) {
+		/* Unregister ourselves from progress tracking */
+		device_handler_status_download_remove(handler, procinfo);
+	}
+
+	if (rc || !line)
+		return rc;
+
+	rc = sscanf(line, busybox_fmt, &percentage, &size, &suffix);
+
+	/*
+	 * Many unrecognised lines are partial updates. If we see a partial
+	 * line with a newline character, see if we can match a valid line
+	 * at the end of stdout_buf
+	 */
+	if (rc != 3) {
+		n = strchr(line, '\n');
+		if (n)
+			for (s = n - 1; s >= p->stdout_buf; s--)
+				if (*s == '\n') {
+					rc = sscanf(s + 1, busybox_fmt,
+						&percentage, &size, &suffix);
+					break;
+				}
+	}
+
+	if (rc != 3)
+		percentage = size = 0;
+
+	device_handler_status_download(handler, procinfo,
+			percentage, size, suffix);
+
+	return 0;
+}
+
+
 
 static void load_process_to_local_file(struct load_task *task,
 		const char **argv, int argv_local_idx)
@@ -300,8 +370,9 @@ static void load_tftp(struct load_task *task)
 }
 
 enum wget_flags {
-	wget_empty = 0,
-	wget_no_check_certificate = 1,
+	wget_empty			= 0x1,
+	wget_no_check_certificate 	= 0x2,
+	wget_verbose			= 0x4,
 };
 
 /**
@@ -324,10 +395,16 @@ static void load_wget(struct load_task *task, int flags)
 	};
 	int i;
 
+	if (task->process->stdout_cb)
+		flags |= wget_verbose;
+
 	i = 3;
-#if !defined(DEBUG)
-	argv[i++] = "--quiet";
+#if defined(DEBUG)
+	flags |= wget_verbose;
 #endif
+	if ((flags & wget_verbose) == 0)
+		argv[i++] = "--quiet";
+
 	if (flags & wget_no_check_certificate)
 		argv[i++] = "--no-check-certificate";
 
@@ -375,6 +452,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 {
 	struct load_url_result *result;
 	struct load_task *task;
+	int flags = 0;
 
 	if (!url)
 		return NULL;
@@ -395,6 +473,9 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		task->process->stdout_data = stdout_data;
 	}
 
+	if (!stdout_cb && stdout_data && have_busybox())
+		task->process->stdout_cb = busybox_progress_cb;
+
 	/* Make sure we save output for any task that has a custom handler */
 	if (task->process->stdout_cb) {
 		task->process->add_stderr = true;
@@ -404,10 +485,11 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 	switch (url->scheme) {
 	case pb_url_ftp:
 	case pb_url_http:
-		load_wget(task, 0);
+		load_wget(task, flags);
 		break;
 	case pb_url_https:
-		load_wget(task, wget_no_check_certificate);
+		flags |= wget_no_check_certificate;
+		load_wget(task, flags);
 		break;
 	case pb_url_nfs:
 		load_nfs(task);
