@@ -89,6 +89,7 @@ struct interface_info {
 	uint8_t		*hwaddr;
 	char		*name;
 	bool		link;
+	char		*address;
 };
 
 struct blockdev_info {

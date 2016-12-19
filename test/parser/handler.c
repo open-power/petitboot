@@ -38,6 +38,14 @@ void discover_server_notify_boot_status(struct discover_server *server,
 	(void)status;
 }
 
+void system_info_set_interface_address(unsigned int hwaddr_size,
+		uint8_t *hwaddr, const char *address)
+{
+	(void)hwaddr_size;
+	(void)hwaddr;
+	(void)address;
+}
+
 void discover_server_notify_config(struct discover_server *server,
 		struct config *config)
 {

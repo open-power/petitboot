@@ -3,6 +3,7 @@
 
 #include <talloc/talloc.h>
 #include <process/process.h>
+#include <log/log.h>
 
 #include "discover-server.h"
 #include "platform.h"
@@ -14,6 +15,35 @@ static struct discover_server *server;
 const struct system_info *system_info_get(void)
 {
 	return sysinfo;
+}
+
+
+void system_info_set_interface_address(unsigned int hwaddr_size,
+		uint8_t *hwaddr, const char *address)
+{
+	struct interface_info *if_info;
+	unsigned int i;
+
+	for (i = 0; i < sysinfo->n_interfaces; i++) {
+		if_info = sysinfo->interfaces[i];
+
+		if (if_info->hwaddr_size != hwaddr_size)
+			continue;
+
+		if (memcmp(if_info->hwaddr, hwaddr, hwaddr_size))
+			continue;
+
+		/* Found an existing interface. Notify clients if a new address
+		 * is set */
+		if (!if_info->address || strcmp(if_info->address, address)) {
+			talloc_free(if_info->address);
+			if_info->address = talloc_strdup(if_info, address);
+			discover_server_notify_system_info(server, sysinfo);
+			return;
+		}
+	}
+
+	pb_log("Couldn't find interface matching %s\n", "foo");
 }
 
 void system_info_register_interface(unsigned int hwaddr_size, uint8_t *hwaddr,

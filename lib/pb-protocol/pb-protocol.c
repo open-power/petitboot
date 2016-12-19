@@ -249,7 +249,8 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 		struct interface_info *if_info = sysinfo->interfaces[i];
 		len +=	4 + if_info->hwaddr_size +
 			4 + optional_strlen(if_info->name) +
-			sizeof(if_info->link);
+			sizeof(if_info->link) +
+			4 + optional_strlen(if_info->address);
 	}
 
 	for (i = 0; i < sysinfo->n_blockdevs; i++) {
@@ -465,6 +466,8 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 
 		*(bool *)pos = if_info->link;
 		pos += sizeof(bool);
+
+		pos += pb_protocol_serialise_string(pos, if_info->address);
 	}
 
 	*(uint32_t *)pos = __cpu_to_be32(sysinfo->n_blockdevs);
@@ -948,6 +951,9 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 
 		if_info->link = *(bool *)pos;
 		pos += sizeof(if_info->link);
+
+		if (read_string(if_info, &pos, &len, &if_info->address))
+			goto out;
 
 		sysinfo->interfaces[i] = if_info;
 	}

@@ -384,6 +384,10 @@ static void configure_interface_static(struct network *network,
 		return;
 	}
 
+	system_info_set_interface_address(sizeof(interface->hwaddr),
+				interface->hwaddr,
+				config->static_config.address);
+
 	/* we need the interface up before we can route through it */
 	rc = interface_up(interface);
 	if (rc)
