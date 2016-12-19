@@ -522,7 +522,8 @@ static int start_url_load(struct boot_task *task, const char *name,
 	if (!url)
 		return 0;
 
-	*result = load_url_async(task, url, boot_process, task);
+	*result = load_url_async(task, url, boot_process, task, NULL,
+				 task->status_arg);
 	if (!*result) {
 		update_status(task->status_fn, task->status_arg,
 				STATUS_ERROR, _("Error loading %s"), name);

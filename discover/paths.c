@@ -370,7 +370,8 @@ static void load_local(struct load_task *task)
  */
 
 struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
-		load_url_complete async_cb, void *async_data)
+		load_url_complete async_cb, void *async_data,
+		waiter_cb stdout_cb, void *stdout_data)
 {
 	struct load_url_result *result;
 	struct load_task *task;
@@ -390,6 +391,14 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		task->async_data = async_data;
 		task->process->exit_cb = load_url_process_exit;
 		task->process->data = task;
+		task->process->stdout_cb = stdout_cb;
+		task->process->stdout_data = stdout_data;
+	}
+
+	/* Make sure we save output for any task that has a custom handler */
+	if (task->process->stdout_cb) {
+		task->process->add_stderr = true;
+		task->process->keep_stdout = true;
 	}
 
 	switch (url->scheme) {
@@ -430,7 +439,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 
 struct load_url_result *load_url(void *ctx, struct pb_url *url)
 {
-	return load_url_async(ctx, url, NULL, NULL);
+	return load_url_async(ctx, url, NULL, NULL, NULL, NULL);
 }
 
 void load_url_async_cancel(struct load_url_result *res)

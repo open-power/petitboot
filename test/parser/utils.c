@@ -310,7 +310,8 @@ int parser_replace_file(struct discover_context *ctx,
 }
 
 struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
-		load_url_complete async_cb, void *async_data)
+		load_url_complete async_cb, void *async_data,
+		waiter_cb stdout_cb, void *stdout_data)
 {
 	struct conf_context *conf = async_data;
 	struct parser_test *test = conf->dc->test_data;
@@ -319,6 +320,10 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 	ssize_t rc = -1, sz = 0;
 	struct test_file *file;
 	int fd;
+
+	/* Ignore the stdout callback for tests */
+	(void)stdout_cb;
+	(void)stdout_data;
 
 	fd = mkstemp(tmp);
 

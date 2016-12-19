@@ -2,6 +2,8 @@
 #define PATHS_H
 
 #include <url/url.h>
+#include <waiter/waiter.h>
+#include <process/process.h>
 
 /**
  * Utility function for joining two paths. Adds a / between a and b if
@@ -43,7 +45,8 @@ typedef void (*load_url_complete)(struct load_url_result *result, void *data);
 
 /* Load a (potentially remote) file, and return a guaranteed-local name */
 struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
-		load_url_complete complete, void *data);
+		load_url_complete complete, void *data,
+		waiter_cb stdout_cb, void *stdout_data);
 
 /* Cancel a pending load */
 void load_url_async_cancel(struct load_url_result *res);

@@ -227,7 +227,8 @@ static void pxe_load_next_filename(struct conf_context *conf)
 		if (!url)
 			continue;
 
-		if (load_url_async(conf, url, pxe_conf_parse_cb, conf))
+		if (load_url_async(conf, url, pxe_conf_parse_cb, conf,
+				   NULL, NULL))
 			break;
 	}
 
@@ -380,7 +381,7 @@ static int pxe_parse(struct discover_context *dc)
 
 		/* we have a complete URL; use this and we're done. */
 		result = load_url_async(conf->dc, conf->dc->conf_url,
-					pxe_conf_parse_cb, conf);
+					pxe_conf_parse_cb, conf, NULL, ctx);
 		if (!result) {
 			pb_log("load_url_async fails for %s\n",
 					dc->conf_url->path);
