@@ -129,10 +129,11 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		if_info_mac_str(info, macbuf, sizeof(macbuf));
 
 		line("%s:", info->name);
-		line(_(" MAC:  %s"), macbuf);
+		line(_(" MAC:        %s"), macbuf);
+		line(_(" IP Address: %s"), info->address ?: _("none"));
 		/* TRANSLATORS: these "up" / "down" strings refer to the
 		 * link status for a network connection. */
-		line(_(" link: %s"), info->link ? _("up") : _("down"));
+		line(_(" link:       %s"), info->link ? _("up") : _("down"));
 		line(NULL);
 	}
 
