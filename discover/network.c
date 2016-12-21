@@ -214,13 +214,12 @@ static int network_send_link_query(struct network *network)
 	return 0;
 }
 
-static void add_interface(struct network *network,
+static void create_interface_dev(struct network *network,
 		struct interface *interface)
 {
 	char *uuid = mac_bytes_to_string(interface, interface->hwaddr,
 						sizeof(interface->hwaddr));
 
-	list_add(&network->interfaces, &interface->list);
 	interface->dev = discover_device_create(network->handler, uuid,
 						interface->name);
 	interface->dev->device->type = DEVICE_TYPE_NETWORK;
@@ -563,7 +562,8 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		interface->state = IFSTATE_NEW;
 		memcpy(interface->hwaddr, ifaddr, sizeof(interface->hwaddr));
 		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
-		add_interface(network, interface);
+		list_add(&network->interfaces, &interface->list);
+		create_interface_dev(network, interface);
 	}
 
 	/* A repeated RTM_NEWLINK can represent an interface name change */
@@ -581,6 +581,9 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 				sizeof(interface->hwaddr),
 				interface->hwaddr, interface->name,
 				info->ifi_flags & IFF_LOWER_UP);
+
+	if (!interface->dev)
+		create_interface_dev(network, interface);
 
 	configure_interface(network, interface,
 			info->ifi_flags & IFF_UP,
