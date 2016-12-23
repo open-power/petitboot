@@ -242,7 +242,10 @@ void network_register_device(struct network *network,
 {
 	struct interface *iface;
 
-	iface = find_interface_by_uuid(network, dev->uuid);
+	if (dev->uuid)
+		iface = find_interface_by_uuid(network, dev->uuid);
+	else
+		iface = find_interface_by_name(network, dev->label);
 	if (!iface)
 		return;
 
