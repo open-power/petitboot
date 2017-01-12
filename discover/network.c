@@ -497,7 +497,7 @@ static void configure_interface(struct network *network,
 static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 {
 	bool have_ifaddr, have_ifname;
-	struct interface *interface;
+	struct interface *interface, *tmp;
 	struct ifinfomsg *info;
 	struct rtattr *attr;
 	unsigned int mtu;
@@ -562,6 +562,16 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		interface->state = IFSTATE_NEW;
 		memcpy(interface->hwaddr, ifaddr, sizeof(interface->hwaddr));
 		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
+
+		list_for_each_entry(&network->interfaces, tmp, list)
+			if (memcmp(interface->hwaddr, tmp->hwaddr,
+				   sizeof(interface->hwaddr)) == 0) {
+				pb_log("%s: %s has duplicate MAC address, ignoring\n",
+				       __func__, interface->name);
+				talloc_free(interface);
+				return -1;
+			}
+
 		list_add(&network->interfaces, &interface->list);
 		create_interface_dev(network, interface);
 	}
