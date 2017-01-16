@@ -23,6 +23,7 @@ void system_info_set_interface_address(unsigned int hwaddr_size,
 {
 	struct interface_info *if_info;
 	unsigned int i;
+	char mac[20];
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		if_info = sysinfo->interfaces[i];
@@ -43,7 +44,8 @@ void system_info_set_interface_address(unsigned int hwaddr_size,
 		}
 	}
 
-	pb_log("Couldn't find interface matching %s\n", "foo");
+	mac_str(hwaddr, hwaddr_size, mac, sizeof(mac));
+	pb_log("Couldn't find interface matching %s\n", mac);
 }
 
 void system_info_register_interface(unsigned int hwaddr_size, uint8_t *hwaddr,
