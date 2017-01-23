@@ -440,8 +440,29 @@ int process_run_async(struct process *process)
 
 void process_stop_async(struct process *process)
 {
+	/* Avoid signalling an old pid */
+	if (process->cancelled)
+		return;
+
 	pb_debug("process: sending SIGTERM to pid %d\n", process->pid);
 	kill(process->pid, SIGTERM);
+	process->cancelled = true;
+}
+
+void process_stop_async_all(void)
+{
+	struct process_info *procinfo;
+	struct process *process = NULL;
+
+	pb_debug("process: cancelling all async jobs\n");
+
+	list_for_each_entry(&procset->async_list, procinfo, async_list) {
+		process = &procinfo->process;
+		/* Ignore the process completion - callbacks may use stale data */
+		process->exit_cb = NULL;
+		process->stdout_cb = NULL;
+		process_stop_async(process);
+	}
 }
 
 int process_run_simple_argv(void *ctx, const char *argv[])

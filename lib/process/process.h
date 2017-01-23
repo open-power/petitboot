@@ -45,6 +45,7 @@ struct process {
 
 	/* post-execution information */
 	int			exit_status;
+	bool			cancelled;
 };
 
 /* Process management system init. process_init must be called before
@@ -77,6 +78,7 @@ int process_run_simple(void *ctx, const char *name, ...)
 int process_run_async(struct process *process);
 
 void process_stop_async(struct process *process);
+void process_stop_async_all(void);
 
 /* helper function to determine if a process exited cleanly, with a non-zero
  * exit status */

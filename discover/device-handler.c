@@ -358,6 +358,9 @@ void device_handler_reinit(struct device_handler *handler)
 		handler->pending_boot_is_default = false;
 	}
 
+	/* Cancel any remaining async jobs */
+	process_stop_async_all();
+
 	/* free unresolved boot options */
 	list_for_each_entry_safe(&handler->unresolved_boot_options,
 			opt, tmp, list)
