@@ -351,6 +351,12 @@ void device_handler_reinit(struct device_handler *handler)
 	unsigned int i;
 
 	device_handler_cancel_default(handler);
+	/* Cancel any pending non-default boot */
+	if (handler->pending_boot) {
+		boot_cancel(handler->pending_boot);
+		handler->pending_boot = NULL;
+		handler->pending_boot_is_default = false;
+	}
 
 	/* free unresolved boot options */
 	list_for_each_entry_safe(&handler->unresolved_boot_options,
