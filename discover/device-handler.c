@@ -1039,8 +1039,6 @@ int device_handler_discover(struct device_handler *handler,
 		_("Processing new %s device"),
 		device_type_display_name(dev->device->type));
 
-	process_boot_option_queue(handler);
-
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
 
@@ -1058,6 +1056,7 @@ int device_handler_discover(struct device_handler *handler,
 	/* add discovered stuff to the handler */
 	device_handler_discover_context_commit(handler, ctx);
 
+	process_boot_option_queue(handler);
 out:
 	talloc_unlink(handler, ctx);
 
