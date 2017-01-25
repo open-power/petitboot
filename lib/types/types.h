@@ -183,4 +183,6 @@ struct config {
 	bool			debug;
 };
 
+bool config_autoboot_active(const struct config *config);
+
 #endif /* _TYPES_H */

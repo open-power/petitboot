@@ -321,7 +321,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	handler->server = server;
 	handler->waitset = waitset;
 	handler->dry_run = dry_run;
-	handler->autoboot_enabled = config_get()->autoboot_enabled;
+	handler->autoboot_enabled = config_autoboot_active(config_get());
 
 	list_init(&handler->unresolved_boot_options);
 

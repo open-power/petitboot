@@ -755,21 +755,8 @@ static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
 	config->ipmi_bootdev = bootdev;
 	config->ipmi_bootdev_persistent = persistent;
 
-	switch (bootdev) {
-	case IPMI_BOOTDEV_NONE:
-	case IPMI_BOOTDEV_DISK:
-	case IPMI_BOOTDEV_NETWORK:
-	case IPMI_BOOTDEV_CDROM:
-	default:
-		break;
-	case IPMI_BOOTDEV_SETUP:
-		config->autoboot_enabled = false;
-		break;
-	case IPMI_BOOTDEV_SAFE:
-		config->autoboot_enabled = false;
+	if (bootdev == IPMI_BOOTDEV_SAFE)
 		config->safe_mode = true;
-		break;
-	}
 }
 
 static int read_bootdev_sysparam(const char *name, uint8_t *val)

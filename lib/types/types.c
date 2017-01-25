@@ -75,3 +75,15 @@ enum device_type find_device_type(const char *str)
 
 	return DEVICE_TYPE_UNKNOWN;
 }
+
+bool config_autoboot_active(const struct config *config)
+{
+	enum ipmi_bootdev bootdev = config->ipmi_bootdev;
+
+	if (!config->autoboot_enabled)
+		return false;
+	if (bootdev == IPMI_BOOTDEV_SETUP || bootdev == IPMI_BOOTDEV_SAFE)
+		return false;
+
+	return true;
+}
