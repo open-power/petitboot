@@ -139,6 +139,39 @@ static int write_boot_option_add_message(struct discover_server *server,
 	return client_write_message(server, client, message);
 }
 
+static int write_plugin_option_add_message(struct discover_server *server,
+		struct client *client, const struct plugin_option *opt)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_plugin_option_len(opt);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_PLUGIN_OPTION_ADD, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_plugin_option(opt, message->payload, len);
+
+	return client_write_message(server, client, message);
+}
+
+static int write_plugins_remove_message(struct discover_server *server,
+		struct client *client)
+{
+	struct pb_protocol_message *message;
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_PLUGINS_REMOVE, 0);
+	if (!message)
+		return -1;
+
+	/* No payload so nothing to serialise */
+
+	return client_write_message(server, client, message);
+}
+
 static int write_device_remove_message(struct discover_server *server,
 		struct client *client, char *dev_id)
 {
@@ -284,7 +317,7 @@ static int discover_server_process_connection(void *arg)
 {
 	struct discover_server *server = arg;
 	struct statuslog_entry *entry;
-	int fd, rc, i, n_devices;
+	int fd, rc, i, n_devices, n_plugins;
 	struct client *client;
 
 	/* accept the incoming connection */
@@ -338,6 +371,15 @@ static int discover_server_process_connection(void *arg)
 	/* send status backlog to client */
 	list_for_each_entry(&server->status, entry, list)
 		write_boot_status_message(server, client, entry->status);
+
+	/* send installed plugins to client */
+	n_plugins = device_handler_get_plugin_count(server->device_handler);
+	for (i = 0; i < n_plugins; i++) {
+		const struct plugin_option *plugin;
+
+		plugin = device_handler_get_plugin(server->device_handler, i);
+		write_plugin_option_add_message(server, client, plugin);
+	}
 
 	return 0;
 }
@@ -414,6 +456,23 @@ void discover_server_notify_config(struct discover_server *server,
 
 	list_for_each_entry(&server->clients, client, list)
 		write_config_message(server, client, config);
+}
+
+void discover_server_notify_plugin_option_add(struct discover_server *server,
+		struct plugin_option *opt)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_plugin_option_add_message(server, client, opt);
+}
+
+void discover_server_notify_plugins_remove(struct discover_server *server)
+{
+	struct client *client;
+
+	list_for_each_entry(&server->clients, client, list)
+		write_plugins_remove_message(server, client);
 }
 
 void discover_server_set_device_source(struct discover_server *server,

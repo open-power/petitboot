@@ -80,6 +80,9 @@ void device_handler_destroy(struct device_handler *devices);
 int device_handler_get_device_count(const struct device_handler *handler);
 const struct discover_device *device_handler_get_device(
 	const struct device_handler *handler, unsigned int index);
+int device_handler_get_plugin_count(const struct device_handler *handler);
+const struct plugin_option *device_handler_get_plugin(
+	const struct device_handler *handler, unsigned int index);
 struct network *device_handler_get_network(
 		const struct device_handler *handler);
 
@@ -126,6 +129,8 @@ struct discover_boot_option *discover_boot_option_create(
 		struct discover_device *dev);
 void discover_context_add_boot_option(struct discover_context *ctx,
 		struct discover_boot_option *opt);
+void device_handler_add_plugin_option(struct device_handler *handler,
+		struct plugin_option *opt);
 
 int device_handler_user_event(struct device_handler *handler,
 				struct event *event);

@@ -100,6 +100,7 @@ test_parser_libtest_ro_SOURCES = \
 	test/parser/utils.c \
 	test/parser/handler.c \
 	test/parser/network.c \
+	test/parser/user-event.c \
 	test/parser/parser-test.h \
 	discover/yaboot-parser.c \
 	discover/kboot-parser.c \

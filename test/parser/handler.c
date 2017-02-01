@@ -7,6 +7,7 @@
 #include "device-handler.h"
 
 struct network;
+struct client;
 
 typedef void (*boot_status_fn)(void *arg, struct status *);
 
@@ -109,4 +110,9 @@ void pending_network_jobs_start(void)
 
 void pending_network_jobs_cancel(void)
 {
+}
+
+void discover_server_notify_plugins_remove(struct discover_server *server)
+{
+	(void)server;
 }

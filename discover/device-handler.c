@@ -84,6 +84,9 @@ struct device_handler {
 
 	struct list		progress;
 	unsigned int		n_progress;
+
+	struct plugin_option	**plugins;
+	unsigned int		n_plugins;
 };
 
 static int mount_device(struct discover_device *dev);
@@ -124,6 +127,28 @@ const struct discover_device *device_handler_get_device(
 	}
 
 	return handler->devices[index];
+}
+
+/**
+ * device_handler_get_plugin_count - Get the count of current handler plugins.
+ */
+int device_handler_get_plugin_count(const struct device_handler *handler)
+{
+	return handler->n_plugins;
+}
+
+/**
+ * discover_handler_get_plugin - Get a handler plugin by index.
+ */
+const struct plugin_option *device_handler_get_plugin(
+	const struct device_handler *handler, unsigned int index)
+{
+	if (index >= handler->n_plugins) {
+		assert(0 && "bad index");
+		return NULL;
+	}
+
+	return handler->plugins[index];
 }
 
 struct network *device_handler_get_network(
@@ -384,6 +409,15 @@ void device_handler_reinit(struct device_handler *handler)
 	talloc_free(handler->ramdisks);
 	handler->ramdisks = NULL;
 	handler->n_ramdisks = 0;
+
+	/* drop any known plugins */
+	for (i = 0; i < handler->n_plugins; i++)
+		talloc_free(handler->plugins[i]);
+	talloc_free(handler->plugins);
+	handler->plugins = NULL;
+	handler->n_plugins = 0;
+
+	discover_server_notify_plugins_remove(handler->server);
 
 	device_handler_reinit_sources(handler);
 }
@@ -1406,6 +1440,36 @@ void device_handler_discover_context_commit(struct device_handler *handler,
 			}
 		}
 	}
+}
+
+void device_handler_add_plugin_option(struct device_handler *handler,
+		struct plugin_option *opt)
+{
+	struct plugin_option *tmp;
+	unsigned int i;
+
+	for (i = 0; i < handler->n_plugins; i++) {
+		tmp = handler->plugins[i];
+		/* If both id and version match, ignore */
+		if (strncmp(opt->id, tmp->id, strlen(opt->id)) == 0 &&
+				strncmp(opt->version, tmp->version,
+					strlen(opt->version) == 0)) {
+			pb_log("discover: Plugin '%s' already exists, ignoring\n",
+					opt->id);
+			return;
+		}
+	}
+
+	handler->plugins = talloc_realloc(handler, handler->plugins,
+			struct plugin_option *, handler->n_plugins + 1);
+	if (!handler->plugins) {
+		pb_log("Failed to allocate memory for new plugin\n");
+		handler->n_plugins = 0;
+		return;
+	}
+
+	handler->plugins[handler->n_plugins++] = opt;
+	discover_server_notify_plugin_option_add(handler->server, opt);
 }
 
 static void device_handler_update_lang(const char *lang)

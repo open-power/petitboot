@@ -7,6 +7,8 @@ struct discover_server;
 struct device_handler;
 struct boot_option;
 struct status;
+struct plugin_option;
+struct boot_status;
 struct system_info;
 struct device;
 struct config;
@@ -30,4 +32,7 @@ void discover_server_notify_system_info(struct discover_server *server,
 		const struct system_info *sysinfo);
 void discover_server_notify_config(struct discover_server *server,
 		const struct config *config);
+void discover_server_notify_plugin_option_add(struct discover_server *server,
+		struct plugin_option *option);
+void discover_server_notify_plugins_remove(struct discover_server *server);
 #endif /* _DISCOVER_SERVER_H */
