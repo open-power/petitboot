@@ -58,6 +58,11 @@ struct boot_option {
 	struct list_item	list;
 
 	void		*ui_info;
+
+	enum {
+		DISCOVER_BOOT_OPTION,
+		DISCOVER_PLUGIN_OPTION,
+	} type;
 };
 
 struct plugin_option {

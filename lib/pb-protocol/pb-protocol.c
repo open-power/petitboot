@@ -75,6 +75,8 @@ void pb_protocol_dump_device(const struct device *dev, const char *text,
 		fprintf(stream, "%s\t\tdtb:  %s\n", text, opt->dtb_file);
 		fprintf(stream, "%s\t\targs: %s\n", text, opt->boot_args);
 		fprintf(stream, "%s\t\tasig: %s\n", text, opt->args_sig_file);
+		fprintf(stream, "%s\t\ttype: %s\n", text,
+			opt->type == DISCOVER_BOOT_OPTION ? "boot" : "plugin");
 	}
 }
 
@@ -201,7 +203,8 @@ int pb_protocol_boot_option_len(const struct boot_option *opt)
 		4 + optional_strlen(opt->dtb_file) +
 		4 + optional_strlen(opt->boot_args) +
 		4 + optional_strlen(opt->args_sig_file) +
-		sizeof(opt->is_default);
+		sizeof(opt->is_default) +
+		sizeof(opt->type);
 }
 
 int pb_protocol_boot_len(const struct boot_command *boot)
@@ -396,6 +399,9 @@ int pb_protocol_serialise_boot_option(const struct boot_option *opt,
 
 	*(bool *)pos = opt->is_default;
 	pos += sizeof(bool);
+
+	*(uint32_t *)pos = __cpu_to_be32(opt->type);
+	pos += 4;
 
 	assert(pos <= buf + buf_len);
 	(void)buf_len;
@@ -825,6 +831,11 @@ int pb_protocol_deserialise_boot_option(struct boot_option *opt,
 	if (len < sizeof(bool))
 		goto out;
 	opt->is_default = *(bool *)(pos);
+	pos += sizeof(bool);
+	len -= sizeof(bool);
+
+	if (read_u32(&pos, &len, &opt->type))
+		return -1;
 
 	rc = 0;
 

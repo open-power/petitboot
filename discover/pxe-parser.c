@@ -148,7 +148,7 @@ static void pxe_process_pair(struct conf_context *ctx,
 		return;
 	}
 
-	if (streq(name, "LABEL")) {
+	if (streq(name, "LABEL") || streq(name, "PLUGIN")) {
 		if (opt)
 			pxe_finish(ctx);
 
@@ -158,8 +158,12 @@ static void pxe_process_pair(struct conf_context *ctx,
 		opt->option->id = talloc_asprintf(opt, "%s@%p",
 				ctx->dc->device->device->id, opt);
 
-		opt->option->is_default = parser_info->default_name &&
-					streq(parser_info->default_name, value);
+		if (streq(name, "LABEL")) {
+			opt->option->type = DISCOVER_BOOT_OPTION;
+			opt->option->is_default = parser_info->default_name &&
+						streq(parser_info->default_name, value);
+		} else
+			opt->option->type = DISCOVER_PLUGIN_OPTION;
 
 		parser_info->opt = opt;
 		return;
@@ -168,6 +172,14 @@ static void pxe_process_pair(struct conf_context *ctx,
 	/* all other parameters need an option */
 	if (!opt)
 		return;
+
+	if (streq(name, "TARBALL") &&
+			opt->option->type == DISCOVER_PLUGIN_OPTION) {
+		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
+		opt->boot_image = create_url_resource(opt, url);
+		/* All other options apply to boot options only */
+		return;
+	}
 
 	if (streq(name, "KERNEL")) {
 		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
@@ -210,7 +222,6 @@ static void pxe_process_pair(struct conf_context *ctx,
 		url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
 		opt->dtb = create_url_resource(opt, url);
 	}
-
 }
 
 static void pxe_load_next_filename(struct conf_context *conf)
