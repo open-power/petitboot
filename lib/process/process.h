@@ -33,6 +33,7 @@ struct process {
 	const char		**argv;
 	bool			keep_stdout;
 	bool			add_stderr;
+	bool			raw_stdout;
 	process_exit_cb		exit_cb;
 	void			*data;
 	waiter_cb		stdout_cb;

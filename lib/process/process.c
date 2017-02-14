@@ -114,7 +114,7 @@ static int process_setup_stdout_pipe(struct process_info *procinfo)
 {
 	int rc;
 
-	if (!procinfo->process.keep_stdout)
+	if (!procinfo->process.keep_stdout || procinfo->process.raw_stdout)
 		return 0;
 
 	procinfo->stdout_buf_len = 4096;
@@ -132,7 +132,7 @@ static int process_setup_stdout_pipe(struct process_info *procinfo)
 
 static void process_setup_stdout_parent(struct process_info *procinfo)
 {
-	if (!procinfo->process.keep_stdout)
+	if (!procinfo->process.keep_stdout || procinfo->process.raw_stdout)
 		return;
 
 	close(procinfo->stdout_pipe[1]);
@@ -141,6 +141,9 @@ static void process_setup_stdout_parent(struct process_info *procinfo)
 static void process_setup_stdout_child(struct process_info *procinfo)
 {
 	int log = fileno(pb_log_get_stream());
+
+	if (procinfo->process.raw_stdout)
+		return;
 
 	if (procinfo->process.keep_stdout)
 		dup2(procinfo->stdout_pipe[1], STDOUT_FILENO);
