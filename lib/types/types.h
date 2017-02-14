@@ -60,6 +60,21 @@ struct boot_option {
 	void		*ui_info;
 };
 
+struct plugin_option {
+	char		*id;
+	char		*name;
+	char		*vendor;
+	char		*vendor_id;
+	char		*version;
+	char		*date;
+	char		*plugin_file;
+
+	unsigned int	n_executables;
+	char		**executables;
+
+	void		*ui_info;
+};
+
 struct boot_command {
 	char *option_id;
 	char *boot_image_file;

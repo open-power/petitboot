@@ -340,6 +340,26 @@ int pb_protocol_url_len(const char *url)
 	return 4 + optional_strlen(url);
 }
 
+
+int pb_protocol_plugin_option_len(const struct plugin_option *opt)
+{
+	unsigned int i, len = 0;
+
+	len += 4 + optional_strlen(opt->id);
+	len += 4 + optional_strlen(opt->name);
+	len += 4 + optional_strlen(opt->vendor);
+	len += 4 + optional_strlen(opt->vendor_id);
+	len += 4 + optional_strlen(opt->version);
+	len += 4 + optional_strlen(opt->date);
+	len += 4 + optional_strlen(opt->plugin_file);
+
+	len += 4; /* n_executables */
+	for (i = 0; i < opt->n_executables; i++)
+		len += 4 + optional_strlen(opt->executables[i]);
+
+	return len;
+}
+
 int pb_protocol_serialise_device(const struct device *dev,
 		char *buf, int buf_len)
 {
@@ -606,6 +626,32 @@ int pb_protocol_serialise_url(const char *url, char *buf, int buf_len)
 	pos += pb_protocol_serialise_string(pos, url);
 
 	assert(pos <=buf+buf_len);
+	(void)buf_len;
+
+	return 0;
+}
+
+int pb_protocol_serialise_plugin_option(const struct plugin_option *opt,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
+	unsigned int i;
+
+	pos += pb_protocol_serialise_string(pos, opt->id);
+	pos += pb_protocol_serialise_string(pos, opt->name);
+	pos += pb_protocol_serialise_string(pos, opt->vendor);
+	pos += pb_protocol_serialise_string(pos, opt->vendor_id);
+	pos += pb_protocol_serialise_string(pos, opt->version);
+	pos += pb_protocol_serialise_string(pos, opt->date);
+	pos += pb_protocol_serialise_string(pos, opt->plugin_file);
+
+	*(uint32_t *)pos = __cpu_to_be32(opt->n_executables);
+	pos += 4;
+
+	for (i = 0; i < opt->n_executables; i++)
+		pos += pb_protocol_serialise_string(pos, opt->executables[i]);
+
+	assert(pos <= buf + buf_len);
 	(void)buf_len;
 
 	return 0;
@@ -1147,6 +1193,64 @@ int pb_protocol_deserialise_config(struct config *config,
 
 	rc = 0;
 
+out:
+	return rc;
+}
+
+int pb_protocol_deserialise_plugin_option(struct plugin_option *opt,
+		const struct pb_protocol_message *message)
+{
+	unsigned int len, i, tmp;
+	const char *pos;
+	int rc = -1;
+	char *str;
+
+	len = message->payload_len;
+	pos = message->payload;
+
+	if (read_string(opt, &pos, &len, &str))
+		goto out;
+	opt->id = str;
+
+	if (read_string(opt, &pos, &len, &str))
+		goto out;
+	opt->name = str;
+
+	if (read_string(opt, &pos, &len, &str))
+		goto out;
+	opt->vendor = str;
+
+	if (read_string(opt, &pos, &len, &str))
+		goto out;
+	opt->vendor_id = str;
+
+	if (read_string(opt, &pos, &len, &str))
+		goto out;
+	opt->version = str;
+
+	if (read_string(opt, &pos, &len, &str))
+		goto out;
+	opt->date = str;
+
+	if (read_string(opt, &pos, &len, &str))
+		goto out;
+	opt->plugin_file = str;
+
+	if (read_u32(&pos, &len, &tmp))
+		goto out;
+	opt->n_executables = tmp;
+
+	opt->executables = talloc_zero_array(opt, char *, opt->n_executables);
+	if (!opt->executables)
+		goto out;
+
+	for (i = 0; i < opt->n_executables; i++) {
+		if (read_string(opt, &pos, &len, &str))
+			goto out;
+		opt->executables[i] = talloc_strdup(opt, str);
+	}
+
+	rc = 0;
 out:
 	return rc;
 }
