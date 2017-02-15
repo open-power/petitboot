@@ -98,7 +98,8 @@ void cui_abort(struct cui *cui);
 void cui_resize(struct cui *cui);
 void cui_on_exit(struct pmenu *menu);
 void cui_on_open(struct pmenu *menu);
-int cui_run_cmd(struct pmenu_item *item);
+int cui_run_cmd(struct cui *cui, const char **cmd_argv);
+int cui_run_cmd_from_item(struct pmenu_item *item);
 
 static inline struct cui *cui_from_arg(void *arg)
 {

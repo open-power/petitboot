@@ -155,19 +155,29 @@ void cui_on_exit(struct pmenu *menu)
  * cui_run_cmd - A generic cb to run the supplied command.
  */
 
-int cui_run_cmd(struct pmenu_item *item)
+int cui_run_cmd(struct cui *cui, const char **cmd_argv)
 {
+	struct process *process;
 	int result;
-	struct cui *cui = cui_from_item(item);
-	const char **cmd_argv = item->data;
+
+	process = process_create(cui);
+	if (!process)
+		return -1;
+
+	process->path = cmd_argv[0];
+	process->argv = cmd_argv;
+	process->raw_stdout = true;
 
 	nc_scr_status_printf(cui->current, _("Running %s..."), cmd_argv[0]);
 
 	def_prog_mode();
+	endwin();
 
-	result = process_run_simple_argv(item, cmd_argv);
+	result = process_run_sync(process);
 
 	reset_prog_mode();
+	refresh();
+
 	redrawwin(cui->current->main_ncw);
 
 	if (result) {
@@ -176,7 +186,17 @@ int cui_run_cmd(struct pmenu_item *item)
 				cmd_argv[0]);
 	}
 
+	process_release(process);
+
 	return result;
+}
+
+int cui_run_cmd_from_item(struct pmenu_item *item)
+{
+	struct cui *cui = cui_from_item(item);
+	const char **cmd_argv = item->data;
+
+	return cui_run_cmd(cui, cmd_argv);
 }
 
 /**
