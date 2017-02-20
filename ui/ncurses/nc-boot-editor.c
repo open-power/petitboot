@@ -162,7 +162,8 @@ static char *conditional_prefix(struct pb_boot_data *ctx,
 	sep = "";
 	if (!prefix)
 		prefix = "";
-	else if (prefix[strlen(prefix)] != '/')
+	else if ((prefix[strlen(prefix) - 1] != '/') &&
+				(value[0] != '/'))
 		sep = "/";
 
 	return talloc_asprintf(ctx, "%s%s%s", prefix, sep, value);
