@@ -576,19 +576,9 @@ static int write_devicetree(struct offb_ctx *ctx)
 	return rc;
 }
 
-
-int main(void)
+static int set_offb(struct offb_ctx *ctx)
 {
-	struct offb_ctx *ctx;
 	int rc;
-
-	ctx = talloc_zero(NULL, struct offb_ctx);
-
-	ctx->dtb_name = getenv("boot_dtb");
-	if (!ctx->dtb_name) {
-		talloc_free(ctx);
-		return EXIT_SUCCESS;
-	}
 
 	rc = load_dtb(ctx);
 	if (rc)
@@ -605,14 +595,39 @@ int main(void)
 	rc = populate_devicetree(ctx);
 	if (rc)
 		goto out;
-
-	rc = set_stdout(ctx);
-	if (rc)
-		goto out;
-
-	rc = write_devicetree(ctx);
-
 out:
+	return rc;
+}
+
+
+int main(void)
+{
+	struct offb_ctx *ctx;
+	int rc;
+
+	ctx = talloc_zero(NULL, struct offb_ctx);
+
+	ctx->dtb_name = getenv("boot_dtb");
+	if (!ctx->dtb_name) {
+		talloc_free(ctx);
+		return EXIT_SUCCESS;
+	}
+
+	if (set_offb(ctx)) {
+		warn("Failed offb setup step");
+		rc = -1;
+	}
+
+	if (set_stdout(ctx)) {
+		warn("Failed stdout setup step\n");
+		rc = -1;
+	}
+
+	if (write_devicetree(ctx)) {
+		warn("Failed to write back device tree\n");
+		rc = -1;
+	}
+
 	talloc_free(ctx);
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
