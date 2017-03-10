@@ -515,7 +515,10 @@ static int set_stdout(struct offb_ctx *ctx)
 	if (strncmp(boot_console, "/dev/", strlen("/dev/")) != 0) {
 		/* We already have the full path */
 		stdout_path = talloc_strdup(ctx, boot_console);
-	} else if (strstr(boot_console, "tty") != NULL) {
+		/* Check for a tty* console but don't accidentally catch
+		 * ttyS* consoles */
+	} else if (strstr(boot_console, "tty") != NULL &&
+			strstr(boot_console, "ttyS") == NULL) {
 		fprintf(stderr, "TTY recognised: %s\n", boot_console);
 		stdout_path = get_vga_path(ctx);
 	} else {
