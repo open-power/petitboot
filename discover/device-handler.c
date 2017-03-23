@@ -361,6 +361,7 @@ void device_handler_reinit(struct device_handler *handler)
 
 	/* Cancel any remaining async jobs */
 	process_stop_async_all();
+	pending_network_jobs_cancel();
 
 	/* free unresolved boot options */
 	list_for_each_entry_safe(&handler->unresolved_boot_options,
@@ -1082,6 +1083,8 @@ int device_handler_dhcp(struct device_handler *handler,
 	device_handler_status_dev_info(handler, dev,
 			_("Processing DHCP lease response (ip: %s)"),
 			event_get_param(event, "ip"));
+
+	pending_network_jobs_start();
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);

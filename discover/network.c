@@ -23,6 +23,7 @@
 #include "sysinfo.h"
 #include "platform.h"
 #include "device-handler.h"
+#include "paths.h"
 
 #define HWADDR_SIZE	6
 #define PIDFILE_BASE	(LOCAL_STATE_DIR "/petitboot/")
@@ -489,6 +490,8 @@ static void configure_interface(struct network *network,
 
 	} else if (config->method == CONFIG_METHOD_STATIC) {
 		configure_interface_static(network, interface, config);
+		/* Nothing left to do for static interfaces */
+		pending_network_jobs_start();
 	}
 
 	interface->state = IFSTATE_CONFIGURED;

@@ -43,6 +43,10 @@ struct load_url_result {
  */
 typedef void (*load_url_complete)(struct load_url_result *result, void *data);
 
+/* Start transfers that were waiting for network connectivity */
+void pending_network_jobs_start(void);
+void pending_network_jobs_cancel(void);
+
 /* Load a (potentially remote) file, and return a guaranteed-local name */
 struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		load_url_complete complete, void *data,

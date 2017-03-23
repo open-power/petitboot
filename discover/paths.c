@@ -18,8 +18,19 @@
 
 #include "paths.h"
 #include "device-handler.h"
+#include "sysinfo.h"
 
 #define DEVICE_MOUNT_BASE (LOCAL_STATE_DIR "/petitboot/mnt")
+
+
+struct list	pending_network_jobs;
+
+struct network_job {
+	struct load_task	*task;
+	int			flags;
+
+	struct list_item	list;
+};
 
 struct load_task {
 	struct pb_url		*url;
@@ -437,6 +448,86 @@ static void load_local(struct load_task *task)
 	}
 }
 
+static void load_url_async_start_pending(struct load_task *task, int flags)
+{
+	pb_log("Starting pending job for %s\n", task->url->full);
+
+	switch (task->url->scheme) {
+	case pb_url_ftp:
+	case pb_url_http:
+		load_wget(task, flags);
+		break;
+	case pb_url_https:
+		flags |= wget_no_check_certificate;
+		load_wget(task, flags);
+		break;
+	case pb_url_nfs:
+		load_nfs(task);
+		break;
+	case pb_url_sftp:
+		load_sftp(task);
+		break;
+	case pb_url_tftp:
+		load_tftp(task);
+		break;
+	default:
+		/* Shouldn't be a need via this path but.. */
+		load_local(task);
+		break;
+	}
+
+	if (task->result->status == LOAD_ERROR) {
+		pb_log("Pending job failed for %s\n", task->url->full);
+		load_url_result_cleanup_local(task->result);
+		talloc_free(task->result);
+		talloc_free(task);
+	}
+}
+
+void pending_network_jobs_start(void)
+{
+	struct network_job *job, *tmp;
+
+	if (!pending_network_jobs.head.next)
+		return;
+
+	list_for_each_entry_safe(&pending_network_jobs, job, tmp, list) {
+		load_url_async_start_pending(job->task, job->flags);
+		list_remove(&job->list);
+	}
+}
+
+void pending_network_jobs_cancel(void)
+{
+	struct network_job *job, *tmp;
+
+	if (!pending_network_jobs.head.next)
+		return;
+
+	list_for_each_entry_safe(&pending_network_jobs, job, tmp, list)
+		talloc_free(job);
+	list_init(&pending_network_jobs);
+}
+
+static void pending_network_jobs_add(struct load_task *task, int flags)
+{
+	struct network_job *job;
+
+	if (!pending_network_jobs.head.next)
+		list_init(&pending_network_jobs);
+
+	job = talloc(task, struct network_job);
+	if (!job) {
+		pb_log("Failed to allocate space for pending job\n");
+		return;
+	}
+
+	job->task = task;
+	job->flags = flags;
+	list_add_tail(&pending_network_jobs, &job->list);
+}
+
+
 /**
  * load_url - Loads a (possibly) remote URL and returns the local file
  * path.
@@ -485,6 +576,15 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 	if (task->process->stdout_cb) {
 		task->process->add_stderr = true;
 		task->process->keep_stdout = true;
+	}
+
+	/* If the url is remote but network is not yet available queue up this
+	 * load for later */
+	if (!system_info_network_available() && url->scheme != pb_url_file) {
+		pb_log("load task for %s queued pending network\n", url->full);
+		pending_network_jobs_add(task, flags);
+		task->result->status = LOAD_ASYNC;
+		return task->result;
 	}
 
 	switch (url->scheme) {

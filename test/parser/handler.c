@@ -102,3 +102,11 @@ void boot_cancel(struct boot_task *task)
 {
 	(void)task;
 }
+
+void pending_network_jobs_start(void)
+{
+}
+
+void pending_network_jobs_cancel(void)
+{
+}
