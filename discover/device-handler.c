@@ -1244,61 +1244,100 @@ static char *device_from_addr(void *ctx, struct pb_url *url)
 	return dev;
 }
 
+static void process_url_cb(struct load_url_result *result, void *data)
+{
+	struct device_handler *handler;
+	struct discover_context *ctx;
+	struct discover_device *dev;
+	struct event *event = data;
+	const char *mac;
+
+	if (result->status != LOAD_OK) {
+		pb_log("%s: Load failed for %s\n", __func__, result->url->full);
+		return;
+	}
+
+	if (!event)
+		return;
+
+	handler = talloc_parent(event);
+	if (!handler)
+		return;
+
+	event->device = device_from_addr(event, result->url);
+	if (!event->device) {
+		pb_log("Downloaded a file but can't find its interface - pretending it was local\n");
+		event->device = talloc_asprintf(event, "local");
+	}
+
+	mac = event_get_param(event, "mac");
+	char *url = talloc_asprintf(event, "file://%s", result->local);
+	event_set_param(event, "pxeconffile", url);
+
+	dev = discover_device_create(handler, mac, event->device);
+	ctx = device_handler_discover_context_create(handler, dev);
+	talloc_steal(ctx, event);
+	ctx->event = event;
+
+	iterate_parsers(ctx);
+
+	device_handler_discover_context_commit(handler, ctx);
+
+	talloc_unlink(handler, ctx);
+}
+
 void device_handler_process_url(struct device_handler *handler,
 		const char *url, const char *mac, const char *ip)
 {
 	struct discover_context *ctx;
 	struct discover_device *dev;
+	bool allow_async = false;
 	struct pb_url *pb_url;
 	struct event *event;
-	struct param *param;
 
-	if (!handler->network) {
-		device_handler_status_err(handler, _("No network configured"));
-		return;
-	}
-
-	event = talloc(handler, struct event);
+	event = talloc_zero(handler, struct event);
 	event->type = EVENT_TYPE_USER;
 	event->action = EVENT_ACTION_URL;
 
-	if (url[strlen(url) - 1] == '/') {
-		event->params = talloc_array(event, struct param, 3);
-		param = &event->params[0];
-		param->name = talloc_strdup(event, "pxepathprefix");
-		param->value = talloc_strdup(event, url);
-		param = &event->params[1];
-		param->name = talloc_strdup(event, "mac");
-		param->value = talloc_strdup(event, mac);
-		param = &event->params[2];
-		param->name = talloc_strdup(event, "ip");
-		param->value = talloc_strdup(event, ip);
-		event->n_params = 3;
-	} else {
-		event->params = talloc_array(event, struct param, 1);
-		param = &event->params[0];
-		param->name = talloc_strdup(event, "pxeconffile");
-		param->value = talloc_strdup(event, url);
-		event->n_params = 1;
-	}
-
-	pb_url = pb_url_parse(event, event->params->value);
+	pb_url = pb_url_parse(event, url);
 	if (!pb_url || (pb_url->scheme != pb_url_file && !pb_url->host)) {
 		device_handler_status_err(handler, _("Invalid config URL!"));
+		talloc_free(event);
 		return;
+	}
+
+	if (url[strlen(url) - 1] == '/') {
+		event_set_param(event, "pxepathprefix", url);
+		event_set_param(event, "mac", mac);
+		event_set_param(event, "ip", ip);
+		event->device = device_from_addr(event, pb_url);
+		if (!event->device) {
+			device_handler_status_err(handler,
+					_("Unable to route to host %s"),
+					pb_url->host);
+			talloc_free(event);
+			return;
+		}
+	} else {
+		event_set_param(event, "pxeconffile", url);
+		allow_async = true;
 	}
 
 	if (pb_url->scheme == pb_url_file)
 		event->device = talloc_asprintf(event, "local");
-	else
-		event->device = device_from_addr(event, pb_url);
-
-	if (!event->device) {
-		device_handler_status_err(handler,
-					_("Unable to route to host %s"),
-					pb_url->host);
+	else if (allow_async) {
+		/* If file is remote load asynchronously before passing to
+		 * parser. This allows us to wait for network to be available */
+		if (!load_url_async(handler, pb_url, process_url_cb, event,
+					NULL, handler)) {
+			pb_log("Failed to load url %s\n", pb_url->full);
+			device_handler_status_err(handler, _("Failed to load URL!"));
+			talloc_free(event);
+		}
 		return;
 	}
+
+	/* If path is local we can parse straight away */
 
 	dev = discover_device_create(handler, mac, event->device);
 	if (pb_url->scheme == pb_url_file)

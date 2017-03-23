@@ -386,6 +386,9 @@ static int pxe_parse(struct discover_context *dc)
 			pb_log("load_url_async fails for %s\n",
 					dc->conf_url->path);
 			goto out_conf;
+		} else if (result->status == LOAD_OK) {
+			/* Local load - call pxe_conf_parse_cb() now */
+			pxe_conf_parse_cb(result, conf);
 		}
 	} else {
 		pxe_conf_files = user_event_parse_conf_filenames(dc, dc->event);
