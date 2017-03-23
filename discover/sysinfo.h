@@ -15,6 +15,7 @@ void system_info_register_blockdev(const char *name, const char *uuid,
 		const char *mountpoint);
 
 void system_info_init(struct discover_server *server);
+void system_info_reinit(void);
 
 #endif /* SYSINFO_H */
 

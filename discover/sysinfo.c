@@ -139,3 +139,21 @@ void system_info_init(struct discover_server *s)
 	sysinfo = talloc_zero(server, struct system_info);
 	platform_get_sysinfo(sysinfo);
 }
+
+/* Only reset device information. Platform information is static */
+void system_info_reinit(void)
+{
+	unsigned int i;
+
+	for (i = 0; i < sysinfo->n_blockdevs; i++)
+		talloc_free(sysinfo->blockdevs[i]);
+	talloc_free(sysinfo->blockdevs);
+	sysinfo->blockdevs = NULL;
+	sysinfo->n_blockdevs = 0;
+
+	for (i = 0; i < sysinfo->n_interfaces; i++)
+		talloc_free(sysinfo->interfaces[i]);
+	talloc_free(sysinfo->interfaces);
+	sysinfo->interfaces = NULL;
+	sysinfo->n_interfaces = 0;
+}

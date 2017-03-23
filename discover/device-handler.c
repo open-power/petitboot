@@ -1407,6 +1407,8 @@ static void device_handler_reinit_sources(struct device_handler *handler)
 		return;
 	}
 
+	system_info_reinit();
+
 	udev_reinit(handler->udev);
 
 	network_shutdown(handler->network);
