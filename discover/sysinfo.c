@@ -17,6 +17,15 @@ const struct system_info *system_info_get(void)
 	return sysinfo;
 }
 
+bool system_info_network_available(void)
+{
+	unsigned int i;
+
+	for (i = 0; i < sysinfo->n_interfaces; i++)
+		if (sysinfo->interfaces[i]->address)
+			return true;
+	return false;
+}
 
 void system_info_set_interface_address(unsigned int hwaddr_size,
 		uint8_t *hwaddr, const char *address)
