@@ -1033,7 +1033,6 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 	struct platform_powerpc *platform = p->platform_data;
 	uint16_t resp_len = 16;
 	uint8_t resp[16], bcd;
-	uint32_t aux_version;
 	int i, rc;
 
 	/* Retrieve info from current side */
@@ -1061,10 +1060,11 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 						resp[2]);
 		bcd = resp[4] & 0x0f;
 		bcd += 10 * (resp[4] >> 4);
-		memcpy(&aux_version, &resp[12], sizeof(aux_version));
+		/* rev1.rev2.aux_revision */
 		info->bmc_current[2] = talloc_asprintf(info,
-						"Firmware version: %u.%02u.%05u",
-						resp[3], bcd, aux_version);
+						"Firmware version: %u.%02u.%02x%02x%02x%02x",
+						resp[3], bcd, resp[12],
+						resp[13], resp[14], resp[15]);
 		bcd = resp[5] & 0x0f;
 		bcd += 10 * (resp[5] >> 4);
 		info->bmc_current[3] = talloc_asprintf(info, "IPMI version: %u",
@@ -1099,10 +1099,11 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 						resp[2]);
 		bcd = resp[4] & 0x0f;
 		bcd += 10 * (resp[4] >> 4);
-		memcpy(&aux_version, &resp[12], sizeof(aux_version));
+		/* rev1.rev2.aux_revision */
 		info->bmc_golden[2] = talloc_asprintf(info,
-						"Firmware version: %u.%02u.%u",
-						resp[3], bcd, aux_version);
+						"Firmware version: %u.%02u.%02x%02x%02x%02x",
+						resp[3], bcd, resp[12],
+						resp[13], resp[14], resp[15]);
 		bcd = resp[5] & 0x0f;
 		bcd += 10 * (resp[5] >> 4);
 		info->bmc_golden[3] = talloc_asprintf(info, "IPMI version: %u",
