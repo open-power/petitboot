@@ -19,6 +19,7 @@
 #include <url/url.h>
 #include <i18n/i18n.h>
 
+#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
