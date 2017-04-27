@@ -1254,7 +1254,7 @@ static int load_config(struct platform *p, struct config *config)
 
 	rc = parse_nvram(platform);
 	if (rc)
-		return rc;
+		pb_log("%s: Failed to parse nvram\n", __func__);
 
 	populate_config(platform, config);
 
