@@ -64,7 +64,7 @@ fi
 
 AC_CHECK_LIB([devmapper], [dm_task_create],
 	[DEVMAPPER_LIBS=-ldevmapper],
-	[AC_MSG_FAILURE([The libdevmapper development library is required by petitboot.  Try installing the package libdevmapper-dev or libdevmapper-devel.])]
+	[AC_MSG_FAILURE([The libdevmapper development library is required by petitboot.  Try installing the package libdevmapper-dev or device-mapper-devel.])]
 )
 
 AC_ARG_WITH([fdt],
