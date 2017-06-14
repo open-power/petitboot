@@ -1050,7 +1050,7 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 		pb_debug("\n");
 	}
 
-	if (rc == 0 && resp_len == 16) {
+	if (rc == 0 && (resp_len == 12 || resp_len == 16)) {
 		info->bmc_current = talloc_array(info, char *, 4);
 		info->n_bmc_current = 4;
 
@@ -1062,9 +1062,14 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 		bcd += 10 * (resp[4] >> 4);
 		/* rev1.rev2.aux_revision */
 		info->bmc_current[2] = talloc_asprintf(info,
-						"Firmware version: %u.%02u.%02x%02x%02x%02x",
-						resp[3], bcd, resp[12],
-						resp[13], resp[14], resp[15]);
+				"Firmware version: %u.%02u",
+				resp[3], bcd);
+		if (resp_len == 16) {
+			info->bmc_current[2] = talloc_asprintf_append(
+					info->bmc_current[2],
+					".%02x%02x%02x%02x",
+					resp[12], resp[13], resp[14], resp[15]);
+		}
 		bcd = resp[5] & 0x0f;
 		bcd += 10 * (resp[5] >> 4);
 		info->bmc_current[3] = talloc_asprintf(info, "IPMI version: %u",
@@ -1089,7 +1094,7 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 		pb_debug("\n");
 	}
 
-	if (rc == 0 && resp_len == 16) {
+	if (rc == 0 && (resp_len == 12 || resp_len == 16)) {
 		info->bmc_golden = talloc_array(info, char *, 4);
 		info->n_bmc_golden = 4;
 
@@ -1101,9 +1106,14 @@ static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
 		bcd += 10 * (resp[4] >> 4);
 		/* rev1.rev2.aux_revision */
 		info->bmc_golden[2] = talloc_asprintf(info,
-						"Firmware version: %u.%02u.%02x%02x%02x%02x",
-						resp[3], bcd, resp[12],
-						resp[13], resp[14], resp[15]);
+				"Firmware version: %u.%02u",
+				resp[3], bcd);
+		if (resp_len == 16) {
+			info->bmc_golden[2] = talloc_asprintf_append(
+					info->bmc_golden[2],
+					".%02x%02x%02x%02x",
+					resp[12], resp[13], resp[14], resp[15]);
+		}
 		bcd = resp[5] & 0x0f;
 		bcd += 10 * (resp[5] >> 4);
 		info->bmc_golden[3] = talloc_asprintf(info, "IPMI version: %u",
