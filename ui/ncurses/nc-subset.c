@@ -222,8 +222,11 @@ static void subset_screen_draw(struct subset_screen *screen)
 	bool repost = false;
 	int height;
 
-	/* Size of pad = top space + number of available options */
-	height = 1 + N_FIELDS + widget_subset_n_inactive(screen->options);
+	/*
+	 * Size of pad = top space + 2 * number of available options in case
+	 * device names wrap
+	 */
+	height = 1 + N_FIELDS + widget_subset_n_inactive(screen->options) * 2;
 
 	if (!screen->pad || getmaxy(screen->pad) < height) {
 		if (screen->pad)
