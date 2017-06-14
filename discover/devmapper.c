@@ -285,11 +285,11 @@ static int create_base(struct discover_device *device)
 		goto out;
 	}
 
-	name = talloc_asprintf(device, "%s-base", device->device->id);
+	name = talloc_asprintf(device, "pb-%s-base", device->device->id);
 	if (!name || run_create_task(name, &target))
 		goto out;
 
-	device->ramdisk->base = talloc_asprintf(device, "/dev/mapper/%s-base",
+	device->ramdisk->base = talloc_asprintf(device, "/dev/mapper/pb-%s-base",
 					device->device->id);
 	if (!device->ramdisk->base) {
 		pb_log("Failed to track new device /dev/mapper/%s-base\n",
@@ -325,12 +325,12 @@ static int create_origin(struct discover_device *device)
 		goto out;
 	}
 
-	name = talloc_asprintf(device, "%s-origin", device->device->id);
+	name = talloc_asprintf(device, "pb-%s-origin", device->device->id);
 	if (!name || run_create_task(name, &target))
 		goto out;
 
 	device->ramdisk->origin = talloc_asprintf(device,
-					"/dev/mapper/%s-origin",
+					"/dev/mapper/pb-%s-origin",
 					device->device->id);
 	if (!device->ramdisk->origin) {
 		pb_log("Failed to track new device /dev/mapper/%s-origin\n",
@@ -350,6 +350,7 @@ out:
 static int create_snapshot(struct discover_device *device)
 {
 	struct target target;
+	char *name = NULL;
 	int rc = -1;
 
 	if (!device->ramdisk || !device->ramdisk->base ||
@@ -367,10 +368,11 @@ static int create_snapshot(struct discover_device *device)
 		goto out;
 	}
 
-	if (run_create_task(device->device->id, &target))
+	name = talloc_asprintf(device, "pb-%s", device->device->id);
+	if (!name || run_create_task(name, &target))
 		goto out;
 
-	device->ramdisk->snapshot = talloc_asprintf(device, "/dev/mapper/%s",
+	device->ramdisk->snapshot = talloc_asprintf(device, "/dev/mapper/pb-%s",
 						device->device->id);
 	if (!device->ramdisk->snapshot) {
 		pb_log("Failed to track new device /dev/mapper/%s\n",
@@ -381,6 +383,7 @@ static int create_snapshot(struct discover_device *device)
 	rc = 0;
 
 out:
+	talloc_free(name);
 	talloc_free(target.params);
 	talloc_free(target.ttype);
 	return rc;
