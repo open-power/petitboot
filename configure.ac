@@ -332,6 +332,8 @@ DEFINE_HOST_PROG(UMOUNT, umount, [/bin/umount])
 DEFINE_HOST_PROG(WGET, wget, [/usr/bin/wget])
 DEFINE_HOST_PROG(IP, ip, [/sbin/ip])
 DEFINE_HOST_PROG(UDHCPC, udhcpc, [/sbin/udhcpc])
+DEFINE_HOST_PROG(VGSCAN, vgscan, [/usr/sbin/vgscan])
+DEFINE_HOST_PROG(VGCHANGE, vgchange, [/usr/sbin/vgchange])
 
 AC_ARG_WITH(
     [tftp],

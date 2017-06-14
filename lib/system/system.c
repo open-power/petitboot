@@ -28,6 +28,8 @@ const struct pb_system_apps pb_system_apps = {
 	.wget		= HOST_PROG_WGET,
 	.ip		= HOST_PROG_IP,
 	.udhcpc		= HOST_PROG_UDHCPC,
+	.vgscan		= HOST_PROG_VGSCAN,
+	.vgchange	= HOST_PROG_VGCHANGE,
 };
 
 #ifndef TFTP_TYPE

@@ -13,6 +13,8 @@ struct pb_system_apps {
 	const char *wget;
 	const char *ip;
 	const char *udhcpc;
+	const char *vgscan;
+	const char *vgchange;
 };
 
 extern const struct pb_system_apps pb_system_apps;
