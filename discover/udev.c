@@ -19,6 +19,7 @@
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
 #include <system/system.h>
+#include <process/process.h>
 
 #include "event.h"
 #include "udev.h"
@@ -70,9 +71,26 @@ static void udev_setup_device_params(struct udev_device *udev,
 				udev_list_entry_get_value(entry));
 }
 
+/*
+ * Search for LVM logical volumes. If any exist they should be recognised
+ * by udev as normal.
+ * Normally this is handled in an init script, but on some platforms
+ * disks are slow enough to come up that we need to check again.
+ */
+static void lvm_vg_search(struct device_handler *handler)
+{
+	if (process_run_simple(handler, pb_system_apps.vgscan, "-qq", NULL))
+		pb_log("%s: Failed to execute vgscan\n", __func__);
+
+	if (process_run_simple(handler, pb_system_apps.vgchange, "-ay", "-qq",
+				NULL))
+		pb_log("%s: Failed to execute vgchange\n", __func__);
+}
+
 static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		const char *name)
 {
+	char *devlinks = NULL, *link, *saveptr = NULL;
 	struct discover_device *ddev;
 	unsigned int i = 0;
 	const char *typestr;
@@ -85,7 +103,6 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	const char *ignored_types[] = {
 		"linux_raid_member",
 		"swap",
-		"LVM2_member",
 		NULL,
 	};
 	bool cdrom, usb;
@@ -124,10 +141,9 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		}
 	}
 
-	/* If our environment's udev can recognise them explictly skip any
-	 * device mapper devices we encounter */
+	/* Ignore any device mapper devices that aren't logical volumes */
 	devname = udev_device_get_property_value(dev, "DM_NAME");
-	if (devname) {
+	if (devname && ! udev_device_get_property_value(dev, "DM_LV_NAME")) {
 		pb_debug("SKIP: dm-device %s\n", devname);
 		return 0;
 	}
@@ -146,6 +162,12 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		i++;
 	}
 
+	/* Search for LVM logical volumes if we see an LVM member */
+	if (strncmp(type, "LVM2_member", strlen("LVM2_member")) == 0) {
+		lvm_vg_search(udev->handler);
+		return 0;
+	}
+
 	/* We may see multipath devices; they'll have the same uuid as an
 	 * existing device, so only parse the first. */
 	uuid = udev_device_get_property_value(dev, "ID_FS_UUID");
@@ -158,9 +180,31 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		}
 	}
 
-	ddev = discover_device_create(udev->handler, uuid, name);
+	/* Use DM_NAME for logical volumes, or the device name otherwise */
+	ddev = discover_device_create(udev->handler, uuid, devname ?: name);
+
+	if (devname) {
+		/*
+		 * For logical volumes udev_device_get_devnode() returns a path
+		 * of the form "/dev/dm-xx". These nodes names are not
+		 * persistent and are opaque to the user. Instead use the more
+		 * recognisable "/dev/mapper/lv-name" node if it is available.
+		 */
+		devlinks = talloc_strdup(ddev,
+				udev_device_get_property_value(dev, "DEVLINKS"));
+		link = devlinks ? strtok_r(devlinks, " ", &saveptr) : NULL;
+		while (link) {
+			if (strncmp(link, "/dev/mapper/",
+					strlen("/dev/mapper/")) == 0) {
+				node = link;
+				break;
+			}
+			link = strtok_r(NULL, " ", &saveptr);
+		}
+	}
 
 	ddev->device_path = talloc_strdup(ddev, node);
+	talloc_free(devlinks);
 
 	if (uuid)
 		ddev->uuid = talloc_strdup(ddev, uuid);
