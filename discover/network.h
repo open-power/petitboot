@@ -18,5 +18,8 @@ void network_unregister_device(struct network *network,
 uint8_t *find_mac_by_name(void *ctx, struct network *network,
 		const char *name);
 
+void network_mark_interface_ready(struct device_handler *handler,
+		int ifindex, const char *ifname, uint8_t *mac, int hwsize);
+
 #endif /* NETWORK_H */
 

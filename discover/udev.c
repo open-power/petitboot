@@ -27,6 +27,7 @@
 #include "device-handler.h"
 #include "cdrom.h"
 #include "devmapper.h"
+#include "network.h"
 
 /* We set a default monitor buffer size, as we may not process monitor
  * events while performing device discvoery. systemd uses a 128M buffer, so
@@ -230,6 +231,69 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	return 0;
 }
 
+/*
+ * Mark valid interfaces as 'ready'.
+ * The udev_enumerate_add_match_is_initialized() filter in udev_enumerate()
+ * ensures that any device we see is properly initialized by udev (eg. interface
+ * names); here we check that the properties are sane and mark the interface
+ * as ready for configuration in discover/network.
+ */
+static int udev_check_interface_ready(struct device_handler *handler,
+		struct udev_device *dev)
+{
+	const char *name, *name_path, *ifindex, *interface, *mac_name;
+	uint8_t *mac;
+	char byte[3];
+	unsigned int i, j;
+
+
+	name = udev_device_get_sysname(dev);
+	if (!name) {
+		pb_debug("udev_device_get_sysname failed\n");
+		return -1;
+	}
+
+	name_path = udev_device_get_property_value(dev, "ID_NET_NAME_PATH");
+	ifindex = udev_device_get_property_value(dev, "IFINDEX");
+	interface = udev_device_get_property_value(dev, "INTERFACE");
+	mac_name = udev_device_get_property_value(dev, "ID_NET_NAME_MAC");
+
+	/* Physical interfaces should have all of these properties */
+	if (!name_path || !ifindex || !interface || !mac_name) {
+		pb_debug("%s: interface %s missing properties\n",
+				__func__, name);
+		return -1;
+	}
+
+	/* ID_NET_NAME_MAC format is enxMACADDR */
+	if (strlen(mac_name) < 15) {
+		pb_debug("%s: Unexpected MAC format: %s\n",
+				__func__, mac_name);
+		return -1;
+	}
+
+	mac = talloc_array(handler, uint8_t, HWADDR_SIZE);
+	if (!mac)
+		return -1;
+
+	/*
+	 * ID_NET_NAME_MAC is not a conventionally formatted MAC
+	 * string - convert it before passing it to network.c
+	 */
+	byte[2] = '\0';
+	for (i = strlen("enx"), j = 0;
+			i < strlen(mac_name) && j < HWADDR_SIZE; i += 2) {
+		memcpy(byte, &mac_name[i], 2);
+		mac[j++] = strtoul(byte, NULL, 16);
+	}
+
+	network_mark_interface_ready(handler,
+			atoi(ifindex), interface, mac, HWADDR_SIZE);
+
+	talloc_free(mac);
+	return 0;
+}
+
 static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 {
 	const char *subsys;
@@ -246,6 +310,10 @@ static int udev_handle_dev_add(struct pb_udev *udev, struct udev_device *dev)
 		pb_debug("udev_device_get_subsystem failed\n");
 		return -1;
 	}
+
+	/* If we see a net device, check if it is ready to be used */
+	if (!strncmp(subsys, "net", strlen("net")))
+		return udev_check_interface_ready(udev->handler, dev);
 
 	if (device_lookup_by_id(udev->handler, name)) {
 		pb_debug("device %s is already present?\n", name);
@@ -324,10 +392,16 @@ static bool udev_handle_cdrom_events(struct pb_udev *udev,
 static int udev_handle_dev_change(struct pb_udev *udev, struct udev_device *dev)
 {
 	struct discover_device *ddev;
+	const char *subsys;
 	const char *name;
 	int rc = 0;
 
 	name = udev_device_get_sysname(dev);
+	subsys = udev_device_get_subsystem(dev);
+
+	/* If we see a net device, check if it is ready to be used */
+	if (!strncmp(subsys, "net", strlen("net")))
+		return udev_check_interface_ready(udev->handler, dev);
 
 	ddev = device_lookup_by_id(udev->handler, name);
 
@@ -392,6 +466,12 @@ static int udev_enumerate(struct udev *udev)
 		goto fail;
 	}
 
+	result = udev_enumerate_add_match_subsystem(enumerate, "net");
+	if (result) {
+		pb_log("udev_enumerate_add_match_subsystem failed\n");
+		goto fail;
+	}
+
 	result = udev_enumerate_add_match_is_initialized(enumerate);
 	if (result) {
 		pb_log("udev_enumerate_add_match_is_initialised failed\n");
@@ -442,6 +522,14 @@ static int udev_setup_monitor(struct udev *udev, struct udev_monitor **monitor)
 	}
 
 	result = udev_monitor_filter_add_match_subsystem_devtype(m, "block",
+		NULL);
+
+	if (result) {
+		pb_log("udev_monitor_filter_add_match_subsystem_devtype failed\n");
+		goto out_err;
+	}
+
+	result = udev_monitor_filter_add_match_subsystem_devtype(m, "net",
 		NULL);
 
 	if (result) {

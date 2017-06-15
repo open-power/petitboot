@@ -1424,13 +1424,13 @@ static void device_handler_update_lang(const char *lang)
 static int device_handler_init_sources(struct device_handler *handler)
 {
 	/* init our device sources: udev, network and user events */
-	handler->udev = udev_init(handler, handler->waitset);
-	if (!handler->udev)
-		return -1;
-
 	handler->network = network_init(handler, handler->waitset,
 			handler->dry_run);
 	if (!handler->network)
+		return -1;
+
+	handler->udev = udev_init(handler, handler->waitset);
+	if (!handler->udev)
 		return -1;
 
 	handler->user_event = user_event_init(handler, handler->waitset);
@@ -1451,11 +1451,11 @@ static void device_handler_reinit_sources(struct device_handler *handler)
 
 	system_info_reinit();
 
-	udev_reinit(handler->udev);
-
 	network_shutdown(handler->network);
 	handler->network = network_init(handler, handler->waitset,
 			handler->dry_run);
+
+	udev_reinit(handler->udev);
 }
 
 static inline const char *get_device_path(struct discover_device *dev)

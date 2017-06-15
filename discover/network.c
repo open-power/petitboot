@@ -54,6 +54,7 @@ struct interface {
 	struct list_item list;
 	struct process *udhcpc_process;
 	struct discover_device *dev;
+	bool ready;
 };
 
 struct network {
@@ -598,11 +599,82 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 	if (!interface->dev)
 		create_interface_dev(network, interface);
 
+	if (!interface->ready && strncmp(interface->name, "lo", strlen("lo"))) {
+		pb_log("%s not marked ready yet\n", interface->name);
+		return 0;
+	}
+
 	configure_interface(network, interface,
 			info->ifi_flags & IFF_UP,
 			info->ifi_flags & IFF_LOWER_UP);
 
 	return 0;
+}
+
+void network_mark_interface_ready(struct device_handler *handler,
+		int ifindex, const char *ifname, uint8_t *mac, int hwsize)
+{
+	struct network *network = device_handler_get_network(handler);
+	struct interface *interface, *tmp = NULL;
+	char *macstr;
+
+	if (!network) {
+		pb_log("Network not ready - can not mark interface ready\n");
+		return;
+	}
+
+	if (hwsize != HWADDR_SIZE)
+		return;
+
+	if (strncmp(ifname, "lo", strlen("lo")) == 0)
+		return;
+
+	interface = find_interface_by_ifindex(network, ifindex);
+	if (!interface) {
+		pb_debug("Creating ready interface %d - %s\n",
+				ifindex, ifname);
+		interface = talloc_zero(network, struct interface);
+		interface->ifindex = ifindex;
+		interface->state = IFSTATE_NEW;
+		memcpy(interface->hwaddr, mac, HWADDR_SIZE);
+		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
+
+		list_for_each_entry(&network->interfaces, tmp, list)
+			if (memcmp(interface->hwaddr, tmp->hwaddr,
+				   sizeof(interface->hwaddr)) == 0) {
+				pb_log("%s: %s has duplicate MAC address, ignoring\n",
+				       __func__, interface->name);
+				talloc_free(interface);
+				return;
+			}
+
+		list_add(&network->interfaces, &interface->list);
+		create_interface_dev(network, interface);
+	}
+
+	if (interface->ready) {
+		pb_log("%s already ready\n", interface->name);
+		return;
+	}
+
+	if (strncmp(interface->name, ifname, strlen(ifname)) != 0) {
+		pb_debug("ifname update from udev: %s -> %s\n", interface->name, ifname);
+		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
+		talloc_free(interface->dev->device->id);
+		interface->dev->device->id =
+			talloc_strdup(interface->dev->device, ifname);
+	}
+
+	if (memcmp(interface->hwaddr, mac, HWADDR_SIZE) != 0) {
+		macstr = mac_bytes_to_string(interface, mac, hwsize);
+		pb_log("Warning - new MAC for interface %d does not match: %s\n",
+				ifindex, macstr);
+		talloc_free(macstr);
+	}
+
+	pb_log("Interface %s ready\n", ifname);
+	interface->ready = true;
+	configure_interface(network, interface, false, false);
 }
 
 static int network_netlink_process(void *arg)
