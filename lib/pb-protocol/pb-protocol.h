@@ -25,6 +25,7 @@ enum pb_protocol_action {
 	PB_PROTOCOL_ACTION_ADD_URL		= 0xb,
 	PB_PROTOCOL_ACTION_PLUGIN_OPTION_ADD	= 0xc,
 	PB_PROTOCOL_ACTION_PLUGINS_REMOVE	= 0xd,
+	PB_PROTOCOL_ACTION_PLUGIN_INSTALL	= 0xe,
 };
 
 struct pb_protocol_message {

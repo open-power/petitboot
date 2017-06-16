@@ -304,6 +304,12 @@ static int discover_server_process_message(void *arg)
 				url, NULL, NULL);
 		break;
 
+	case PB_PROTOCOL_ACTION_PLUGIN_INSTALL:
+		url = pb_protocol_deserialise_string((void *) client, message);
+
+		device_handler_install_plugin(client->server->device_handler,
+				url);
+		break;
 	default:
 		pb_log("%s: invalid action %d\n", __func__, message->action);
 		return 0;

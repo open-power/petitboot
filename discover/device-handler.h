@@ -159,6 +159,8 @@ void device_handler_update_config(struct device_handler *handler,
 		struct config *config);
 void device_handler_process_url(struct device_handler *handler,
 		const char *url, const char *mac, const char *ip);
+void device_handler_install_plugin(struct device_handler *handler,
+		const char *plugin_file);
 void device_handler_reinit(struct device_handler *handler);
 
 int device_request_write(struct discover_device *dev, bool *release);

@@ -87,6 +87,7 @@ struct device_handler {
 
 	struct plugin_option	**plugins;
 	unsigned int		n_plugins;
+	bool			plugin_installing;
 };
 
 static int mount_device(struct discover_device *dev);
@@ -1404,6 +1405,61 @@ void device_handler_process_url(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 	talloc_unlink(handler, ctx);
+}
+
+static void plugin_install_cb(struct process *process)
+{
+	struct device_handler *handler = process->data;
+
+	if (!handler) {
+		pb_log("%s: Missing data!\n", __func__);
+		return;
+	}
+
+	handler->plugin_installing = false;
+	if (process->exit_status) {
+		device_handler_status_err(handler, "Plugin failed to install!");
+		pb_log("Failed to install plugin:\n%s\n", process->stdout_buf);
+	}
+}
+
+void device_handler_install_plugin(struct device_handler *handler,
+		const char *plugin_file)
+{
+	struct process *p;
+	int result;
+
+	if (handler->plugin_installing) {
+		pb_log("Plugin install cancelled - install already running");
+		return;
+	}
+
+	p = process_create(handler);
+	if (!p) {
+		pb_log("install_plugin: Failed to create process\n");
+		return;
+	}
+
+	const char *argv[] = {
+		pb_system_apps.pb_plugin,
+		"install",
+		"auto",
+		plugin_file,
+		NULL
+	};
+
+	p->path = pb_system_apps.pb_plugin;
+	p->argv = argv;
+	p->exit_cb = plugin_install_cb;
+	p->data = handler;
+	p->keep_stdout = true;
+
+	result = process_run_async(p);
+
+	if (result)
+		device_handler_status_err(handler, "Could not install plugin");
+	else
+		handler->plugin_installing = true;
 }
 
 #ifndef PETITBOOT_TEST
