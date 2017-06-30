@@ -946,7 +946,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		label = talloc_asprintf(screen,
 				_("%s IPMI boot option: %s"),
 				config->ipmi_bootdev_persistent ?
-				"Persistent" : "Temporary",
+				_("Persistent") : _("Temporary"),
 				ipmi_bootdev_display_name(config->ipmi_bootdev));
 		screen->widgets.ipmi_type_l = widget_new_label(set, 0, 0,
 							label);

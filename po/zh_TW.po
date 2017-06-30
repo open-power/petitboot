@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2016-03-07 10:02+1100\n"
+"POT-Creation-Date: 2017-10-11 13:42+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Traditional Chinese\n"
@@ -16,21 +16,31 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "running boot hooks"
-msgstr "正在執行啟動連結鉤"
+msgid "Running boot hooks"
+msgstr "啟動連結鉤執行中"
 
 #, c-format
-msgid "Couldn't load %s"
-msgstr "無法載入 %s"
+msgid "Loaded %s from %s"
+msgstr "已載入 %s，來源：%s"
 
-msgid "performing kexec_load"
-msgstr "正在執行 kexec_load"
+#, c-format
+msgid "Couldn't load %s from %s"
+msgstr "無法載入 %s，載入來源：%s"
 
-msgid "kexec load failed"
-msgstr "kexec 載入失敗"
+msgid "Performing kexec load"
+msgstr "正在執行 kexec 負載"
 
-msgid "performing kexec reboot"
-msgstr "正在執行 kexec 重新啟動"
+msgid "Decryption failed"
+msgstr "解密失敗"
+
+msgid "Signature verification failed"
+msgstr "簽章驗證失敗"
+
+msgid "Invalid signature configuration"
+msgstr "簽章配置無效"
+
+msgid "Performing kexec reboot"
+msgstr "正在執行 kexec 重新開機"
 
 msgid "kexec reboot failed"
 msgstr "kexec 重新啟動失敗"
@@ -43,60 +53,72 @@ msgid "(unknown)"
 msgstr "（不明）"
 
 #, c-format
-msgid "Booting %s."
-msgstr "正在啟動 %s。"
+msgid "Booting %s"
+msgstr "正在啟動 %s"
 
 msgid "Boot failed: no image specified"
 msgstr "啟動失敗：未指定任何映像檔"
+
+msgid "Boot failed: no command line signature file specified"
+msgstr "啟動失敗：未指定指令行簽章檔案"
+
+msgid "kernel image"
+msgstr "核心映像"
+
+msgid "initrd"
+msgstr "initrd"
+
+msgid "dtb"
+msgstr "dtb"
+
+msgid "kernel image signature"
+msgstr "核心映像簽章"
+
+msgid "initrd signature"
+msgstr "initrd 簽章"
+
+msgid "dtb signature"
+msgstr "dtb 簽章"
+
+msgid "kernel command line signature"
+msgstr "核心指令行簽章"
 
 msgid "Boot cancelled"
 msgstr "已取消啟動"
 
 #, c-format
+msgid "%u downloads in progress..."
+msgstr "%u 下載進行中..."
+
+#, c-format
+msgid "%u %s downloading: %.0f%% - %lu%cB"
+msgstr "%u %s 正在下載：已下載%.0f%% - %lu%cB"
+
+msgid "item"
+msgid_plural "items"
+msgstr[0] "項目"
+
+#, fuzzy, c-format
 msgid "Booting in %d sec: %s"
-msgstr "將於 %d 秒後啟動：%s"
+msgstr "%d 秒後啟動：[%s] %s"
 
-#. TRANSLATORS: this string will be passed the type and identifier
-#. of the device. For example, the first parameter could be "Disk",
-#. (which will be translated accordingly) and the second a Linux device
-#. identifier like 'sda1' (which will not be translated)
+#. TRANSLATORS: this string will be passed the type of the
+#. device (eg "disk" or "network"), which will be translated
+#. accordingly.
 #.
 #, c-format
-msgid "Processing %s device %s"
-msgstr "處理 %s 裝置 %s"
+msgid "Processing new %s device"
+msgstr "正在處理新 %s 裝置"
 
-#. TRANSLATORS: the format specifier in this string is a Linux
-#. device identifier, like 'sda1'
-#.
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
 #, c-format
-msgid "Processing %s complete"
-msgstr "處理 %s 完成"
-
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
-#, c-format
-msgid "Processing dhcp event on %s"
-msgstr "處理 %s 上的 DHCP 事件"
-
-msgid "Processing user config"
-msgstr "處理使用者配置"
-
-msgid "Processing user config complete"
-msgstr "處理使用者配置完成"
+msgid "Processing DHCP lease response (ip: %s)"
+msgstr "正在處理 DHCP 租賃期限回應 (IP: %s)"
 
 msgid "Default boot cancelled"
 msgstr "已取消預設啟動"
 
-#, c-format
-msgid "Received config URL %s"
-msgstr "接收到配置 URL %s"
-
 msgid "No network configured"
-msgstr "沒有配置網路"
+msgstr "No network configured"
 
 msgid "Invalid config URL!"
 msgstr "配置 URL 無效！"
@@ -106,8 +128,46 @@ msgid "Unable to route to host %s"
 msgstr "無法遞送至主機 %s"
 
 #, c-format
-msgid "Config file %s parsed"
-msgstr "已剖析配置檔 %s"
+msgid "Parsed GRUB configuration from %s"
+msgstr "已從 %s 剖析 GRUB 配置"
+
+#, c-format
+msgid "Parsed kboot configuration from %s"
+msgstr "已從 %s 剖析 kboot 配置"
+
+msgid "Configuring with DHCP"
+msgstr "正在配置 DHCP"
+
+#, c-format
+msgid "Configuring with static address (ip: %s)"
+msgstr "正在配置靜態位址 (ip: %s)"
+
+#, c-format
+msgid "Download complete: %s"
+msgstr "下載完成：%s"
+
+#, c-format
+msgid "Failed to download %s"
+msgstr "無法下載 %s"
+
+msgid "PXE autoconfiguration failed"
+msgstr "PXE 自動配置失敗"
+
+#, c-format
+msgid "Parsed PXE config from %s"
+msgstr "已從 %s 剖析 PXE 配置"
+
+#, c-format
+msgid "Requesting config %s"
+msgstr "正在要求配置 %s"
+
+#, c-format
+msgid "Probing from base %s"
+msgstr "正在從基本程式 %s 探查"
+
+#, c-format
+msgid "Parsed yaboot configuration from %s"
+msgstr "已從 %s 剖析 yaboot 配置"
 
 msgid "None"
 msgstr "無"
@@ -181,6 +241,9 @@ msgstr "裝置樹狀結構："
 msgid "Boot arguments:"
 msgstr "啟動引數："
 
+msgid "Argument signature file:"
+msgstr "引數簽章檔案："
+
 msgid "Petitboot Option Editor"
 msgstr "Petitboot 選項編輯器"
 
@@ -200,13 +263,13 @@ msgid "Autoboot:"
 msgstr "自動啟動："
 
 msgid "Disabled"
-msgstr ""
+msgstr "已停用"
 
 msgid "Enabled"
-msgstr ""
+msgstr "已啟用"
 
 msgid "Add Device"
-msgstr "新增裝置"
+msgstr "新增裝置："
 
 msgid "Clear"
 msgstr "清除"
@@ -215,7 +278,7 @@ msgid "Clear & Boot Any"
 msgstr "清除並啟動任意項"
 
 msgid "Boot Order:"
-msgstr "開機順序："
+msgstr "開機順序"
 
 msgid "(None)"
 msgstr "（無）"
@@ -229,7 +292,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "網路：%s [MAC：%s]"
 
 msgid "Any Device"
-msgstr "任何裝置"
+msgstr "任何裝置："
 
 #, c-format
 msgid "Any %s device"
@@ -245,8 +308,17 @@ msgstr "秒"
 msgid "%s IPMI boot option: %s"
 msgstr "%s IPMI 啟動選項：%s"
 
+msgid "Persistent"
+msgstr ""
+
+msgid "Temporary"
+msgstr ""
+
 msgid "Clear option:"
 msgstr "清除選項："
+
+msgid "Clear IPMI override now"
+msgstr "立即清除 IPMI 置換"
 
 msgid "Network:"
 msgstr "網路："
@@ -266,6 +338,9 @@ msgstr "向上鏈結"
 msgid "link down"
 msgstr "向下鏈結"
 
+msgid "Network Override Active! 'OK' will overwrite interface config"
+msgstr "網路置換作用中！按一下「確定」會改寫介面配置"
+
 msgid "IP/mask:"
 msgstr "IP/遮罩："
 
@@ -279,10 +354,10 @@ msgid "(eg. 192.168.0.1)"
 msgstr "（例如：192.168.0.1）"
 
 msgid "URL:"
-msgstr ""
+msgstr "URL："
 
 msgid "(eg. tftp://)"
-msgstr ""
+msgstr "(eg. tftp://)"
 
 msgid "DNS Server(s):"
 msgstr "DNS 伺服器："
@@ -292,6 +367,12 @@ msgstr "（例如：192.168.0.2）"
 
 msgid "(if not provided by DHCP server)"
 msgstr "（如果 DHCP 伺服器未提供的話）"
+
+msgid "HTTP Proxy:"
+msgstr "HTTP Proxy："
+
+msgid "HTTPS Proxy:"
+msgstr "HTTPS Proxy："
 
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "選取「確定」將會結束安全模式"
@@ -304,6 +385,17 @@ msgstr "阻止全部寫入磁碟"
 
 msgid "Allow bootloader scripts to modify disks"
 msgstr "容許開機載入器 Script 修改磁碟"
+
+msgid "Boot console:"
+msgstr "啟動主控台："
+
+#, c-format
+msgid "Manually set: '%s'"
+msgstr "手動設定：'%s'"
+
+#, c-format
+msgid "Current interface: %s"
+msgstr "現行介面：%s"
 
 msgid "Petitboot System Configuration"
 msgstr "Petitboot 系統配置"
@@ -328,12 +420,6 @@ msgstr "失敗：啟動 %s"
 msgid "User item %u"
 msgstr "使用者項目 %u"
 
-msgid "Error"
-msgstr "錯誤"
-
-msgid "Info"
-msgstr "資訊"
-
 #, c-format
 msgid "SAFE MODE: select '%s' to continue"
 msgstr "安全模式：選取 '%s' 以繼續"
@@ -341,8 +427,8 @@ msgstr "安全模式：選取 '%s' 以繼續"
 msgid "Rescan devices"
 msgstr "重新掃描裝置"
 
-msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
-msgstr "Enter = 接受，e = 編輯，n = 新建，x = 結束，l = 語言，h = 說明"
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"
+msgstr "Enter=接受，e=編輯，n=新建，x=退出，l=語言，g=日誌，h=說明"
 
 msgid "Welcome to Petitboot"
 msgstr "歡迎使用 Petitboot"
@@ -353,8 +439,14 @@ msgstr "系統資訊"
 msgid "System configuration"
 msgstr "系統配置"
 
+msgid "System status log"
+msgstr "系統狀態日誌"
+
 msgid "Retrieve config from URL"
 msgstr "從 URL 擷取配置"
+
+msgid "Reboot"
+msgstr "重新啟動"
 
 msgid "Exit to shell"
 msgstr "結束至 Shell"
@@ -396,7 +488,7 @@ msgid "Petitboot Language Selection"
 msgstr "選取 Petitboot 語言"
 
 msgid "tab=next, shift+tab=previous, x=exit"
-msgstr "tab = 下一個，shift+tab = 前一個，x = 結束"
+msgstr "Tab=下一個，Shift+Tab=上一個，x=退出"
 
 #, c-format
 msgid "!Invalid option %d"
@@ -415,30 +507,30 @@ msgid "System id:"
 msgstr "系統 ID："
 
 msgid "Primary platform versions:"
-msgstr ""
+msgstr "主要的平台版本："
 
 msgid "Alternate platform versions:"
-msgstr ""
+msgstr "替代平台版本："
 
 msgid "BMC current side:"
-msgstr ""
+msgstr "BMC 現行端："
 
 msgid "BMC golden side:"
-msgstr ""
+msgstr "BMC 最優端："
 
 msgid "Storage devices"
 msgstr "儲存裝置"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID：      %s"
+msgstr "  UUID：      %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " 裝載位置：%s"
+msgstr "  裝載位置：%s"
 
 msgid "Management (BMC) interface"
-msgstr ""
+msgstr "管理 (BMC) 介面"
 
 #, c-format
 msgid " MAC:  %s"
@@ -447,11 +539,22 @@ msgstr "  MAC：%s"
 msgid "Network interfaces"
 msgstr "網路介面"
 
+#, c-format
+msgid " MAC:        %s"
+msgstr "  MAC：%s"
+
+#, c-format
+msgid " IP Address: %s"
+msgstr " IP 位址：%s"
+
+msgid "none"
+msgstr "無"
+
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
-msgid " link: %s"
-msgstr " 鏈結：%s"
+msgid " link:       %s"
+msgstr "  鏈結：%s"
 
 msgid "up"
 msgstr "向上鏈結"
@@ -488,6 +591,9 @@ msgid ""
 "\n"
 "To set the language for the petitboot interface, type L (language).\n"
 "\n"
+"To view the log of status messages from the discovery process, type G "
+"(log).\n"
+"\n"
 "To find new or updated boot options on the system, select the 'Rescan "
 "devices' option.\n"
 "\n"
@@ -510,6 +616,8 @@ msgstr ""
 "如果要變更系統配置，請鍵入 C（配置）。\n"
 "\n"
 "如果要設定 Petitboot 介面的語言，請鍵入 L（語言）。\n"
+"\n"
+"要檢視探索處理程序的狀態訊息日誌，請鍵入 G（日誌）。\n"
 "\n"
 "如果要在系統上尋找新的啟動選項或已更新的啟動選項，請選取「重新掃描裝置」選"
 "項。\n"
@@ -580,10 +688,10 @@ msgid ""
 "\n"
 "By selecting the 'Add Device' button new devices can be added to the "
 "autoboot list, either by UUID, MAC address, or device type. Once added to "
-"the boot order, the priority of devices can be changed with the 'left' and "
-"'right' keys Devices can be individually removed from the boot order with "
-"the minus key. Use this option if you have multiple operating system images "
-"installed.\n"
+"the boot order, the priority of devices can be changed with the '-' (minus) "
+"and '+' (plus) keys. Devices can be individually removed from the boot order "
+"with the 'delete' or 'backspace' keys. Use this option if you have multiple "
+"operating system images installed.\n"
 "\n"
 "To autoboot from any device, select the 'Clear & Boot Any' button. In this "
 "case, any boot option that is marked as a default (by bootloader "
@@ -617,6 +725,10 @@ msgid ""
 "this option if you do not have a DHCP server, or want explicit control of "
 "network settings.\n"
 "\n"
+"HTTP(S) Proxy: Allows you to specify an optional HTTP or HTTPS proxy server "
+"if required, for example: \"http://proxy:3128\". Any HTTP(S) requests made "
+"by the pb-discover server will use these details.\n"
+"\n"
 "Disk R/W: Certain bootloader configurations may request write access to "
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
@@ -624,13 +736,13 @@ msgstr ""
 "自動啟動：指定要從其中自動啟動的裝置。\n"
 "\n"
 "透過選取「新增裝置」按鈕，可依 UUID、MAC 位址或裝置類型將新裝置新增至自動啟動"
-"清單。新增至開機順序之後，即可利用「向左」與「向右」鍵，變更裝置的優先順序。"
-"可利用減號鍵將裝置從開機順序中個別地移除。如果已安裝了多個作業系統映像檔，請"
-"使用此選項。\n"
+"清單。新增至開機順序，裝置優先順序可採用 '-' (減號) 和 '+' (加號) 鍵來更改。"
+"可採用「刪除」或「退格」鍵來個別移除裝置。 如果安裝了多個作業系統映像請採用此"
+"選項。\n"
 "\n"
 "若要從任何裝置中自動啟動，請選取「清除與啟動任何」按鈕。在此情況下，逾時之"
-"後，已標示為預設（透過開機載入器配置）的任何啟動選項都將自動啟動。如果要在不"
-"變更任何啟動選項設定的情況下快速啟動系統，請使用此選項。這是一般配置。\n"
+"後，已標示為預設（透過開機載入器配置）的任何啟動選項都將自動啟動。採用此選項"
+"快速啟動系統，請使用此選項。這是一般配置。\n"
 "\n"
 "若要停用自動啟動，請選取將清除開機順序的「清除」按鈕。在停用自動啟動的情況"
 "下，將需要使用者互動才能繼續先前的 Petitboot 功能表。如果您要讓機器等待明確的"
@@ -651,11 +763,105 @@ msgstr ""
 "靜態 IP 配置：容許您指定網路介面的 IPv4 位址和網路遮罩、閘道以及 DNS 伺服器。"
 "如果您沒有 DHCP 伺服器，或者您要明確控制網路設定，請選取此選項。\n"
 "\n"
-"磁碟 R/W：某些開機載入器配置可能需要磁碟的寫入權，以儲存資訊或更新參數（例"
-"如：GRUB2）。使用此選項來控制對磁碟的存取。\n"
+"HTTP(S) Proxy：如果需要，容許指定非必須的 HTTP 或 HTTPS Proxy 伺服器範例："
+"\"http://proxy:3128\"。任何由 pb-discover 伺服器發出的 HTTP(S) 要求都將採用這"
+"些詳細資料。\n"
+"\n"
+"磁碟 R/W：某些開機載入器配置可能需要磁碟的寫入權，來儲存資訊或更新參數（例"
+"如：GRUB2）。採用此選項來控制對磁碟的存取。\n"
 
 msgid "Usage"
 msgstr "用法"
+
+#~ msgid "Failed to load URL!"
+#~ msgstr "無法載入 URL！"
+
+#~ msgid "Plugins (0)"
+#~ msgstr "外掛程式 (0)"
+
+#~ msgid "Petitboot Plugins"
+#~ msgstr "Petitboot 外掛程式"
+
+#~ msgid "Enter=install, e=details, x=exit, h=help"
+#~ msgstr "Enter=安裝，e=詳細資料，x=退出，h=說明"
+
+#~ msgid "Available Petitboot Plugins"
+#~ msgstr "可用的 Petitboot 外掛程式"
+
+#~ msgid "plugin menu"
+#~ msgstr "外掛程式功能表"
+
+#~ msgid "Petitboot Plugin"
+#~ msgstr "Petitboot 外掛程式"
+
+#~ msgid "Finished: %s"
+#~ msgstr "已完成：%s"
+
+#~ msgid "Installing plugin %s"
+#~ msgstr "正在安裝外掛程式 %s"
+
+#~ msgid "Failed to send install request"
+#~ msgstr "無法傳送安裝要求"
+
+#~ msgid "ID:"
+#~ msgstr "ID："
+
+#~ msgid "Name:"
+#~ msgstr "名稱："
+
+#~ msgid "Vendor:"
+#~ msgstr "供應商："
+
+#~ msgid "Vendor ID:"
+#~ msgstr "供應商 ID："
+
+#~ msgid "Version:"
+#~ msgstr "版本："
+
+#~ msgid "Date"
+#~ msgstr "日期"
+
+#~ msgid "Commands:"
+#~ msgstr "指令："
+
+#~ msgid "Run selected command"
+#~ msgstr "執行選取指令"
+
+#~ msgid ""
+#~ "This screen lists the details and available commands of an installed "
+#~ "plugin.\n"
+#~ "To run a plugin command choose it in the list and select the \"Run\" "
+#~ "button. The Petitboot UI will temporarily exit to run the command, then "
+#~ "return to this screen."
+#~ msgstr ""
+#~ "此螢幕列出已安裝的外掛程式的詳細資料及可用的指令。\n"
+#~ "要執行外掛程式指令，請在清單中選擇該項目然後選取「執行」按鈕。Petitboot 使"
+#~ "用者介面將暫時退出以執行指令，然後會回到此螢幕。"
+
+#~ msgid ""
+#~ "Plugins discovered by Petitboot are listed in this menu.\n"
+#~ "Press Enter to install the selected plugin. Once installed the plugin "
+#~ "details can be seen by pressing 'e'. From the detailed view plugin "
+#~ "commands can also be run."
+#~ msgstr ""
+#~ "此功能表中列出 Petitboot 發現的外掛程式。\n"
+#~ "按一下 Enter 鍵以安裝選取的外掛程式。外掛程式已安裝後可以按一下 'e' 來顯示"
+#~ "詳細資料。還可以從詳細視圖執行外掛程式指令。"
+
+#~ msgid "Petitboot status log"
+#~ msgstr "Petitboot 狀態日誌"
+
+#~ msgid "kexec load failed"
+#~ msgstr "kexec load failed"
+
+#~ msgid "Config file %s parsed"
+#~ msgstr "Config file %s parsed"
+
+#~ msgid "Error"
+#~ msgstr "Error"
+
+#~ msgid "Info"
+#~ msgstr "Info"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2016-03-07 10:02+1100\n"
+"POT-Creation-Date: 2017-10-11 13:42+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Portugese (Brazil)\n"
@@ -16,21 +16,31 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n>1;\n"
 
-msgid "running boot hooks"
-msgstr "executando ganchos de inicialização"
+msgid "Running boot hooks"
+msgstr "Executando ganchos de inicialização"
 
 #, c-format
-msgid "Couldn't load %s"
-msgstr "Não foi possível carregar %s"
+msgid "Loaded %s from %s"
+msgstr "%s carregado a partir de %s"
 
-msgid "performing kexec_load"
-msgstr "executando kexec_load"
+#, c-format
+msgid "Couldn't load %s from %s"
+msgstr "Não foi possível carregar %s a partir de %s"
 
-msgid "kexec load failed"
-msgstr "falha no carregamento de kexec"
+msgid "Performing kexec load"
+msgstr "Executando o carregamento de kexec"
 
-msgid "performing kexec reboot"
-msgstr "executando reinicialização de kexec"
+msgid "Decryption failed"
+msgstr "Falha na decriptografia"
+
+msgid "Signature verification failed"
+msgstr "Falha na verificação de assinatura"
+
+msgid "Invalid signature configuration"
+msgstr "Configuração de assinatura inválida"
+
+msgid "Performing kexec reboot"
+msgstr "Executando a reinicialização de kexec"
 
 msgid "kexec reboot failed"
 msgstr "falha na reinicialização de kexec"
@@ -43,60 +53,75 @@ msgid "(unknown)"
 msgstr "(desconhecido)"
 
 #, c-format
-msgid "Booting %s."
-msgstr "Inicializando %s."
+msgid "Booting %s"
+msgstr "Inicializando %s"
 
 msgid "Boot failed: no image specified"
 msgstr "Falha na inicialização: nenhuma imagem especificada"
+
+msgid "Boot failed: no command line signature file specified"
+msgstr ""
+"A inicialização falhou: nenhum arquivo de assinatura de linha de comandos "
+"foi especificado"
+
+msgid "kernel image"
+msgstr "Imagem de kernel"
+
+msgid "initrd"
+msgstr "initrd"
+
+msgid "dtb"
+msgstr "dtb"
+
+msgid "kernel image signature"
+msgstr "Assinatura de imagem de kernel"
+
+msgid "initrd signature"
+msgstr "Assinatura initrd"
+
+msgid "dtb signature"
+msgstr "Assinatura dtb"
+
+msgid "kernel command line signature"
+msgstr "Assinatura de linha de comandos de kernel"
 
 msgid "Boot cancelled"
 msgstr "Inicialização cancelada"
 
 #, c-format
+msgid "%u downloads in progress..."
+msgstr "%u downloads em andamento..."
+
+#, c-format
+msgid "%u %s downloading: %.0f%% - %lu%cB"
+msgstr "%u %s fazendo download: %.0f%% - %lu%cB"
+
+msgid "item"
+msgid_plural "items"
+msgstr[0] "item"
+msgstr[1] "itens de golfe"
+
+#, fuzzy, c-format
 msgid "Booting in %d sec: %s"
-msgstr "Inicializando em %d s: %s"
+msgstr "Inicializando em %d seg: [%s] %s"
 
-#. TRANSLATORS: this string will be passed the type and identifier
-#. of the device. For example, the first parameter could be "Disk",
-#. (which will be translated accordingly) and the second a Linux device
-#. identifier like 'sda1' (which will not be translated)
+#. TRANSLATORS: this string will be passed the type of the
+#. device (eg "disk" or "network"), which will be translated
+#. accordingly.
 #.
 #, c-format
-msgid "Processing %s device %s"
-msgstr "Processando %s dispositivo %s"
+msgid "Processing new %s device"
+msgstr "Processando novo dispositivo %s"
 
-#. TRANSLATORS: the format specifier in this string is a Linux
-#. device identifier, like 'sda1'
-#.
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
 #, c-format
-msgid "Processing %s complete"
-msgstr "Processamento do %s foi concluído"
-
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
-#, c-format
-msgid "Processing dhcp event on %s"
-msgstr "Processando o evento dhcp no %s"
-
-msgid "Processing user config"
-msgstr "Processando a configuração de usuário"
-
-msgid "Processing user config complete"
-msgstr "Processamento de configuração de usuário concluída"
+msgid "Processing DHCP lease response (ip: %s)"
+msgstr "Processando resposta de leasing DHCP (IP: %s)"
 
 msgid "Default boot cancelled"
 msgstr "Inicialização padrão cancelada"
 
-#, c-format
-msgid "Received config URL %s"
-msgstr "URL de configuração %s recebida"
-
 msgid "No network configured"
-msgstr "Nenhuma rede configurada"
+msgstr "No network configured"
 
 msgid "Invalid config URL!"
 msgstr "URL de configuração inválida!"
@@ -106,8 +131,46 @@ msgid "Unable to route to host %s"
 msgstr "Não é possível rotear para o host %s"
 
 #, c-format
-msgid "Config file %s parsed"
-msgstr "Arquivo de configuração %s analisado"
+msgid "Parsed GRUB configuration from %s"
+msgstr "Configuração GRUB analisada do %s"
+
+#, c-format
+msgid "Parsed kboot configuration from %s"
+msgstr "Configuração kboot analisada do %s"
+
+msgid "Configuring with DHCP"
+msgstr "Configurando com DHCP"
+
+#, c-format
+msgid "Configuring with static address (ip: %s)"
+msgstr "Configurando com endereço estático (ip: %s)"
+
+#, c-format
+msgid "Download complete: %s"
+msgstr "Download concluído: %s"
+
+#, c-format
+msgid "Failed to download %s"
+msgstr "Falha em fazer o download do %s"
+
+msgid "PXE autoconfiguration failed"
+msgstr "Autoconfiguração de PXE com falha"
+
+#, c-format
+msgid "Parsed PXE config from %s"
+msgstr "Configuração PXE analisada do %s"
+
+#, c-format
+msgid "Requesting config %s"
+msgstr "Solicitando configuração %s"
+
+#, c-format
+msgid "Probing from base %s"
+msgstr "Analisando a partir do %s básico"
+
+#, c-format
+msgid "Parsed yaboot configuration from %s"
+msgstr "Configuração yaboot analisada do %s"
 
 msgid "None"
 msgstr "Nenhum"
@@ -181,6 +244,9 @@ msgstr "Árvore do dispositivo:"
 msgid "Boot arguments:"
 msgstr "Argumentos de inicialização:"
 
+msgid "Argument signature file:"
+msgstr "Arquivo de assinatura de argumento:"
+
 msgid "Petitboot Option Editor"
 msgstr "Editor de Opções do Petitboot"
 
@@ -197,16 +263,16 @@ msgid "Waiting for configuration data..."
 msgstr "Aguardando dados de configuração..."
 
 msgid "Autoboot:"
-msgstr "Inicialização automática:"
+msgstr "Executar a inicialização automática:"
 
 msgid "Disabled"
-msgstr ""
+msgstr "Desativada"
 
 msgid "Enabled"
-msgstr ""
+msgstr "Ativado"
 
 msgid "Add Device"
-msgstr "Incluir dispositivo"
+msgstr "Incluir dispositivo:"
 
 msgid "Clear"
 msgstr "Limpar"
@@ -215,7 +281,7 @@ msgid "Clear & Boot Any"
 msgstr "Limpar e inicializar qualquer um"
 
 msgid "Boot Order:"
-msgstr "Ordem de Inic.:"
+msgstr "Ordem de inicialização"
 
 msgid "(None)"
 msgstr "(Nenhum)"
@@ -229,7 +295,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "rede:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "Qualquer dispositivo"
+msgstr "Qualquer dispositivo:"
 
 #, c-format
 msgid "Any %s device"
@@ -245,17 +311,29 @@ msgstr "segundos"
 msgid "%s IPMI boot option: %s"
 msgstr "%s Opção de inicialização de IPMI: %s"
 
+msgid "Persistent"
+msgstr ""
+
+msgid "Temporary"
+msgstr ""
+
 msgid "Clear option:"
 msgstr "Limpar opção:"
+
+msgid "Clear IPMI override now"
+msgstr "Limpar a substituição de IPMI agora"
 
 msgid "Network:"
 msgstr "Rede:"
 
 msgid "DHCP on all active interfaces"
-msgstr "DHCP em todas as interfaces ativas"
+msgstr ""
+"DHCP (Protocolo de Configuração de Host Dinâmico) em todas as interfaces "
+"ativas"
 
 msgid "DHCP on a specific interface"
-msgstr "DHCP em uma interface específica"
+msgstr ""
+"DHCP (Protocolo de Configuração de Host Dinâmico) em uma interface específica"
 
 msgid "Static IP configuration"
 msgstr "Configuração de IP Estático"
@@ -265,6 +343,10 @@ msgstr "link ativo"
 
 msgid "link down"
 msgstr "link inativo"
+
+msgid "Network Override Active! 'OK' will overwrite interface config"
+msgstr ""
+"Substituição de rede ativa! 'OK' substituirá a configuração da interface"
 
 msgid "IP/mask:"
 msgstr "IP/máscara:"
@@ -279,19 +361,25 @@ msgid "(eg. 192.168.0.1)"
 msgstr "(por exemplo, 192.168.0.1)"
 
 msgid "URL:"
-msgstr ""
+msgstr "URL:"
 
 msgid "(eg. tftp://)"
-msgstr ""
+msgstr "(por exemplo, tftp://)"
 
 msgid "DNS Server(s):"
-msgstr "Servidores DNS:"
+msgstr "Servidor(es) DNS:"
 
 msgid "(eg. 192.168.0.2)"
 msgstr "(por exemplo, 192.168.0.2)"
 
 msgid "(if not provided by DHCP server)"
 msgstr "(se não for fornecido pelo servidor DHCP)"
+
+msgid "HTTP Proxy:"
+msgstr "Proxy de HTTP:"
+
+msgid "HTTPS Proxy:"
+msgstr "Proxy HTTPS:"
 
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Selecionar 'OK' irá sair do modo de segurança"
@@ -304,6 +392,17 @@ msgstr "Evitar todas as gravações em disco"
 
 msgid "Allow bootloader scripts to modify disks"
 msgstr "Permitir que scripts de carregador de inicialização modifiquem discos"
+
+msgid "Boot console:"
+msgstr "Console de inicialização:"
+
+#, c-format
+msgid "Manually set: '%s'"
+msgstr "Configure manualmente: '%s'"
+
+#, c-format
+msgid "Current interface: %s"
+msgstr "Interface atual: %s"
 
 msgid "Petitboot System Configuration"
 msgstr "Configuração do Sistema Petitboot"
@@ -328,12 +427,6 @@ msgstr "Falha: inicializar %s"
 msgid "User item %u"
 msgstr "Item do usuário %u"
 
-msgid "Error"
-msgstr "Erro"
-
-msgid "Info"
-msgstr "Informações"
-
 #, c-format
 msgid "SAFE MODE: select '%s' to continue"
 msgstr "MODO DE SEGURANÇA: selecione '%s' para continuar"
@@ -341,8 +434,8 @@ msgstr "MODO DE SEGURANÇA: selecione '%s' para continuar"
 msgid "Rescan devices"
 msgstr "Varrer os dispositivos novamente"
 
-msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
-msgstr "Enter=aceitar, e=editar, n=novo, x=sair, l=idioma, h=ajuda"
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"
+msgstr "Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"
 
 msgid "Welcome to Petitboot"
 msgstr "Bem-vindo ao Petitboot"
@@ -353,8 +446,14 @@ msgstr "Informações do sistema"
 msgid "System configuration"
 msgstr "Configuração do sistema"
 
+msgid "System status log"
+msgstr "Log de status do sistema"
+
 msgid "Retrieve config from URL"
 msgstr "Recuperar configuração a partir da URL"
+
+msgid "Reboot"
+msgstr "Reinicializar"
 
 msgid "Exit to shell"
 msgstr "Sair para shell"
@@ -396,7 +495,7 @@ msgid "Petitboot Language Selection"
 msgstr "Seleção de Idioma do Petitboot"
 
 msgid "tab=next, shift+tab=previous, x=exit"
-msgstr "tab=próximo, shift+tab=anterior, x=sair"
+msgstr "tab=next, shift+tab=previous, x=exit"
 
 #, c-format
 msgid "!Invalid option %d"
@@ -415,16 +514,16 @@ msgid "System id:"
 msgstr "ID do sistema:"
 
 msgid "Primary platform versions:"
-msgstr ""
+msgstr "Versões primárias de plataforma:"
 
 msgid "Alternate platform versions:"
-msgstr ""
+msgstr "Versões alternativas de plataforma:"
 
 msgid "BMC current side:"
-msgstr ""
+msgstr "Lado atual de BMC:"
 
 msgid "BMC golden side:"
-msgstr ""
+msgstr "Lado golden de BMC:"
 
 msgid "Storage devices"
 msgstr "Dispositivos de armazenamento"
@@ -438,7 +537,7 @@ msgid " mounted at: %s"
 msgstr " montado em: %s"
 
 msgid "Management (BMC) interface"
-msgstr ""
+msgstr "Interface de gerenciamento (BMC)"
 
 #, c-format
 msgid " MAC:  %s"
@@ -447,10 +546,21 @@ msgstr " MAC:  %s"
 msgid "Network interfaces"
 msgstr "Interfaces de rede"
 
+#, c-format
+msgid " MAC:        %s"
+msgstr " MAC:  %s"
+
+#, c-format
+msgid " IP Address: %s"
+msgstr " Endereço IP: %s"
+
+msgid "none"
+msgstr "nenhum"
+
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
-msgid " link: %s"
+msgid " link:       %s"
 msgstr " link: %s"
 
 msgid "up"
@@ -488,6 +598,9 @@ msgid ""
 "\n"
 "To set the language for the petitboot interface, type L (language).\n"
 "\n"
+"To view the log of status messages from the discovery process, type G "
+"(log).\n"
+"\n"
 "To find new or updated boot options on the system, select the 'Rescan "
 "devices' option.\n"
 "\n"
@@ -511,6 +624,9 @@ msgstr ""
 "Para fazer alterações na configuração do sistema, digite C (configurar).\n"
 "\n"
 "Para configurar o idioma da interface do petitboot, digite L (idioma).\n"
+"\n"
+"Para visualizar o log de mensagens de status do processo de descoberta, "
+"digite G (log).\n"
 "\n"
 "Para localizar opções de inicialização novas ou atualizadas no sistema, "
 "selecione a opção 'Varrer novamente dispositivos'.\n"
@@ -590,10 +706,10 @@ msgid ""
 "\n"
 "By selecting the 'Add Device' button new devices can be added to the "
 "autoboot list, either by UUID, MAC address, or device type. Once added to "
-"the boot order, the priority of devices can be changed with the 'left' and "
-"'right' keys Devices can be individually removed from the boot order with "
-"the minus key. Use this option if you have multiple operating system images "
-"installed.\n"
+"the boot order, the priority of devices can be changed with the '-' (minus) "
+"and '+' (plus) keys. Devices can be individually removed from the boot order "
+"with the 'delete' or 'backspace' keys. Use this option if you have multiple "
+"operating system images installed.\n"
 "\n"
 "To autoboot from any device, select the 'Clear & Boot Any' button. In this "
 "case, any boot option that is marked as a default (by bootloader "
@@ -627,6 +743,10 @@ msgid ""
 "this option if you do not have a DHCP server, or want explicit control of "
 "network settings.\n"
 "\n"
+"HTTP(S) Proxy: Allows you to specify an optional HTTP or HTTPS proxy server "
+"if required, for example: \"http://proxy:3128\". Any HTTP(S) requests made "
+"by the pb-discover server will use these details.\n"
+"\n"
 "Disk R/W: Certain bootloader configurations may request write access to "
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
@@ -637,17 +757,17 @@ msgstr ""
 "Selecionando o botão 'Incluir dispositivo' novos dispositivos podem ser "
 "incluídos na lista de inicialização automática, seja por UUID, endereço MAC "
 "ou tipo de dispositivo. Quando incluído para a ordem de inicialização, a "
-"prioridade de dispositivos pode ser alterada com as teclas 'esquerdo' e "
-"'direito'. Os dispositivos podem ser removidos individualmente da ordem de "
-"inicialização coma tecla de menos. Use essa opção se tiver várias imagens do "
-"sistema operacionalinstaladas.\n"
+"prioridade de dispositivos pode ser alterada com as chaves '-' (menos) e "
+"'+' (mais). Os dispositivos podem ser removidos individualmente da ordem de "
+"inicialização com as chaves 'delete' ou 'backspace'. Use esta opção se "
+"possuir múltiplas imagens de sistema operacional instaladas.\n"
 "\n"
 "Para inicializar automaticamente qualquer dispositivo, selecione o botão "
 "'Limpar e inicializar todos'. Nesse caso, qualquer opção de inicialização "
 "que for marcada como padrão (pela configuração do carregador de "
 "inicialização) será inicializada automaticamente após um tempo limite. Use "
 "essa opção se desejar inicializar rapidamente seu sistema sem mudar "
-"quaisquer configurações de opção deinicialização. Essa é a configuração "
+"quaisquer configurações de opção de inicialização. Essa é a configuração "
 "típica.\n"
 "\n"
 "Para desativar a inicialização automática, selecione o botão 'Limpar', que "
@@ -664,28 +784,127 @@ msgstr ""
 "\n"
 "Opções de rede:\n"
 "\n"
-"DHCP em todas as interfaces ativas: designa automaticamente endereços IP a "
-"cada interface de rede. Use essa opção se tiver um servidor DHCP em sua "
-"rede.\n"
+"DHCP (Protocolo de Configuração de Host Dinâmico) em todas as interfaces "
+"ativas: designa automaticamente endereços IP a cada interface de rede. Use "
+"essa opção se tiver um servidor DHCP em sua rede.\n"
 "\n"
-"DHCP em uma interface específica: designa automaticamente endereços IP à "
-"interface de rede selecionada. As outras interfaces não estão configuradas. "
-"Selecione essa opção se tiver vários servidores DHCP em interfaces "
-"diferentes, mas desejar apenas configurar uma única interface durante a "
-"inicialização.\n"
+"DHCP (Protocolo de Configuração de Host Dinâmico) em uma interface "
+"específica: designa automaticamente endereços IP à interface de rede "
+"selecionada. As outras interfaces não estão configuradas. Selecione essa "
+"opção se tiver vários servidores DHCP em interfaces diferentes, mas desejar "
+"apenas configurar uma única interface durante a inicialização.\n"
 "\n"
 "Configuração de IP Estático: permite que você especifique um endereço IPv4 "
-"(Protocolo de Internet versão 4) e máscara, gateway e servidores DNS de rede "
-"para uma interface de rede. Selecione essa opção se você não tiver um "
+"(Protocolo de Internet versão 4) e máscara, gateway e servidor(es) DNS de "
+"rede para uma interface de rede. Selecione essa opção se você não tiver um "
 "servidor DHCP ou desejar o controle explícito das configurações de rede.\n"
 "\n"
+"Proxy HTTP(S): Permite que você especifique um servidor proxy HTTP ou HTTPS "
+"opcional se necessário, por exemplo: \"http://proxy:3128\". Qualquer "
+"solicitação HTTP(S) efetuada pelo servidor pb-discover usará estes "
+"detalhes.\n"
+"\n"
 "R/W de disco: determinadas configurações do carregador de inicialização "
-"podem solicitar acesso de gravação aosdiscos para salvar informações ou "
-"parâmetros de atualização (por ex. GRUB2). Use essa opção para controlar "
+"podem solicitar acesso de gravação aos discos para salvar informações ou "
+"atualizar parâmetros (por exemplo, GRUB2). Use essa opção para controlar "
 "acesso aos discos.\n"
 
 msgid "Usage"
 msgstr "Uso"
+
+#~ msgid "Failed to load URL!"
+#~ msgstr "Falha ao carregar URL!"
+
+#~ msgid "Plugins (0)"
+#~ msgstr "Plug-ins (0)"
+
+#~ msgid "Petitboot Plugins"
+#~ msgstr "Plug-ins de Petitboot"
+
+#~ msgid "Enter=install, e=details, x=exit, h=help"
+#~ msgstr "Enter=install, e=details, x=exit, h=help"
+
+#~ msgid "Available Petitboot Plugins"
+#~ msgstr "Plug-ins do Petitboot Disponíveis"
+
+#~ msgid "plugin menu"
+#~ msgstr "Menu de plug-in"
+
+#~ msgid "Petitboot Plugin"
+#~ msgstr "Plug-ins de Petitboot"
+
+#~ msgid "Finished: %s"
+#~ msgstr "Concluído: %s"
+
+#~ msgid "Installing plugin %s"
+#~ msgstr "Instalando o plug-in %s"
+
+#~ msgid "Failed to send install request"
+#~ msgstr "Falha em enviar a solicitação de instalação"
+
+#~ msgid "ID:"
+#~ msgstr "ID:"
+
+#~ msgid "Name:"
+#~ msgstr "Nome:"
+
+#~ msgid "Vendor:"
+#~ msgstr "Fornecedor:"
+
+#~ msgid "Vendor ID:"
+#~ msgstr "ID do Fornecedor:"
+
+#~ msgid "Version:"
+#~ msgstr "Versão:"
+
+#~ msgid "Date"
+#~ msgstr "Data"
+
+#~ msgid "Commands:"
+#~ msgstr "Comandos:"
+
+#~ msgid "Run selected command"
+#~ msgstr "Executar o comando selecionado"
+
+#~ msgid ""
+#~ "This screen lists the details and available commands of an installed "
+#~ "plugin.\n"
+#~ "To run a plugin command choose it in the list and select the \"Run\" "
+#~ "button. The Petitboot UI will temporarily exit to run the command, then "
+#~ "return to this screen."
+#~ msgstr ""
+#~ "Esta tela lista os detalhes e os comandos disponíveis de um plug-in "
+#~ "instalado.\n"
+#~ "para executar um comando de plug-in, escolha-o na lista e selecione o "
+#~ "botão \"Executar\". A IU do Petitboot sairá temporariamente para executar "
+#~ "o comando e, em seguida, retornará a esta tela."
+
+#~ msgid ""
+#~ "Plugins discovered by Petitboot are listed in this menu.\n"
+#~ "Press Enter to install the selected plugin. Once installed the plugin "
+#~ "details can be seen by pressing 'e'. From the detailed view plugin "
+#~ "commands can also be run."
+#~ msgstr ""
+#~ "Os plug-ins descobertos pelo Petitboot são listados neste menu.\n"
+#~ "Pressione Enter para instalar o plug-in selecionado. Uma vez que o plug-"
+#~ "in esteja instalado, será possível visualizar os detalhes pressionando "
+#~ "'e'. Os comandos de plugin também podem ser executadosa partir da "
+#~ "visualização detalhada."
+
+#~ msgid "Petitboot status log"
+#~ msgstr "Log de status do Petitboot"
+
+#~ msgid "kexec load failed"
+#~ msgstr "kexec load failed"
+
+#~ msgid "Config file %s parsed"
+#~ msgstr "Config file %s parsed"
+
+#~ msgid "Error"
+#~ msgstr "Error"
+
+#~ msgid "Info"
+#~ msgstr "Info"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"
