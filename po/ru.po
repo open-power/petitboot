@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2016-03-07 10:02+1100\n"
+"POT-Creation-Date: 2017-08-29 14:37+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Russian\n"
@@ -17,24 +17,34 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-msgid "running boot hooks"
-msgstr "выполнение привязок загрузки"
+msgid "Running boot hooks"
+msgstr "Выполнение привязок загрузки"
 
 #, c-format
-msgid "Couldn't load %s"
-msgstr "Не удалось загрузить %s"
+msgid "Loaded %s from %s"
+msgstr "Загружено %s из %s"
 
-msgid "performing kexec_load"
-msgstr "выполнение kexec_load"
+#, c-format
+msgid "Couldn't load %s from %s"
+msgstr "Не удалось загрузить %s из %s"
 
-msgid "kexec load failed"
-msgstr "не удалось выполнить kexec load"
+msgid "Performing kexec load"
+msgstr "Выполнение загрузки kexec"
 
-msgid "performing kexec reboot"
-msgstr "выполнение kexec reboot"
+msgid "Decryption failed"
+msgstr "Не удалось расшифровать"
+
+msgid "Signature verification failed"
+msgstr "Подпись не прошла проверку"
+
+msgid "Invalid signature configuration"
+msgstr "Неправильная конфигурация подписи"
+
+msgid "Performing kexec reboot"
+msgstr "Выполнение перезагрузки kexec"
 
 msgid "kexec reboot failed"
-msgstr "не удалось выполнить kexec reboot"
+msgstr "Не удалось выполнить перезагрузку kexec"
 
 #, c-format
 msgid "Error loading %s"
@@ -44,60 +54,71 @@ msgid "(unknown)"
 msgstr "(не известно)"
 
 #, c-format
-msgid "Booting %s."
-msgstr "Загружается %s."
+msgid "Booting %s"
+msgstr "Загружается %s"
 
 msgid "Boot failed: no image specified"
 msgstr "Не удалось загрузить: образ не указан"
+
+msgid "Boot failed: no command line signature file specified"
+msgstr "Не удалось загрузить: не указан файл подписи командной строки"
+
+msgid "kernel image"
+msgstr "образ ядра"
+
+msgid "initrd"
+msgstr "initrd"
+
+msgid "dtb"
+msgstr "dtb"
+
+msgid "kernel image signature"
+msgstr "подпись образа ядра"
+
+msgid "initrd signature"
+msgstr "подпись initrd"
+
+msgid "dtb signature"
+msgstr "подпись dtb"
+
+msgid "kernel command line signature"
+msgstr "подпись командной строки ядра"
 
 msgid "Boot cancelled"
 msgstr "Загрузка отменена"
 
 #, c-format
-msgid "Booting in %d sec: %s"
-msgstr "Загрузка через %d сек: %s"
+msgid "%u downloads in progress..."
+msgstr "Выполняется загрузка (%u)..."
 
-#. TRANSLATORS: this string will be passed the type and identifier
-#. of the device. For example, the first parameter could be "Disk",
-#. (which will be translated accordingly) and the second a Linux device
-#. identifier like 'sda1' (which will not be translated)
+#, c-format
+msgid "%u %s downloading: %.0f%% - %lu%cB"
+msgstr "%u - загрузка %s: %.0f%% - %lu%cB"
+
+msgid "item"
+msgid_plural "items"
+msgstr[0] "элемент"
+msgstr[1] "элемента"
+msgstr[2] "элементов"
+
+#, c-format
+msgid "Booting in %d sec: [%s] %s"
+msgstr "Загрузка через %d сек: [%s] %s"
+
+#. TRANSLATORS: this string will be passed the type of the
+#. device (eg "disk" or "network"), which will be translated
+#. accordingly.
 #.
 #, c-format
-msgid "Processing %s device %s"
-msgstr "Выполняется обработка %s устройства %s"
+msgid "Processing new %s device"
+msgstr "Обработка нового устройства %s"
 
-#. TRANSLATORS: the format specifier in this string is a Linux
-#. device identifier, like 'sda1'
-#.
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
 #, c-format
-msgid "Processing %s complete"
-msgstr "Обработка %s завершена"
-
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
-#, c-format
-msgid "Processing dhcp event on %s"
-msgstr "Обработка события dhcp в %s"
-
-msgid "Processing user config"
-msgstr "Обработка конфигурации пользователя"
-
-msgid "Processing user config complete"
-msgstr "Обработка конфигурации пользователя завершена"
+msgid "Processing DHCP lease response (ip: %s)"
+msgstr "Обработка ответа об аренде DHCP (ip: %s)"
 
 msgid "Default boot cancelled"
 msgstr "Загрузка по умолчанию отменена"
-
-#, c-format
-msgid "Received config URL %s"
-msgstr "Получен URL конфигурации %s"
-
-msgid "No network configured"
-msgstr "Сеть не настроена"
 
 msgid "Invalid config URL!"
 msgstr "Недопустимый URL конфигурации!"
@@ -106,9 +127,50 @@ msgstr "Недопустимый URL конфигурации!"
 msgid "Unable to route to host %s"
 msgstr "Не удалось перенаправить к хосту %s"
 
+msgid "Failed to load URL!"
+msgstr "Не удалось загрузить URL!"
+
 #, c-format
-msgid "Config file %s parsed"
-msgstr "Файл конфигурации %s проанализирован"
+msgid "Parsed GRUB configuration from %s"
+msgstr ""
+
+#, c-format
+msgid "Parsed kboot configuration from %s"
+msgstr ""
+
+msgid "Configuring with DHCP"
+msgstr ""
+
+#, c-format
+msgid "Configuring with static address (ip: %s)"
+msgstr ""
+
+#, c-format
+msgid "Download complete: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to download %s"
+msgstr ""
+
+msgid "PXE autoconfiguration failed"
+msgstr ""
+
+#, c-format
+msgid "Parsed PXE config from %s"
+msgstr ""
+
+#, c-format
+msgid "Requesting config %s"
+msgstr ""
+
+#, c-format
+msgid "Probing from base %s"
+msgstr ""
+
+#, c-format
+msgid "Parsed yaboot configuration from %s"
+msgstr ""
 
 msgid "None"
 msgstr "Нет"
@@ -159,7 +221,7 @@ msgid "Petitboot Config Retrieval"
 msgstr "Получение конфигурации Petitboot"
 
 msgid "tab=next, shift+tab=previous, x=exit, h=help"
-msgstr "tab=далее, shift+tab=назад, x=выход, h=помощь"
+msgstr "tab=далее, shift+tab=назад, x=выход, h=справка"
 
 msgid "Boot Option Editor"
 msgstr "Редактор опций загрузки"
@@ -182,6 +244,9 @@ msgstr "Дерево устройства:"
 msgid "Boot arguments:"
 msgstr "Аргументы загрузки:"
 
+msgid "Argument signature file:"
+msgstr "Файл подписи аргументов:"
+
 msgid "Petitboot Option Editor"
 msgstr "Редактор опций загрузки Petitboot"
 
@@ -201,13 +266,13 @@ msgid "Autoboot:"
 msgstr "Автоматическая загрузка:"
 
 msgid "Disabled"
-msgstr ""
+msgstr "Выключено"
 
 msgid "Enabled"
-msgstr ""
+msgstr "Включено"
 
 msgid "Add Device"
-msgstr "Добавить устройство"
+msgstr "Добавить устройство:"
 
 msgid "Clear"
 msgstr "Очистить"
@@ -216,7 +281,7 @@ msgid "Clear & Boot Any"
 msgstr "Очистить и загрузить все"
 
 msgid "Boot Order:"
-msgstr "Порядок загр:"
+msgstr "Порядок загрузки"
 
 msgid "(None)"
 msgstr "(Нет)"
@@ -230,7 +295,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "сеть:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "Любое устройство"
+msgstr "Любое устройство:"
 
 #, c-format
 msgid "Any %s device"
@@ -248,6 +313,9 @@ msgstr "Опция загрузки IPMI %s: %s"
 
 msgid "Clear option:"
 msgstr "Опция очистки:"
+
+msgid "Clear IPMI override now"
+msgstr ""
 
 msgid "Network:"
 msgstr "Сеть:"
@@ -267,6 +335,11 @@ msgstr "линия связи активна"
 msgid "link down"
 msgstr "линия связи неактивна"
 
+msgid "Network Override Active! 'OK' will overwrite interface config"
+msgstr ""
+"Активно переопределение сети! Нажатие 'ОК' приведет к переопределению "
+"конфигурации интерфейса"
+
 msgid "IP/mask:"
 msgstr "IP/маска:"
 
@@ -280,13 +353,13 @@ msgid "(eg. 192.168.0.1)"
 msgstr "(eg. 192.168.0.1)"
 
 msgid "URL:"
-msgstr ""
+msgstr "URL:"
 
 msgid "(eg. tftp://)"
-msgstr ""
+msgstr "(например: tftp://)"
 
 msgid "DNS Server(s):"
-msgstr "Серверы DNS:"
+msgstr "Сервер(серверы) DNS:"
 
 msgid "(eg. 192.168.0.2)"
 msgstr "(eg. 192.168.0.2)"
@@ -294,17 +367,34 @@ msgstr "(eg. 192.168.0.2)"
 msgid "(if not provided by DHCP server)"
 msgstr "(если не предоставляется сервером DHCP)"
 
+msgid "HTTP Proxy:"
+msgstr "Прокси HTTP:"
+
+msgid "HTTPS Proxy:"
+msgstr "Прокси HTTPS:"
+
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "После нажатия 'OK' безопасный режим будет выключен"
 
 msgid "Disk R/W:"
-msgstr "Чт/Зп диска"
+msgstr "Чтение/Запись диска"
 
 msgid "Prevent all writes to disk"
 msgstr "Запретить любую запись на диск"
 
 msgid "Allow bootloader scripts to modify disks"
 msgstr "Разрешить сценарии загрузчика для изменения дисков"
+
+msgid "Boot console:"
+msgstr "Консоль загрузки:"
+
+#, c-format
+msgid "Manually set: '%s'"
+msgstr "Задание вручную: '%s'"
+
+#, c-format
+msgid "Current interface: %s"
+msgstr "Текущий интерфейс: %s"
 
 msgid "Petitboot System Configuration"
 msgstr "Конфигурация Petitboot System"
@@ -329,12 +419,6 @@ msgstr "Не удалось: загрузиться %s"
 msgid "User item %u"
 msgstr "Пользовательский элемент %u"
 
-msgid "Error"
-msgstr "Ошибка"
-
-msgid "Info"
-msgstr "Информация"
-
 #, c-format
 msgid "SAFE MODE: select '%s' to continue"
 msgstr "БЕЗОПАСНЫЙ РЕЖИМ: чтобы продолжить, выберите '%s'"
@@ -342,8 +426,10 @@ msgstr "БЕЗОПАСНЫЙ РЕЖИМ: чтобы продолжить, выб
 msgid "Rescan devices"
 msgstr "Заново сканировать устройства"
 
-msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
-msgstr "Enter=принять, e=редактировать, n=новый, x=выход, l=язык, h=помощь"
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"
+msgstr ""
+"Enter=принять, e=редактировать, n=новый, x=выход, l=язык, g=протокол, "
+"h=справка"
 
 msgid "Welcome to Petitboot"
 msgstr "Вас приветствует Petitboot"
@@ -354,14 +440,35 @@ msgstr "Информация о системе"
 msgid "System configuration"
 msgstr "Конфигурация системы"
 
+msgid "System status log"
+msgstr "Протокол состояния системы"
+
 msgid "Retrieve config from URL"
 msgstr "Получение конфигурации по URL"
+
+msgid "Plugins (0)"
+msgstr "Модули (0)"
+
+msgid "Reboot"
+msgstr "Перезагрузить"
 
 msgid "Exit to shell"
 msgstr "Выйти в оболочку"
 
 msgid "main menu"
 msgstr "главное меню"
+
+msgid "Petitboot Plugins"
+msgstr "Модули Petitboot"
+
+msgid "Enter=install, e=details, x=exit, h=help"
+msgstr "Enter=установить, e=сведения, x=выход, h=справка"
+
+msgid "Available Petitboot Plugins"
+msgstr "Доступные модули Petitboot"
+
+msgid "plugin menu"
+msgstr "меню модуля"
 
 #, c-format
 msgid "%s: alloc cui failed.\n"
@@ -380,11 +487,11 @@ msgid "check that pb-discover, the petitboot daemon is running.\n"
 msgstr "проверяю этот pb-discover, демон petitboot запущен.\n"
 
 msgid "Petitboot help"
-msgstr "Помощь по Petitboot"
+msgstr "Справка по Petitboot"
 
 #, c-format
 msgid "Petitboot help: %s"
-msgstr "Помощь по Рetitboot: %s"
+msgstr "Справка по Рetitboot: %s"
 
 msgid "Language"
 msgstr "Язык"
@@ -416,16 +523,16 @@ msgid "System id:"
 msgstr "ИД системы:"
 
 msgid "Primary platform versions:"
-msgstr ""
+msgstr "Версии основной платформы:"
 
 msgid "Alternate platform versions:"
-msgstr ""
+msgstr "Версии альтернативной платформы:"
 
 msgid "BMC current side:"
-msgstr ""
+msgstr "Текущая сторона BMC:"
 
 msgid "BMC golden side:"
-msgstr ""
+msgstr "Золотая сторона BMC:"
 
 msgid "Storage devices"
 msgstr "Устройства хранения"
@@ -439,7 +546,7 @@ msgid " mounted at: %s"
 msgstr " точка монтирования: %s"
 
 msgid "Management (BMC) interface"
-msgstr ""
+msgstr "Интерфейс управления (BMC)"
 
 #, c-format
 msgid " MAC:  %s"
@@ -448,10 +555,21 @@ msgstr " MAC:  %s"
 msgid "Network interfaces"
 msgstr "Сетевые интерфейсы"
 
+#, c-format
+msgid " MAC:        %s"
+msgstr " MAC:  %s"
+
+#, c-format
+msgid " IP Address: %s"
+msgstr " IP-адрес: %s"
+
+msgid "none"
+msgstr "нет"
+
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
-msgid " link: %s"
+msgid " link:       %s"
 msgstr " линия связи: %s"
 
 msgid "up"
@@ -467,7 +585,7 @@ msgid "System Information"
 msgstr "Информация о системе"
 
 msgid "x=exit, h=help"
-msgstr "x=выход, h=помощь"
+msgstr "x=выход, h=справка"
 
 msgid "x=exit"
 msgstr "x=выход"
@@ -488,6 +606,9 @@ msgid ""
 "To make changes to the system configuration, type C (configure).\n"
 "\n"
 "To set the language for the petitboot interface, type L (language).\n"
+"\n"
+"To view the log of status messages from the discovery process, type G "
+"(log).\n"
 "\n"
 "To find new or updated boot options on the system, select the 'Rescan "
 "devices' option.\n"
@@ -513,7 +634,10 @@ msgstr ""
 "\n"
 "Для выбора языка интерфейса petitboot нажмите клавишу L (language).\n"
 "\n"
-"Для того, чтобы найти в системе вариант новой или обновленной загрузки, "
+"Для того чтобы просмотреть протокол сообщений о состоянии процесса "
+"обнаружения, введите G (протокол).\n"
+"\n"
+"Для того чтобы найти в системе вариант новой или обновленной загрузки, "
 "выберите опцию 'Заново сканировать устройства'.\n"
 "\n"
 "Для передачи нового варианта загрузки из удаленного файла конфигурации "
@@ -588,10 +712,10 @@ msgid ""
 "\n"
 "By selecting the 'Add Device' button new devices can be added to the "
 "autoboot list, either by UUID, MAC address, or device type. Once added to "
-"the boot order, the priority of devices can be changed with the 'left' and "
-"'right' keys Devices can be individually removed from the boot order with "
-"the minus key. Use this option if you have multiple operating system images "
-"installed.\n"
+"the boot order, the priority of devices can be changed with the '-' (minus) "
+"and '+' (plus) keys. Devices can be individually removed from the boot order "
+"with the 'delete' or 'backspace' keys. Use this option if you have multiple "
+"operating system images installed.\n"
 "\n"
 "To autoboot from any device, select the 'Clear & Boot Any' button. In this "
 "case, any boot option that is marked as a default (by bootloader "
@@ -625,6 +749,10 @@ msgid ""
 "this option if you do not have a DHCP server, or want explicit control of "
 "network settings.\n"
 "\n"
+"HTTP(S) Proxy: Allows you to specify an optional HTTP or HTTPS proxy server "
+"if required, for example: \"http://proxy:3128\". Any HTTP(S) requests made "
+"by the pb-discover server will use these details.\n"
+"\n"
 "Disk R/W: Certain bootloader configurations may request write access to "
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
@@ -634,9 +762,9 @@ msgstr ""
 "При нажатии кнопки 'Добавить устройство' можно добавить новые устройства в "
 "список autoboot по UUID, MAC-адресу или типу устройства. После добавления в "
 "список порядка загрузки приоритет устройств можно изменить с помощью клавиш "
-"'стрелка влево' и 'стрелка вправо'. Для удаления конкретного устройства из "
-"списка нажмите клавишу минус. Эта опция применяется при использовании "
-"нескольких установленных образов операционных систем.\n"
+"'-' (минус) и '+' (плюс). Для удаления конкретного устройства из списка "
+"нажмите клавишу 'Delete' или 'Backspace'. Используйте данный вариант, если у "
+"вас установлено несколько образов операционных систем.\n"
 "\n"
 "Для автоматической загрузки с любого устройства нажмите кнопку 'Очистить и "
 "загрузить все'. В этом случае вариант загрузки, помеченный как выбор по "
@@ -671,13 +799,88 @@ msgstr ""
 "если у вас нет сервера DHCP, или если требуется точный контроль параметров "
 "сети.\n"
 "\n"
+"Прокси HTTP(S): позволяет указать прокси-сервер HTTP или HTTPS, если "
+"необходимо. Например: \"http://proxy:3128\". Эти сведения будут "
+"использоваться для всех запросов HTTP(S), сделанных сервером pb-discover.\n"
+"\n"
 "Чтение / Запись диска: для некоторых конфигураций bootloader может "
 "потребоваться доступ к дискам для записи с целью сохранения информации или "
 "обновления параметров (пример: GRUB2). Эта опция применяется для управления "
 "доступом к дискам.\n"
 
+msgid "Petitboot Plugin"
+msgstr "Модули Petitboot"
+
+#, c-format
+msgid "Finished: %s"
+msgstr ""
+
+#, c-format
+msgid "Installing plugin %s"
+msgstr ""
+
+msgid "Failed to send install request"
+msgstr ""
+
+msgid "ID:"
+msgstr ""
+
+msgid "Name:"
+msgstr ""
+
+msgid "Vendor:"
+msgstr ""
+
+msgid "Vendor ID:"
+msgstr ""
+
+msgid "Version:"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Commands:"
+msgstr ""
+
+msgid "Run selected command"
+msgstr ""
+
+msgid ""
+"This screen lists the details and available commands of an installed "
+"plugin.\n"
+"To run a plugin command choose it in the list and select the \"Run\" button. "
+"The Petitboot UI will temporarily exit to run the command, then return to "
+"this screen."
+msgstr ""
+
+msgid ""
+"Plugins discovered by Petitboot are listed in this menu.\n"
+"Press Enter to install the selected plugin. Once installed the plugin "
+"details can be seen by pressing 'e'. From the detailed view plugin commands "
+"can also be run."
+msgstr ""
+
+msgid "Petitboot status log"
+msgstr ""
+
 msgid "Usage"
 msgstr "Использование"
+
+#~ msgid "kexec load failed"
+#~ msgstr "kexec load failed"
+
+#~ msgid "No network configured"
+#~ msgstr "No network configured"
+
+#~ msgid "Config file %s parsed"
+#~ msgstr "Config file %s parsed"
+
+#~ msgid "Error"
+#~ msgstr "Error"
+
+#~ msgid "Info"
+#~ msgstr "Info"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"

@@ -2,6 +2,12 @@
 
 discover/boot.c
 discover/device-handler.c
+discover/grub2/grub2.c
+discover/kboot-parser.c
+discover/network.c
+discover/paths.c
+discover/pxe-parser.c
+discover/yaboot-parser.c
 lib/types/types.c
 ui/ncurses/nc-add-url.c
 ui/ncurses/nc-boot-editor.c
@@ -18,4 +24,8 @@ ui/ncurses/nc-add-url-help.c
 ui/ncurses/nc-boot-editor-help.c
 ui/ncurses/nc-config-help.c
 ui/ncurses/nc-sysinfo-help.c
+ui/ncurses/nc-plugin.c
+ui/ncurses/nc-plugin-help.c
+ui/ncurses/nc-plugin-menu-help.c
+ui/ncurses/nc-statuslog.c
 ui/ncurses/generic-main.c

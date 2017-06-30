@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2016-03-07 10:02+1100\n"
+"POT-Creation-Date: 2017-08-29 14:37+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Japanese\n"
@@ -16,20 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "running boot hooks"
+msgid "Running boot hooks"
 msgstr "ブート・フックを実行しています"
 
 #, c-format
-msgid "Couldn't load %s"
-msgstr "%s をロードできませんでした"
+msgid "Loaded %s from %s"
+msgstr "%s を %s からロードしました"
 
-msgid "performing kexec_load"
-msgstr "kexec_load を実行しています"
+#, c-format
+msgid "Couldn't load %s from %s"
+msgstr "%s を %s からロードできませんでした"
 
-msgid "kexec load failed"
-msgstr "kexec をロードできませんでした"
+msgid "Performing kexec load"
+msgstr "kexec ロードを実行しています"
 
-msgid "performing kexec reboot"
+msgid "Decryption failed"
+msgstr "暗号化解除に失敗しました"
+
+msgid "Signature verification failed"
+msgstr "シグニチャー検査が失敗しました"
+
+msgid "Invalid signature configuration"
+msgstr "シグニチャー構成が無効です"
+
+msgid "Performing kexec reboot"
 msgstr "kexec リブートを実行しています"
 
 msgid "kexec reboot failed"
@@ -43,60 +53,71 @@ msgid "(unknown)"
 msgstr "(不明)"
 
 #, c-format
-msgid "Booting %s."
+msgid "Booting %s"
 msgstr "%s をブートしています。"
 
 msgid "Boot failed: no image specified"
 msgstr "ブートできませんでした: イメージが指定されていません"
 
+msgid "Boot failed: no command line signature file specified"
+msgstr ""
+"ブートできませんでした: コマンド・ライン・シグニチャー・ファイルが指定されて"
+"いません"
+
+msgid "kernel image"
+msgstr "カーネル・イメージ"
+
+msgid "initrd"
+msgstr "initrd"
+
+msgid "dtb"
+msgstr "dtb"
+
+msgid "kernel image signature"
+msgstr "カーネル・イメージ・シグニチャー"
+
+msgid "initrd signature"
+msgstr "initrd シグニチャー"
+
+msgid "dtb signature"
+msgstr "dtb シグニチャー"
+
+msgid "kernel command line signature"
+msgstr "カーネル・コマンド・ライン・シグニチャー"
+
 msgid "Boot cancelled"
 msgstr "ブートが取り消されました"
 
 #, c-format
-msgid "Booting in %d sec: %s"
-msgstr "%d 秒でブートします: %s"
+msgid "%u downloads in progress..."
+msgstr "%u ダウンロードが進行中..."
 
-#. TRANSLATORS: this string will be passed the type and identifier
-#. of the device. For example, the first parameter could be "Disk",
-#. (which will be translated accordingly) and the second a Linux device
-#. identifier like 'sda1' (which will not be translated)
+#, c-format
+msgid "%u %s downloading: %.0f%% - %lu%cB"
+msgstr "%u %s ダウンロード中: %.0f%% - %lu%cB"
+
+msgid "item"
+msgid_plural "items"
+msgstr[0] "項目"
+
+#, c-format
+msgid "Booting in %d sec: [%s] %s"
+msgstr "%d 秒でブートします: [%s] %s"
+
+#. TRANSLATORS: this string will be passed the type of the
+#. device (eg "disk" or "network"), which will be translated
+#. accordingly.
 #.
 #, c-format
-msgid "Processing %s device %s"
-msgstr "処理 %s デバイス %s"
+msgid "Processing new %s device"
+msgstr "新規 %s デバイスを処理しています"
 
-#. TRANSLATORS: the format specifier in this string is a Linux
-#. device identifier, like 'sda1'
-#.
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
 #, c-format
-msgid "Processing %s complete"
-msgstr "処理 %s 完了"
-
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
-#, c-format
-msgid "Processing dhcp event on %s"
-msgstr "%s で DHCP イベントを処理"
-
-msgid "Processing user config"
-msgstr "ユーザー構成の処理"
-
-msgid "Processing user config complete"
-msgstr "ユーザー構成の処理の完了"
+msgid "Processing DHCP lease response (ip: %s)"
+msgstr "DHCP リース応答を処理しています (IP: %s)"
 
 msgid "Default boot cancelled"
 msgstr "デフォルトのブートが取り消されました"
-
-#, c-format
-msgid "Received config URL %s"
-msgstr "構成 URL %s を受け取りました"
-
-msgid "No network configured"
-msgstr "ネットワークが構成されていません"
 
 msgid "Invalid config URL!"
 msgstr "構成 URL が無効です!"
@@ -105,9 +126,50 @@ msgstr "構成 URL が無効です!"
 msgid "Unable to route to host %s"
 msgstr "ホスト %s に経路指定できません"
 
+msgid "Failed to load URL!"
+msgstr "URL のロードに失敗しました!"
+
 #, c-format
-msgid "Config file %s parsed"
-msgstr "構成ファイル %s が解析されました"
+msgid "Parsed GRUB configuration from %s"
+msgstr ""
+
+#, c-format
+msgid "Parsed kboot configuration from %s"
+msgstr ""
+
+msgid "Configuring with DHCP"
+msgstr ""
+
+#, c-format
+msgid "Configuring with static address (ip: %s)"
+msgstr ""
+
+#, c-format
+msgid "Download complete: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to download %s"
+msgstr ""
+
+msgid "PXE autoconfiguration failed"
+msgstr ""
+
+#, c-format
+msgid "Parsed PXE config from %s"
+msgstr ""
+
+#, c-format
+msgid "Requesting config %s"
+msgstr ""
+
+#, c-format
+msgid "Probing from base %s"
+msgstr ""
+
+#, c-format
+msgid "Parsed yaboot configuration from %s"
+msgstr ""
 
 msgid "None"
 msgstr "なし"
@@ -181,6 +243,9 @@ msgstr "デバイス・ツリー:"
 msgid "Boot arguments:"
 msgstr "ブート引数:"
 
+msgid "Argument signature file:"
+msgstr "引数シグニチャー・ファイル:"
+
 msgid "Petitboot Option Editor"
 msgstr "Petitboot オプション・エディター"
 
@@ -200,13 +265,13 @@ msgid "Autoboot:"
 msgstr "自動ブート:"
 
 msgid "Disabled"
-msgstr ""
+msgstr "使用不可"
 
 msgid "Enabled"
-msgstr ""
+msgstr "使用可能"
 
 msgid "Add Device"
-msgstr "デバイスの追加"
+msgstr "デバイスの追加:"
 
 msgid "Clear"
 msgstr "消去"
@@ -215,7 +280,7 @@ msgid "Clear & Boot Any"
 msgstr "消去してブート"
 
 msgid "Boot Order:"
-msgstr "ブート順序:"
+msgstr "ブート順序"
 
 msgid "(None)"
 msgstr "(なし)"
@@ -229,7 +294,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "net:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "任意のデバイス"
+msgstr "任意のデバイス:"
 
 #, c-format
 msgid "Any %s device"
@@ -247,6 +312,9 @@ msgstr "%s IPMI ブート・オプション: %s"
 
 msgid "Clear option:"
 msgstr "消去オプション:"
+
+msgid "Clear IPMI override now"
+msgstr ""
 
 msgid "Network:"
 msgstr "ネットワーク:"
@@ -266,6 +334,11 @@ msgstr "リンクアップ"
 msgid "link down"
 msgstr "リンクダウン"
 
+msgid "Network Override Active! 'OK' will overwrite interface config"
+msgstr ""
+"ネットワーク・オーバーライドがアクティブです。「OK」でインターフェース構成を"
+"上書きします"
+
 msgid "IP/mask:"
 msgstr "IP/マスク:"
 
@@ -279,10 +352,10 @@ msgid "(eg. 192.168.0.1)"
 msgstr "(例: 192.168.0.1)"
 
 msgid "URL:"
-msgstr ""
+msgstr "URL:"
 
 msgid "(eg. tftp://)"
-msgstr ""
+msgstr "(例: tftp://)"
 
 msgid "DNS Server(s):"
 msgstr "DNS サーバー:"
@@ -292,6 +365,12 @@ msgstr "(例: 192.168.0.2)"
 
 msgid "(if not provided by DHCP server)"
 msgstr "(DHCP サーバーから提供されない場合)"
+
+msgid "HTTP Proxy:"
+msgstr "HTTP プロキシー:"
+
+msgid "HTTPS Proxy:"
+msgstr "HTTPS プロキシー:"
 
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "「OK」を選択するとセーフ・モードが終了します"
@@ -304,6 +383,17 @@ msgstr "ディスクへの書き込みをすべて抑止する"
 
 msgid "Allow bootloader scripts to modify disks"
 msgstr "ブート・ローダー・スクリプトでディスクを変更可能にする"
+
+msgid "Boot console:"
+msgstr "ブート・コンソール:"
+
+#, c-format
+msgid "Manually set: '%s'"
+msgstr "手動で設定: %s"
+
+#, c-format
+msgid "Current interface: %s"
+msgstr "現在のインターフェース: %s"
 
 msgid "Petitboot System Configuration"
 msgstr "Petitboot システム構成"
@@ -328,12 +418,6 @@ msgstr "失敗: %s のブート"
 msgid "User item %u"
 msgstr "ユーザー項目 %u"
 
-msgid "Error"
-msgstr "エラー"
-
-msgid "Info"
-msgstr "通知"
-
 #, c-format
 msgid "SAFE MODE: select '%s' to continue"
 msgstr "セーフ・モード: 続行するには「%s」を選択してください"
@@ -341,8 +425,8 @@ msgstr "セーフ・モード: 続行するには「%s」を選択してくだ�
 msgid "Rescan devices"
 msgstr "デバイスの再スキャン"
 
-msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
-msgstr "Enter=受け入れ、e=編集、n=新規、x=終了、l=言語、h=ヘルプ"
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"
+msgstr "Enter=受け入れ、e=編集、n=新規、x=終了、l=言語、g=ログ、h=ヘルプ"
 
 msgid "Welcome to Petitboot"
 msgstr "Petitboot へようこそ"
@@ -353,14 +437,35 @@ msgstr "システム情報"
 msgid "System configuration"
 msgstr "システム構成"
 
+msgid "System status log"
+msgstr "システム状況ログ"
+
 msgid "Retrieve config from URL"
 msgstr "URL から構成を取得"
+
+msgid "Plugins (0)"
+msgstr "プラグイン (0)"
+
+msgid "Reboot"
+msgstr "リブート"
 
 msgid "Exit to shell"
 msgstr "終了してシェルに戻る"
 
 msgid "main menu"
 msgstr "メインメニュー"
+
+msgid "Petitboot Plugins"
+msgstr "Petitboot プラグイン"
+
+msgid "Enter=install, e=details, x=exit, h=help"
+msgstr "Enter=インストール、e=詳細、x=終了、h=ヘルプ"
+
+msgid "Available Petitboot Plugins"
+msgstr "使用可能な Petitboot プラグイン"
+
+msgid "plugin menu"
+msgstr "プラグイン・メニュー"
 
 #, c-format
 msgid "%s: alloc cui failed.\n"
@@ -401,7 +506,7 @@ msgstr "tab=次へ、shift+tab=前へ、x=終了"
 
 #, c-format
 msgid "!Invalid option %d"
-msgstr "オプション %d は無効です"
+msgstr "オプション %d は無効です "
 
 msgid "Unknown Device"
 msgstr "不明なデバイスです"
@@ -416,43 +521,54 @@ msgid "System id:"
 msgstr "システム ID:"
 
 msgid "Primary platform versions:"
-msgstr ""
+msgstr "1 次プラットフォーム・バージョン:"
 
 msgid "Alternate platform versions:"
-msgstr ""
+msgstr "代替プラットフォーム・バージョン:"
 
 msgid "BMC current side:"
-msgstr ""
+msgstr "BMC の現在のサイド:"
 
 msgid "BMC golden side:"
-msgstr ""
+msgstr "BMC のゴールデン・サイド:"
 
 msgid "Storage devices"
 msgstr "ストレージ・デバイス"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr " UUID:       %s"
+msgstr "  UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr " マウント位置: %s"
+msgstr "  マウント位置: %s"
 
 msgid "Management (BMC) interface"
-msgstr ""
+msgstr "管理 (BMC) インターフェース"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr " MAC:  %s"
+msgstr "  MAC:  %s"
 
 msgid "Network interfaces"
 msgstr "ネットワーク・インターフェース"
 
+#, c-format
+msgid " MAC:        %s"
+msgstr "  MAC:  %s"
+
+#, c-format
+msgid " IP Address: %s"
+msgstr " IP アドレス: %s"
+
+msgid "none"
+msgstr "なし"
+
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
-msgid " link: %s"
-msgstr " リンク: %s"
+msgid " link:       %s"
+msgstr "  リンク: %s"
 
 msgid "up"
 msgstr "アップ"
@@ -489,6 +605,9 @@ msgid ""
 "\n"
 "To set the language for the petitboot interface, type L (language).\n"
 "\n"
+"To view the log of status messages from the discovery process, type G "
+"(log).\n"
+"\n"
 "To find new or updated boot options on the system, select the 'Rescan "
 "devices' option.\n"
 "\n"
@@ -514,6 +633,9 @@ msgstr ""
 "システム構成を変更するには、C (構成) を入力します。\n"
 "\n"
 "petitboot インターフェースの言語を設定するには、L (言語) を入力します。\n"
+"\n"
+"ディスカバリー・プロセスにおける状況メッセージのログを表示するには、G (ログ) "
+"を入力します。\n"
 "\n"
 "システムで新規ブート・オプションや更新されたブート・\n"
 "オプションを検索するには、「デバイスの再スキャン」\n"
@@ -594,10 +716,10 @@ msgid ""
 "\n"
 "By selecting the 'Add Device' button new devices can be added to the "
 "autoboot list, either by UUID, MAC address, or device type. Once added to "
-"the boot order, the priority of devices can be changed with the 'left' and "
-"'right' keys Devices can be individually removed from the boot order with "
-"the minus key. Use this option if you have multiple operating system images "
-"installed.\n"
+"the boot order, the priority of devices can be changed with the '-' (minus) "
+"and '+' (plus) keys. Devices can be individually removed from the boot order "
+"with the 'delete' or 'backspace' keys. Use this option if you have multiple "
+"operating system images installed.\n"
 "\n"
 "To autoboot from any device, select the 'Clear & Boot Any' button. In this "
 "case, any boot option that is marked as a default (by bootloader "
@@ -631,6 +753,10 @@ msgid ""
 "this option if you do not have a DHCP server, or want explicit control of "
 "network settings.\n"
 "\n"
+"HTTP(S) Proxy: Allows you to specify an optional HTTP or HTTPS proxy server "
+"if required, for example: \"http://proxy:3128\". Any HTTP(S) requests made "
+"by the pb-discover server will use these details.\n"
+"\n"
 "Disk R/W: Certain bootloader configurations may request write access to "
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
@@ -639,16 +765,16 @@ msgstr ""
 "\n"
 "「デバイスの追加」ボタンを選択し、新しいデバイスを UUID、MAC アドレス、デバイ"
 "ス・タイプのいずれかで自動ブート・リストに追加できます。ブート順序に追加され"
-"ると、デバイスの優先順位は「left」および「right」キーで変更できます。マイナ"
-"ス・キーを使用すると、デバイスを個別にブート順序から除外できます。このオプ"
-"ションは、複数のオペレーティング・システム・イメージをインストール済みである"
-"場合に使用します。\n"
+"ると、デバイスの優先順位は「-」キー (マイナス) と「+」キー (プラス) キーで変"
+"更できます。「Delete」キーまたは「Backspace」キーを使用すると、デバイスを個別"
+"にブート順序から除外できます。このオプションは、複数のオペレーティング・シス"
+"テム・イメージをインストール済みである場合に使用します。\n"
 "\n"
 "任意のデバイスから自動ブートするには、「消去してブート」ボタンを選択します。"
-"この場合、(ブート・ローダ構成により) デフォルトとしてマークが付けられている"
+"この場合、(ブート・ローダー構成により) デフォルトとしてマークが付けられている"
 "ブート・オプションは、タイムアウトの後、自動的にブートされます。このオプショ"
-"ンは、ブート・オプションの設定を変更することなく、すばやくシステムをブートし"
-"たい場合に使用します。これは標準の構成です。\n"
+"ンは、ブート・オプションの設定を変更することなく、素早くシステムをブートした"
+"い場合に使用します。これは標準の構成です。\n"
 "\n"
 "自動ブートを無効にするには、「消去」ボタンを選択してブート順序を消去します。"
 "自動ブートを無効にすると、petitboot メニューをさらに続行するには、ユーザーに"
@@ -677,12 +803,87 @@ msgstr ""
 "場合や、ネットワーク設定を明示的に制御したい場合に、このオプションを選択しま"
 "す。\n"
 "\n"
+"HTTP(S) プロキシー: 必要に応じて、オプションの HTTP または HTTPS プロキシー・"
+"サーバー (例えば \"http://proxy:3128\") を指定できます。pb ディスカバー・サー"
+"バーによって行われた HTTP(S) 要求では、これらの詳細が使用されます。\n"
+"\n"
 "ディスク R/W: 特定のブート・ローダー構成では、情報を保存したり、パラメーター"
 "(例: GRUB2) を更新するために、ディスクへの書き込み権限が必要な場合がありま"
 "す。このオプションを使用して、ディスクへのアクセスを制御します。\n"
 
+msgid "Petitboot Plugin"
+msgstr "Petitboot プラグイン"
+
+#, c-format
+msgid "Finished: %s"
+msgstr ""
+
+#, c-format
+msgid "Installing plugin %s"
+msgstr ""
+
+msgid "Failed to send install request"
+msgstr ""
+
+msgid "ID:"
+msgstr ""
+
+msgid "Name:"
+msgstr ""
+
+msgid "Vendor:"
+msgstr ""
+
+msgid "Vendor ID:"
+msgstr ""
+
+msgid "Version:"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Commands:"
+msgstr ""
+
+msgid "Run selected command"
+msgstr ""
+
+msgid ""
+"This screen lists the details and available commands of an installed "
+"plugin.\n"
+"To run a plugin command choose it in the list and select the \"Run\" button. "
+"The Petitboot UI will temporarily exit to run the command, then return to "
+"this screen."
+msgstr ""
+
+msgid ""
+"Plugins discovered by Petitboot are listed in this menu.\n"
+"Press Enter to install the selected plugin. Once installed the plugin "
+"details can be seen by pressing 'e'. From the detailed view plugin commands "
+"can also be run."
+msgstr ""
+
+msgid "Petitboot status log"
+msgstr ""
+
 msgid "Usage"
 msgstr "使用法"
+
+#~ msgid "kexec load failed"
+#~ msgstr "kexec load failed"
+
+#~ msgid "No network configured"
+#~ msgstr "No network configured"
+
+#~ msgid "Config file %s parsed"
+#~ msgstr "Config file %s parsed"
+
+#~ msgid "Error"
+#~ msgstr "Error"
+
+#~ msgid "Info"
+#~ msgstr "Info"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"
