@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2016-03-07 10:02+1100\n"
+"POT-Creation-Date: 2017-08-29 14:14+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Korean\n"
@@ -16,21 +16,31 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "running boot hooks"
+msgid "Running boot hooks"
 msgstr "부트 후크 실행 중"
 
 #, c-format
-msgid "Couldn't load %s"
-msgstr "%s을(를) 로드할 수 없음"
+msgid "Loaded %s from %s"
+msgstr "%s을(를) %s에서 로드함"
 
-msgid "performing kexec_load"
-msgstr "kexec_load 수행 중"
+#, c-format
+msgid "Couldn't load %s from %s"
+msgstr "%s을(를) %s에서 로드할 수 없음"
 
-msgid "kexec load failed"
-msgstr "kexec 로드에 실패함"
+msgid "Performing kexec load"
+msgstr "kexec 로드 수행 중"
 
-msgid "performing kexec reboot"
-msgstr "kexec 다시 부팅 수행 중"
+msgid "Decryption failed"
+msgstr "복호화 실패"
+
+msgid "Signature verification failed"
+msgstr "서명 확인 실패"
+
+msgid "Invalid signature configuration"
+msgstr "올바르지 않은 서명 구성"
+
+msgid "Performing kexec reboot"
+msgstr "kexec 재부팅 수행 중"
 
 msgid "kexec reboot failed"
 msgstr "kexec 다시 부팅에 실패함"
@@ -43,60 +53,69 @@ msgid "(unknown)"
 msgstr "(알 수 없음)"
 
 #, c-format
-msgid "Booting %s."
-msgstr "%s 부팅 중입니다."
+msgid "Booting %s"
+msgstr "%s 부팅 중"
 
 msgid "Boot failed: no image specified"
 msgstr "부트 실패: 이미지가 지정되지 않음"
+
+msgid "Boot failed: no command line signature file specified"
+msgstr "부트 실패: 명령행 서명 파일이 지정되지 않음"
+
+msgid "kernel image"
+msgstr "커널 이미지"
+
+msgid "initrd"
+msgstr "initrd"
+
+msgid "dtb"
+msgstr "dtb"
+
+msgid "kernel image signature"
+msgstr "커널 이미지 서명"
+
+msgid "initrd signature"
+msgstr "initrd 서명"
+
+msgid "dtb signature"
+msgstr "dtb 서명"
+
+msgid "kernel command line signature"
+msgstr "커널 명령행 서명"
 
 msgid "Boot cancelled"
 msgstr "부팅이 취소됨"
 
 #, c-format
-msgid "Booting in %d sec: %s"
-msgstr "%d초에 부팅 중: %s"
+msgid "%u downloads in progress..."
+msgstr "%u 다운로드 진행 중..."
 
-#. TRANSLATORS: this string will be passed the type and identifier
-#. of the device. For example, the first parameter could be "Disk",
-#. (which will be translated accordingly) and the second a Linux device
-#. identifier like 'sda1' (which will not be translated)
+#, c-format
+msgid "%u %s downloading: %.0f%% - %lu%cB"
+msgstr "%u %s 다운로드 중: %.0f%% - %lu%cB"
+
+msgid "item"
+msgid_plural "items"
+msgstr[0] "항목"
+
+#, c-format
+msgid "Booting in %d sec: [%s] %s"
+msgstr "%d초 후 부팅 중: [%s] %s"
+
+#. TRANSLATORS: this string will be passed the type of the
+#. device (eg "disk" or "network"), which will be translated
+#. accordingly.
 #.
 #, c-format
-msgid "Processing %s device %s"
-msgstr "%s 장치 처리 중 %s"
+msgid "Processing new %s device"
+msgstr "새 %s 장치 처리 중"
 
-#. TRANSLATORS: the format specifier in this string is a Linux
-#. device identifier, like 'sda1'
-#.
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
 #, c-format
-msgid "Processing %s complete"
-msgstr "%s 처리 완료"
-
-#. TRANSLATORS: this format specifier will be the name of a network
-#. device, like 'eth0'.
-#.
-#, c-format
-msgid "Processing dhcp event on %s"
-msgstr "%s에서 DHCP 이벤트 처리 중"
-
-msgid "Processing user config"
-msgstr "사용자 구성 처리 중"
-
-msgid "Processing user config complete"
-msgstr "사용자 구성 처리 완료"
+msgid "Processing DHCP lease response (ip: %s)"
+msgstr "DHCP 리스 응답 처리 중(ip: %s)"
 
 msgid "Default boot cancelled"
 msgstr "기본 부팅이 취소됨"
-
-#, c-format
-msgid "Received config URL %s"
-msgstr "구성 URL %s을(를) 수신함"
-
-msgid "No network configured"
-msgstr "네크워크가 구성되지 않았습니다."
 
 msgid "Invalid config URL!"
 msgstr "올바르지 않은 구성 URL입니다."
@@ -105,9 +124,50 @@ msgstr "올바르지 않은 구성 URL입니다."
 msgid "Unable to route to host %s"
 msgstr "호스트 %s에 경로 지정할 수 없음"
 
+msgid "Failed to load URL!"
+msgstr "URL 로드 실패!"
+
 #, c-format
-msgid "Config file %s parsed"
-msgstr "%s 구성 파일을 구문 분석함"
+msgid "Parsed GRUB configuration from %s"
+msgstr ""
+
+#, c-format
+msgid "Parsed kboot configuration from %s"
+msgstr ""
+
+msgid "Configuring with DHCP"
+msgstr ""
+
+#, c-format
+msgid "Configuring with static address (ip: %s)"
+msgstr ""
+
+#, c-format
+msgid "Download complete: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to download %s"
+msgstr ""
+
+msgid "PXE autoconfiguration failed"
+msgstr ""
+
+#, c-format
+msgid "Parsed PXE config from %s"
+msgstr ""
+
+#, c-format
+msgid "Requesting config %s"
+msgstr ""
+
+#, c-format
+msgid "Probing from base %s"
+msgstr ""
+
+#, c-format
+msgid "Parsed yaboot configuration from %s"
+msgstr ""
 
 msgid "None"
 msgstr "없음"
@@ -181,6 +241,9 @@ msgstr "장치 트리:"
 msgid "Boot arguments:"
 msgstr "부트 인수:"
 
+msgid "Argument signature file:"
+msgstr "인수 서명 파일:"
+
 msgid "Petitboot Option Editor"
 msgstr "Petitboot 옵션 편집기"
 
@@ -197,16 +260,16 @@ msgid "Waiting for configuration data..."
 msgstr "구성 데이터 대기 중..."
 
 msgid "Autoboot:"
-msgstr "자동 부트:"
+msgstr "자동 부팅:"
 
 msgid "Disabled"
-msgstr ""
+msgstr "사용 안함"
 
 msgid "Enabled"
-msgstr ""
+msgstr "사용함"
 
 msgid "Add Device"
-msgstr "장치 추가"
+msgstr "장치 추가:"
 
 msgid "Clear"
 msgstr "선택 취소"
@@ -215,7 +278,7 @@ msgid "Clear & Boot Any"
 msgstr "선택 취소 & 모든 부트"
 
 msgid "Boot Order:"
-msgstr "부팅 순서:"
+msgstr "부팅 순서"
 
 msgid "(None)"
 msgstr "(없음)"
@@ -229,7 +292,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "네트:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "임의의 장치"
+msgstr "임의의 장치:"
 
 #, c-format
 msgid "Any %s device"
@@ -247,6 +310,9 @@ msgstr "%s IPMI 부트 옵션: %s"
 
 msgid "Clear option:"
 msgstr "선택 취소 옵션:"
+
+msgid "Clear IPMI override now"
+msgstr ""
 
 msgid "Network:"
 msgstr "네트워크:"
@@ -266,6 +332,9 @@ msgstr "링크 연결"
 msgid "link down"
 msgstr "링크 중단"
 
+msgid "Network Override Active! 'OK' will overwrite interface config"
+msgstr "네트워크 대체 활성! '확인'이 인터페이스 구성을 겹쳐씀"
+
 msgid "IP/mask:"
 msgstr "IP/마스크:"
 
@@ -279,10 +348,10 @@ msgid "(eg. 192.168.0.1)"
 msgstr "(예: 192.168.0.1)"
 
 msgid "URL:"
-msgstr ""
+msgstr "URL:"
 
 msgid "(eg. tftp://)"
-msgstr ""
+msgstr "(예: tftp://)"
 
 msgid "DNS Server(s):"
 msgstr "DNS 서버:"
@@ -292,6 +361,12 @@ msgstr "(예: 192.168.0.2)"
 
 msgid "(if not provided by DHCP server)"
 msgstr "(DHCP 서버에서 제공되지 않은 경우)"
+
+msgid "HTTP Proxy:"
+msgstr "HTTP 프록시:"
+
+msgid "HTTPS Proxy:"
+msgstr "HTTPS 프록시:"
 
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "'확인'을 선택하면 안전 모드를 종료합니다."
@@ -304,6 +379,17 @@ msgstr "디스크에 대한 모든 쓰기 방지"
 
 msgid "Allow bootloader scripts to modify disks"
 msgstr "부트 로더 스크립트가 디스크를 수정하도록 허용"
+
+msgid "Boot console:"
+msgstr "부트 콘솔:"
+
+#, c-format
+msgid "Manually set: '%s'"
+msgstr "수동으로 설정됨: '%s'"
+
+#, c-format
+msgid "Current interface: %s"
+msgstr "현재 인터페이스: %s"
 
 msgid "Petitboot System Configuration"
 msgstr "Petitboot 시스템 구성"
@@ -326,13 +412,7 @@ msgstr "실패: %s 부트"
 
 #, c-format
 msgid "User item %u"
-msgstr "사용자 항목 %u"
-
-msgid "Error"
-msgstr "오류"
-
-msgid "Info"
-msgstr "정보"
+msgstr "User item %u"
 
 #, c-format
 msgid "SAFE MODE: select '%s' to continue"
@@ -341,8 +421,8 @@ msgstr "안전 모드: 계속하려면 '%s' 선택"
 msgid "Rescan devices"
 msgstr "장치 다시 스캔"
 
-msgid "Enter=accept, e=edit, n=new, x=exit, l=language, h=help"
-msgstr "Enter=허용, e=편집, n=새로 작성, x=종료, l=언어, h=도움말"
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"
+msgstr "Enter=허용, e=편집, n=새로 작성, x=종료, l=언어, g=로그, h=도움말"
 
 msgid "Welcome to Petitboot"
 msgstr "Petitboot 시작"
@@ -353,8 +433,14 @@ msgstr "시스템 정보"
 msgid "System configuration"
 msgstr "시스템 구성"
 
+msgid "System status log"
+msgstr "시스템 상태 로그"
+
 msgid "Retrieve config from URL"
 msgstr "URL에서 구성 검색"
+
+msgid "Reboot"
+msgstr "다시 부팅"
 
 msgid "Exit to shell"
 msgstr "쉘로 종료"
@@ -415,16 +501,16 @@ msgid "System id:"
 msgstr "시스템 ID:"
 
 msgid "Primary platform versions:"
-msgstr ""
+msgstr "기본 플랫폼 버전:"
 
 msgid "Alternate platform versions:"
-msgstr ""
+msgstr "대체 플랫폼 버전:"
 
 msgid "BMC current side:"
-msgstr ""
+msgstr "BMC 현재 측면:"
 
 msgid "BMC golden side:"
-msgstr ""
+msgstr "BMC 골든 측면:"
 
 msgid "Storage devices"
 msgstr "스토리지 장치"
@@ -438,7 +524,7 @@ msgid " mounted at: %s"
 msgstr " 마운트 위치: %s"
 
 msgid "Management (BMC) interface"
-msgstr ""
+msgstr "관리 (BMC) 인터페이스"
 
 #, c-format
 msgid " MAC:  %s"
@@ -447,11 +533,22 @@ msgstr " MAC:  %s"
 msgid "Network interfaces"
 msgstr "네트워크 인터페이스"
 
+#, c-format
+msgid " MAC:        %s"
+msgstr " MAC:        %s"
+
+#, c-format
+msgid " IP Address: %s"
+msgstr " IP 주소: %s"
+
+msgid "none"
+msgstr "없음"
+
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
-msgid " link: %s"
-msgstr " 링크: %s"
+msgid " link:       %s"
+msgstr " 링크:       %s"
 
 msgid "up"
 msgstr "연결"
@@ -488,6 +585,9 @@ msgid ""
 "\n"
 "To set the language for the petitboot interface, type L (language).\n"
 "\n"
+"To view the log of status messages from the discovery process, type G "
+"(log).\n"
+"\n"
 "To find new or updated boot options on the system, select the 'Rescan "
 "devices' option.\n"
 "\n"
@@ -511,6 +611,8 @@ msgstr ""
 "시스템 구성에 대한 변경사항을 작성하려면 C(구성)를 입력하십시오.\n"
 "\n"
 "Petitboot 인터페이스에 대한 언어를 설정하려면 L(언어)을 입력하십시오.\n"
+"\n"
+"검색 프로세스에서 상태 메시지의 로그를 보려면 G(로그)를 입력하십시오.\n"
 "\n"
 "시스템에서 새 부트 또는 업데이트된 부트 옵션을 찾으려면 '장치 다시 스캔' 옵션"
 "을 선택하십시오.\n"
@@ -568,8 +670,8 @@ msgstr ""
 "유형 이미지입니다.\n"
 "예: /boot/vmlinux\n"
 "\n"
-"Initrd: 초기 RAM 디스크 이미지에 대한 경로를 입력하십시오. 이 필드는 선택적입"
-"니다.\n"
+"Initrd: 초기 RAM 디스크 이미지의 경로를 입력하십시오. 이 필드는 선택적입니"
+"다.\n"
 "예: /boot/initrd.img\n"
 "\n"
 "장치 트리: 장치 트리 blob 파일(.dtb)에 대한 경로를 입력하십시오. 이 필드는 선"
@@ -586,10 +688,10 @@ msgid ""
 "\n"
 "By selecting the 'Add Device' button new devices can be added to the "
 "autoboot list, either by UUID, MAC address, or device type. Once added to "
-"the boot order, the priority of devices can be changed with the 'left' and "
-"'right' keys Devices can be individually removed from the boot order with "
-"the minus key. Use this option if you have multiple operating system images "
-"installed.\n"
+"the boot order, the priority of devices can be changed with the '-' (minus) "
+"and '+' (plus) keys. Devices can be individually removed from the boot order "
+"with the 'delete' or 'backspace' keys. Use this option if you have multiple "
+"operating system images installed.\n"
 "\n"
 "To autoboot from any device, select the 'Clear & Boot Any' button. In this "
 "case, any boot option that is marked as a default (by bootloader "
@@ -623,6 +725,10 @@ msgid ""
 "this option if you do not have a DHCP server, or want explicit control of "
 "network settings.\n"
 "\n"
+"HTTP(S) Proxy: Allows you to specify an optional HTTP or HTTPS proxy server "
+"if required, for example: \"http://proxy:3128\". Any HTTP(S) requests made "
+"by the pb-discover server will use these details.\n"
+"\n"
 "Disk R/W: Certain bootloader configurations may request write access to "
 "disks to save information or update parameters (eg. GRUB2). Use this option "
 "to control access to disks.\n"
@@ -630,15 +736,15 @@ msgstr ""
 "자동 부팅: 자동 부팅할 장치를 지정하십시오.\n"
 "\n"
 "'장치 추가' 단추를 선택하여 자동 부팅 목록에 UUID, MAC 주소 또는 장치 유형별"
-"로 새 장치를 추가할 수 있습니다. 부팅 순서에 추가되면 '왼쪽' 및 '오른쪽' 키"
-"를 사용하여 장치의 우선순위를 변경할 수 있습니다. 빼기 키를 사용하여 부팅 순"
-"서에서 장치를 개별적으로 제거할 수 있습니다. 여러 운영 체제 이미지를 설치한 "
-"경우 이 옵션을 사용하십시오.\n"
+"로 새 장치를 추가할 수 있습니다. 부팅 순서에 추가된 장치의 우선순위는 '-'(빼"
+"기) 및 '+'(더하기) 키를 사용하여 변경할 수 있습니다. 부팅 순서에서 'delete' "
+"또는 '백스페이스' 키를 사용하여 장치를 개별적으로 제거할 수 있습니다. 여러 운"
+"영 체제 이미지가 설치되어 있는 경우 이 옵션을 사용하십시오.\n"
 "\n"
-"임의의 장치에서 자동 부팅하려면 '선택 취소 및 임의 부팅' 단추를 선택하십시"
-"오. 이 경우 기본값으로 표시된(부트 로더 구성에서) 모든 부트 옵션이 제한시간 "
-"이후 자동으로 부팅됩니다. 부트 옵션 설정을 변경하지 않고 신속하게 시스템을 부"
-"팅하려는 경우 이 옵션을 사용하십시오. 이는 일반적인 구성입니다.\n"
+"장치에서 자동 부팅하려면 '선택 취소 & 모든 부트' 단추를 선택하십시오. 이 경"
+"우 기본값으로 표시된(부트 로더 구성에서) 모든 부트 옵션이 제한시간 이후 자동"
+"으로 부팅됩니다. 부트 옵션 설정을 변경하지 않고 신속하게 시스템을 부팅하려는 "
+"경우 이 옵션을 사용하십시오. 이는 일반적인 구성입니다.\n"
 "\n"
 "자동 부팅을 사용하지 않도록 설정하려면 부팅 순서를 선택 취소하는 '선택 취소' "
 "단추를 선택하십시오. 자동 부팅을 사용하지 않고 petitboot를 넘어 계속하려면 사"
@@ -662,12 +768,52 @@ msgstr ""
 "웨이 및 DNS 서버를 지정할 수 있습니다. DHCP가 없거나 네트워크 설정을 명시적으"
 "로 제어하려면 이 옵션을 선택하십시오.\n"
 "\n"
+"HTTP(S) 프록시: 필요한 경우 사용자가 선택적 HTTP 또는 HTTPS 프록시 서버를 지"
+"정할 수 있도록 합니다(예: \"http://proxy:3128\"). pb-discover 서버에 의해 작"
+"성된 임의의 HTTP(S) 요청에서 이러한 세부사항을 사용합니다.\n"
+"\n"
 "디스크 R/W: 특정 부트 로더 구성 시 정보를 저장하거나 매개변수(예: GRUB2)를 업"
 "데이트하기 위해 디스크에 대한 쓰기 액세스가 필요할 수 있습니다. 디스크에 대"
 "한 액세스를 제어하려면 이 옵션을 사용하십시오.\n"
 
+msgid "Petitboot status log"
+msgstr ""
+
 msgid "Usage"
 msgstr "사용법"
+
+#~ msgid "Plugins (0)"
+#~ msgstr "플러그인(0)"
+
+#~ msgid "Petitboot Plugins"
+#~ msgstr "Petitboot 플러그인"
+
+#~ msgid "Enter=install, e=details, x=exit, h=help"
+#~ msgstr "Enter=설치, e=세부사항, x=종료, h=도움말"
+
+#~ msgid "Available Petitboot Plugins"
+#~ msgstr "사용 가능한 Petitboot 플러그인"
+
+#~ msgid "plugin menu"
+#~ msgstr "플러그인 메뉴"
+
+#~ msgid "Petitboot Plugin"
+#~ msgstr "Petitboot 플러그인"
+
+#~ msgid "kexec load failed"
+#~ msgstr "kexec load failed"
+
+#~ msgid "No network configured"
+#~ msgstr "No network configured"
+
+#~ msgid "Config file %s parsed"
+#~ msgstr "Config file %s parsed"
+
+#~ msgid "Error"
+#~ msgstr "Error"
+
+#~ msgid "Info"
+#~ msgstr "Info"
 
 #~ msgid "Don't autoboot"
 #~ msgstr "Don't autoboot"
