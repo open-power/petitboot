@@ -63,6 +63,10 @@ fi
 log "Adding dmesg"
 dmesg > /$diagdir/dmesg
 
+# Add Skiboot log
+log "Adding Skiboot log"
+cat /sys/firmware/opal/msglog > /$diagdir/msglog
+
 log "Compressing..."
 cd /
 tar $tarflags -cf $tarfile $diagdir
