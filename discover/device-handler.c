@@ -628,7 +628,8 @@ static void countdown_status(struct device_handler *handler,
 
 	status.type = STATUS_INFO;
 	status.message = talloc_asprintf(handler,
-			_("Booting in %d sec: %s"), sec, opt->option->name);
+			_("Booting in %d sec: [%s] %s"), sec,
+			opt->device->device->id, opt->option->name);
 	status.backlog = false;
 
 	device_handler_status(handler, &status);
