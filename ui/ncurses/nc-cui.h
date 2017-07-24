@@ -26,8 +26,11 @@
 #include "nc-helpscreen.h"
 
 struct cui_opt_data {
-	const char *name;
-	struct pb_boot_data *bd;
+	char *name;
+	union {
+		struct pb_boot_data *bd;
+		struct pb_plugin_data *pd;
+	};
 
 	/* optional data */
 	const struct device *dev;
@@ -53,6 +56,8 @@ struct cui {
 	sig_atomic_t resize;
 	struct nc_scr *current;
 	struct pmenu *main;
+	struct pmenu *plugin_menu;
+	unsigned int n_plugins;
 	struct waitset *waitset;
 	struct discover_client *client;
 	struct system_info *sysinfo;
@@ -61,6 +66,7 @@ struct cui {
 	struct config *config;
 	struct config_screen *config_screen;
 	struct add_url_screen *add_url_screen;
+	struct plugin_screen *plugin_screen;
 	struct boot_editor *boot_editor;
 	struct lang_screen *lang_screen;
 	struct help_screen *help_screen;
@@ -88,8 +94,11 @@ void cui_show_help(struct cui *cui, const char *title,
 void cui_show_subset(struct cui *cui, const char *title,
 		void *arg);
 void cui_show_add_url(struct cui *cui);
+void cui_show_plugin(struct pmenu_item *item);
+void cui_show_plugin_menu(struct cui *cui);
 int cui_send_config(struct cui *cui, struct config *config);
 int cui_send_url(struct cui *cui, char *url);
+int cui_send_plugin_install(struct cui *cui, char *file);
 void cui_send_reinit(struct cui *cui);
 
 /* convenience routines */

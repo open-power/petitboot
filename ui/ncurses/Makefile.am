@@ -51,8 +51,11 @@ ui_ncurses_libpbnc_la_SOURCES = \
 	ui/ncurses/nc-subset.c \
 	ui/ncurses/nc-subset.h \
 	ui/ncurses/nc-statuslog.c \
-	ui/ncurses/nc-statuslog.h
-
+	ui/ncurses/nc-statuslog.h \
+	ui/ncurses/nc-plugin.c \
+	ui/ncurses/nc-plugin.h \
+	ui/ncurses/nc-plugin-help.c \
+	ui/ncurses/nc-plugin-menu-help.c
 
 sbin_PROGRAMS += ui/ncurses/petitboot-nc
 

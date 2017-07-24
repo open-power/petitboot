@@ -112,6 +112,21 @@ static void device_remove(struct discover_client *client, const char *id)
 	talloc_free(device);
 }
 
+static void plugin_option_add(struct discover_client *client,
+		struct plugin_option *opt)
+{
+	talloc_steal(client, opt);
+
+	if (client->ops.plugin_option_add)
+		client->ops.plugin_option_add(opt, client->ops.cb_arg);
+}
+
+static void plugins_remove(struct discover_client *client)
+{
+	if (client->ops.plugins_remove)
+		client->ops.plugins_remove(client->ops.cb_arg);
+}
+
 void discover_client_enumerate(struct discover_client *client)
 {
 	struct boot_option *opt;
@@ -155,6 +170,7 @@ static int discover_client_process(void *arg)
 {
 	struct discover_client *client = arg;
 	struct pb_protocol_message *message;
+	struct plugin_option *p_opt;
 	struct system_info *sysinfo;
 	struct boot_option *opt;
 	struct status *status;
@@ -234,6 +250,20 @@ static int discover_client_process(void *arg)
 			goto out;
 		}
 		update_config(client, config);
+		break;
+	case PB_PROTOCOL_ACTION_PLUGIN_OPTION_ADD:
+		p_opt = talloc_zero(ctx, struct plugin_option);
+
+		rc = pb_protocol_deserialise_plugin_option(p_opt, message);
+		if (rc) {
+			pb_log("%s: no plugin_option?\n", __func__);
+			goto out;
+		}
+
+		plugin_option_add(client, p_opt);
+		break;
+	case PB_PROTOCOL_ACTION_PLUGINS_REMOVE:
+		plugins_remove(client);
 		break;
 	default:
 		pb_log("%s: unknown action %d\n", __func__, message->action);
@@ -401,6 +431,24 @@ int discover_client_send_url(struct discover_client *client,
 		return -1;
 
 	pb_protocol_serialise_url(url, message->payload, len);
+
+	return pb_protocol_write_message(client->fd, message);
+}
+
+int discover_client_send_plugin_install(struct discover_client *client,
+		char *file)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_url_len(file);
+
+	message = pb_protocol_create_message(client,
+				PB_PROTOCOL_ACTION_PLUGIN_INSTALL, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_url(file, message->payload, len);
 
 	return pb_protocol_write_message(client->fd, message);
 }

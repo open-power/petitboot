@@ -53,6 +53,7 @@ struct pmenu_item {
 	int (*on_execute)(struct pmenu_item *item);
 };
 
+int pmenu_item_update(struct pmenu_item *item, const char *name);
 struct pmenu_item *pmenu_item_create(struct pmenu *menu, const char *name);
 struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 	struct boot_option *opt);

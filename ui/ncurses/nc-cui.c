@@ -44,12 +44,15 @@
 #include "nc-helpscreen.h"
 #include "nc-statuslog.h"
 #include "nc-subset.h"
+#include "nc-plugin.h"
 
 extern const struct help_text main_menu_help_text;
+extern const struct help_text plugin_menu_help_text;
 
 static bool cui_detached = false;
 
 static struct pmenu *main_menu_init(struct cui *cui);
+static struct pmenu *plugin_menu_init(struct cui *cui);
 
 static bool lockdown_active(void)
 {
@@ -376,10 +379,35 @@ static void cui_add_url_exit(struct cui *cui)
 	cui->add_url_screen = NULL;
 }
 
+static void cui_plugin_exit(struct cui *cui)
+{
+	cui_set_current(cui, &cui->plugin_menu->scr);
+	talloc_free(cui->plugin_screen);
+	cui->plugin_screen = NULL;
+}
+
+static void cui_plugin_menu_exit(struct pmenu *menu)
+{
+	struct cui *cui = cui_from_pmenu(menu);
+	cui_set_current(cui, &cui->main->scr);
+}
+
 void cui_show_add_url(struct cui *cui)
 {
 	cui->add_url_screen = add_url_screen_init(cui, cui_add_url_exit);
 	cui_set_current(cui, add_url_screen_scr(cui->add_url_screen));
+}
+
+void cui_show_plugin_menu(struct cui *cui)
+{
+	cui_set_current(cui, &cui->plugin_menu->scr);
+}
+
+void cui_show_plugin(struct pmenu_item *item)
+{
+	struct cui *cui = cui_from_item(item);
+	cui->plugin_screen = plugin_screen_init(cui, item, cui_plugin_exit);
+	cui_set_current(cui, plugin_screen_scr(cui->plugin_screen));
 }
 
 static void cui_help_exit(struct cui *cui)
@@ -549,6 +577,7 @@ static void cui_handle_resize(struct cui *cui)
  *
  * Creates menu_items for all the device boot_options and inserts those
  * menu_items into the main menu.  Redraws the main menu if it is active.
+ * If a 'plugin' type boot_option appears the plugin menu is updated instead.
  */
 
 static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
@@ -560,86 +589,130 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	const char *tab = "  ";
 	unsigned int insert_pt;
 	int result, rows, cols;
+	struct pmenu *menu;
+	bool plugin_option;
 	ITEM *selected;
 	char *name;
 
+	plugin_option = opt->type == DISCOVER_PLUGIN_OPTION;
+	menu = plugin_option ? cui->plugin_menu : cui->main;
+
 	pb_debug("%s: %p %s\n", __func__, opt, opt->id);
 
-	selected = current_item(cui->main->ncm);
-	menu_format(cui->main->ncm, &rows, &cols);
+	selected = current_item(menu->ncm);
+	menu_format(menu->ncm, &rows, &cols);
 
 	if (cui->current == &cui->main->scr)
 		nc_scr_unpost(cui->current);
+	if (plugin_option && cui->current == &cui->plugin_menu->scr)
+		nc_scr_unpost(cui->current);
 
 	/* Check if the boot device is new */
-	dev_hdr = pmenu_find_device(cui->main, dev, opt);
+	dev_hdr = pmenu_find_device(menu, dev, opt);
 
 	/* All actual boot entries are 'tabbed' across */
-	name = talloc_asprintf(cui->main, "%s%s",
+	name = talloc_asprintf(menu, "%s%s",
 			tab, opt->name ? : "Unknown Name");
 
 	/* Save the item in opt->ui_info for cui_device_remove() */
-	opt->ui_info = i = pmenu_item_create(cui->main, name);
+	opt->ui_info = i = pmenu_item_create(menu, name);
 	talloc_free(name);
 	if (!i)
 		return -1;
 
-	i->on_edit = cui_item_edit;
-	i->on_execute = cui_boot;
-	i->data = cod = talloc(i, struct cui_opt_data);
+	if (plugin_option) {
+		i->on_edit = NULL;
+		i->on_execute = plugin_install_plugin;
+	} else {
+		i->on_edit = cui_item_edit;
+		i->on_execute = cui_boot;
+	}
 
+	i->data = cod = talloc(i, struct cui_opt_data);
 	cod->opt = opt;
 	cod->dev = dev;
 	cod->opt_hash = pb_opt_hash(dev, opt);
 	cod->name = opt->name;
-	cod->bd = talloc(i, struct pb_boot_data);
 
-	cod->bd->image = talloc_strdup(cod->bd, opt->boot_image_file);
-	cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
-	cod->bd->dtb = talloc_strdup(cod->bd, opt->dtb_file);
-	cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
-	cod->bd->args_sig_file = talloc_strdup(cod->bd, opt->args_sig_file);
+	if (plugin_option) {
+		cod->pd = talloc(i, struct pb_plugin_data);
+		cod->pd->plugin_file = talloc_strdup(cod,
+				opt->boot_image_file);
+	} else {
+		cod->bd = talloc(i, struct pb_boot_data);
+		cod->bd->image = talloc_strdup(cod->bd, opt->boot_image_file);
+		cod->bd->initrd = talloc_strdup(cod->bd, opt->initrd_file);
+		cod->bd->dtb = talloc_strdup(cod->bd, opt->dtb_file);
+		cod->bd->args = talloc_strdup(cod->bd, opt->boot_args);
+		cod->bd->args_sig_file = talloc_strdup(cod->bd, opt->args_sig_file);
+	}
 
 	/* This disconnects items array from menu. */
-	result = set_menu_items(cui->main->ncm, NULL);
+	result = set_menu_items(menu->ncm, NULL);
 
 	if (result)
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
 
 	/* Insert new items at insert_pt. */
 	if (dev_hdr) {
-		insert_pt = pmenu_grow(cui->main, 2);
-		pmenu_item_insert(cui->main, dev_hdr, insert_pt);
+		insert_pt = pmenu_grow(menu, 2);
+		pmenu_item_insert(menu, dev_hdr, insert_pt);
 		pb_log("%s: adding new device hierarchy %s\n",
-			__func__,opt->device_id);
-		pmenu_item_insert(cui->main, i, insert_pt+1);
+			__func__, opt->device_id);
+		pmenu_item_insert(menu, i, insert_pt+1);
 	} else {
-		insert_pt = pmenu_grow(cui->main, 1);
-		pmenu_item_add(cui->main, i, insert_pt);
+		insert_pt = pmenu_grow(menu, 1);
+		pmenu_item_add(menu, i, insert_pt);
 	}
 
-	pb_log("%s: adding opt '%s'\n", __func__, cod->name);
-	pb_log("   image  '%s'\n", cod->bd->image);
-	pb_log("   initrd '%s'\n", cod->bd->initrd);
-	pb_log("   args   '%s'\n", cod->bd->args);
-	pb_log("   argsig '%s'\n", cod->bd->args_sig_file);
+	if (plugin_option) {
+		pb_log("%s: adding plugin '%s'\n", __func__, cod->name);
+		pb_log("   file  '%s'\n", cod->pd->plugin_file);
+	} else {
+		pb_log("%s: adding opt '%s'\n", __func__, cod->name);
+		pb_log("   image  '%s'\n", cod->bd->image);
+		pb_log("   initrd '%s'\n", cod->bd->initrd);
+		pb_log("   args   '%s'\n", cod->bd->args);
+		pb_log("   argsig '%s'\n", cod->bd->args_sig_file);
+	}
+
+	/* Update the plugin menu label if needed */
+	if (plugin_option) {
+		struct pmenu_item *item;
+		unsigned int j;
+		result = set_menu_items(cui->main->ncm, NULL);
+		for (j = 0 ; j < cui->main->item_count; j++) {
+			item = item_userptr(cui->main->items[j]);
+			if (strncmp(item->nci->name.str, "Plugins", strlen("Plugins")))
+				continue;
+			cui->n_plugins++;
+			char *label = talloc_asprintf(item, "Plugins (%u)",
+					cui->n_plugins);
+			pmenu_item_update(item, label);
+			talloc_free(label);
+			break;
+		}
+		result = set_menu_items(cui->main->ncm, cui->main->items);
+		if (result)
+			pb_log("%s: set_menu_items failed: %d\n", __func__, result);
+	}
 
 	/* Re-attach the items array. */
-	result = set_menu_items(cui->main->ncm, cui->main->items);
+	result = set_menu_items(menu->ncm, menu->items);
 
 	if (result)
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
 
 	if (0) {
 		pb_log("%s\n", __func__);
-		pmenu_dump_items(cui->main->items,
-			item_count(cui->main->ncm) + 1);
+		pmenu_dump_items(menu->items,
+			item_count(menu->ncm) + 1);
 	}
 
 	if (!item_visible(selected)) {
 		int idx, top;
 
-		top = top_row(cui->main->ncm);
+		top = top_row(menu->ncm);
 		idx = item_index(selected);
 
 		/* If our index is above the current top row, align
@@ -647,11 +720,13 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		 * bottom */
 		top = top < idx ? idx - rows + 1 : idx;
 
-		set_top_row(cui->main->ncm, top);
-		set_current_item(cui->main->ncm, selected);
+		set_top_row(menu->ncm, top);
+		set_current_item(menu->ncm, selected);
 	}
 
-	if (cui->current == &cui->main->scr)
+	if (cui->current == &menu->scr)
+		nc_scr_post(cui->current);
+	if (plugin_option && cui->current == &cui->main->scr)
 		nc_scr_post(cui->current);
 
 	return 0;
@@ -663,7 +738,6 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
  * Removes all the menu_items for the device from the main menu and redraws the
  * main menu if it is active.
  */
-
 static void cui_device_remove(struct device *dev, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
@@ -676,10 +750,13 @@ static void cui_device_remove(struct device *dev, void *arg)
 
 	if (cui->current == &cui->main->scr)
 		nc_scr_unpost(cui->current);
+	if (cui->current == &cui->plugin_menu->scr)
+		nc_scr_unpost(cui->current);
 
 	/* This disconnects items array from menu. */
 
 	result = set_menu_items(cui->main->ncm, NULL);
+	result |= set_menu_items(cui->plugin_menu->ncm, NULL);
 
 	if (result)
 		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
@@ -688,7 +765,10 @@ static void cui_device_remove(struct device *dev, void *arg)
 		struct pmenu_item *item = pmenu_item_from_arg(opt->ui_info);
 
 		assert(pb_protocol_device_cmp(dev, cod_from_item(item)->dev));
-		pmenu_remove(cui->main, item);
+		if (opt->type == DISCOVER_PLUGIN_OPTION)
+			pmenu_remove(cui->plugin_menu, item);
+		else
+			pmenu_remove(cui->main, item);
 	}
 
 	/* Manually remove remaining device hierarchy item */
@@ -701,18 +781,38 @@ static void cui_device_remove(struct device *dev, void *arg)
 		if (data && data->dev && data->dev == dev)
 			pmenu_remove(cui->main,item);
 	}
+	/* Look in plugins menu too */
+	for (i=0; i < cui->plugin_menu->item_count; i++) {
+		struct pmenu_item *item = item_userptr(cui->plugin_menu->items[i]);
+		if (!item || !item->data )
+			continue;
+
+		struct cui_opt_data *data = item->data;
+		if (data && data->dev && data->dev == dev)
+			pmenu_remove(cui->plugin_menu,item);
+	}
 
 	/* Re-attach the items array. */
 
 	result = set_menu_items(cui->main->ncm, cui->main->items);
+	result |= set_menu_items(cui->plugin_menu->ncm, cui->plugin_menu->items);
 
-	/* Move cursor to 'Exit' menu entry */
+	/* Move cursor to 'Exit' menu entry for the main menu.. */
 	menu_format(cui->main->ncm, &rows, &cols);
 	last = cui->main->item_count - 1;
 	set_current_item(cui->main->ncm, cui->main->items[last]);
 	if (!item_visible(cui->main->items[last])) {
 		top = last < rows ? 0 : last - rows + 1;
 		set_top_row(cui->main->ncm, top);
+	}
+
+	/* ..and the plugin menu */
+	menu_format(cui->plugin_menu->ncm, &rows, &cols);
+	last = cui->plugin_menu->item_count - 1;
+	set_current_item(cui->plugin_menu->ncm, cui->plugin_menu->items[last]);
+	if (!item_visible(cui->plugin_menu->items[last])) {
+		top = last < rows ? 0 : last - rows + 1;
+		set_top_row(cui->plugin_menu->ncm, top);
 	}
 
 	if (result)
@@ -725,6 +825,8 @@ static void cui_device_remove(struct device *dev, void *arg)
 	}
 
 	if (cui->current == &cui->main->scr)
+		nc_scr_post(cui->current);
+	if (cui->current == &cui->plugin_menu->scr)
 		nc_scr_post(cui->current);
 }
 
@@ -739,9 +841,171 @@ static void cui_update_status(struct status *status, void *arg)
 		nc_scr_status_printf(cui->current, "%s", status->message);
 }
 
+/*
+ * Handle a new installed plugin option and update its associated
+ * (uninstalled) menu item if it exists.
+ */
+static int cui_plugin_option_add(struct plugin_option *opt, void *arg)
+{
+	struct cui_opt_data *cod;
+	struct cui *cui = cui_from_arg(arg);
+	struct pmenu_item *item = NULL;
+	struct boot_option *dummy_opt;
+	struct device *dev;
+	unsigned int i;
+	int result;
+
+fallback:
+	/* Find uninstalled plugin by matching on plugin_file */
+	for (i = 0; i < cui->plugin_menu->item_count; i++) {
+		item = item_userptr(cui->plugin_menu->items[i]);
+		if (!item)
+			continue;
+		cod = cod_from_item(item);
+		if (!cod || !cod->pd)
+			continue;
+		if (strncmp(cod->pd->plugin_file, opt->plugin_file,
+					strlen(cod->pd->plugin_file)) == 0)
+			break;
+	}
+
+	/*
+	 * If pb-plugin was run manually there may not be an associated
+	 * plugin-type boot_option. Pass a fake device and option to
+	 * cui_boot_option_add() so we have an item to work with.
+	 */
+	if (!item || i >= cui->plugin_menu->item_count) {
+		pb_log("New plugin option %s doesn't have a source item\n",
+				opt->id);
+		dev = talloc_zero(cui, struct device);
+		dev->id = dev->name = talloc_asprintf(dev, "(unknown)");
+		dev->type = DEVICE_TYPE_UNKNOWN;
+		dummy_opt = talloc_zero(cui, struct boot_option);
+		dummy_opt->device_id = talloc_strdup(dummy_opt, dev->id);
+		dummy_opt->id = dummy_opt->name = talloc_asprintf(dummy_opt, "dummy");
+		dummy_opt->boot_image_file = talloc_strdup(dummy_opt, opt->plugin_file);
+		dummy_opt->type = DISCOVER_PLUGIN_OPTION;
+		cui_boot_option_add(dev, dummy_opt, cui);
+		goto fallback;
+	}
+
+	/*
+	 * If this option was faked above move the context under
+	 * the item so it is cleaned up later in cui_plugins_remove().
+	 */
+	if (strncmp(cod->opt->id, "dummy", strlen("dummy") == 0 &&
+				cod->dev->type == DEVICE_TYPE_UNKNOWN)) {
+		talloc_steal(item, cod->dev);
+		talloc_steal(item, cod->opt);
+	}
+
+	talloc_free(cod->name);
+	/* Name is still tabbed across */
+	cod->name = talloc_asprintf(cod, "  %s [installed]", opt->name);
+
+	cod->pd->opt = opt;
+	item->on_execute = NULL;
+	item->on_edit = cui_show_plugin;
+
+	if (cui->current == &cui->plugin_menu->scr)
+		nc_scr_unpost(cui->current);
+
+	/* This disconnects items array from menu. */
+	result = set_menu_items(cui->plugin_menu->ncm, NULL);
+
+	if (result == E_OK)
+		pmenu_item_update(item, cod->name);
+
+	/* Re-attach the items array. */
+	result = set_menu_items(cui->plugin_menu->ncm, cui->plugin_menu->items);
+
+	if (cui->current == &cui->plugin_menu->scr)
+		nc_scr_post(cui->current);
+
+	return result;
+}
+
+/*
+ * Most plugin menu items will be removed via cui_device_remove(). However if
+ * pb-plugin has been run manually it is possible that there a plugin items
+ * not associated with a device - remove them here.
+ */
+static int cui_plugins_remove(void *arg)
+{
+	struct cui *cui = cui_from_arg(arg);
+	struct pmenu_item *item = NULL;
+	struct cui_opt_data *cod;
+	unsigned int i = 0;
+
+	pb_debug("%s\n", __func__);
+
+	if (cui->current == &cui->plugin_menu->scr)
+		nc_scr_unpost(cui->current);
+	if (cui->current == &cui->main->scr)
+		nc_scr_unpost(cui->current);
+
+	/* This disconnects items array from menu. */
+	set_menu_items(cui->plugin_menu->ncm, NULL);
+
+	while (i < cui->plugin_menu->item_count) {
+		item = item_userptr(cui->plugin_menu->items[i]);
+		if (!item || !item->data) {
+			i++;
+			continue;
+		}
+		cod = cod_from_item(item);
+		if (!cod->opt && !cod->dev) {
+			i++;
+			continue;
+		}
+
+		pmenu_remove(cui->plugin_menu, item);
+		/* plugin_menu entries will shift, jump to bottom to make sure
+		 * we remove all plugin option items */
+		i = 0;
+	}
+
+	/* Re-attach the items array. */
+	set_menu_items(cui->plugin_menu->ncm, cui->plugin_menu->items);
+
+	set_menu_items(cui->main->ncm, NULL);
+	for (i = 0; i < cui->main->item_count; i++) {
+		item = item_userptr(cui->main->items[i]);
+		if (strncmp(item->nci->name.str, "Plugins", strlen("Plugins")))
+			continue;
+		cui->n_plugins = 0;
+		pmenu_item_update(item, "Plugins (0)");
+		break;
+	}
+
+	set_menu_items(cui->main->ncm, cui->main->items);
+
+	if (cui->current == &cui->main->scr)
+		nc_scr_post(cui->current);
+
+	/* If we're currently in a plugin screen jump back to the plugin menu */
+	if (cui->plugin_screen &&
+			cui->current == plugin_screen_scr(cui->plugin_screen))
+		cui_plugin_exit(cui);
+
+	return 0;
+}
+
 static void cui_update_mm_title(struct cui *cui)
 {
 	struct nc_frame *frame = &cui->main->scr.frame;
+
+	talloc_free(frame->rtitle);
+
+	frame->rtitle = talloc_strdup(cui->main, cui->sysinfo->type);
+	if (cui->sysinfo->identifier)
+		frame->rtitle = talloc_asprintf_append(frame->rtitle,
+				" %s", cui->sysinfo->identifier);
+
+	if (cui->current == &cui->main->scr)
+		nc_scr_post(cui->current);
+
+	frame = &cui->plugin_menu->scr.frame;
 
 	talloc_free(frame->rtitle);
 
@@ -790,12 +1054,14 @@ static void cui_update_language(struct cui *cui, char *lang)
 	setlocale(LC_ALL, lang);
 
 	/* we'll need to update the menu: drop all items and repopulate */
-	repost_menu = cui->current == &cui->main->scr;
+	repost_menu = cui->current == &cui->main->scr ||
+		cui->current == &cui->plugin_menu->scr;
 	if (repost_menu)
 		nc_scr_unpost(cui->current);
 
 	talloc_free(cui->main);
 	cui->main = main_menu_init(cui);
+	cui->plugin_menu = plugin_menu_init(cui);
 
 	if (repost_menu) {
 		cui->current = &cui->main->scr;
@@ -833,6 +1099,11 @@ int cui_send_config(struct cui *cui, struct config *config)
 int cui_send_url(struct cui *cui, char * url)
 {
 	return discover_client_send_url(cui->client, url);
+}
+
+int cui_send_plugin_install(struct cui *cui, char *file)
+{
+	return discover_client_send_plugin_install(cui->client, file);
 }
 
 void cui_send_reinit(struct cui *cui)
@@ -878,6 +1149,13 @@ static int menu_add_url_execute(struct pmenu_item *item)
 	return 0;
 }
 
+static int menu_plugin_execute(struct pmenu_item *item)
+{
+	if (cui_from_item(item)->client)
+		cui_show_plugin_menu(cui_from_item(item));
+	return 0;
+}
+
 /**
  * pb_mm_init - Setup the main menu instance.
  */
@@ -888,7 +1166,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	int result;
 	bool lockdown = lockdown_active();
 
-	m = pmenu_init(cui, 8, cui_on_exit);
+	m = pmenu_init(cui, 9, cui_on_exit);
 	if (!m) {
 		pb_log("%s: failed\n", __func__);
 		return NULL;
@@ -934,12 +1212,16 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	i->on_execute = menu_add_url_execute;
 	pmenu_item_insert(m, i, 6);
 
+	i = pmenu_item_create(m, _("Plugins (0)"));
+	i->on_execute = menu_plugin_execute;
+	pmenu_item_insert(m, i, 7);
+
 	if (lockdown)
 		i = pmenu_item_create(m, _("Reboot"));
 	else
 		i = pmenu_item_create(m, _("Exit to shell"));
 	i->on_execute = pmenu_exit_cb;
-	pmenu_item_insert(m, i, 7);
+	pmenu_item_insert(m, i, 8);
 
 	result = pmenu_setup(m);
 
@@ -963,10 +1245,57 @@ fail_setup:
 	return NULL;
 }
 
+/*
+ * plugin_menu_init: Set up the plugin menu instance
+ */
+static struct pmenu *plugin_menu_init(struct cui *cui)
+{
+	struct pmenu_item *i;
+	struct pmenu *m;
+	int result;
+
+	m = pmenu_init(cui, 2, cui_plugin_menu_exit);
+	m->on_new = cui_item_new;
+	m->scr.frame.ltitle = talloc_asprintf(m, _("Petitboot Plugins"));
+	m->scr.frame.rtitle = talloc_asprintf(m, NULL);
+	m->scr.frame.help = talloc_strdup(m,
+		_("Enter=install, e=details, x=exit, h=help"));
+	m->scr.frame.status = talloc_asprintf(m,
+			_("Available Petitboot Plugins"));
+
+	/* add a separator */
+	i = pmenu_item_create(m, " ");
+	item_opts_off(i->nci, O_SELECTABLE);
+	pmenu_item_insert(m, i, 0);
+
+	i = pmenu_item_create(m, ("Return to Main Menu"));
+	i->on_execute = pmenu_exit_cb;
+	pmenu_item_insert(m, i, 1);
+
+	result = pmenu_setup(m);
+
+	if (result) {
+		pb_log("%s:%d: pmenu_setup failed: %s\n", __func__, __LINE__,
+			strerror(errno));
+		goto fail_setup;
+	}
+
+	m->help_title = _("plugin menu");
+	m->help_text = &plugin_menu_help_text;
+
+	return m;
+
+fail_setup:
+	talloc_free(m);
+	return NULL;
+}
+
 static struct discover_client_ops cui_client_ops = {
 	.device_add = NULL,
 	.boot_option_add = cui_boot_option_add,
 	.device_remove = cui_device_remove,
+	.plugin_option_add = cui_plugin_option_add,
+	.plugins_remove = cui_plugins_remove,
 	.update_status = cui_update_status,
 	.update_sysinfo = cui_update_sysinfo,
 	.update_config = cui_update_config,
@@ -1119,6 +1448,10 @@ retry_start:
 
 	cui->main = main_menu_init(cui);
 	if (!cui->main)
+		goto fail_client_init;
+
+	cui->plugin_menu = plugin_menu_init(cui);
+	if (!cui->plugin_menu)
 		goto fail_client_init;
 
 	waiter_register_io(cui->waitset, STDIN_FILENO, WAIT_IN,

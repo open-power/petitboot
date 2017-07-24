@@ -124,6 +124,31 @@ static const char *pmenu_item_label(struct pmenu_item *item, const char *name)
 }
 
 /**
+ * pmenu_item_update - Update the label of an existing pmenu_item.
+ *
+ * The item array must be disconnected prior to calling.
+ */
+int pmenu_item_update(struct pmenu_item *item, const char *name)
+{
+	const char *label;
+	ITEM *i;
+
+	if (!item || !item->nci)
+		return -1;
+
+	label = pmenu_item_label(item, name);
+
+	if (!label)
+		return -1;
+
+	i = item->nci;
+	i->name.str = label;
+	i->name.length = strncols(label);
+
+	return 0;
+}
+
+/**
  * pmenu_item_create - Allocate and initialize a new pmenu_item instance.
  *
  * Returns a pointer the the initialized struct pmenu_item instance or NULL
@@ -230,7 +255,7 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 
 	for (i = 0; i < menu->item_count; i++) {
 		item = item_userptr(menu->items[i]);
-		cod = item->data;
+		cod = cod_from_item(item);
 		/* boot entries will have opt defined */
 		if (!cod || cod->opt)
 			continue;
@@ -314,10 +339,9 @@ struct pmenu_item *pmenu_find_device(struct pmenu *menu, struct device *dev,
 
 	/* We identify dev_hdr items as having a valid c->name,
 	 * but a NULL c->opt */
-	cod = talloc(dev_hdr, struct cui_opt_data);
+	cod = talloc_zero(dev_hdr, struct cui_opt_data);
 	cod->name = talloc_strdup(dev_hdr, opt->device_id);
 	cod->dev = dev;
-	cod->opt = NULL;
 	dev_hdr->data = cod;
 
 	pb_debug("%s: returning %s\n",__func__,cod->name);

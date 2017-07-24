@@ -14,6 +14,11 @@ struct pb_boot_data {
 	char *args_sig_file;
 };
 
+struct pb_plugin_data {
+	char *plugin_file;
+	struct plugin_option *opt;
+};
+
 /**
  * struct discover_client_ops - Application supplied client info.
  * @device_add: PB_PROTOCOL_ACTION_ADD event callback.
@@ -35,6 +40,8 @@ struct discover_client_ops {
 	int (*boot_option_add)(struct device *dev, struct boot_option *option,
 			void *arg);
 	void (*device_remove)(struct device *device, void *arg);
+	int (*plugin_option_add)(struct plugin_option *option, void *arg);
+	int (*plugins_remove)(void *arg);
 	void (*update_status)(struct status *status, void *arg);
 	void (*update_sysinfo)(struct system_info *sysinfo, void *arg);
 	void (*update_config)(struct config *sysinfo, void *arg);
@@ -91,5 +98,8 @@ void discover_client_enumerate(struct discover_client *client);
 
 /* Send url to config to the discover server */
 int discover_client_send_url(struct discover_client *client, char *url);
+/* Send plugin file path to discover server to install */
+int discover_client_send_plugin_install(struct discover_client *client,
+		char *file);
 
 #endif
