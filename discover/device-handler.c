@@ -637,6 +637,21 @@ void device_handler_status_download(struct device_handler *handler,
 	}
 }
 
+static void device_handler_plugin_scan_device(struct device_handler *handler,
+		struct discover_device *dev)
+{
+	int rc;
+
+	pb_debug("Scanning %s for plugin files\n", dev->device->id);
+
+	rc = process_run_simple(handler, pb_system_apps.pb_plugin,
+				"scan", dev->mount_path,
+				NULL);
+	if (rc)
+		pb_log("Error from pb-plugin scan %s\n",
+				dev->mount_path);
+}
+
 void device_handler_status_download_remove(struct device_handler *handler,
 		struct process_info *procinfo)
 {
@@ -1103,6 +1118,9 @@ int device_handler_discover(struct device_handler *handler,
 	device_handler_discover_context_commit(handler, ctx);
 
 	process_boot_option_queue(handler);
+
+	/* Check this device for pb-plugins */
+	device_handler_plugin_scan_device(handler, dev);
 out:
 	talloc_unlink(handler, ctx);
 
