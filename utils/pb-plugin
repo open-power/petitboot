@@ -16,7 +16,7 @@ Usage: $0 <command>
 
 Where <command> is one of:
   install <FILE|URL> - install plugin from FILE/URL
-  scan               - look for available plugins on attached devices
+  scan <DIR>         - look for available plugins on attached devices
   create <DIR>       - create a new plugin archive from DIR
   lint <FILE>        - perform a pre-distribution check on FILE
 EOF
@@ -150,7 +150,12 @@ EOF
 
 do_install()
 {
-	local url name file __dest
+	local url name file __dest auto
+
+	if [ "$1" == "auto" ]; then
+		auto=y
+		shift;
+	fi
 
 	url=$1
 
@@ -186,17 +191,20 @@ do_install()
 	sha256sum "$file" | cut -f1 -d' '
 	echo
 
-	echo "Do you want to install this plugin? (y/N)"
-	read resp
+	if [ -z "$auto" ]
+	then
+		echo "Do you want to install this plugin? (y/N)"
+		read resp
 
-	case $resp in
-	[yY]|[yY][eE][sS])
-		;;
-	*)
-		echo "Cancelled"
-		exit 0
-		;;
-	esac
+		case $resp in
+		[yY]|[yY][eE][sS])
+			;;
+		*)
+			echo "Cancelled"
+			exit 0
+			;;
+		esac
+	fi
 
 	__dest=$(mktemp -d)
 	gunzip -c "$file" | ( cd $__dest && cpio -i -d)
@@ -222,6 +230,12 @@ do_install()
 	do
 		__create_wrapper "$__dest" "$binary"
 	done
+
+	pb-event plugin@local \
+		name=$PLUGIN_NAME id=$PLUGIN_ID version=$PLUGIN_VERSION \
+		vendor=$PLUGIN_VENDOR vendor_id=$PLUGIN_VENDOR_ID \
+		date=$PLUGIN_DATE executables="$PLUGIN_EXECUTABLES" \
+		source_file=$url installed="yes"
 
 	echo "Plugin installed"
 	plugin_info
@@ -260,6 +274,9 @@ do_scan_mount()
 			printf "To run this plugin:\n"
 			printf "  $0 install $plugin_path\n"
 			printf "\n"
+
+			pb-event plugin@$dev name=$PLUGIN_NAME \
+				path=$plugin_path installed="no"
 		)
 		if [ $? = 0 ]
 		then
@@ -271,9 +288,18 @@ do_scan_mount()
 
 do_scan()
 {
-	local found mnt
+	local found mnt dev locations
 	found=0
-	for mnt in $__pb_mount_dir/*
+	dev=$1
+
+	if [ -z $dev ]; then
+		locations=$__pb_mount_dir/*
+	else
+		echo "Scanning device $dev"
+		locations=$dev
+	fi
+
+	for mnt in $locations
 	do
 		do_scan_mount $mnt
 	done
