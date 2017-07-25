@@ -55,6 +55,8 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 		*action = EVENT_ACTION_BOOT;
 	else if (streq(buf, "sync"))
 		*action = EVENT_ACTION_SYNC;
+	else if (streq(buf, "plugin"))
+		*action = EVENT_ACTION_PLUGIN;
 	else {
 		pb_log("%s: unknown action: %s\n", __func__, buf);
 		return -1;

@@ -63,6 +63,8 @@ static const char *event_action_name(enum event_action action)
 		return "boot";
 	case EVENT_ACTION_SYNC:
 		return "sync";
+	case EVENT_ACTION_PLUGIN:
+		return "plugin";
 	default:
 		break;
 	}
@@ -486,6 +488,111 @@ static int user_event_sync(struct user_event *uev, struct event *event)
 	return 0;
 }
 
+static int process_uninstalled_plugin(struct user_event *uev,
+		struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	struct discover_boot_option *file_opt;
+	struct discover_device *device;
+	struct discover_context *ctx;
+	const char *path;
+	struct resource *res;
+
+	if (!event_get_param(event, "path")) {
+		pb_log("Uninstalled pb-plugin event missing path param\n");
+		return -1;
+	}
+
+	device = device_lookup_by_name(handler, event->device);
+	if (!device) {
+		pb_log("Couldn't find device matching %s for plugin\n",
+				event->device);
+		return -1;
+	}
+
+	ctx = device_handler_discover_context_create(handler, device);
+	file_opt = discover_boot_option_create(ctx, device);
+	file_opt->option->name = talloc_strdup(file_opt,
+			event_get_param(event, "name"));
+	file_opt->option->id = talloc_asprintf(file_opt, "%s@%p",
+			device->device->id, file_opt);
+	file_opt->option->type = DISCOVER_PLUGIN_OPTION;
+
+
+	path = event_get_param(event, "path");
+	/* path may be relative to root */
+	if (strncmp(device->mount_path, path, strlen(device->mount_path)) == 0) {
+		path += strlen(device->mount_path) + 1;
+	}
+
+	res = talloc(file_opt, struct resource);
+	resolve_resource_against_device(res, device, path);
+	file_opt->boot_image = res;
+
+	discover_context_add_boot_option(ctx, file_opt);
+	device_handler_discover_context_commit(handler, ctx);
+
+	return 0;
+}
+
+/*
+ * Notification of a plugin event. This can either be for an uninstalled plugin
+ * that pb-plugin has scanned, or the result of a plugin that pb-plugin has
+ * installed.
+ */
+static int user_event_plugin(struct user_event *uev, struct event *event)
+{
+	struct device_handler *handler = uev->handler;
+	char *executable, *executables, *saveptr;
+	struct plugin_option *opt;
+	const char *installed;
+
+	installed = event_get_param(event, "installed");
+	if (!installed || strncmp(installed, "no", strlen("no")) == 0)
+		return process_uninstalled_plugin(uev, event);
+
+	opt = talloc_zero(handler, struct plugin_option);
+	if (!opt)
+		return -1;
+	opt->name = talloc_strdup(opt, event_get_param(event, "name"));
+	opt->id = talloc_strdup(opt, event_get_param(event, "id"));
+	opt->version = talloc_strdup(opt, event_get_param(event, "version"));
+	opt->vendor = talloc_strdup(opt, event_get_param(event, "vendor"));
+	opt->vendor_id = talloc_strdup(opt, event_get_param(event, "vendor_id"));
+	opt->date = talloc_strdup(opt, event_get_param(event, "date"));
+	opt->plugin_file = talloc_strdup(opt,
+			event_get_param(event, "source_file"));
+
+	executables = talloc_strdup(opt, event_get_param(event, "executables"));
+	if (!executables) {
+		talloc_free(opt);
+		return -1;
+	}
+
+	/*
+	 * The 'executables' parameter is a space-delimited list of installed
+	 * executables
+	 */
+	executable = strtok_r(executables, " ", &saveptr);
+	while (executable) {
+		opt->executables = talloc_realloc(opt, opt->executables,
+						  char *, opt->n_executables + 1);
+		if (!opt->executables) {
+			talloc_free(opt);
+			return -1;
+		}
+		opt->executables[opt->n_executables++] = talloc_strdup(opt,
+								executable);
+		executable = strtok_r(NULL, " ", &saveptr);
+	}
+
+	device_handler_add_plugin_option(handler, opt);
+
+	talloc_free(executables);
+
+	return 0;
+}
+
 static void user_event_handle_message(struct user_event *uev, char *buf,
 	int len)
 {
@@ -520,6 +627,9 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	case EVENT_ACTION_SYNC:
 		result = user_event_sync(uev, event);
+		break;
+	case EVENT_ACTION_PLUGIN:
+		result = user_event_plugin(uev, event);
 		break;
 	default:
 		break;
