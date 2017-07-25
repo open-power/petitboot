@@ -334,6 +334,8 @@ DEFINE_HOST_PROG(IP, ip, [/sbin/ip])
 DEFINE_HOST_PROG(UDHCPC, udhcpc, [/sbin/udhcpc])
 DEFINE_HOST_PROG(VGSCAN, vgscan, [/usr/sbin/vgscan])
 DEFINE_HOST_PROG(VGCHANGE, vgchange, [/usr/sbin/vgchange])
+DEFINE_HOST_PROG(PB_PLUGIN, pb-plugin, [/usr/sbin/pb-plugin])
+DEFINE_HOST_PROG(PB_EXEC, pb-exec, [/usr/sbin/pb-exec])
 
 AC_ARG_WITH(
     [tftp],

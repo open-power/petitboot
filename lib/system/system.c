@@ -30,6 +30,8 @@ const struct pb_system_apps pb_system_apps = {
 	.udhcpc		= HOST_PROG_UDHCPC,
 	.vgscan		= HOST_PROG_VGSCAN,
 	.vgchange	= HOST_PROG_VGCHANGE,
+	.pb_plugin	= HOST_PROG_PB_PLUGIN,
+	.pb_exec	= HOST_PROG_PB_EXEC,
 };
 
 #ifndef TFTP_TYPE
