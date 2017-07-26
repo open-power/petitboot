@@ -310,7 +310,7 @@ static int layout_pair(struct boot_editor *boot_editor, int y,
 
 static int pad_height(int blockdevs_height)
 {
-	return 10 + blockdevs_height;
+	return 10 + (2 * blockdevs_height);
 }
 
 static void boot_editor_layout_widgets(struct boot_editor *boot_editor)
