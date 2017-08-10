@@ -40,11 +40,14 @@ struct add_url_screen {
 	struct nc_scr		scr;
 	struct cui		*cui;
 	struct nc_widgetset	*widgetset;
+	WINDOW			*pad;
 
 	bool			exit;
 	bool			show_help;
 	bool			need_redraw;
 	void			(*on_exit)(struct cui *);
+
+	int			scroll_y;
 
 	int			label_x;
 	int			field_x;
@@ -68,6 +71,16 @@ static struct add_url_screen *add_url_screen_from_scr(struct nc_scr *scr)
 		((char *)scr - (size_t)&((struct add_url_screen *)0)->scr);
 	assert(add_url_screen->scr.sig == pb_add_url_screen_sig);
 	return add_url_screen;
+}
+
+static void pad_refresh(struct add_url_screen *screen)
+{
+	int y, x, rows, cols;
+
+	getmaxyx(screen->scr.sub_ncw, rows, cols);
+	getbegyx(screen->scr.sub_ncw, y, x);
+
+	prefresh(screen->pad, screen->scroll_y, 0, y, x, rows, cols);
 }
 
 static void add_url_screen_process_key(struct nc_scr *scr, int key)
@@ -99,7 +112,7 @@ static void add_url_screen_process_key(struct nc_scr *scr, int key)
 			&add_url_help_text);
 
 	} else if (handled) {
-		wrefresh(screen->scr.main_ncw);
+		pad_refresh(screen);
 	}
 }
 
@@ -113,6 +126,7 @@ static int add_url_screen_post(struct nc_scr *scr)
 		screen->need_redraw = false;
 	}
 	wrefresh(screen->scr.main_ncw);
+	pad_refresh(screen);
 	return 0;
 }
 
@@ -199,6 +213,30 @@ static void add_url_screen_layout_widgets(struct add_url_screen *screen)
 		y, screen->field_x + 28);
 }
 
+static void add_url_screen_widget_focus(struct nc_widget *widget, void *arg)
+{
+	struct add_url_screen *screen = arg;
+	int w_y, w_height, w_focus, s_max, adjust;
+
+	w_height = widget_height(widget);
+	w_focus = widget_focus_y(widget);
+	w_y = widget_y(widget) + w_focus;
+	s_max = getmaxy(screen->scr.sub_ncw) - 1;
+
+	if (w_y < screen->scroll_y)
+		screen->scroll_y = w_y;
+
+	else if (w_y + screen->scroll_y + 1 > s_max) {
+		/* Fit as much of the widget into the screen as possible */
+		adjust = min(s_max - 1, w_height - w_focus);
+		if (w_y + adjust >= screen->scroll_y + s_max)
+			screen->scroll_y = max(0, 1 + w_y + adjust - s_max);
+	} else
+		return;
+
+	pad_refresh(screen);
+}
+
 static void add_url_screen_setup_widgets(struct add_url_screen *screen)
 {
 	struct nc_widgetset *set = screen->widgetset;
@@ -218,12 +256,21 @@ static void add_url_screen_setup_widgets(struct add_url_screen *screen)
 			cancel_click, screen);
 }
 
+static int add_url_screen_destroy(void *arg)
+{
+	struct add_url_screen *screen = arg;
+	if (screen->pad)
+		delwin(screen->pad);
+	return 0;
+}
+
 struct add_url_screen *add_url_screen_init(struct cui *cui,
 		void (*on_exit)(struct cui *))
 {
 	struct add_url_screen *screen;
 
 	screen = talloc_zero(cui, struct add_url_screen);
+	talloc_set_destructor(screen, add_url_screen_destroy);
 
 	screen->cui = cui;
 	screen->on_exit = on_exit;
@@ -243,8 +290,11 @@ struct add_url_screen *add_url_screen_init(struct cui *cui,
 			_("tab=next, shift+tab=previous, x=exit, h=help"));
 	nc_scr_frame_draw(&screen->scr);
 
+	screen->pad = newpad(LINES, COLS);
 	screen->widgetset = widgetset_create(screen, screen->scr.main_ncw,
-			NULL);
+			screen->pad);
+	widgetset_set_widget_focus(screen->widgetset,
+			add_url_screen_widget_focus, screen);
 
 	add_url_screen_setup_widgets(screen);
 	add_url_screen_layout_widgets(screen);
