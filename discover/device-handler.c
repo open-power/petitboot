@@ -1563,6 +1563,10 @@ static void device_handler_update_lang(const char *lang)
 static int device_handler_init_sources(struct device_handler *handler)
 {
 	/* init our device sources: udev, network and user events */
+	handler->user_event = user_event_init(handler, handler->waitset);
+	if (!handler->user_event)
+		return -1;
+
 	handler->network = network_init(handler, handler->waitset,
 			handler->dry_run);
 	if (!handler->network)
@@ -1570,10 +1574,6 @@ static int device_handler_init_sources(struct device_handler *handler)
 
 	handler->udev = udev_init(handler, handler->waitset);
 	if (!handler->udev)
-		return -1;
-
-	handler->user_event = user_event_init(handler, handler->waitset);
-	if (!handler->user_event)
 		return -1;
 
 	return 0;
