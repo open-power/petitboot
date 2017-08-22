@@ -492,19 +492,6 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 	config->n_autoboot_opts = n_new;
 }
 
-static void set_proxy_variables(struct config *config)
-{
-	if (config->http_proxy)
-		setenv("http_proxy", config->http_proxy, 1);
-	else
-		unsetenv("http_proxy");
-
-	if (config->https_proxy)
-		setenv("https_proxy", config->https_proxy, 1);
-	else
-		unsetenv("https_proxy");
-}
-
 static void populate_config(struct platform_powerpc *platform,
 		struct config *config)
 {
@@ -560,7 +547,6 @@ static void populate_config(struct platform_powerpc *platform,
 	val = get_param(platform, "petitboot,https_proxy");
 	if (val)
 		config->https_proxy = talloc_strdup(config, val);
-	set_proxy_variables(config);
 }
 
 static char *iface_config_str(void *ctx, struct interface_config *config)
@@ -740,7 +726,6 @@ static int update_config(struct platform_powerpc *platform,
 	update_string_config(platform, "petitboot,http_proxy", val);
 	val = config->https_proxy ?: "";
 	update_string_config(platform, "petitboot,https_proxy", val);
-	set_proxy_variables(config);
 
 	update_network_config(platform, config);
 

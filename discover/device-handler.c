@@ -338,6 +338,22 @@ const char *discover_device_get_param(struct discover_device *device,
 	return NULL;
 }
 
+static void set_env_variables(const struct config *config)
+{
+	if (config->http_proxy)
+		setenv("http_proxy", config->http_proxy, 1);
+	else
+		unsetenv("http_proxy");
+
+	if (config->https_proxy)
+		setenv("https_proxy", config->https_proxy, 1);
+	else
+		unsetenv("https_proxy");
+
+	/* Reduce noise in the log from LVM listing open file descriptors */
+	setenv("LVM_SUPPRESS_FD_WARNINGS", "1", 1);
+}
+
 struct device_handler *device_handler_init(struct discover_server *server,
 		struct waitset *waitset, int dry_run)
 {
@@ -361,6 +377,8 @@ struct device_handler *device_handler_init(struct discover_server *server,
 
 	if (config_get()->safe_mode)
 		return handler;
+
+	set_env_variables(config_get());
 
 	rc = device_handler_init_sources(handler);
 	if (rc) {
@@ -419,6 +437,8 @@ void device_handler_reinit(struct device_handler *handler)
 	handler->n_plugins = 0;
 
 	discover_server_notify_plugins_remove(handler->server);
+
+	set_env_variables(config_get());
 
 	device_handler_reinit_sources(handler);
 }
