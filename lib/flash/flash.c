@@ -36,7 +36,7 @@ struct flash_info {
 	/* Device information */
 	struct blocklevel_device	*bl;
 	struct ffs_handle		*ffs;
-	uint32_t			size;	/* raw size of partition */
+	uint64_t			size;	/* raw size of partition */
 	const char			*path;
 	bool				ecc;
 	uint32_t			erase_granule;
@@ -124,7 +124,7 @@ static struct flash_info *flash_setup_buffer(void *ctx, const char *partition)
 
 	pb_debug("%s Details\n", partition);
 	pb_debug("\tName\t\t%s\n", info->path);
-	pb_debug("\tFlash Size\t%u\n", info->size);
+	pb_debug("\tFlash Size\t%lu\n", info->size);
 	pb_debug("\tGranule\t\t%u\n", info->erase_granule);
 	pb_debug("\tECC\t\t%s\n", info->ecc ? "Protected" : "Unprotected");
 	pb_debug("\tCurrent Side info:\n");
