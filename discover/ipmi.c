@@ -201,7 +201,7 @@ struct ipmi *ipmi_open(void *ctx)
 	struct ipmi *ipmi;
 	int fd;
 
-	fd = open(ipmi_devnode, O_RDWR);
+	fd = open(ipmi_devnode, O_RDWR | O_CLOEXEC);
 	if (fd < 0) {
 		pb_log("IPMI: can't open IPMI device %s: %m\n", ipmi_devnode);
 		return NULL;
