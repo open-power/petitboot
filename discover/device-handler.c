@@ -18,6 +18,7 @@
 #include <process/process.h>
 #include <url/url.h>
 #include <i18n/i18n.h>
+#include <pb-config/pb-config.h>
 
 #include <sys/sysmacros.h>
 #include <sys/types.h>
@@ -393,6 +394,7 @@ void device_handler_reinit(struct device_handler *handler)
 {
 	struct discover_boot_option *opt, *tmp;
 	struct ramdisk_device *ramdisk;
+	struct config *config;
 	unsigned int i;
 
 	device_handler_cancel_default(handler);
@@ -439,6 +441,14 @@ void device_handler_reinit(struct device_handler *handler)
 	discover_server_notify_plugins_remove(handler->server);
 
 	set_env_variables(config_get());
+
+	/* If the safe mode warning was active disable it now */
+	if (config_get()->safe_mode) {
+		config = config_copy(handler, config_get());
+		config->safe_mode = false;
+		config_set(config);
+		discover_server_notify_config(handler->server, config);
+	}
 
 	device_handler_reinit_sources(handler);
 }
