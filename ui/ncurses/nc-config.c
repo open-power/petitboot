@@ -84,7 +84,7 @@ struct config_screen {
 
 		struct nc_widget_label		*ipmi_type_l;
 		struct nc_widget_label		*ipmi_clear_l;
-		struct nc_widget_checkbox	*ipmi_clear_cb;
+		struct nc_widget_button		*ipmi_clear_b;
 
 		struct nc_widget_label		*network_l;
 		struct nc_widget_select		*network_f;
@@ -256,11 +256,6 @@ static int screen_process_form(struct config_screen *screen)
 			config->autoboot_timeout_sec = x;
 	}
 
-	if (screen->ipmi_override)
-		if (widget_checkbox_get_value(screen->widgets.ipmi_clear_cb))
-			config->ipmi_bootdev = IPMI_BOOTDEV_INVALID;
-
-
 	net_conf_type = widget_select_get_value(screen->widgets.network_f);
 
 	/* if we don't have any network interfaces, prevent per-interface
@@ -398,6 +393,26 @@ static void cancel_click(void *arg)
 	screen->exit = true;
 }
 
+static void ipmi_clear_click(void *arg)
+{
+	struct config_screen *screen = arg;
+	struct config *config;
+	int rc;
+
+	config = config_copy(screen, screen->cui->config);
+	config->ipmi_bootdev = IPMI_BOOTDEV_INVALID;
+	config->safe_mode = false;
+
+	rc = cui_send_config(screen->cui, config);
+	talloc_free(config);
+
+	if (rc)
+		pb_log("cui_send_config failed!\n");
+	else
+		pb_debug("config sent!\n");
+	screen->exit = true;
+}
+
 static int layout_pair(struct config_screen *screen, int y,
 		struct nc_widget_label *label,
 		struct nc_widget *field)
@@ -497,7 +512,7 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		y += 1;
 
 		wl = widget_label_base(screen->widgets.ipmi_clear_l);
-		wf = widget_checkbox_base(screen->widgets.ipmi_clear_cb);
+		wf = widget_button_base(screen->widgets.ipmi_clear_b);
 		widget_set_visible(wl, true);
 		widget_set_visible(wf, true);
 		widget_move(wl, y, screen->label_x);
@@ -937,8 +952,10 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 							label);
 		screen->widgets.ipmi_clear_l = widget_new_label(set, 0, 0,
 							_("Clear option:"));
-		screen->widgets.ipmi_clear_cb = widget_new_checkbox(set, 0, 0,
-							false);
+		screen->widgets.ipmi_clear_b = widget_new_button(set, 0, 0,
+				strncols(_("Clear IPMI override now")) + 10,
+				_("Clear IPMI override now"),
+				ipmi_clear_click, screen);
 		screen->ipmi_override = true;
 	}
 
