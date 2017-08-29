@@ -32,6 +32,7 @@ const struct pb_system_apps pb_system_apps = {
 	.vgchange	= HOST_PROG_VGCHANGE,
 	.pb_plugin	= HOST_PROG_PB_PLUGIN,
 	.pb_exec	= HOST_PROG_PB_EXEC,
+	.sh		= HOST_PROG_SH,
 };
 
 #ifndef TFTP_TYPE
