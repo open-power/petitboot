@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-08-29 14:37+1000\n"
+"POT-Creation-Date: 2017-09-13 14:07+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Traditional Chinese\n"
@@ -129,45 +129,45 @@ msgstr "無法載入 URL！"
 
 #, c-format
 msgid "Parsed GRUB configuration from %s"
-msgstr ""
+msgstr "已從 %s 剖析 GRUB 配置"
 
 #, c-format
 msgid "Parsed kboot configuration from %s"
-msgstr ""
+msgstr "已從 %s 剖析 kboot 配置"
 
 msgid "Configuring with DHCP"
-msgstr ""
+msgstr "正在配置 DHCP"
 
 #, c-format
 msgid "Configuring with static address (ip: %s)"
-msgstr ""
+msgstr "正在配置靜態位址 (ip: %s)"
 
 #, c-format
 msgid "Download complete: %s"
-msgstr ""
+msgstr "下載完成：%s"
 
 #, c-format
 msgid "Failed to download %s"
-msgstr ""
+msgstr "無法下載 %s"
 
 msgid "PXE autoconfiguration failed"
-msgstr ""
+msgstr "PXE 自動配置失敗"
 
 #, c-format
 msgid "Parsed PXE config from %s"
-msgstr ""
+msgstr "已從 %s 剖析 PXE 配置"
 
 #, c-format
 msgid "Requesting config %s"
-msgstr ""
+msgstr "正在要求配置 %s"
 
 #, c-format
 msgid "Probing from base %s"
-msgstr ""
+msgstr "正在從基本程式 %s 探查"
 
 #, c-format
 msgid "Parsed yaboot configuration from %s"
-msgstr ""
+msgstr "已從 %s 剖析 yaboot 配置"
 
 msgid "None"
 msgstr "無"
@@ -312,7 +312,7 @@ msgid "Clear option:"
 msgstr "清除選項："
 
 msgid "Clear IPMI override now"
-msgstr ""
+msgstr "立即清除 IPMI 置換"
 
 msgid "Network:"
 msgstr "網路："
@@ -784,38 +784,38 @@ msgstr "Petitboot 外掛程式"
 
 #, c-format
 msgid "Finished: %s"
-msgstr ""
+msgstr "已完成：%s"
 
 #, c-format
 msgid "Installing plugin %s"
-msgstr ""
+msgstr "正在安裝外掛程式 %s"
 
 msgid "Failed to send install request"
-msgstr ""
+msgstr "無法傳送安裝要求"
 
 msgid "ID:"
-msgstr ""
+msgstr "ID："
 
 msgid "Name:"
-msgstr ""
+msgstr "名稱："
 
 msgid "Vendor:"
-msgstr ""
+msgstr "供應商："
 
 msgid "Vendor ID:"
-msgstr ""
+msgstr "供應商 ID："
 
 msgid "Version:"
-msgstr ""
+msgstr "版本："
 
 msgid "Date"
-msgstr ""
+msgstr "日期"
 
 msgid "Commands:"
-msgstr ""
+msgstr "指令："
 
 msgid "Run selected command"
-msgstr ""
+msgstr "執行選取指令"
 
 msgid ""
 "This screen lists the details and available commands of an installed "
@@ -824,6 +824,9 @@ msgid ""
 "The Petitboot UI will temporarily exit to run the command, then return to "
 "this screen."
 msgstr ""
+"此螢幕列出已安裝的外掛程式的詳細資料及可用的指令。\n"
+"要執行外掛程式指令，請在清單中選擇該項目然後選取「執行」按鈕。Petitboot 使用"
+"者介面將暫時退出以執行指令，然後會回到此螢幕。"
 
 msgid ""
 "Plugins discovered by Petitboot are listed in this menu.\n"
@@ -831,9 +834,12 @@ msgid ""
 "details can be seen by pressing 'e'. From the detailed view plugin commands "
 "can also be run."
 msgstr ""
+"此功能表中列出 Petitboot 發現的外掛程式。\n"
+"按一下 Enter 鍵以安裝選取的外掛程式。外掛程式已安裝後可以按一下 'e' 來顯示詳"
+"細資料。還可以從詳細視圖執行外掛程式指令。"
 
 msgid "Petitboot status log"
-msgstr ""
+msgstr "Petitboot 狀態日誌"
 
 msgid "Usage"
 msgstr "用法"

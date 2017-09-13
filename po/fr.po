@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-08-29 14:37+1000\n"
+"POT-Creation-Date: 2017-09-13 14:07+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: French\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n>1;\n"
 
 msgid "Running boot hooks"
-msgstr "Exécution de points d'ancrage d'amorçage "
+msgstr "Exécution de points d'ancrage d'amorçage"
 
 #, c-format
 msgid "Loaded %s from %s"
@@ -34,13 +34,13 @@ msgid "Decryption failed"
 msgstr "Echec du déchiffrement"
 
 msgid "Signature verification failed"
-msgstr "Echec de la vérification de signature "
+msgstr "Echec de la vérification de signature"
 
 msgid "Invalid signature configuration"
-msgstr "Configuration de signature non valide "
+msgstr "Configuration de signature non valide"
 
 msgid "Performing kexec reboot"
-msgstr "Exécution du réamorçage kexec "
+msgstr "Exécution du réamorçage kexec"
 
 msgid "kexec reboot failed"
 msgstr "échec de réamorçage kexec"
@@ -62,10 +62,10 @@ msgstr "Echec de l'amorçage : aucune image spécifiée"
 msgid "Boot failed: no command line signature file specified"
 msgstr ""
 "Echec de l'amorçage : pas de fichier de signature de ligne de commande "
-"spécifié "
+"spécifié"
 
 msgid "kernel image"
-msgstr "Image du noyau "
+msgstr "Image du noyau"
 
 msgid "initrd"
 msgstr "initrd"
@@ -77,20 +77,20 @@ msgid "kernel image signature"
 msgstr "Signature de l'image du noyau"
 
 msgid "initrd signature"
-msgstr "Signature initrd "
+msgstr "Signature initrd"
 
 msgid "dtb signature"
-msgstr "Signature dtb "
+msgstr "Signature dtb"
 
 msgid "kernel command line signature"
-msgstr "Signature de la ligne de commande du noyau "
+msgstr "Signature de la ligne de commande du noyau"
 
 msgid "Boot cancelled"
 msgstr "Amorçage annulé"
 
 #, c-format
 msgid "%u downloads in progress..."
-msgstr "%u téléchargement(s) en cours... "
+msgstr "%u téléchargement(s) en cours..."
 
 #, c-format
 msgid "%u %s downloading: %.0f%% - %lu%cB"
@@ -111,7 +111,7 @@ msgstr "Amorçage dans %d seconde(s) : [%s] %s"
 #.
 #, c-format
 msgid "Processing new %s device"
-msgstr "Traitement d'une nouvelle unité %s "
+msgstr "Traitement d'une nouvelle unité %s"
 
 #, c-format
 msgid "Processing DHCP lease response (ip: %s)"
@@ -128,49 +128,49 @@ msgid "Unable to route to host %s"
 msgstr "Impossible de router vers l'hôte %s"
 
 msgid "Failed to load URL!"
-msgstr "Echec du chargement de l'URL "
+msgstr "Echec du chargement de l'URL"
 
 #, c-format
 msgid "Parsed GRUB configuration from %s"
-msgstr ""
+msgstr "Configuration de GRUB analysée depuis %s"
 
 #, c-format
 msgid "Parsed kboot configuration from %s"
-msgstr ""
+msgstr "Configuration de kboot analysée depuis %s"
 
 msgid "Configuring with DHCP"
-msgstr ""
+msgstr "Configuration avec DHCP"
 
 #, c-format
 msgid "Configuring with static address (ip: %s)"
-msgstr ""
+msgstr "Configuration avec une adresse statique (ip : %s)"
 
 #, c-format
 msgid "Download complete: %s"
-msgstr ""
+msgstr "Téléchargement terminé : %s"
 
 #, c-format
 msgid "Failed to download %s"
-msgstr ""
+msgstr "Echec du téléchargement de %s"
 
 msgid "PXE autoconfiguration failed"
-msgstr ""
+msgstr "Echec de la configuration automatique de PXE "
 
 #, c-format
 msgid "Parsed PXE config from %s"
-msgstr ""
+msgstr "Configuration de PXE analysée depuis %s"
 
 #, c-format
 msgid "Requesting config %s"
-msgstr ""
+msgstr "Configuration %s demandée "
 
 #, c-format
 msgid "Probing from base %s"
-msgstr ""
+msgstr "Examen depuis la base %s"
 
 #, c-format
 msgid "Parsed yaboot configuration from %s"
-msgstr ""
+msgstr "Configuration yaboot analysée depuis %s"
 
 msgid "None"
 msgstr "Aucun"
@@ -245,7 +245,7 @@ msgid "Boot arguments:"
 msgstr "Arguments d'amorçage :"
 
 msgid "Argument signature file:"
-msgstr "Fichier de signature d'argument : "
+msgstr "Fichier de signature d'argument :"
 
 msgid "Petitboot Option Editor"
 msgstr "Editeur d'option Petitboot"
@@ -266,7 +266,7 @@ msgid "Autoboot:"
 msgstr "Amorçage auto :"
 
 msgid "Disabled"
-msgstr "Désactivé "
+msgstr "Désactivé"
 
 msgid "Enabled"
 msgstr "Activé"
@@ -315,7 +315,7 @@ msgid "Clear option:"
 msgstr "Option d'effacement :"
 
 msgid "Clear IPMI override now"
-msgstr ""
+msgstr "Effacer la substitution IPMI maintenant "
 
 msgid "Network:"
 msgstr "Réseau :"
@@ -338,7 +338,7 @@ msgstr "liaison vers le bas"
 msgid "Network Override Active! 'OK' will overwrite interface config"
 msgstr ""
 "Remplacement du réseau actif. 'OK' remplacera la configuration de "
-"l'interface. "
+"l'interface."
 
 msgid "IP/mask:"
 msgstr "IP/masque :"
@@ -368,10 +368,10 @@ msgid "(if not provided by DHCP server)"
 msgstr "(si non fourni par le serveur DHCP)"
 
 msgid "HTTP Proxy:"
-msgstr "Proxy HTTP : "
+msgstr "Proxy HTTP :"
 
 msgid "HTTPS Proxy:"
-msgstr "Proxy HTTPS : "
+msgstr "Proxy HTTPS :"
 
 msgid "Selecting 'OK' will exit safe mode"
 msgstr "Sélectionner 'OK' vous fera sortir du mode sans échec"
@@ -386,7 +386,7 @@ msgid "Allow bootloader scripts to modify disks"
 msgstr "Autoriser les scripts de chargeur de démarrage à modifier les disques"
 
 msgid "Boot console:"
-msgstr "Console d'amorçage : "
+msgstr "Console d'amorçage :"
 
 #, c-format
 msgid "Manually set: '%s'"
@@ -440,7 +440,7 @@ msgid "System configuration"
 msgstr "Configuration système"
 
 msgid "System status log"
-msgstr "Journal d'état du système "
+msgstr "Journal d'état du système"
 
 msgid "Retrieve config from URL"
 msgstr "Récupérer la config depuis une URL"
@@ -458,16 +458,16 @@ msgid "main menu"
 msgstr "menu principal"
 
 msgid "Petitboot Plugins"
-msgstr "Plug-in Petitboot "
+msgstr "Plug-in Petitboot"
 
 msgid "Enter=install, e=details, x=exit, h=help"
 msgstr "Entrée=installer, e=détails, x=quitter, h=aide"
 
 msgid "Available Petitboot Plugins"
-msgstr "Plug-in Petitboot disponibles "
+msgstr "Plug-in Petitboot disponibles"
 
 msgid "plugin menu"
-msgstr "Menu des plug-in "
+msgstr "Menu des plug-in"
 
 #, c-format
 msgid "%s: alloc cui failed.\n"
@@ -504,7 +504,7 @@ msgid "Petitboot Language Selection"
 msgstr "Sélection de langue pour Petitboot"
 
 msgid "tab=next, shift+tab=previous, x=exit"
-msgstr "tabulation=suivant, maj+tabulation=précédent, x=quitter "
+msgstr "tabulation=suivant, maj+tabulation=précédent, x=quitter"
 
 #, c-format
 msgid "!Invalid option %d"
@@ -523,13 +523,13 @@ msgid "System id:"
 msgstr "ID système :"
 
 msgid "Primary platform versions:"
-msgstr "Versions de plateforme principales : "
+msgstr "Versions de plateforme principales :"
 
 msgid "Alternate platform versions:"
-msgstr "Versions de plateforme secondaires : "
+msgstr "Versions de plateforme secondaires :"
 
 msgid "BMC current side:"
-msgstr "Niveau en cours du BMC : "
+msgstr "Niveau en cours du BMC :"
 
 msgid "BMC golden side:"
 msgstr "Niveau Golden Side du BMC :"
@@ -546,7 +546,7 @@ msgid " mounted at: %s"
 msgstr " monté à : %s"
 
 msgid "Management (BMC) interface"
-msgstr "Interface de gestion (BMC) "
+msgstr "Interface de gestion (BMC)"
 
 #, c-format
 msgid " MAC:  %s"
@@ -816,42 +816,42 @@ msgstr ""
 "contrôler l'accès aux disques.\n"
 
 msgid "Petitboot Plugin"
-msgstr "Plug-in Petitboot "
+msgstr "Plug-in Petitboot"
 
 #, c-format
 msgid "Finished: %s"
-msgstr ""
+msgstr "Terminé : %s"
 
 #, c-format
 msgid "Installing plugin %s"
-msgstr ""
+msgstr "Installation du plug-in %s"
 
 msgid "Failed to send install request"
-msgstr ""
+msgstr "Echec de l'envoi de la demande d'installation "
 
 msgid "ID:"
-msgstr ""
+msgstr "ID :"
 
 msgid "Name:"
-msgstr ""
+msgstr "Nom : "
 
 msgid "Vendor:"
-msgstr ""
+msgstr "Fournisseur : "
 
 msgid "Vendor ID:"
-msgstr ""
+msgstr "ID du fournisseur : "
 
 msgid "Version:"
-msgstr ""
+msgstr "Version :"
 
 msgid "Date"
-msgstr ""
+msgstr "Date"
 
 msgid "Commands:"
-msgstr ""
+msgstr "Commandes :"
 
 msgid "Run selected command"
-msgstr ""
+msgstr "Exécuter la commande sélectionnée "
 
 msgid ""
 "This screen lists the details and available commands of an installed "
@@ -860,6 +860,11 @@ msgid ""
 "The Petitboot UI will temporarily exit to run the command, then return to "
 "this screen."
 msgstr ""
+"Cet écran répertorie les détails et les commandes disponibles d'un plug-in "
+"installé.\n"
+"Pour exécuter une commande de plug-in, choisissez-la dans la liste et "
+"cliquez sur le bouton \"Exécuter\". L'interface utilisateur Petitboot se "
+"ferme temporairement pour exécuter la commande, puis revient à cet écran. "
 
 msgid ""
 "Plugins discovered by Petitboot are listed in this menu.\n"
@@ -867,9 +872,13 @@ msgid ""
 "details can be seen by pressing 'e'. From the detailed view plugin commands "
 "can also be run."
 msgstr ""
+"Les plug-in détectés par Petitboot sont répertoriés dans ce menu.\n"
+"Appuyez sur Entrée pour installer le plug-in sélectionné. Une fois le plug-"
+"in installé, vous pouvez afficher ses détails en appuyant sur 'e'. Depuis la "
+"vue détaillée, vous pouvez également exécuter des commandes. "
 
 msgid "Petitboot status log"
-msgstr ""
+msgstr "Journal d'état de Petitboot "
 
 msgid "Usage"
 msgstr "Utilisation"

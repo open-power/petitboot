@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-08-29 14:37+1000\n"
+"POT-Creation-Date: 2017-09-13 14:07+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Spanish\n"
@@ -132,45 +132,45 @@ msgstr "Se ha encontrado un error en la carga del URL."
 
 #, c-format
 msgid "Parsed GRUB configuration from %s"
-msgstr ""
+msgstr "Se ha analizado la configuración de GRUB desde %s"
 
 #, c-format
 msgid "Parsed kboot configuration from %s"
-msgstr ""
+msgstr "Se ha analizado la configuración de kboot desde %s"
 
 msgid "Configuring with DHCP"
-msgstr ""
+msgstr "Configurando con DHCP"
 
 #, c-format
 msgid "Configuring with static address (ip: %s)"
-msgstr ""
+msgstr "Configurando con la dirección estática (ip: %s)"
 
 #, c-format
 msgid "Download complete: %s"
-msgstr ""
+msgstr "Descarga completa: %s"
 
 #, c-format
 msgid "Failed to download %s"
-msgstr ""
+msgstr "No se ha podido descargar %s"
 
 msgid "PXE autoconfiguration failed"
-msgstr ""
+msgstr "La autoconfiguración de PXE ha fallado"
 
 #, c-format
 msgid "Parsed PXE config from %s"
-msgstr ""
+msgstr "Se ha analizado la configuración de PXE desde %s"
 
 #, c-format
 msgid "Requesting config %s"
-msgstr ""
+msgstr "Solicitando configuración de %s"
 
 #, c-format
 msgid "Probing from base %s"
-msgstr ""
+msgstr "Sondeando desde la base %s"
 
 #, c-format
 msgid "Parsed yaboot configuration from %s"
-msgstr ""
+msgstr "Se ha analizado la configuración de yaboot desde %s"
 
 msgid "None"
 msgstr "Ninguno"
@@ -315,7 +315,7 @@ msgid "Clear option:"
 msgstr "Borrar opción:"
 
 msgid "Clear IPMI override now"
-msgstr ""
+msgstr "Borrar ahora alteración temporal de IPMI"
 
 msgid "Network:"
 msgstr "Red:"
@@ -538,25 +538,25 @@ msgstr "Dispositivos de almacenamiento"
 
 #, c-format
 msgid " UUID:       %s"
-msgstr "  UUID:       %s"
+msgstr " UUID:       %s"
 
 #, c-format
 msgid " mounted at: %s"
-msgstr "  montado en: %s"
+msgstr " montado en: %s"
 
 msgid "Management (BMC) interface"
 msgstr "interfaz de gestión (BMC)"
 
 #, c-format
 msgid " MAC:  %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 msgid "Network interfaces"
 msgstr "Interfaces de red"
 
 #, c-format
 msgid " MAC:        %s"
-msgstr "  MAC:  %s"
+msgstr " MAC:  %s"
 
 #, c-format
 msgid " IP Address: %s"
@@ -569,7 +569,7 @@ msgstr "ninguno"
 #. * link status for a network connection.
 #, c-format
 msgid " link:       %s"
-msgstr "  enlace: %s"
+msgstr " enlace: %s"
 
 msgid "up"
 msgstr "activo"
@@ -815,42 +815,42 @@ msgstr ""
 "el acceso a los discos.\n"
 
 msgid "Petitboot Plugin"
-msgstr "Plugin de Petitboot"
+msgstr "Plugins de Petitboot"
 
 #, c-format
 msgid "Finished: %s"
-msgstr ""
+msgstr "Finalizado: %s"
 
 #, c-format
 msgid "Installing plugin %s"
-msgstr ""
+msgstr "Instalando plugin %s"
 
 msgid "Failed to send install request"
-msgstr ""
+msgstr "No se ha podido enviar la solicitud de instalación"
 
 msgid "ID:"
-msgstr ""
+msgstr "ID:"
 
 msgid "Name:"
-msgstr ""
+msgstr "Nombre:"
 
 msgid "Vendor:"
-msgstr ""
+msgstr "Proveedor:"
 
 msgid "Vendor ID:"
-msgstr ""
+msgstr "ID de proveedor:"
 
 msgid "Version:"
-msgstr ""
+msgstr "Versión:"
 
 msgid "Date"
-msgstr ""
+msgstr "Fecha"
 
 msgid "Commands:"
-msgstr ""
+msgstr "Mandatos:"
 
 msgid "Run selected command"
-msgstr ""
+msgstr "Ejecutar mandato seleccionado"
 
 msgid ""
 "This screen lists the details and available commands of an installed "
@@ -859,6 +859,11 @@ msgid ""
 "The Petitboot UI will temporarily exit to run the command, then return to "
 "this screen."
 msgstr ""
+"Esta pantalla muestra los detalles y los mandatos disponibles de un "
+"plugininstalado.\n"
+"Para ejecutar un mandato del plugin, elíjalo en la lista y seleccione el "
+"botón \"Ejecutar\". La UI de Petitboot saldrá temporalmente para ejecutar el "
+"mandato y volverá después aesta pantalla. "
 
 msgid ""
 "Plugins discovered by Petitboot are listed in this menu.\n"
@@ -866,9 +871,13 @@ msgid ""
 "details can be seen by pressing 'e'. From the detailed view plugin commands "
 "can also be run."
 msgstr ""
+"Los plugins descubiertos por Petitboot se listan en este menú.\n"
+"Pulse Intro para instalar el plugin seleccionado. Una vez instalado el "
+"plugin, pulse 'e' para ver los detalles. En la vista detallada, también "
+"pueden ejecutarse los mandatos del plugin. "
 
 msgid "Petitboot status log"
-msgstr ""
+msgstr "Registro de estado de Petitboot"
 
 msgid "Usage"
 msgstr "Uso"

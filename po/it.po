@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-08-29 14:37+1000\n"
+"POT-Creation-Date: 2017-09-13 14:07+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Italian\n"
@@ -131,45 +131,45 @@ msgstr "Caricamento URL non riuscito!"
 
 #, c-format
 msgid "Parsed GRUB configuration from %s"
-msgstr ""
+msgstr "Configurazione GRUB analizzata da %s"
 
 #, c-format
 msgid "Parsed kboot configuration from %s"
-msgstr ""
+msgstr "Configurazione kboot analizzata da %s"
 
 msgid "Configuring with DHCP"
-msgstr ""
+msgstr "Configurazione con DHCP"
 
 #, c-format
 msgid "Configuring with static address (ip: %s)"
-msgstr ""
+msgstr "Configurazione con indirizzo statico (ip: %s)"
 
 #, c-format
 msgid "Download complete: %s"
-msgstr ""
+msgstr "Download completo: %s"
 
 #, c-format
 msgid "Failed to download %s"
-msgstr ""
+msgstr "Download di %s non riuscito"
 
 msgid "PXE autoconfiguration failed"
-msgstr ""
+msgstr "Configurazione automatica PXE non riuscita"
 
 #, c-format
 msgid "Parsed PXE config from %s"
-msgstr ""
+msgstr "Configurazione PXE analizzata da %s"
 
 #, c-format
 msgid "Requesting config %s"
-msgstr ""
+msgstr "Richiesta configurazione %s"
 
 #, c-format
 msgid "Probing from base %s"
-msgstr ""
+msgstr "Analisi da %s base"
 
 #, c-format
 msgid "Parsed yaboot configuration from %s"
-msgstr ""
+msgstr "Configurazione yaboot analizzata da %s"
 
 msgid "None"
 msgstr "Nessuno"
@@ -315,7 +315,7 @@ msgid "Clear option:"
 msgstr "Ripulisci opzione:"
 
 msgid "Clear IPMI override now"
-msgstr ""
+msgstr "Cancella sovrascrittura IPMI ora"
 
 msgid "Network:"
 msgstr "Rete:"
@@ -767,7 +767,7 @@ msgstr ""
 "MAC o tipo di dispositivo. Una volta aggiunto all'ordine di avvio, la "
 "priorità dei dispositivi può essere modificata con i tasti '-' (meno) e "
 "'+' (più). I dispositivi possono essere rimossi singolarmente dall'ordine di "
-"avviocon i tasti 'canc' o 'backspace'. Utilizzare questa opzione se sono "
+"avvio con i tasti 'canc' o 'backspace'. Utilizzare questa opzione se sono "
 "installate più immagini di sistema operativo.\n"
 "\n"
 "Per eseguire l'avvio automatico da un dispositivo, selezionare il pulsante "
@@ -821,38 +821,38 @@ msgstr "Plugin Petitboot"
 
 #, c-format
 msgid "Finished: %s"
-msgstr ""
+msgstr "Terminato: %s"
 
 #, c-format
 msgid "Installing plugin %s"
-msgstr ""
+msgstr "Installazione plugin %s"
 
 msgid "Failed to send install request"
-msgstr ""
+msgstr "Invio richiesta di installazione non riuscito"
 
 msgid "ID:"
-msgstr ""
+msgstr "ID:"
 
 msgid "Name:"
-msgstr ""
+msgstr "Nome:"
 
 msgid "Vendor:"
-msgstr ""
+msgstr "Fornitore:"
 
 msgid "Vendor ID:"
-msgstr ""
+msgstr "ID fornitore:"
 
 msgid "Version:"
-msgstr ""
+msgstr "Versione:"
 
 msgid "Date"
-msgstr ""
+msgstr "Data"
 
 msgid "Commands:"
-msgstr ""
+msgstr "Comandi:"
 
 msgid "Run selected command"
-msgstr ""
+msgstr "Esegui comando selezionato"
 
 msgid ""
 "This screen lists the details and available commands of an installed "
@@ -861,6 +861,11 @@ msgid ""
 "The Petitboot UI will temporarily exit to run the command, then return to "
 "this screen."
 msgstr ""
+"Questa schermata elenca i dettagli e i comandi disponibili di un plugin "
+"installato.\n"
+"Per eseguire un comando plugin sceglierlo nell'elenco e selezionare il "
+"pulsante \"Esegui\". La UI Petitboot si chiuderà temporaneamente per "
+"eseguire il comando, poi tornare a questa schermata."
 
 msgid ""
 "Plugins discovered by Petitboot are listed in this menu.\n"
@@ -868,9 +873,13 @@ msgid ""
 "details can be seen by pressing 'e'. From the detailed view plugin commands "
 "can also be run."
 msgstr ""
+"I plugin rilevati da Petitboot sono elencati in questo menu.\n"
+"Premere Invio per installare il plugin selezionato. Una volta installato il "
+"plugin è possibile vederne i dettagli premendo 'e'. Dalla vista dettagliata "
+"è anche possibileeseguire i comandi plugin. "
 
 msgid "Petitboot status log"
-msgstr ""
+msgstr "Log di stato Petitboot"
 
 msgid "Usage"
 msgstr "Utilizzo"

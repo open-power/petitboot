@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-08-29 14:37+1000\n"
+"POT-Creation-Date: 2017-09-13 14:07+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Russian\n"
@@ -89,7 +89,7 @@ msgstr "Загрузка отменена"
 
 #, c-format
 msgid "%u downloads in progress..."
-msgstr "Выполняется загрузка (%u)..."
+msgstr "Выполняются %u загрузок..."
 
 #, c-format
 msgid "%u %s downloading: %.0f%% - %lu%cB"
@@ -132,45 +132,45 @@ msgstr "Не удалось загрузить URL!"
 
 #, c-format
 msgid "Parsed GRUB configuration from %s"
-msgstr ""
+msgstr "Проанализирована конфигурация GRUB из %s"
 
 #, c-format
 msgid "Parsed kboot configuration from %s"
-msgstr ""
+msgstr "Проанализирована конфигурация kboot из %s"
 
 msgid "Configuring with DHCP"
-msgstr ""
+msgstr "Настройка с DHCP"
 
 #, c-format
 msgid "Configuring with static address (ip: %s)"
-msgstr ""
+msgstr "Настройка со статическим адресом (IP-адрес: %s)"
 
 #, c-format
 msgid "Download complete: %s"
-msgstr ""
+msgstr "Загрузка окончена: %s"
 
 #, c-format
 msgid "Failed to download %s"
-msgstr ""
+msgstr "Не удалось загрузить %s"
 
 msgid "PXE autoconfiguration failed"
-msgstr ""
+msgstr "Сбой автоматической настройки PXE"
 
 #, c-format
 msgid "Parsed PXE config from %s"
-msgstr ""
+msgstr "Проанализирована конфигурация PXE из %s"
 
 #, c-format
 msgid "Requesting config %s"
-msgstr ""
+msgstr "Запрос конфигурации %s"
 
 #, c-format
 msgid "Probing from base %s"
-msgstr ""
+msgstr "Проверка от базы %s"
 
 #, c-format
 msgid "Parsed yaboot configuration from %s"
-msgstr ""
+msgstr "Проанализирована конфигурация yaboot из %s"
 
 msgid "None"
 msgstr "Нет"
@@ -315,7 +315,7 @@ msgid "Clear option:"
 msgstr "Опция очистки:"
 
 msgid "Clear IPMI override now"
-msgstr ""
+msgstr "Очистить переопределение IPMI"
 
 msgid "Network:"
 msgstr "Сеть:"
@@ -337,7 +337,7 @@ msgstr "линия связи неактивна"
 
 msgid "Network Override Active! 'OK' will overwrite interface config"
 msgstr ""
-"Активно переопределение сети! Нажатие 'ОК' приведет к переопределению "
+"Активно переопределение сети! Нажатие кнопки OK приведет к переопределению "
 "конфигурации интерфейса"
 
 msgid "IP/mask:"
@@ -813,38 +813,38 @@ msgstr "Модули Petitboot"
 
 #, c-format
 msgid "Finished: %s"
-msgstr ""
+msgstr "Завершено: %s"
 
 #, c-format
 msgid "Installing plugin %s"
-msgstr ""
+msgstr "Установка модуля %s"
 
 msgid "Failed to send install request"
-msgstr ""
+msgstr "Не удалось отправить запрос на установку"
 
 msgid "ID:"
-msgstr ""
+msgstr "ИД:"
 
 msgid "Name:"
-msgstr ""
+msgstr "Имя:"
 
 msgid "Vendor:"
-msgstr ""
+msgstr "Вендор:"
 
 msgid "Vendor ID:"
-msgstr ""
+msgstr "ИД вендора:"
 
 msgid "Version:"
-msgstr ""
+msgstr "Версия:"
 
 msgid "Date"
-msgstr ""
+msgstr "Дата"
 
 msgid "Commands:"
-msgstr ""
+msgstr "Команды:"
 
 msgid "Run selected command"
-msgstr ""
+msgstr "Выполнить выбранную команду"
 
 msgid ""
 "This screen lists the details and available commands of an installed "
@@ -853,6 +853,10 @@ msgid ""
 "The Petitboot UI will temporarily exit to run the command, then return to "
 "this screen."
 msgstr ""
+"Этот экран содержит информацию и доступные команды установленного модуля.\n"
+"Для того чтобы выполнить команду модуля, выберите ее в списке и нажмите "
+"кнопку Выполнить. Пользовательский интерфейс Petitboot временно закроется "
+"для выполнения команды, после выполнения будет снова показан этот экран."
 
 msgid ""
 "Plugins discovered by Petitboot are listed in this menu.\n"
@@ -860,9 +864,13 @@ msgid ""
 "details can be seen by pressing 'e'. From the detailed view plugin commands "
 "can also be run."
 msgstr ""
+"Это меню содержит модули, найденные Petitboot.\n"
+"Нажмите клавишу Enter, чтобы установить выбранный модуль. После установки "
+"сведения о модуле можно просмотреть, нажав клавишу 'e'. В подробном "
+"представлении команды модуля можно также выполнять."
 
 msgid "Petitboot status log"
-msgstr ""
+msgstr "Протокол состояния Petitboot"
 
 msgid "Usage"
 msgstr "Использование"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-08-29 14:37+1000\n"
+"POT-Creation-Date: 2017-09-13 14:07+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Japanese\n"
@@ -131,45 +131,45 @@ msgstr "URL のロードに失敗しました!"
 
 #, c-format
 msgid "Parsed GRUB configuration from %s"
-msgstr ""
+msgstr "%s からの GRUB 構成が解析されました"
 
 #, c-format
 msgid "Parsed kboot configuration from %s"
-msgstr ""
+msgstr "%s からの kboot 構成が解析されました"
 
 msgid "Configuring with DHCP"
-msgstr ""
+msgstr "DHCP を使用して構成しています。"
 
 #, c-format
 msgid "Configuring with static address (ip: %s)"
-msgstr ""
+msgstr "静的アドレス (ip: %s) を使用して構成しています"
 
 #, c-format
 msgid "Download complete: %s"
-msgstr ""
+msgstr "ダウンロードが完了しました: %s"
 
 #, c-format
 msgid "Failed to download %s"
-msgstr ""
+msgstr "%s をダウンロードできませんでした"
 
 msgid "PXE autoconfiguration failed"
-msgstr ""
+msgstr "PXE 自動構成が失敗しました"
 
 #, c-format
 msgid "Parsed PXE config from %s"
-msgstr ""
+msgstr "%s からの PXE 構成が解析されました"
 
 #, c-format
 msgid "Requesting config %s"
-msgstr ""
+msgstr "構成 %s を要求しています"
 
 #, c-format
 msgid "Probing from base %s"
-msgstr ""
+msgstr "ベース %s からプローブしています"
 
 #, c-format
 msgid "Parsed yaboot configuration from %s"
-msgstr ""
+msgstr "%s からの yaboot 構成が解析されました"
 
 msgid "None"
 msgstr "なし"
@@ -314,7 +314,7 @@ msgid "Clear option:"
 msgstr "消去オプション:"
 
 msgid "Clear IPMI override now"
-msgstr ""
+msgstr "IPMI オーバーライドを直ちに消去してください"
 
 msgid "Network:"
 msgstr "ネットワーク:"
@@ -763,24 +763,24 @@ msgid ""
 msgstr ""
 "自動ブート: 自動ブートを開始するデバイスを指定します。\n"
 "\n"
-"「デバイスの追加」ボタンを選択し、新しいデバイスを UUID、MAC アドレス、デバイ"
-"ス・タイプのいずれかで自動ブート・リストに追加できます。ブート順序に追加され"
-"ると、デバイスの優先順位は「-」キー (マイナス) と「+」キー (プラス) キーで変"
-"更できます。「Delete」キーまたは「Backspace」キーを使用すると、デバイスを個別"
-"にブート順序から除外できます。このオプションは、複数のオペレーティング・シス"
-"テム・イメージをインストール済みである場合に使用します。\n"
+"「デバイスの追加」ボタンを選択すれば、新しいデバイスを UUID、MAC アドレス、デ"
+"バイス・タイプのいずれかで自動ブート・リストに追加できます。ブート順序に追加"
+"されたデバイスの優先順位は「-」(負符号) キーと「+」(正符号) キーで変更できま"
+"す。「Delete」キーまたは「Backspace」キーを使用すれば、デバイスを個別にブート"
+"順序から削除できます。このオプションは、複数のオペレーティング・システム・イ"
+"メージがインストールされている場合に使用してください。\n"
 "\n"
-"任意のデバイスから自動ブートするには、「消去してブート」ボタンを選択します。"
-"この場合、(ブート・ローダー構成により) デフォルトとしてマークが付けられている"
-"ブート・オプションは、タイムアウトの後、自動的にブートされます。このオプショ"
-"ンは、ブート・オプションの設定を変更することなく、素早くシステムをブートした"
-"い場合に使用します。これは標準の構成です。\n"
+"任意のデバイスから自動ブートを行うには、「消去してブート」ボタンを選択しま"
+"す。この場合、(ブート・ローダー構成により) デフォルトとしてマークされている"
+"ブート・オプションは、タイムアウト後に自動的にブートされます。このオプション"
+"は、ブート・オプション設定を変更することなくシステムを素早くブートする場合に"
+"使用してください。これは標準の構成です。\n"
 "\n"
-"自動ブートを無効にするには、「消去」ボタンを選択してブート順序を消去します。"
-"自動ブートを無効にすると、petitboot メニューをさらに続行するには、ユーザーに"
-"よる対話が必要になります。明示的なブート選択をマシンが待つようにしたい場合、"
-"またはシステムのブート前に petitboot と対話したい場合は、このオプションを使用"
-"します。\n"
+"自動ブートを無効にするには、「消去」ボタンを選択します。これによりブート順序"
+"が消去されます。自動ブートが無効になっている場合に petitboot メニューより先に"
+"進むには、ユーザーによる対話が必要となります。このオプションは、明示的なブー"
+"ト選択をマシンが待機するようにしたい場合、またはシステムのブート前に "
+"petitboot と対話したい場合に使用してください。\n"
 "\n"
 "タイムアウト: デフォルト・ブート・オプションが開始される前にメインメニューが"
 "表示される期間 (秒) を指定します。このオプションが表示されるのは、自動ブート"
@@ -816,38 +816,38 @@ msgstr "Petitboot プラグイン"
 
 #, c-format
 msgid "Finished: %s"
-msgstr ""
+msgstr "完了しました: %s"
 
 #, c-format
 msgid "Installing plugin %s"
-msgstr ""
+msgstr "プラグイン %s をインストールしています"
 
 msgid "Failed to send install request"
-msgstr ""
+msgstr "インストール要求を送信できませんでした"
 
 msgid "ID:"
-msgstr ""
+msgstr "ID:"
 
 msgid "Name:"
-msgstr ""
+msgstr "名前:"
 
 msgid "Vendor:"
-msgstr ""
+msgstr "ベンダー:"
 
 msgid "Vendor ID:"
-msgstr ""
+msgstr "ベンダー ID:"
 
 msgid "Version:"
-msgstr ""
+msgstr "バージョン: "
 
 msgid "Date"
-msgstr ""
+msgstr "日付"
 
 msgid "Commands:"
-msgstr ""
+msgstr "コマンド:"
 
 msgid "Run selected command"
-msgstr ""
+msgstr "選択したコマンドを実行してください"
 
 msgid ""
 "This screen lists the details and available commands of an installed "
@@ -856,6 +856,11 @@ msgid ""
 "The Petitboot UI will temporarily exit to run the command, then return to "
 "this screen."
 msgstr ""
+"この画面には、インストールされたプラグインの詳細と使用可能コマンドがリストさ"
+"れます。\n"
+"プラグイン・コマンドを実行するには、対象のコマンドをリストで選択して「実行」"
+"ボタンを選びます。Petitboot UI が一時的に終了して、コマンドが実行され、その後"
+"でこの画面に戻ります。"
 
 msgid ""
 "Plugins discovered by Petitboot are listed in this menu.\n"
@@ -863,9 +868,13 @@ msgid ""
 "details can be seen by pressing 'e'. From the detailed view plugin commands "
 "can also be run."
 msgstr ""
+"Petitboot によって検出されたプラグインがこのメニューにリストされます。\n"
+"選択したプラグインをインストールするには、Enter を押してください。「e」を押せ"
+"ば、インストールしたプラグインの詳細を表示できます。詳細ビューからプラグイ"
+"ン・コマンドを実行することもできます。"
 
 msgid "Petitboot status log"
-msgstr ""
+msgstr "Petitboot 状況ログ"
 
 msgid "Usage"
 msgstr "使用法"

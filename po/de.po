@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-08-29 14:37+1000\n"
+"POT-Creation-Date: 2017-09-13 14:07+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: German\n"
@@ -130,45 +130,45 @@ msgstr "URL konnte nicht geladen werden."
 
 #, c-format
 msgid "Parsed GRUB configuration from %s"
-msgstr ""
+msgstr "Syntaktisch analysiert wurde GRUB-Konfiguration in %s"
 
 #, c-format
 msgid "Parsed kboot configuration from %s"
-msgstr ""
+msgstr "Syntaktisch analysiert wurde kboot-Konfiguration in %s"
 
 msgid "Configuring with DHCP"
-msgstr ""
+msgstr "Konfigurieren mit DHCP"
 
 #, c-format
 msgid "Configuring with static address (ip: %s)"
-msgstr ""
+msgstr "Konfigurieren mit statischer Adresse (IP: %s)"
 
 #, c-format
 msgid "Download complete: %s"
-msgstr ""
+msgstr "Herunterladen abgeschlossen: %s"
 
 #, c-format
 msgid "Failed to download %s"
-msgstr ""
+msgstr "Fehler beim Herunterladen von %s"
 
 msgid "PXE autoconfiguration failed"
-msgstr ""
+msgstr "Automatische Konfiguration von PXE fehlgeschlagen"
 
 #, c-format
 msgid "Parsed PXE config from %s"
-msgstr ""
+msgstr "Syntaktisch analysiert wurde PXE-Konfiguration in %s"
 
 #, c-format
 msgid "Requesting config %s"
-msgstr ""
+msgstr "Anfordern der Konfiguration %s"
 
 #, c-format
 msgid "Probing from base %s"
-msgstr ""
+msgstr "Prüfen in Basis %s"
 
 #, c-format
 msgid "Parsed yaboot configuration from %s"
-msgstr ""
+msgstr "Syntaktisch analysiert wurde yaboot-Konfiguration in %s"
 
 msgid "None"
 msgstr "Ohne"
@@ -315,7 +315,7 @@ msgid "Clear option:"
 msgstr "Option 'Inhalt löschen':"
 
 msgid "Clear IPMI override now"
-msgstr ""
+msgstr "IPMI-Überschreibung sofort löschen"
 
 msgid "Network:"
 msgstr "Netz:"
@@ -824,42 +824,42 @@ msgstr ""
 "Verwenden Sie diese Option, um Zugriff auf Platten zu steuern.\n"
 
 msgid "Petitboot Plugin"
-msgstr "Petitboot-Plug-in"
+msgstr "Petitboot-Plug-ins"
 
 #, c-format
 msgid "Finished: %s"
-msgstr ""
+msgstr "Fertiggestellt: %s"
 
 #, c-format
 msgid "Installing plugin %s"
-msgstr ""
+msgstr "Installieren von Plug-in %s"
 
 msgid "Failed to send install request"
-msgstr ""
+msgstr "Fehler beim Senden der Installationsanforderung"
 
 msgid "ID:"
-msgstr ""
+msgstr "ID:"
 
 msgid "Name:"
-msgstr ""
+msgstr "Name:"
 
 msgid "Vendor:"
-msgstr ""
+msgstr "Lieferant:"
 
 msgid "Vendor ID:"
-msgstr ""
+msgstr "Lieferanten-ID:"
 
 msgid "Version:"
-msgstr ""
+msgstr "Version:"
 
 msgid "Date"
-msgstr ""
+msgstr "Datum"
 
 msgid "Commands:"
-msgstr ""
+msgstr "Befehle:"
 
 msgid "Run selected command"
-msgstr ""
+msgstr "Ausgewählten Befehl ausführen"
 
 msgid ""
 "This screen lists the details and available commands of an installed "
@@ -868,6 +868,12 @@ msgid ""
 "The Petitboot UI will temporarily exit to run the command, then return to "
 "this screen."
 msgstr ""
+"Diese Anzeige enthält eine Liste der Details und verfügbaren Befehle eines "
+"installierten Plug-ins.\n"
+"Um einen Plug-in-Befehl auszuführen, wählen Sie ihn in der Liste aus und "
+"wählen die Schaltfläche \"Ausführen\" aus. Die Petitboot-UI wird dann "
+"vorübergehend verlassen, um den Befehl auszuführen. Danach erfolgt die "
+"Rückkehr zu dieser Anzeige."
 
 msgid ""
 "Plugins discovered by Petitboot are listed in this menu.\n"
@@ -875,9 +881,14 @@ msgid ""
 "details can be seen by pressing 'e'. From the detailed view plugin commands "
 "can also be run."
 msgstr ""
+"Dieses Menü enthält die durch Petitboot gefundenen Plug-ins.\n"
+"Drücken Sie die Eingabetaste, um das ausgewählte Plug-in zu installieren. "
+"Nach der Installation können die Details zum Plug-in angezeigt werden, indem "
+"'e' gedrückt wird. In der detaillierten Ansicht können Plug-in-Befehle auch "
+"ausgeführt werden."
 
 msgid "Petitboot status log"
-msgstr ""
+msgstr "Petitboot-Statusprotokoll"
 
 msgid "Usage"
 msgstr "Verwendung"
