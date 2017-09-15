@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-09-13 14:07+1000\n"
+"POT-Creation-Date: 2017-09-15 11:30+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Spanish\n"
@@ -311,6 +311,12 @@ msgstr "segundos"
 msgid "%s IPMI boot option: %s"
 msgstr "Opción de arranque de IPMI %s: %s"
 
+msgid "Persistent"
+msgstr ""
+
+msgid "Temporary"
+msgstr ""
+
 msgid "Clear option:"
 msgstr "Borrar opción:"
 
@@ -420,6 +426,10 @@ msgid "User item %u"
 msgstr "Elemento de usuario %u"
 
 #, c-format
+msgid "  %s [installed]"
+msgstr ""
+
+#, c-format
 msgid "SAFE MODE: select '%s' to continue"
 msgstr "MODALIDAD SEGURA: seleccione '%s' para continuar"
 
@@ -465,6 +475,9 @@ msgstr "Intro=instalar, e=detalles, x=salir, h=ayuda"
 
 msgid "Available Petitboot Plugins"
 msgstr "Plugins de Petitboot disponibles"
+
+msgid "Return to Main Menu"
+msgstr ""
 
 msgid "plugin menu"
 msgstr "menú de plugins"

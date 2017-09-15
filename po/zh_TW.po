@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: Geoff Levand <geoff@infradead.org>\n"
-"POT-Creation-Date: 2017-09-13 14:07+1000\n"
+"POT-Creation-Date: 2017-09-15 11:30+1000\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: Traditional Chinese\n"
@@ -308,6 +308,12 @@ msgstr "秒"
 msgid "%s IPMI boot option: %s"
 msgstr "%s IPMI 啟動選項：%s"
 
+msgid "Persistent"
+msgstr ""
+
+msgid "Temporary"
+msgstr ""
+
 msgid "Clear option:"
 msgstr "清除選項："
 
@@ -415,6 +421,10 @@ msgid "User item %u"
 msgstr "使用者項目 %u"
 
 #, c-format
+msgid "  %s [installed]"
+msgstr ""
+
+#, c-format
 msgid "SAFE MODE: select '%s' to continue"
 msgstr "安全模式：選取 '%s' 以繼續"
 
@@ -459,6 +469,9 @@ msgstr "Enter=安裝，e=詳細資料，x=退出，h=說明"
 
 msgid "Available Petitboot Plugins"
 msgstr "可用的 Petitboot 外掛程式"
+
+msgid "Return to Main Menu"
+msgstr ""
 
 msgid "plugin menu"
 msgstr "外掛程式功能表"

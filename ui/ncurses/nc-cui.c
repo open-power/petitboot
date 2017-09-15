@@ -901,7 +901,7 @@ fallback:
 
 	talloc_free(cod->name);
 	/* Name is still tabbed across */
-	cod->name = talloc_asprintf(cod, "  %s [installed]", opt->name);
+	cod->name = talloc_asprintf(cod, _("  %s [installed]"), opt->name);
 
 	cod->pd->opt = opt;
 	item->on_execute = NULL;
@@ -1268,7 +1268,7 @@ static struct pmenu *plugin_menu_init(struct cui *cui)
 	item_opts_off(i->nci, O_SELECTABLE);
 	pmenu_item_insert(m, i, 0);
 
-	i = pmenu_item_create(m, ("Return to Main Menu"));
+	i = pmenu_item_create(m, _("Return to Main Menu"));
 	i->on_execute = pmenu_exit_cb;
 	pmenu_item_insert(m, i, 1);
 
