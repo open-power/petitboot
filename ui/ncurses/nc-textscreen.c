@@ -41,15 +41,17 @@ struct text_screen *text_screen_from_scr(struct nc_scr *scr)
 
 void text_screen_draw(struct text_screen *screen)
 {
-	int max_y, max_x, i;
+	int max_y, max_x, i, len;
 
 	max_y = getmaxy(screen->scr.sub_ncw);
 	max_x = getmaxx(screen->scr.sub_ncw) - 1;
 
 	max_y = min(max_y, screen->scroll_y + screen->n_lines);
 
-	for (i = screen->scroll_y; i < max_y; i++)
-		mvwaddnstr(screen->scr.sub_ncw, i, 1, screen->lines[i], max_x);
+	for (i = screen->scroll_y; i < max_y; i++) {
+		len = strncols(screen->lines[i]) > max_x ? max_x : -1;
+		mvwaddnstr(screen->scr.sub_ncw, i, 1, screen->lines[i], len);
+	}
 
 	wrefresh(screen->scr.sub_ncw);
 }
@@ -58,7 +60,7 @@ static void text_screen_scroll(struct text_screen *screen, int key)
 {
 	int win_lines = getmaxy(screen->scr.sub_ncw);
 	int win_cols = getmaxx(screen->scr.sub_ncw) - 1;
-	int delta;
+	int delta, len, i;
 
 	if (key == KEY_UP)
 		delta = -1;
@@ -75,13 +77,16 @@ static void text_screen_scroll(struct text_screen *screen, int key)
 	screen->scroll_y += delta;
 	wscrl(screen->scr.sub_ncw, delta);
 
+
 	if (delta > 0) {
+		i = screen->scroll_y + win_lines - 1;
+		len = strncols(screen->lines[i]) > win_cols ? win_cols : -1;
 		mvwaddnstr(screen->scr.sub_ncw, win_lines - 1, 1,
-				screen->lines[screen->scroll_y+win_lines-1],
-				win_cols);
+				screen->lines[i], len);
 	} else if (delta < 0) {
-		mvwaddnstr(screen->scr.sub_ncw, 0, 1,
-				screen->lines[screen->scroll_y], win_cols);
+		i = screen->scroll_y;
+		len = strncols(screen->lines[i]) > win_cols ? win_cols : -1;
+		mvwaddnstr(screen->scr.sub_ncw, 0, 1, screen->lines[i], len);
 	}
 
 	wrefresh(screen->scr.sub_ncw);
