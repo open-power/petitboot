@@ -1792,6 +1792,20 @@ static int mount_device(struct discover_device *dev)
 	rc = try_mount(device_path, dev->mount_path, fstype,
 		       MS_RDONLY | MS_SILENT, dev->ramdisk);
 
+	/* If mount fails clean up any snapshot and try again */
+	if (rc && dev->ramdisk) {
+		pb_log("couldn't mount snapshot for %s: mount failed: %s\n",
+				device_path, strerror(errno));
+		pb_log("falling back to actual device\n");
+
+		devmapper_destroy_snapshot(dev);
+
+		device_path = get_device_path(dev);
+		pb_log("mounting device %s read-only\n", dev->device_path);
+		rc = try_mount(device_path, dev->mount_path, fstype,
+			       MS_RDONLY | MS_SILENT, dev->ramdisk);
+	}
+
 	if (!rc) {
 		dev->mounted = true;
 		dev->mounted_rw = false;
@@ -1802,9 +1816,6 @@ static int mount_device(struct discover_device *dev)
 
 	pb_log("couldn't mount device %s: mount failed: %s\n",
 			device_path, strerror(errno));
-
-	/* If mount fails clean up any snapshot */
-	devmapper_destroy_snapshot(dev);
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 err_free:
