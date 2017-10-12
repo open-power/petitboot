@@ -288,7 +288,7 @@ struct subset_screen *subset_screen_init(struct cui *cui,
 			title_suffix);
 	screen->scr.frame.rtitle = NULL;
 	screen->scr.frame.help = talloc_strdup(screen,
-			_("tab=next, shift+tab=previous, x=exit, h=help"));
+			_("tab=next, shift+tab=previous, x=exit"));
 
 	scrollok(screen->scr.sub_ncw, true);
 
