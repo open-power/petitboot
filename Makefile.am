@@ -55,6 +55,7 @@ include test/Makefile.am
 include test/lib/Makefile.am
 include test/parser/Makefile.am
 include test/urls/Makefile.am
+include test/ui/Makefile.am
 include ui/common/Makefile.am
 
 if WITH_NCURSES

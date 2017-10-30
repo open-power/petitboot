@@ -24,6 +24,8 @@ ui_ncurses_libpbnc_la_SOURCES = \
 	ui/ncurses/nc-config.c \
 	ui/ncurses/nc-config.h \
 	ui/ncurses/nc-config-help.c \
+	ui/ncurses/console-codes.c \
+	ui/ncurses/console-codes.h \
 	ui/ncurses/nc-cui.c \
 	ui/ncurses/nc-cui.h \
 	ui/ncurses/nc-cui-help.c \

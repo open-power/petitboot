@@ -21,6 +21,7 @@
 #endif
 
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,6 +46,7 @@
 #include "nc-statuslog.h"
 #include "nc-subset.h"
 #include "nc-plugin.h"
+#include "console-codes.h"
 
 extern const struct help_text main_menu_help_text;
 extern const struct help_text plugin_menu_help_text;
@@ -524,6 +526,9 @@ static bool process_global_keys(struct cui *cui, int key)
 static int cui_process_key(void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
+	unsigned int i;
+	char *sequence;
+	int grab;
 
 	assert(cui->current);
 
@@ -534,6 +539,29 @@ static int cui_process_key(void *arg)
 
 		if (c == ERR)
 			break;
+
+		if (c == 27) {
+			/*
+			 * If this is a console code sequence try to parse it
+			 * and don't treat this as a key press.
+			 */
+			grab = getch();
+			if (grab != ERR && grab != 27) {
+				ungetch(grab);
+				pb_debug("%s: Caught unhandled command sequence\n",
+						__func__);
+				sequence = handle_control_sequence(cui, c);
+				pb_debug("Caught sequence ");
+				if (sequence) {
+					pb_debug("(%zu): ", strlen(sequence));
+					for (i = 0; i < strlen(sequence); i++)
+						pb_debug("0%o ", sequence[i]);
+					pb_debug("\n");
+				} else
+					pb_debug("(0): (none)\n");
+				continue;
+			}
+		}
 
 		if (!cui->has_input) {
 			cui->has_input = true;
