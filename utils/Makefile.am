@@ -24,7 +24,7 @@ utils_hooks_30_dtb_updates_LDADD = $(top_builddir)/lib/libpbcore.la \
 		$(FDT_LIBS)
 
 if HAVE_LIBFDT
-noinst_PROGRAMS = \
+noinst_PROGRAMS += \
 	utils/hooks/30-dtb-updates
 endif
 
