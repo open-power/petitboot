@@ -200,6 +200,11 @@ AC_DEFUN([_AX_WITH_CURSES_EXTRA], [
     ], [
         AS_IF([test "x$ax_cv_curses_which" = xncursesw], [
             _AX_WITH_CURSES_CHECKEXTRA([$1], [$2], [$3], [ncursesw/$4], [$5])
+            dnl This fixes a problem building on distros with 'odd'
+            dnl ncurses header file setups
+            AS_IF([test x$[]ax_cv_[]m4_tolower($1) != "xyes"], [
+                _AX_WITH_CURSES_CHECKEXTRA([$1], [$2], [$3], [$4], [$5])
+            ])
         ], [test "x$ax_cv_curses_which" = xncurses], [
             _AX_WITH_CURSES_CHECKEXTRA([$1], [$2], [$3], [ncurses/$4], [$6])
             _AX_WITH_CURSES_CHECKEXTRA([$1], [$2], [$3], [$4], [$6])
