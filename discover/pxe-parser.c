@@ -31,13 +31,17 @@ struct pxe_parser_info {
 	char				**pxe_conf_files;
 	struct pb_url			*pxe_base_url;
 	int				current;
+	char	                        *proxy;
 };
 
 static void pxe_finish(struct conf_context *conf)
 {
 	struct pxe_parser_info *info = conf->parser_info;
-	if (info->opt)
+	if (info->opt) {
+		if (info->proxy)
+			info->opt->proxy = talloc_strdup(info->opt, info->proxy);
 		discover_context_add_boot_option(conf->dc, info->opt);
+	}
 }
 
 /* We need a slightly modified version of pb_url_join, to allow for the
@@ -145,6 +149,14 @@ static void pxe_process_pair(struct conf_context *ctx,
 
 	if (streq(name, "DEFAULT")) {
 		parser_info->default_name = talloc_strdup(parser_info, value);
+		return;
+	}
+
+	if (streq(name, "PROXY")) {
+		if (parser_info->proxy)
+			talloc_free(parser_info->proxy);
+
+		parser_info->proxy = talloc_strdup(parser_info, value);
 		return;
 	}
 

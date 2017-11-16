@@ -45,6 +45,7 @@ struct discover_boot_option {
 	struct discover_device	*device;
 	struct boot_option	*option;
 	struct list_item	list;
+	const char              *proxy;
 
 	struct resource		*boot_image;
 	struct resource		*initrd;

@@ -579,6 +579,11 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		dtb = opt->dtb->url;
 	}
 
+	if (opt && opt->proxy) {
+		setenv("http_proxy", opt->proxy, 1);
+		setenv("https_proxy", opt->proxy, 1);
+	}
+
 	boot_task = talloc_zero(ctx, struct boot_task);
 	boot_task->dry_run = dry_run;
 	boot_task->status_fn = status_fn;
