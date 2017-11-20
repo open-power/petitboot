@@ -98,8 +98,18 @@ static void cui_start(void)
 	define_key("\x1b\x4f\x46", KEY_END);
 	define_key("OH", KEY_HOME);
 	define_key("OF", KEY_END);
+
+	/* Arrow keys in normal cursor mode */
 	define_key("\x1b\x5b\x41", KEY_UP);
 	define_key("\x1b\x5b\x42", KEY_DOWN);
+	define_key("\x1b\x5b\x43", KEY_RIGHT);
+	define_key("\x1b\x5b\x44", KEY_LEFT);
+	/* Arrow keys in "application" cursor mode */
+	define_key("\x1b\x4f\x41", KEY_UP);
+	define_key("\x1b\x4f\x42", KEY_DOWN);
+	define_key("\x1b\x4f\x43", KEY_RIGHT);
+	define_key("\x1b\x4f\x44", KEY_LEFT);
+
 	define_key("\x1b\x5b\x33\x7e", KEY_DC);
 
 	while (getch() != ERR)		/* flush stdin */
