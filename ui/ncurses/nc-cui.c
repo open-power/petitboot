@@ -56,6 +56,8 @@ static bool cui_detached = false;
 static struct pmenu *main_menu_init(struct cui *cui);
 static struct pmenu *plugin_menu_init(struct cui *cui);
 
+static void cui_cancel_autoboot_on_exit(struct cui *cui);
+
 static bool lockdown_active(void)
 {
 	bool lockdown = false;
@@ -165,6 +167,8 @@ void cui_on_exit(struct pmenu *menu)
 {
 	struct cui *cui = cui_from_pmenu(menu);
 	char *sh_cmd;
+
+	cui_cancel_autoboot_on_exit(cui);
 
 	sh_cmd = talloc_asprintf(cui,
 		"echo \"Exiting petitboot. Type 'exit' to return.\";\
@@ -1367,31 +1371,6 @@ static struct discover_client_ops cui_client_ops = {
 	.update_config = cui_update_config,
 };
 
-/* cui_server_wait_on_exit - On exit spin until the server is available.
- *
- * If the program exits before connecting to the server autoboot won't be
- * cancelled even though there has been keyboard activity. This function is
- * called by a child process which will spin until the server is connected and
- * told to cancel autoboot.
- *
- * Processes exiting from this function will not carry out the cui_atexit()
- * steps.
- */
-static void cui_server_wait_on_exit(struct cui *cui)
-{
-	cui_detached = true;
-
-	while (!cui->client) {
-		cui->client = discover_client_init(cui->waitset,
-				&cui_client_ops, cui);
-		if (!cui->client)
-			sleep(1);
-	}
-
-	talloc_steal(cui, cui->client);
-	discover_client_cancel_default(cui->client);
-}
-
 /* cui_server_wait - Connect to the discover server.
  * @arg: Pointer to the cui instance.
  *
@@ -1541,6 +1520,41 @@ fail_alloc:
 }
 
 /**
+ * cui_cancel_autoboot_on_exit - On exit spin until the server is available.
+ *
+ * If the program exits before connecting to the server autoboot won't be
+ * cancelled even though there has been keyboard activity. A child is forked
+ * which will spin until the server is connected and told to cancel autoboot.
+ */
+static void cui_cancel_autoboot_on_exit(struct cui *cui)
+{
+	pid_t pid;
+
+	if (!cui->client) {
+		/* Fork a child to tell the server to cancel autoboot */
+		pid = fork();
+		if (!pid) {
+			cui_detached = true;
+
+			/* Loop until connection established */
+			while (!cui->client) {
+				cui->client = discover_client_init(cui->waitset,
+						&cui_client_ops, cui);
+				if (!cui->client)
+					sleep(1);
+			}
+
+			talloc_steal(cui, cui->client);
+			discover_client_cancel_default(cui->client);
+			exit(EXIT_SUCCESS);
+		}
+		if (pid < 0)
+			pb_log("Failed to fork child on exit: %m\n");
+	} else
+		discover_client_cancel_default(cui->client);
+}
+
+/**
  * cui_run - The main cui program loop.
  * @cui: The cui instance.
  * @main: The menu to use as the main menu.
@@ -1552,8 +1566,6 @@ fail_alloc:
 
 int cui_run(struct cui *cui)
 {
-	pid_t pid;
-
 	assert(main);
 
 	cui->current = &cui->main->scr;
@@ -1578,18 +1590,9 @@ int cui_run(struct cui *cui)
 		}
 	}
 
-	cui_atexit();
+	cui_cancel_autoboot_on_exit(cui);
 
-	if (!cui->client) {
-		/* Fork a child to tell the server to cancel autoboot */
-		pid = fork();
-		if (!pid) {
-			cui_server_wait_on_exit(cui);
-			exit(EXIT_SUCCESS);
-		}
-		if (pid < 0)
-			pb_log("Failed to fork child on exit: %m\n");
-	}
+	cui_atexit();
 
 	return cui->abort ? 0 : -1;
 }
