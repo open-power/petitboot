@@ -368,7 +368,7 @@ static struct conf_context *copy_context(void *ctx, struct discover_context *dc)
 
 static int pxe_parse(struct discover_context *dc)
 {
-	struct pb_url *pxe_base_url;
+	struct pb_url *pxe_base_url, *file_url;
 	struct conf_context *conf = NULL;
 	struct load_url_result *result;
 	void *ctx = talloc_parent(dc);
@@ -397,13 +397,25 @@ static int pxe_parse(struct discover_context *dc)
 		return -1;
 
 	if (complete_url) {
+		/* Check if this file has already been downloaded */
+		if (event_get_param(dc->event, "pxeconffile-local"))
+			file_url = pb_url_parse(dc, event_get_param(dc->event,
+						"pxeconffile-local"));
+		else
+			file_url = dc->conf_url;
+
+		if (!file_url) {
+			pb_log("%s: Failed to parse conf url!\n", __func__);
+			goto out_conf;
+		}
+
 		device_handler_status_dev_info(conf->dc->handler,
 			dc->device,
 			_("Requesting config %s"),
 			pb_url_to_string(conf->dc->conf_url));
 
 		/* we have a complete URL; use this and we're done. */
-		result = load_url_async(conf->dc, conf->dc->conf_url,
+		result = load_url_async(conf->dc, file_url,
 					pxe_conf_parse_cb, conf, NULL, ctx);
 		if (!result) {
 			pb_log("load_url_async fails for %s\n",

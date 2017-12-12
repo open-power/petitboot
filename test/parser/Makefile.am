@@ -71,6 +71,7 @@ parser_TESTS = \
 	test/parser/test-pxe-discover-bootfile-pathprefix \
 	test/parser/test-pxe-discover-bootfile-relative-conffile \
 	test/parser/test-pxe-discover-bootfile-absolute-conffile \
+	test/parser/test-pxe-discover-bootfile-async-file \
 	test/parser/test-unresolved-remove
 
 TESTS += $(parser_TESTS)
