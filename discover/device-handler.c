@@ -1356,7 +1356,7 @@ static void process_url_cb(struct load_url_result *result, void *data)
 
 	mac = event_get_param(event, "mac");
 	char *url = talloc_asprintf(event, "file://%s", result->local);
-	event_set_param(event, "pxeconffile", url);
+	event_set_param(event, "pxeconffile-local", url);
 
 	dev = discover_device_create(handler, mac, event->device);
 	ctx = device_handler_discover_context_create(handler, dev);
