@@ -76,6 +76,10 @@ static inline struct cui_opt_data *cod_from_item(struct pmenu_item *item)
 	return item->data;
 }
 
+typedef int (*hot_key_fn)(struct pmenu *menu, struct pmenu_item *item, int c);
+
+int pmenu_main_hot_keys(struct pmenu *menu, struct pmenu_item *item, int c);
+
 /**
  * struct pmenu - Data structure defining complete menu.
  * @insert_pt: Index in nc item array.
@@ -90,7 +94,8 @@ struct pmenu {
 	unsigned int insert_pt;
 	const char *help_title;
 	const struct help_text *help_text;
-	int (*hot_key)(struct pmenu *menu, struct pmenu_item *item, int c);
+	hot_key_fn *hot_keys;
+	unsigned int n_hot_keys;
 	void (*on_exit)(struct pmenu *menu);
 	void (*on_new)(struct pmenu *menu);
 };

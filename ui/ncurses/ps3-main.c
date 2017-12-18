@@ -411,7 +411,15 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 		return NULL;
 	}
 
-	m->hot_key = ps3_hot_key;
+	m->n_hot_keys = 2;
+	m->hot_keys = talloc_array(m, hot_key_fn *, m->n_hot_keys);
+	if (!m->hot_keys) {
+		pb_log("%s: failed to allocate hot_keys\n", __func__);
+		talloc_free(m);
+		return NULL;
+	}
+	m->hot_keys[0] = ps3_hot_key;
+	m->hot_keys[1] = pmenu_main_hot_keys;
 	m->on_new = cui_item_new;
 
 #if defined(DEBUG)

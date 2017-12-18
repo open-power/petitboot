@@ -374,6 +374,34 @@ static void pmenu_move_cursor(struct pmenu *menu, int req)
 }
 
 /**
+ * pmenu_main_hot_keys - Hot keys for the main boot menu
+ */
+int pmenu_main_hot_keys(struct pmenu *menu, struct pmenu_item *item, int c)
+{
+	struct nc_scr *scr = &menu->scr;
+	(void)item;
+
+	switch (c) {
+	case 'i':
+		cui_show_sysinfo(cui_from_arg(scr->ui_ctx));
+		break;
+	case 'c':
+		cui_show_config(cui_from_arg(scr->ui_ctx));
+		break;
+	case 'l':
+		cui_show_lang(cui_from_arg(scr->ui_ctx));
+		break;
+	case 'g':
+		cui_show_statuslog(cui_from_arg(scr->ui_ctx));
+		break;
+	default:
+		return 0;
+	}
+
+	return c;
+}
+
+/**
  * pmenu_process_key - Process a user keystroke.
  */
 
@@ -381,11 +409,15 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 {
 	struct pmenu *menu = pmenu_from_scr(scr);
 	struct pmenu_item *item = pmenu_find_selected(menu);
+	unsigned int i;
 
 	nc_scr_status_free(&menu->scr);
 
-	if (menu->hot_key)
-		key = menu->hot_key(menu, item, key);
+	if (menu->hot_keys)
+		for (i = 0; i < menu->n_hot_keys; i++) {
+			if (menu->hot_keys[i](menu, item, key))
+				return;
+		}
 
 	switch (key) {
 	case 27: /* ESC */
@@ -432,18 +464,6 @@ static void pmenu_process_key(struct nc_scr *scr, int key)
 	case '\r':
 		if (item->on_execute)
 			item->on_execute(item);
-		break;
-	case 'i':
-		cui_show_sysinfo(cui_from_arg(scr->ui_ctx));
-		break;
-	case 'c':
-		cui_show_config(cui_from_arg(scr->ui_ctx));
-		break;
-	case 'l':
-		cui_show_lang(cui_from_arg(scr->ui_ctx));
-		break;
-	case 'g':
-		cui_show_statuslog(cui_from_arg(scr->ui_ctx));
 		break;
 	case KEY_F(1):
 	case 'h':

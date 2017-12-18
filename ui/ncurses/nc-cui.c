@@ -1242,6 +1242,14 @@ static struct pmenu *main_menu_init(struct cui *cui)
 		return NULL;
 	}
 
+	m->n_hot_keys = 1;
+	m->hot_keys = talloc_array(m, hot_key_fn, m->n_hot_keys);
+	if (!m->hot_keys) {
+		pb_log("%s: failed to allocate hot_keys\n", __func__);
+		talloc_free(m);
+		return NULL;
+	}
+	m->hot_keys[0] = pmenu_main_hot_keys;
 	m->on_new = cui_item_new;
 
 	m->scr.frame.ltitle = talloc_asprintf(m,
@@ -1325,7 +1333,6 @@ static struct pmenu *plugin_menu_init(struct cui *cui)
 	int result;
 
 	m = pmenu_init(cui, 2, cui_plugin_menu_exit);
-	m->on_new = cui_item_new;
 	m->scr.frame.ltitle = talloc_asprintf(m, _("Petitboot Plugins"));
 	m->scr.frame.rtitle = talloc_asprintf(m, NULL);
 	m->scr.frame.help = talloc_strdup(m,
