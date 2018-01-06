@@ -26,7 +26,13 @@ AS_IF([test "x$CFLAGS" = "x"], [AC_SUBST([CFLAGS], [""])])
 
 AC_PROG_CC
 AC_PROG_LEX
+if test -z "$($LEX --version)"; then
+	AC_MSG_ERROR([[Please install flex/lex]])
+fi
 AC_PROG_YACC
+if test -z "$($YACC --version)"; then
+	AC_MSG_ERROR([[Please install bison/yacc]])
+fi
 AC_PROG_INSTALL
 
 AM_INIT_AUTOMAKE
