@@ -16,7 +16,7 @@
 
 AC_INIT([petitboot],
     [m4_esyscmd_s([./version.sh])],
-    [Geoff Levand <geoff@infradead.org>])
+    [https://lists.ozlabs.org/listinfo/petitboot])
 
 AC_CONFIG_MACRO_DIR([m4])
 
