@@ -257,7 +257,7 @@ static int do_translate(void *fdt, int node,
 	current_pci_flags = na > 2 ? of_read_number(addr, 1) : 0;
 	child_pci_flags = cna > 2 ? of_read_number(ranges, 1) : 0;
 	if (current_pci_flags != 0 && current_pci_flags != child_pci_flags) {
-		fprintf(stderr, "Unexpected change in flags: %lx, %lx\n",
+		fprintf(stderr, "Unexpected change in flags: %" PRIu64 ", %" PRIu64 "\n",
 			current_pci_flags, child_pci_flags);
 		return -1;
 	}
@@ -324,7 +324,7 @@ static int do_translate(void *fdt, int node,
 
 	fprintf(stderr, "New address:\n\t");
 	for (i = 0; i < *addr_cells; i++)
-		fprintf(stderr, " %lx ", of_read_number(&addr[i], 1));
+		fprintf(stderr, " %" PRIu64 " ", of_read_number(&addr[i], 1));
 	fprintf(stderr, "\n");
 
 	return 0;
@@ -382,7 +382,7 @@ static int create_translated_addresses(struct offb_ctx *ctx,
 
 	fprintf(stderr, "Final address:\n\t");
 	for (i = 0; i < addr_cells; i++)
-		fprintf(stderr, " %lx ", of_read_number(&addr[i], 1));
+		fprintf(stderr, " %" PRIu64 " ", of_read_number(&addr[i], 1));
 	fprintf(stderr, "\n");
 
 	if (addr_cells + size_cells > reg_cells) {

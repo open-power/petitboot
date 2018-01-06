@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -653,7 +654,7 @@ void device_handler_status_download(struct device_handler *handler,
 			unit++;
 		}
 		update = talloc_asprintf(handler,
-				_("%u %s downloading: %.0f%% - %lu%cB"),
+				_("%u %s downloading: %.0f%% - %" PRIu64 "%cB"),
 				handler->n_progress,
 				ngettext("item", "items", handler->n_progress),
 				(current / total) * 100, current_converted,

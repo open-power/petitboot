@@ -2,6 +2,7 @@
 #include <types/types.h>
 #include <log/log.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <string.h>
 
 #include <sys/types.h>
@@ -231,7 +232,7 @@ static int run_create_task(const char *dm_name, const struct target *target)
 	struct dm_task *task;
 	uint32_t cookie;
 
-	pb_debug("%s: %lu %lu '%s' '%s'\n", __func__,
+	pb_debug("%s: %" PRIu64 " %" PRIu64 " '%s' '%s'\n", __func__,
 		 target->start_sector, target->end_sector,
 		 target->ttype, target->params);
 
