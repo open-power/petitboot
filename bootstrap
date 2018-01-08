@@ -1,3 +1,14 @@
 #!/bin/sh
 
+progs="autoconf automake autopoint libtoolize pkg-config"
+
+for p in ${progs}; do
+	if test -z "$(${p} --version 2>/dev/null)"; then
+		echo "Please install ${p}"
+		result=1
+	fi
+done
+
+[ -z ${result} ] || exit 1
+
 exec autoreconf -f -i
