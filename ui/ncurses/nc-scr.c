@@ -56,7 +56,7 @@ int nc_scr_unpost(struct nc_scr *scr)
 
 void nc_scr_frame_draw(struct nc_scr *scr)
 {
-	int ltitle_len, rtitle_len;
+	int ltitle_len, rtitle_len, help_len;
 
 	DBGS("ltitle '%s'\n", scr->frame.ltitle);
 	DBGS("rtitle '%s'\n", scr->frame.rtitle);
@@ -77,6 +77,10 @@ void nc_scr_frame_draw(struct nc_scr *scr)
 
 	mvwhline(scr->main_ncw, LINES - nc_scr_pos_help_sep, 1, ACS_HLINE,
 		COLS - 2);
+	help_len = 1 + strlen(scr->frame.help);
+	if (help_len < COLS)
+		mvwhline(scr->main_ncw, LINES - nc_scr_pos_help, help_len, ' ',
+				COLS - help_len);
 	mvwaddstr(scr->main_ncw, LINES - nc_scr_pos_help, 1, scr->frame.help);
 	nc_scr_status_draw(scr);
 }
