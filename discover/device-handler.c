@@ -832,6 +832,9 @@ static enum default_priority default_option_priority(
 		int boot_match = autoboot_option_priority(config, opt);
 		if (boot_match > 0)
 			return boot_match;
+	} else {
+		/* If there is no specific boot order, boot any device */
+		return DEFAULT_PRIORITY_LOCAL_FIRST;
 	}
 
 	/* If the option didn't match any entry in the array, it is disabled */

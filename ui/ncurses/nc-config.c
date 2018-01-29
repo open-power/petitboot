@@ -203,7 +203,7 @@ static int screen_process_form(struct config_screen *screen)
 	const struct system_info *sysinfo = screen->cui->sysinfo;
 	enum net_conf_type net_conf_type;
 	struct interface_config *iface;
-	bool allow_write, autoboot;
+	bool allow_write;
 	char *str, *end;
 	struct config *config;
 	int i, n_boot_opts, rc;
@@ -218,8 +218,8 @@ static int screen_process_form(struct config_screen *screen)
 	n_boot_opts = widget_subset_get_order(config, &order,
 					      screen->widgets.boot_order_f);
 
-	autoboot = widget_select_get_value(screen->widgets.autoboot_f);
-	config->autoboot_enabled = autoboot && n_boot_opts;
+	config->autoboot_enabled = widget_select_get_value(
+						screen->widgets.autoboot_f);
 
 	config->n_autoboot_opts = n_boot_opts;
 	config->autoboot_opts = talloc_array(config, struct autoboot_option,
