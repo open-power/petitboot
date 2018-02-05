@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <locale.h>
 #include <string.h>
 
 #include <waiter/waiter.h>
