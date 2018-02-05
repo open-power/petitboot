@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <locale.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/reboot.h>
@@ -1334,7 +1335,7 @@ static struct pmenu *plugin_menu_init(struct cui *cui)
 
 	m = pmenu_init(cui, 2, cui_plugin_menu_exit);
 	m->scr.frame.ltitle = talloc_asprintf(m, _("Petitboot Plugins"));
-	m->scr.frame.rtitle = talloc_asprintf(m, NULL);
+	m->scr.frame.rtitle = talloc_asprintf(m, "%s", "");
 	m->scr.frame.help = talloc_strdup(m,
 		_("Enter=install, e=details, x=exit, h=help"));
 	m->scr.frame.status = talloc_asprintf(m,
