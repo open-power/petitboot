@@ -1574,7 +1574,8 @@ static void cui_cancel_autoboot_on_exit(struct cui *cui)
 
 int cui_run(struct cui *cui)
 {
-	assert(main);
+	assert(cui);
+	assert(cui->main);
 
 	cui->current = &cui->main->scr;
 	cui->default_item = 0;
