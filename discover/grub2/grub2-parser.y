@@ -122,7 +122,7 @@ statement: {
 	| "function" word delim '{' statements '}' {
 		$$ = create_statement_function(parser, $2, $5);
 	}
-	| "menuentry" words delim
+	| "menuentry" words delim0
 		'{' statements '}' {
 		$$ = create_statement_menuentry(parser, $2, $5);
 	}
