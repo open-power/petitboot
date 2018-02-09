@@ -73,7 +73,12 @@ parser_TESTS = \
 	test/parser/test-pxe-discover-bootfile-relative-conffile \
 	test/parser/test-pxe-discover-bootfile-absolute-conffile \
 	test/parser/test-pxe-discover-bootfile-async-file \
-	test/parser/test-unresolved-remove
+	test/parser/test-unresolved-remove \
+	test/parser/test-syslinux-single-yocto \
+	test/parser/test-syslinux-global-append \
+	test/parser/test-syslinux-explicit \
+	test/parser/test-syslinux-nested-config
+
 
 TESTS += $(parser_TESTS)
 check_PROGRAMS += $(parser_TESTS) test/parser/libtest.ro
@@ -82,7 +87,10 @@ check_DATA += \
 	test/parser/data/grub2-f18-ppc64.conf \
 	test/parser/data/grub2-f20-ppc.conf \
 	test/parser/data/grub2-ubuntu-13_04-x86.conf \
-	test/parser/data/yaboot-rh8-ppc64.conf
+	test/parser/data/yaboot-rh8-ppc64.conf \
+	test/parser/data/syslinux-include-root.cfg \
+	test/parser/data/syslinux-include-nest-1.cfg \
+	test/parser/data/syslinux-include-nest-2.cfg
 
 $(parser_TESTS): AM_CPPFLAGS += \
 		-I$(top_srcdir)/discover \
@@ -107,6 +115,7 @@ test_parser_libtest_ro_SOURCES = \
 	discover/yaboot-parser.c \
 	discover/kboot-parser.c \
 	discover/pxe-parser.c \
+	discover/syslinux-parser.c \
 	discover/platform.c \
 	discover/resource.c \
 	discover/paths.c \

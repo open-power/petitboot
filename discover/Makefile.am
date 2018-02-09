@@ -52,7 +52,8 @@ discover_pb_discover_SOURCES = \
 	discover/user-event.h \
 	discover/kboot-parser.c \
 	discover/yaboot-parser.c \
-	discover/pxe-parser.c
+	discover/pxe-parser.c \
+	discover/syslinux-parser.c
 
 discover_pb_discover_LDADD = \
 	discover/grub2/grub2-parser.ro \
