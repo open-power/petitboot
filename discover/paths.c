@@ -436,16 +436,18 @@ static void load_wget(struct load_task *task, int flags)
  */
 static void load_local(struct load_task *task)
 {
+	struct load_url_result *result = task->result;
 	int rc;
 
 	rc = access(task->url->path, F_OK);
 	if (rc) {
-		task->result->status = LOAD_ERROR;
+		result->status = LOAD_ERROR;
 	} else {
-		task->result->local = talloc_strdup(task->result,
-						    task->url->path);
-		task->result->status = LOAD_OK;
+		result->local = talloc_strdup(task->result, task->url->path);
+		result->status = LOAD_OK;
 	}
+
+	task->async_cb(task->result, task->async_data);
 }
 
 static void load_url_async_start_pending(struct load_task *task, int flags)
@@ -618,7 +620,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		return NULL;
 	}
 
-	if (!task->async)
+	if (!task->async || result->status == LOAD_OK)
 		talloc_free(task);
 
 	return result;

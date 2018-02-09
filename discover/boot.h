@@ -41,6 +41,16 @@ struct boot_task {
 	const char *local_initrd_signature;
 	const char *local_dtb_signature;
 	const char *local_cmdline_signature;
+	struct list resources;
+};
+
+struct boot_resource {
+	struct load_url_result *result;
+	struct pb_url *url;
+	const char **local_path;
+	const char *name;
+
+	struct list_item list;
 };
 
 enum {

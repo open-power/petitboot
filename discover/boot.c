@@ -324,7 +324,7 @@ static void run_boot_hooks(struct boot_task *task)
 
 static bool load_pending(struct load_url_result *result)
 {
-	return result && result->status == LOAD_ASYNC;
+	return !result || result->status == LOAD_ASYNC;
 }
 
 static int check_load(struct boot_task *task, const char *name,
@@ -401,6 +401,7 @@ static void cleanup_cancellations(struct boot_task *task,
 static void boot_process(struct load_url_result *result, void *data)
 {
 	struct boot_task *task = data;
+	struct boot_resource *resource;
 	int rc = -1;
 
 	if (task->cancelled) {
@@ -408,65 +409,14 @@ static void boot_process(struct load_url_result *result, void *data)
 		return;
 	}
 
-	if (load_pending(task->image) ||
-			load_pending(task->initrd) ||
-			load_pending(task->dtb))
-		return;
-
-	if (check_load(task, "kernel image", task->image) ||
-			check_load(task, "initrd", task->initrd) ||
-			check_load(task, "dtb", task->dtb))
-		goto no_load;
-
-	if (task->verify_signature) {
-		if (load_pending(task->image_signature) ||
-				load_pending(task->initrd_signature) ||
-				load_pending(task->dtb_signature) ||
-				load_pending(task->cmdline_signature))
-			return;
-	}
-	if (task->decrypt_files) {
-		if (load_pending(task->cmdline_signature))
-			return;
-	}
-
-	if (task->verify_signature) {
-		if (check_load(task, "kernel image signature",
-					task->image_signature) ||
-				check_load(task, "initrd signature",
-					task->initrd_signature) ||
-				check_load(task, "dtb signature",
-					task->dtb_signature) ||
-				check_load(task, "command line signature",
-					task->cmdline_signature))
-			goto no_sig_load;
-	}
-	if (task->decrypt_files) {
-		if (load_pending(task->cmdline_signature))
+	list_for_each_entry(&task->resources, resource, list)
+		if (load_pending(resource->result))
 			return;
 
-		if (check_load(task, "command line signature",
-					task->cmdline_signature))
-			goto no_decrypt_sig_load;
-	}
-
-	/* we make a copy of the local paths, as the boot hooks might update
-	 * and/or create these */
-	task->local_image = task->image ? task->image->local : NULL;
-	task->local_initrd = task->initrd ? task->initrd->local : NULL;
-	task->local_dtb = task->dtb ? task->dtb->local : NULL;
-
-	if (task->verify_signature) {
-		task->local_image_signature = task->image_signature ?
-			task->image_signature->local : NULL;
-		task->local_initrd_signature = task->initrd_signature ?
-			task->initrd_signature->local : NULL;
-		task->local_dtb_signature = task->dtb_signature ?
-			task->dtb_signature->local : NULL;
-	}
-	if (task->verify_signature || task->decrypt_files) {
-		task->local_cmdline_signature = task->cmdline_signature ?
-			task->cmdline_signature->local : NULL;
+	list_for_each_entry(&task->resources, resource, list) {
+		if (check_load(task, resource->name, resource->result))
+			goto no_load;
+		*resource->local_path = resource->result->local;
 	}
 
 	run_boot_hooks(task);
@@ -491,18 +441,9 @@ static void boot_process(struct load_url_result *result, void *data)
 				_("Invalid signature configuration"));
 	}
 
-no_sig_load:
-	cleanup_load(task->image_signature);
-	cleanup_load(task->initrd_signature);
-	cleanup_load(task->dtb_signature);
-
-no_decrypt_sig_load:
-	cleanup_load(task->cmdline_signature);
-
 no_load:
-	cleanup_load(task->image);
-	cleanup_load(task->initrd);
-	cleanup_load(task->dtb);
+	list_for_each_entry(&task->resources, resource, list)
+		cleanup_load(resource->result);
 
 	if (!rc) {
 		update_status(task->status_fn, task->status_arg,
@@ -517,20 +458,41 @@ no_load:
 	}
 }
 
-static int start_url_load(struct boot_task *task, const char *name,
-		struct pb_url *url, struct load_url_result **result)
+static int start_url_load(struct boot_task *task, struct boot_resource *res)
 {
-	if (!url)
+	if (!res)
 		return 0;
 
-	*result = load_url_async(task, url, boot_process, task, NULL,
-				 task->status_arg);
-	if (!*result) {
+	res->result = load_url_async(task, res->url, boot_process,
+				 task, NULL, task->status_arg);
+	if (!res->result) {
 		update_status(task->status_fn, task->status_arg,
-				STATUS_ERROR, _("Error loading %s"), name);
+				STATUS_ERROR, _("Error loading %s"),
+				res->name);
 		return -1;
 	}
 	return 0;
+}
+
+static struct boot_resource *add_boot_resource(struct boot_task *task,
+		const char *name, struct pb_url *url,
+		const char **local_path)
+{
+	struct boot_resource *res;
+
+	if (!url)
+		return NULL;
+
+	res = talloc_zero(task, struct boot_resource);
+	if (!res)
+		return NULL;
+
+	res->name = talloc_strdup(res, name);
+	res->url = pb_url_copy(res, url);
+	res->local_path = local_path;
+
+	list_add(&task->resources, &res->list);
+	return res;
 }
 
 struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
@@ -540,6 +502,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	struct pb_url *image = NULL, *initrd = NULL, *dtb = NULL;
 	struct pb_url *image_sig = NULL, *initrd_sig = NULL, *dtb_sig = NULL,
 		*cmdline_sig = NULL;
+	struct boot_resource *image_res, *initrd_res, *dtb_res, *tmp;
 	const struct config *config = config_get();
 	struct boot_task *boot_task;
 	const char *boot_desc;
@@ -588,6 +551,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	boot_task->dry_run = dry_run;
 	boot_task->status_fn = status_fn;
 	boot_task->status_arg = status_arg;
+	list_init(&boot_task->resources);
 
 	lockdown_type = lockdown_status();
 	boot_task->verify_signature = (lockdown_type == PB_LOCKDOWN_SIGN);
@@ -623,36 +587,48 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		}
 	}
 
+	image_res = add_boot_resource(boot_task, _("kernel image"), image,
+			&boot_task->local_image);
+	initrd_res = add_boot_resource(boot_task, _("initrd"), initrd,
+			&boot_task->local_initrd);
+	dtb_res = add_boot_resource(boot_task, _("dtb"), dtb,
+			&boot_task->local_dtb);
+
 	/* start async loads for boot resources */
-	rc = start_url_load(boot_task, _("kernel image"),
-			image, &boot_task->image)
-	  || start_url_load(boot_task, _("initrd"), initrd, &boot_task->initrd)
-	  || start_url_load(boot_task, _("dtb"), dtb, &boot_task->dtb);
+	rc = start_url_load(boot_task, image_res)
+	  || start_url_load(boot_task, initrd_res)
+	  || start_url_load(boot_task, dtb_res);
 
 	if (boot_task->verify_signature) {
 		/* Generate names of associated signature files and load */
 		if (image) {
 			image_sig = gpg_get_signature_url(ctx, image);
-			rc |= start_url_load(boot_task,
-				_("kernel image signature"), image_sig,
-				&boot_task->image_signature);
+			tmp = add_boot_resource(boot_task,
+					_("kernel image signature"), image_sig,
+					&boot_task->local_image_signature);
+			rc |= start_url_load(boot_task, tmp);
 		}
 		if (initrd) {
 			initrd_sig = gpg_get_signature_url(ctx, initrd);
-			rc |= start_url_load(boot_task, _("initrd signature"),
-				initrd_sig, &boot_task->initrd_signature);
+			tmp = add_boot_resource(boot_task,
+					_("initrd signature"), initrd_sig,
+					&boot_task->local_initrd_signature);
+			rc |= start_url_load(boot_task, tmp);
 		}
 		if (dtb) {
 			dtb_sig = gpg_get_signature_url(ctx, dtb);
-			rc |= start_url_load(boot_task, _("dtb signature"),
-				dtb_sig, &boot_task->dtb_signature);
+			tmp = add_boot_resource(boot_task,
+					_("dtb signature"), dtb_sig,
+					&boot_task->local_dtb_signature);
+			rc |= start_url_load(boot_task, tmp);
 		}
 	}
 
 	if (boot_task->verify_signature || boot_task->decrypt_files) {
-		rc |= start_url_load(boot_task,
-			_("kernel command line signature"), cmdline_sig,
-			&boot_task->cmdline_signature);
+		tmp = add_boot_resource(boot_task,
+				_("kernel command line signature"), cmdline_sig,
+				&boot_task->local_cmdline_signature);
+		rc |= start_url_load(boot_task, tmp);
 	}
 
 	/* If all URLs are local, we may be done. */
