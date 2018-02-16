@@ -488,17 +488,10 @@ static void boot_editor_find_device(struct boot_editor *boot_editor,
 static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 		const struct system_info *sysinfo)
 {
-	struct nc_widgetset *set;
+	struct nc_widgetset *set = boot_editor->widgetset;
 	int field_size;
 
 	field_size = COLS - 1 - boot_editor->field_x;
-
-	boot_editor->widgetset = set = widgetset_create(boot_editor,
-			boot_editor->scr.main_ncw,
-			boot_editor->pad);
-
-	widgetset_set_widget_focus(boot_editor->widgetset,
-			boot_editor_widget_focus, boot_editor);
 
 	boot_editor->widgets.device_l = widget_new_label(set, 0, 0,
 			_("Device:"));
@@ -549,33 +542,82 @@ static void boot_editor_setup_widgets(struct boot_editor *boot_editor,
 					_("Cancel"), cancel_click, boot_editor);
 }
 
+static void boot_editor_draw(struct boot_editor *boot_editor,
+		const struct system_info *sysinfo)
+{
+	bool repost = false;
+	int height;
+
+	height = pad_height(sysinfo ? sysinfo->n_blockdevs : 0);
+
+	if (!boot_editor->pad || getmaxy(boot_editor->pad) < height) {
+		if (boot_editor->pad)
+			delwin(boot_editor->pad);
+		boot_editor->pad = newpad(height, COLS);
+	}
+
+	if (boot_editor->widgetset) {
+		widgetset_unpost(boot_editor->widgetset);
+		talloc_free(boot_editor->widgetset);
+		repost = true;
+	}
+
+	boot_editor->widgetset = widgetset_create(boot_editor,
+			boot_editor->scr.main_ncw,
+			boot_editor->pad);
+	widgetset_set_widget_focus(boot_editor->widgetset,
+			boot_editor_widget_focus, boot_editor);
+
+	boot_editor_setup_widgets(boot_editor, sysinfo);
+	boot_editor_layout_widgets(boot_editor);
+
+	if (repost)
+		widgetset_post(boot_editor->widgetset);
+}
+
 void boot_editor_update(struct boot_editor *boot_editor,
 		const struct system_info *sysinfo)
 {
-	int height;
+	const char *str;
 
 	if (boot_editor->cui->current != boot_editor_scr(boot_editor)) {
 		boot_editor->need_update = true;
 		return;
 	}
 
-	widgetset_unpost(boot_editor->widgetset);
-
-	height = pad_height(sysinfo ? sysinfo->n_blockdevs : 0);
-	if (getmaxy(boot_editor->pad) < height) {
-		delwin(boot_editor->pad);
-		boot_editor->pad = newpad(height, COLS);
-		widgetset_set_windows(boot_editor->widgetset,
-				boot_editor->scr.main_ncw,
-				boot_editor->pad);
+	str = widget_textbox_get_value(boot_editor->widgets.image_f);
+	if (str) {
+		talloc_free(boot_editor->image);
+		boot_editor->image = talloc_strdup(boot_editor, str);
 	}
 
-	boot_editor_populate_device_select(boot_editor, sysinfo);
+	str = widget_textbox_get_value(boot_editor->widgets.initrd_f);
+	if (str) {
+		talloc_free(boot_editor->initrd);
+		boot_editor->initrd = talloc_strdup(boot_editor, str);
+	}
 
-	boot_editor_layout_widgets(boot_editor);
+	str = widget_textbox_get_value(boot_editor->widgets.dtb_f);
+	if (str) {
+		talloc_free(boot_editor->dtb);
+		boot_editor->dtb = talloc_strdup(boot_editor, str);
+	}
 
-	widgetset_post(boot_editor->widgetset);
+	str = widget_textbox_get_value(boot_editor->widgets.args_f);
+	if (str) {
+		talloc_free(boot_editor->args);
+		boot_editor->args = talloc_strdup(boot_editor, str);
+	}
 
+	if (boot_editor->use_signature_files) {
+		str = widget_textbox_get_value(boot_editor->widgets.args_sig_file_f);
+		if (str) {
+			talloc_free(boot_editor->args_sig_file);
+			boot_editor->args_sig_file = talloc_strdup(boot_editor, str);
+		}
+	}
+
+	boot_editor_draw(boot_editor, sysinfo);
 	pad_refresh(boot_editor);
 }
 
@@ -634,28 +676,20 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 
 	if (item) {
 		struct pb_boot_data *bd = cod_from_item(item)->bd;
-		boot_editor->image = bd->image;
-		boot_editor->initrd = bd->initrd;
-		boot_editor->dtb = bd->dtb;
-		boot_editor->args = bd->args;
+		boot_editor->image = talloc_strdup(boot_editor, bd->image);
+		boot_editor->initrd = talloc_strdup(boot_editor, bd->initrd);
+		boot_editor->dtb = talloc_strdup(boot_editor, bd->dtb);
+		boot_editor->args = talloc_strdup(boot_editor, bd->args);
 		if (boot_editor->use_signature_files)
-			boot_editor->args_sig_file = bd->args_sig_file;
+			boot_editor->args_sig_file = talloc_strdup(boot_editor,
+					bd->args_sig_file);
 		else
-			boot_editor->args_sig_file = talloc_strdup(bd, "");
+			boot_editor->args_sig_file = talloc_strdup(boot_editor,
+					"");
 		boot_editor_find_device(boot_editor, bd, sysinfo);
-	} else {
-		boot_editor->image = boot_editor->initrd =
-			boot_editor->dtb = boot_editor->args =
-			boot_editor->args_sig_file = "";
 	}
 
-	boot_editor->pad = newpad(
-				pad_height(sysinfo ? sysinfo->n_blockdevs : 0),
-				COLS);
-
-	boot_editor_setup_widgets(boot_editor, sysinfo);
-
-	boot_editor_layout_widgets(boot_editor);
+	boot_editor_draw(boot_editor, sysinfo);
 	wrefresh(boot_editor->scr.main_ncw);
 
 	return boot_editor;
