@@ -16,6 +16,7 @@
 #include <log/log.h>
 #include <process/process.h>
 #include <types/types.h>
+#include <url/url.h>
 
 #include "hostboot.h"
 #include "platform.h"
@@ -287,7 +288,7 @@ static int parse_one_interface_config(struct config *config,
 		char *confstr)
 {
 	struct interface_config *ifconf;
-	char *tok, *saveptr;
+	char *tok, *tok_gw, *tok_url, *saveptr;
 
 	ifconf = talloc_zero(config, struct interface_config);
 
@@ -320,18 +321,26 @@ static int parse_one_interface_config(struct config *config,
 		ifconf->static_config.address =
 			talloc_strdup(ifconf, tok);
 
-		tok = strtok_r(NULL, ",", &saveptr);
-		if (tok) {
-			ifconf->static_config.gateway =
-				talloc_strdup(ifconf, tok);
+		/*
+		 * If a url is set but not a gateway, we can accidentally
+		 * interpret the url as the gateway. To avoid changing the
+		 * parameter format check if the "gateway" is actually a
+		 * pb-url if it's the last token.
+		 */
+		tok_gw = strtok_r(NULL, ",", &saveptr);
+		tok_url = strtok_r(NULL, ",", &saveptr);
+
+		if (tok_gw) {
+			if (tok_url || !is_url(tok_gw))
+				ifconf->static_config.gateway =
+					talloc_strdup(ifconf, tok_gw);
+			else
+					tok_url = tok_gw;
 		}
 
-		tok = strtok_r(NULL, ",", &saveptr);
-		if (tok) {
+		if (tok_url)
 			ifconf->static_config.url =
-				talloc_strdup(ifconf, tok);
-		}
-
+				talloc_strdup(ifconf, tok_url);
 	} else {
 		pb_log("Unknown network configuration method %s\n", tok);
 		goto out_err;
