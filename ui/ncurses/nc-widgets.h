@@ -42,6 +42,7 @@ void widget_textbox_set_validator_integer(struct nc_widget_textbox *textbox,
 		long min, long max);
 void widget_textbox_set_validator_ipv4(struct nc_widget_textbox *textbox);
 void widget_textbox_set_validator_ipv4_multi(struct nc_widget_textbox *textbox);
+void widget_textbox_set_validator_url(struct nc_widget_textbox *textbox);
 
 void widget_subset_add_option(struct nc_widget_subset *subset, const char *text);
 void widget_subset_make_active(struct nc_widget_subset *subset, int idx);

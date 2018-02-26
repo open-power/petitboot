@@ -1042,6 +1042,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	screen->widgets.url_l = widget_new_label(set, 0, 0, _("URL:"));
 	screen->widgets.url_f = widget_new_textbox(set, 0, 0, 32, url);
+	widget_textbox_set_validator_url(screen->widgets.url_f);
 	screen->widgets.url_help_l =
 		widget_new_label(set, 0, 0, _("(eg. tftp://)"));
 

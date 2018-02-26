@@ -53,6 +53,7 @@
 #include <util/util.h>
 #include <i18n/i18n.h>
 #include <fold/fold.h>
+#include <url/url.h>
 
 #include "nc-cui.h"
 #include "nc-widgets.h"
@@ -83,6 +84,7 @@ struct nc_widgetset {
 
 	/* custom validators */
 	FIELDTYPE *ipv4_multi_type;
+	FIELDTYPE *url_type;
 };
 
 struct nc_widget {
@@ -397,6 +399,20 @@ void widget_textbox_set_validator_integer(struct nc_widget_textbox *textbox,
 		long min, long max)
 {
 	set_field_type(textbox->widget.field, TYPE_INTEGER, 1, min, max);
+}
+
+static bool check_url_field(FIELD *field,
+		const void *arg __attribute__((unused)))
+{
+	return is_url(field_buffer(field, 0));
+}
+
+void widget_textbox_set_validator_url(struct nc_widget_textbox *textbox)
+{
+	if (!textbox->set->url_type)
+		textbox->set->url_type = new_fieldtype(check_url_field, NULL);
+
+	set_field_type(textbox->widget.field, textbox->set->url_type);
 }
 
 void widget_textbox_set_validator_ipv4(struct nc_widget_textbox *textbox)
