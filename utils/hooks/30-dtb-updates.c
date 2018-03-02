@@ -502,9 +502,8 @@ static int set_stdout(struct offb_ctx *ctx)
 {
 	const char *boot_console, *ptr;
 	long unsigned int termno;
-	const fdt32_t *prop;
-	int node, prop_len;
 	char *stdout_path;
+	int node;
 
 	boot_console = getenv("boot_console");
 	if (!boot_console) {
@@ -554,12 +553,12 @@ static int set_stdout(struct offb_ctx *ctx)
 		return -1;
 	}
 
-	prop = fdt_getprop(ctx->dtb, node, "linux,stdout-path", &prop_len);
-	if (!prop) {
-		fprintf(stderr, "Failed to find linux,stdout-path\n");
-		return -1;
-	}
-
+	/*
+	 * linux,stdout-path is deprecated after v3.14 but we don't know
+	 * what the next kernel will be, so set both.
+	 */
+	fdt_set_check(ctx->dtb, node, fdt_setprop_string, "stdout-path",
+			stdout_path);
 	fdt_set_check(ctx->dtb, node, fdt_setprop_string, "linux,stdout-path",
 			stdout_path);
 
