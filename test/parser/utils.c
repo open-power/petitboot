@@ -285,7 +285,7 @@ int parser_replace_file(struct discover_context *ctx,
 		char *buf, int len)
 {
 	struct parser_test *test = ctx->test_data;
-	struct test_file *f, *file;
+	struct test_file *f, *file = NULL;
 
 	list_for_each_entry(&test->files, f, list) {
 		if (f->dev != dev)
