@@ -41,15 +41,6 @@ struct load_task {
 	void			*async_data;
 };
 
-static inline bool have_busybox(void)
-{
-#ifdef WITH_BUSYBOX
-	return true;
-#else
-	return false;
-#endif
-}
-
 const char *mount_base(void)
 {
 	return DEVICE_MOUNT_BASE;
@@ -70,6 +61,12 @@ char *join_paths(void *alloc_ctx, const char *a, const char *b)
 }
 
 #ifndef PETITBOOT_TEST
+
+#ifdef WITH_BUSYBOX
+static inline bool have_busybox(void) { return true; }
+#else
+static inline bool have_busybox(void) { return false; }
+#endif
 
 static char *local_name(void *ctx)
 {
