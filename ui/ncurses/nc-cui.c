@@ -964,8 +964,8 @@ fallback:
 	 * If this option was faked above move the context under
 	 * the item so it is cleaned up later in cui_plugins_remove().
 	 */
-	if (strncmp(cod->opt->id, "dummy", strlen("dummy") == 0 &&
-				cod->dev->type == DEVICE_TYPE_UNKNOWN)) {
+	if (strcmp(cod->opt->id, "dummy") == 0 &&
+			cod->dev->type == DEVICE_TYPE_UNKNOWN) {
 		talloc_steal(item, cod->dev);
 		talloc_steal(item, cod->opt);
 	}
