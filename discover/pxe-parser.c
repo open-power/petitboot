@@ -324,7 +324,7 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 
 	talloc_free(buf);
 out_clean:
-	if (result->cleanup_local)
+	if (result && result->cleanup_local)
 		unlink(result->local);
 	talloc_free(conf);
 }
