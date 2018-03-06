@@ -16,9 +16,6 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 void boot_cancel(struct boot_task *task);
 
 struct boot_task {
-	struct load_url_result *image;
-	struct load_url_result *initrd;
-	struct load_url_result *dtb;
 	const char *local_image;
 	const char *local_initrd;
 	const char *local_dtb;
@@ -33,10 +30,6 @@ struct boot_task {
 	bool cancelled;
 	bool verify_signature;
 	bool decrypt_files;
-	struct load_url_result *image_signature;
-	struct load_url_result *initrd_signature;
-	struct load_url_result *dtb_signature;
-	struct load_url_result *cmdline_signature;
 	const char *local_image_signature;
 	const char *local_initrd_signature;
 	const char *local_dtb_signature;

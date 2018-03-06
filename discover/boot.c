@@ -362,15 +362,14 @@ static void cleanup_load(struct load_url_result *result)
 static void cleanup_cancellations(struct boot_task *task,
 		struct load_url_result *cur_result)
 {
-	struct load_url_result *result, **results[] = {
-		&task->image, &task->initrd, &task->dtb,
-	};
+	struct boot_resource *resource;
+	struct load_url_result *result;
 	bool pending = false;
-	unsigned int i;
 
-	for (i = 0; i < ARRAY_SIZE(results); i++) {
-		result = *results[i];
+	list_for_each_entry(&task->resources, resource, list) {
+		result = resource->result;
 
+		/* Nothing to do if a load hasn't actually started yet */
 		if (!result)
 			continue;
 
@@ -378,9 +377,6 @@ static void cleanup_cancellations(struct boot_task *task,
 		if (result == cur_result || result->status == LOAD_OK
 				|| result->status == LOAD_ERROR) {
 			cleanup_load(result);
-			talloc_free(result);
-			*results[i] = NULL;
-
 		/* ... and cancel any pending loads, which we'll free in
 		 * the completion callback */
 		} else if (result->status == LOAD_ASYNC) {
