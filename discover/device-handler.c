@@ -1560,8 +1560,7 @@ void device_handler_add_plugin_option(struct device_handler *handler,
 		tmp = handler->plugins[i];
 		/* If both id and version match, ignore */
 		if (strncmp(opt->id, tmp->id, strlen(opt->id)) == 0 &&
-				strncmp(opt->version, tmp->version,
-					strlen(opt->version) == 0)) {
+				strcmp(opt->version, tmp->version) == 0) {
 			pb_log("discover: Plugin '%s' already exists, ignoring\n",
 					opt->id);
 			return;
