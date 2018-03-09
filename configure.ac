@@ -113,7 +113,7 @@ AC_ARG_WITH(
 		[build x11 GUI programs using the twin window system [default=yes]]
 	)],
 	[],
-	[with_twin_x11=yes]
+	[with_twin_x11=no]
 )
 AM_CONDITIONAL([WITH_TWIN_X11], [test "x$with_twin_x11" = "xyes"])
 
@@ -124,7 +124,7 @@ AC_ARG_WITH(
 		[build frame buffer GUI programs using the twin window system [default=no]]
 	)],
 	[],
-	[with_twin_fbdev=yes]
+	[with_twin_fbdev=no]
 )
 AM_CONDITIONAL([WITH_TWIN_FBDEV], [test "x$with_twin_fbdev" = "xyes"])
 

@@ -28,6 +28,7 @@ gpg_int_SOURCES =
 endif
 
 lib_libpbcore_la_SOURCES = \
+	lib/ccan/endian/endian.h \
 	lib/file/file.h \
 	lib/file/file.c \
 	lib/fold/fold.h \
