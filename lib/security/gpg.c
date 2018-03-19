@@ -462,10 +462,12 @@ int gpg_validate_boot_files(struct boot_task *boot_task) {
 			local_image_signature,
 			authorized_signatures_handle,
 			"/etc/gpg"))
+			result = KEXEC_LOAD_SIGNATURE_FAILURE;
 		if (verify_file_signature(cmdline_template,
 			local_cmdline_signature,
 			authorized_signatures_handle,
 			"/etc/gpg"))
+			result = KEXEC_LOAD_SIGNATURE_FAILURE;
 
 		if (boot_task->local_initrd_signature)
 			if (verify_file_signature(initrd_filename,
@@ -498,7 +500,7 @@ int gpg_validate_boot_files(struct boot_task *boot_task) {
 			"/etc/gpg"))
 			result = KEXEC_LOAD_SIGNATURE_FAILURE;
 		if (boot_task->local_initrd)
-		if (decrypt_file(initrd_filename,
+			if (decrypt_file(initrd_filename,
 				authorized_signatures_handle,
 				"/etc/gpg"))
 				result = KEXEC_LOAD_DECRYPTION_FALURE;
