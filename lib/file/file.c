@@ -37,7 +37,7 @@ int copy_file_secure_dest(void *ctx, const char *source_file,
 		char **destination_file)
 {
 	char readlink_buffer[MAX_FILENAME_SIZE + 1];
-	char dest_filename[MAX_FILENAME_SIZE] = "";
+	char dest_filename[MAX_FILENAME_SIZE + 1] = "";
 	char template[] = "/tmp/petitbootXXXXXX";
 	FILE *destination_handle, *source_handle;
 	int destination_fd, result = 0;
