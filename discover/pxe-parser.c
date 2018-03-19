@@ -273,12 +273,14 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 
 	if (!data)
 		return;
+	if (!result)
+		goto out_clean;
 
 	handler = talloc_parent(conf);
 
-	if (result && result->status == LOAD_OK)
+	if (result->status == LOAD_OK)
 		rc = read_file(conf, result->local, &buf, &len);
-	if (!result || result->status != LOAD_OK || rc) {
+	if (result->status != LOAD_OK || rc) {
 		/* This load failed so try the next available filename */
 		info = conf->parser_info;
 		if (!info->pxe_conf_files) {
