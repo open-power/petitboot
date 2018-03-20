@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <asm/byteorder.h>
 
