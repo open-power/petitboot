@@ -15,6 +15,7 @@
 noinst_PROGRAMS += discover/grub2/grub2-parser.ro
 
 discover_grub2_grub2_parser_ro_SOURCES = \
+	discover/grub2/blscfg.c \
 	discover/grub2/builtins.c \
 	discover/grub2/env.c \
 	discover/grub2/grub2.h \

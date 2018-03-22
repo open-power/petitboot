@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include "device-handler.h"
 
@@ -76,5 +77,12 @@ int parser_request_url(struct discover_context *ctx, struct pb_url *url,
 int parser_stat_path(struct discover_context *ctx,
 		struct discover_device *dev, const char *path,
 		struct stat *statbuf);
+/* Function used to list the files on a directory. The dirname should
+ * be relative to the discover context device mount path. It returns
+ * the number of files returned in files or a negative value on error.
+ */
+int parser_scandir(struct discover_context *ctx, const char *dirname,
+		   struct dirent ***files, int (*filter)(const struct dirent *),
+		   int (*comp)(const struct dirent **, const struct dirent **));
 
 #endif /* _PARSER_H */

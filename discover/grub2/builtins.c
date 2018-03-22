@@ -330,7 +330,10 @@ extern int builtin_load_env(struct grub2_script *script,
 int builtin_save_env(struct grub2_script *script,
 		void *data __attribute__((unused)),
 		int argc, char *argv[]);
-
+int builtin_blscfg(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc __attribute__((unused)),
+		char *argv[] __attribute__((unused)));
 
 static struct {
 	const char *name;
@@ -380,6 +383,10 @@ static struct {
 		.name = "save_env",
 		.fn = builtin_save_env,
 	},
+	{
+		.name = "blscfg",
+		.fn = builtin_blscfg,
+	}
 };
 
 static const char *nops[] = {
