@@ -103,7 +103,7 @@ static bool is_delim(char c)
 }
 
 static bool option_is_default(struct grub2_script *script,
-		struct discover_boot_option *opt, const char *id)
+			      struct discover_boot_option *opt, const char *id)
 {
 	unsigned int default_idx;
 	const char *var;

@@ -128,6 +128,22 @@ out:
 	return -1;
 }
 
+int parser_scandir(struct discover_context *ctx, const char *dirname,
+		   struct dirent ***files, int (*filter)(const struct dirent *),
+		   int (*comp)(const struct dirent **, const struct dirent **))
+{
+	char *path;
+	int n;
+
+	path = talloc_asprintf(ctx, "%s%s", ctx->device->mount_path, dirname);
+	if (!path)
+		return -1;
+
+	n = scandir(path, files, filter, comp);
+	talloc_free(path);
+	return n;
+}
+
 void iterate_parsers(struct discover_context *ctx)
 {
 	struct p_item* i;

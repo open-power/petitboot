@@ -309,6 +309,65 @@ int parser_replace_file(struct discover_context *ctx,
 	return 0;
 }
 
+int parser_scandir(struct discover_context *ctx, const char *dirname,
+		   struct dirent ***files, int (*filter)(const struct dirent *)
+		   __attribute__((unused)),
+		   int (*comp)(const struct dirent **, const struct dirent **)
+		   __attribute__((unused)))
+{
+	struct parser_test *test = ctx->test_data;
+	struct test_file *f;
+	char *filename;
+	struct dirent **dirents = NULL, **new_dirents;
+	int n = 0, namelen;
+
+	list_for_each_entry(&test->files, f, list) {
+		if (f->dev != ctx->device)
+			continue;
+
+		filename = strrchr(f->name, '/');
+		if (!filename)
+			continue;
+
+		namelen = strlen(filename);
+
+		if (strncmp(f->name, dirname, strlen(f->name) - namelen))
+			continue;
+
+		if (!dirents) {
+			dirents = malloc(sizeof(struct dirent *));
+		} else {
+			new_dirents = realloc(dirents, sizeof(struct dirent *)
+					      * (n + 1));
+			if (!new_dirents)
+				goto err_cleanup;
+
+			dirents = new_dirents;
+		}
+
+		dirents[n] = malloc(sizeof(struct dirent) + namelen + 1);
+
+		if (!dirents[n])
+			goto err_cleanup;
+
+		strcpy(dirents[n]->d_name, filename + 1);
+		n++;
+	}
+
+	*files = dirents;
+
+	return n;
+
+err_cleanup:
+	do {
+		free(dirents[n]);
+	} while (n-- > 0);
+
+	free(dirents);
+
+	return -1;
+}
+
 struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		load_url_complete async_cb, void *async_data,
 		waiter_cb stdout_cb, void *stdout_data)
