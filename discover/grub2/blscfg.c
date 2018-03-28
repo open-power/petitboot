@@ -180,6 +180,7 @@ int builtin_blscfg(struct grub2_script *script,
 	struct conf_context *conf;
 	struct bls_state *state;
 	char *buf, *filename;
+	const char *blsdir;
 	int n, len, rc = -1;
 
 	conf = talloc_zero(dc, struct conf_context);
@@ -191,12 +192,16 @@ int builtin_blscfg(struct grub2_script *script,
 	conf->process_pair = bls_process_pair;
 	conf->finish = bls_finish;
 
-	n = parser_scandir(dc, BLS_DIR, &bls_entries, bls_filter, bls_sort);
+	blsdir = script_env_get(script, "blsdir");
+	if (!blsdir)
+		blsdir = BLS_DIR;
+
+	n = parser_scandir(dc, blsdir, &bls_entries, bls_filter, bls_sort);
 	if (n <= 0)
 		goto err;
 
 	while (n--) {
-		filename = talloc_asprintf(dc, BLS_DIR"/%s",
+		filename = talloc_asprintf(dc, "%s/%s", blsdir,
 					   bls_entries[n]->d_name);
 		if (!filename)
 			break;
