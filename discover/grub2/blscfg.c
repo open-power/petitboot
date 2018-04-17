@@ -20,6 +20,7 @@
 struct bls_state {
 	struct discover_boot_option *opt;
 	struct grub2_script *script;
+	unsigned int idx;
 	const char *filename;
 	const char *title;
 	const char *version;
@@ -81,19 +82,25 @@ static void bls_process_pair(struct conf_context *conf, const char *name,
 	}
 }
 
-static bool option_is_default(struct grub2_script *script,
+static bool option_is_default(struct bls_state *state,
 			      struct boot_option *option)
 {
+	unsigned int idx;
 	const char *var;
+	char *end;
 
-	var = script_env_get(script, "default");
+	var = script_env_get(state->script, "default");
 	if (!var)
 		return false;
 
 	if (!strcmp(var, option->id))
 		return true;
 
-	return !strcmp(var, option->name);
+	if (!strcmp(var, option->name))
+		return true;
+
+	idx = strtoul(var, &end, 10);
+	return end != var && *end == '\0' && idx == state->idx;
 }
 
 static void bls_finish(struct conf_context *conf)
@@ -141,7 +148,7 @@ static void bls_finish(struct conf_context *conf)
 		opt->dtb = create_grub2_resource(opt, conf->dc->device,
 						 root, state->dtb);
 
-	option->is_default = option_is_default(state->script, option);
+	option->is_default = option_is_default(state, option);
 
 	list_add_tail(&state->script->options, &opt->list);
 	state->script->n_options++;
@@ -176,6 +183,7 @@ int builtin_blscfg(struct grub2_script *script,
 		int argc __attribute__((unused)),
 		char *argv[] __attribute__((unused)))
 {
+	unsigned int current_idx = script->n_options;
 	struct discover_context *dc = script->ctx;
 	struct dirent **bls_entries;
 	struct conf_context *conf;
@@ -217,6 +225,7 @@ int builtin_blscfg(struct grub2_script *script,
 
 		state->script = script;
 		state->filename = filename;
+		state->idx = current_idx++;
 		conf->parser_info = state;
 
 		rc = parser_request_file(dc, dc->device, filename, &buf, &len);

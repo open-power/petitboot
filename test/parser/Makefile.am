@@ -41,6 +41,7 @@ parser_TESTS = \
 	test/parser/test-grub2-test-file-ops \
 	test/parser/test-grub2-single-yocto \
 	test/parser/test-grub2-blscfg-default-filename \
+	test/parser/test-grub2-blscfg-default-index \
 	test/parser/test-grub2-blscfg-default-title \
 	test/parser/test-grub2-blscfg-multiple-bls \
 	test/parser/test-grub2-blscfg-opts-config \
