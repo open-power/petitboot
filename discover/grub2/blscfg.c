@@ -162,7 +162,7 @@ static int bls_filter(const struct dirent *ent)
 
 static int bls_sort(const struct dirent **ent_a, const struct dirent **ent_b)
 {
-	return strverscmp((*ent_b)->d_name, (*ent_a)->d_name);
+	return strverscmp((*ent_a)->d_name, (*ent_b)->d_name);
 }
 
 int builtin_blscfg(struct grub2_script *script,
