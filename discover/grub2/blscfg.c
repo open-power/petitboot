@@ -143,7 +143,8 @@ static void bls_finish(struct conf_context *conf)
 
 	option->is_default = option_is_default(state->script, option);
 
-	discover_context_add_boot_option(dc, opt);
+	list_add_tail(&state->script->options, &opt->list);
+	state->script->n_options++;
 
 	device_handler_status_dev_info(dc->handler, dc->device,
 				       _("Created menu entry from BLS file %s"),
