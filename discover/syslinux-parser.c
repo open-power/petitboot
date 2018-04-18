@@ -285,7 +285,7 @@ static void syslinux_process_pair(struct conf_context *conf, const char *name, c
 static void syslinux_finalize(struct conf_context *conf)
 {
 	struct syslinux_options *state = conf->parser_info;
-	struct syslinux_boot_option *syslinux_opt;
+	struct syslinux_boot_option *syslinux_opt, *tmp;
 	struct discover_context *dc = conf->dc;
 	struct discover_boot_option *d_opt;
 	bool implicit_image = true;
@@ -404,9 +404,14 @@ static void syslinux_finalize(struct conf_context *conf)
 
 		discover_context_add_boot_option(dc, d_opt);
 		continue;
+
 fail:
 		talloc_free(d_opt);
 	}
+
+	list_for_each_entry_safe(&state->processed_options, syslinux_opt, tmp, list)
+		talloc_free(syslinux_opt);
+	list_init(&state->processed_options);
 }
 
 static int syslinux_parse(struct discover_context *dc)
