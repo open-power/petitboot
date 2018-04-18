@@ -36,6 +36,11 @@ struct syslinux_options {
 	char *cfg_dir;
 };
 
+struct conf_file_stat {
+	char *name;
+	struct stat stat;
+	struct list_item list;
+};
 
 static const char *const syslinux_conf_files[] = {
 	"/boot/syslinux/syslinux.cfg",
@@ -416,9 +421,12 @@ fail:
 
 static int syslinux_parse(struct discover_context *dc)
 {
+	struct conf_file_stat *confcmp, *confdat;
+	struct list processed_conf_files;
 	struct syslinux_options *state;
 	const char * const *filename;
 	struct conf_context *conf;
+	struct stat statbuf;
 	char *cfg_dir;
 	int len, rc;
 	char *buf;
@@ -441,6 +449,8 @@ static int syslinux_parse(struct discover_context *dc)
 	conf->parser_info = state = talloc_zero(conf, struct syslinux_options);
 	list_init(&state->processed_options);
 
+	list_init(&processed_conf_files);
+
 	/*
 	 * set the global defaults
 	 * by spec 'default' defaults to 'linux' and
@@ -453,9 +463,36 @@ static int syslinux_parse(struct discover_context *dc)
 	conf_set_global_option(conf, "append", "");
 
 	for (filename = syslinux_conf_files; *filename; filename++) {
+		/*
+		 * guard against duplicate entries in case-insensitive
+		 * filesystems, mainly vfat boot partitions
+		 */
+		rc = parser_stat_path(dc, dc->device, *filename, &statbuf);
+		if (rc)
+			continue;
+
+		rc = 0;
+
+		list_for_each_entry(&processed_conf_files, confcmp, list) {
+			if (confcmp->stat.st_ino == statbuf.st_ino) {
+				pb_log("conf file %s is a path duplicate of %s..skipping\n",
+				       *filename, confcmp->name);
+				rc = 1;
+				break;
+			}
+		}
+
+		if (rc)
+			continue;
+
 		rc = parser_request_file(dc, dc->device, *filename, &buf, &len);
 		if (rc)
 			continue;
+
+		confdat = talloc_zero(conf, struct conf_file_stat);
+		confdat->stat = statbuf;
+		confdat->name = talloc_strdup(confdat, *filename);
+		list_add(&processed_conf_files, &confdat->list);
 
 		/*
 		 * save location of root config file for possible
