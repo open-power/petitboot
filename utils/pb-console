@@ -80,12 +80,24 @@ then
 	then
 		getty="$getty_arg"
 	fi
+
+	login_arg="-l$0"
+	for ttyarg in "$@"
+	do
+		# If the getty args include autologin don't override with -l
+		# and leave calling petitboot-nc to the user's init
+		if [ "$ttyarg" == "-a" ]
+		then
+			login_arg=""
+		fi
+	done
+
 	if [ "$detach" = 1 ]
 	then
-		$getty -l $0 "$@" &
+		$getty $login_arg "$@" &
 		exit
 	else
-		exec $getty -l $0 "$@"
+		exec $getty $login_arg "$@"
 	fi
 fi
 
