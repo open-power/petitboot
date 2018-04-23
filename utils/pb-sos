@@ -43,32 +43,31 @@ do
     shift
 done
 
-mkdir -p /$diagdir
+mkdir -p $diagdir
 
 # Include version of pb-discover
-pb-discover --version > /$diagdir/version
+pb-discover --version > $diagdir/version
 
 # Unconditionally grab relevant /var/log files
 log "Adding files from /var/log"
-cp -r /var/log/messages /var/log/petitboot /$diagdir/
+cp -r /var/log/messages /var/log/petitboot $diagdir/
 
 # Check if pb-discover segfaulted
 if [ -r $corefile ]
 then
 	log "Adding core dump"
-	cp /core /$diagdir/
+	cp /core $diagdir/
 fi
 
 # Copy dmesg
 log "Adding dmesg"
-dmesg > /$diagdir/dmesg
+dmesg > $diagdir/dmesg
 
 # Add Skiboot log
 log "Adding Skiboot log"
-cat /sys/firmware/opal/msglog > /$diagdir/msglog
+cat /sys/firmware/opal/msglog > $diagdir/msglog
 
 log "Compressing..."
-cd /
 
 tar $tarflags $tarfile $diagdir
 gzip < $tarfile > $tarfile.gz
