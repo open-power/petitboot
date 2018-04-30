@@ -2,6 +2,9 @@ language: c
 
 sudo: required
 dist: trusty
+os:
+ - linux
+ - linux-ppc64le
 
 before_install:
  - sudo apt-get -qq update
