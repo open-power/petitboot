@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+arch() {
+	local m="$(uname -m)"
+
+	case "${m}" in
+		aarch64) echo "arm64" ;;
+		x86_64)  echo "amd64" ;;
+		*)       echo "${m}" ;;
+	esac
+}
+
+arch_tag() {
+	local a="$(arch)"
+
+	case "${a}" in
+		amd64) echo "" ;;
+		*)     echo "-${a}" ;;
+	esac
+}
+
+run_cmd () {
+	local cmd="${*}"
+
+	if [[ -n ${verbose} || -n "${dry_run}" ]]; then
+		echo "==> ${cmd}"
+	fi
+
+	if [[ -n "${dry_run}" ]]; then
+		true
+	else
+		eval "${cmd}"
+	fi
+}
+
+show_tag () {
+	echo "${DOCKER_TAG}"
+}
+
+: ${VERSION:="1"}
+: ${ARCH_TAG:="$(arch_tag)"}
+: ${DOCKER_NAME:="pb-builder"}
+: ${DOCKER_TAG:="${DOCKER_NAME}:${VERSION}${ARCH_TAG}"}

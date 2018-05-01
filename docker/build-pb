@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+set -e
+
+name="$(basename $0)"
+
+: ${TOP_DIR:="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"}
+
+source ${TOP_DIR}/docker/builder-include
+
+usage () {
+	echo "${name} - Builds the petitboot programs using a pb-builder container." >&2
+	echo "Usage: ${name} [flags]" >&2
+	echo "Option flags:" >&2
+	echo "  -c --check    - Run 'make check'." >&2
+	echo "  -d --dry-run  - Do not run docker commands." >&2
+	echo "  -h --help     - Show this help and exit." >&2
+	echo "  -t --tag      - Print Docker tag to stdout and exit." >&2
+	echo "  -v --verbose  - Verbose execution." >&2
+	echo "Environment:" >&2
+	echo "  DOCKER_TAG    - Default: '${DOCKER_TAG}'" >&2
+	echo "Examples:" >&2
+	echo "  ${name} -vc"
+	echo "  ${name} -v"
+}
+
+short_opts="cdhtv"
+long_opts="check,dry-run,help,tag,verbose"
+
+opts=$(getopt --options ${short_opts} --long ${long_opts} -n "${name}" -- "$@")
+
+if [ $? != 0 ]; then
+	echo "${name}: ERROR: Internal getopt" >&2 
+	exit 1
+fi
+
+eval set -- "${opts}"
+
+while true ; do
+	case "${1}" in
+	-c | --check)
+		check=1
+		shift
+		;;
+	-d | --dry-run)
+		dry_run=1
+		shift
+		;;
+	-h | --help)
+		usage=1
+		shift
+		;;
+	-t | --tag)
+		tag=1
+		shift
+		;;
+	-v | --verbose)
+		set -x
+		verbose=1
+		shift
+		;;
+	--)
+		shift
+		break
+		;;
+	*)
+		echo "${name}: ERROR: Internal opts" >&2 
+		exit 1
+		;;
+	esac
+done
+
+if [[ -n "${usage}" ]]; then
+	usage
+	exit 0
+fi
+
+if [[ -n "${tag}" ]]; then
+	show_tag
+	exit 0
+fi
+
+docker_args="--rm \
+	-u $(id -u):$(id -g) \
+	-v /etc/group:/etc/group:ro \
+	-v /etc/passwd:/etc/passwd:ro \
+	-v ${TOP_DIR}:/opt/pb \
+	-w /opt/pb \
+"
+
+if [[ -n "$verbose}" ]]; then
+	bash_debug="-x"
+fi
+
+if [[ -n "${check}" ]]; then
+	docker_extra="make check"
+else
+	docker_extra="true"
+fi
+
+cd "${TOP_DIR}"
+run_cmd "docker run ${docker_args} ${DOCKER_TAG} /bin/bash \
+	-e ${bash_debug} \
+	-c './bootstrap && ./configure --with-ncurses && make && ${docker_extra}'"

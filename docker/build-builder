@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+set -e
+
+name="$(basename $0)"
+
+: ${TOP_DIR:="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"}
+
+source ${TOP_DIR}/docker/builder-include
+
+: ${DOCKER_FILE:="${TOP_DIR}/docker/Dockerfile.builder.$(arch)"}
+
+usage () {
+	echo "${name} - Builds a docker image that contains tools for building petitboot." >&2
+	echo "Usage: ${name} [flags]" >&2
+	echo "Option flags:" >&2
+	echo "  -d --dry-run  - Do not run build commands." >&2
+	echo "  -h --help     - Show this help and exit." >&2
+	echo "  -p --purge    - Remove existing docker image and rebuild." >&2
+	echo "  -r --rebuild  - Rebuild existing docker image." >&2
+	echo "  -t --tag      - Print Docker tag to stdout and exit." >&2
+	echo "  -v --verbose  - Verbose execution." >&2
+	echo "Environment:" >&2
+	echo "  DOCKER_FILE   - Default: '${DOCKER_FILE}'" >&2
+	echo "  DOCKER_TAG    - Default: '${DOCKER_TAG}'" >&2
+	echo "Examples:" >&2
+	echo "  ${name} -v"
+}
+
+short_opts="dhprtv"
+long_opts="dry-run,help,purge,rebuild,tag,verbose"
+
+opts=$(getopt --options ${short_opts} --long ${long_opts} -n "${name}" -- "$@")
+
+if [ $? != 0 ]; then
+	echo "${name}: ERROR: Internal getopt" >&2 
+	exit 1
+fi
+
+eval set -- "${opts}"
+
+while true ; do
+	case "${1}" in
+	-d | --dry-run)
+		dry_run=1
+		shift
+		;;
+	-h | --help)
+		usage=1
+		shift
+		;;
+	-p | --purge)
+		purge=1
+		shift
+		;;
+	-r | --rebuild)
+		rebuild=1
+		shift
+		;;
+	-t | --tag)
+		tag=1
+		shift
+		;;
+	-v | --verbose)
+		set -x
+		verbose=1
+		shift
+		;;
+	--)
+		shift
+		break
+		;;
+	*)
+		echo "${name}: ERROR: Internal opts" >&2 
+		exit 1
+		;;
+	esac
+done
+
+if [[ -n "${usage}" ]]; then
+	usage
+	exit 0
+fi
+
+if [[ -n "${tag}" ]]; then
+	show_tag
+	exit 0
+fi
+
+if [[ -n "${purge}" ]] && docker inspect --type image ${DOCKER_TAG} >/dev/null 2>/dev/null; then
+	echo "Removing docker image: ${DOCKER_TAG}" >&2
+	run_cmd "docker rmi --force ${DOCKER_TAG}"
+elif [[ -z "${rebuild}" ]] && docker inspect --type image ${DOCKER_TAG} >/dev/null 2>/dev/null; then
+	echo "Docker image exists: ${DOCKER_TAG}" >&2
+	show_tag
+	exit 0
+fi
+
+echo "Building docker image: ${DOCKER_TAG}" >&2
+
+cd ${TOP_DIR}
+run_cmd "docker build --file ${DOCKER_FILE} --tag ${DOCKER_TAG} ."
+
+show_tag
