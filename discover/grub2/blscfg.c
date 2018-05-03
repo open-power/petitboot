@@ -148,6 +148,12 @@ static void bls_finish(struct conf_context *conf)
 		opt->dtb = create_grub2_resource(opt, conf->dc->device,
 						 root, state->dtb);
 
+	char* args_sigfile_default = talloc_asprintf(opt,
+		"%s.cmdline.sig", state->image);
+	opt->args_sig_file = create_grub2_resource(opt, conf->dc->device,
+						root, args_sigfile_default);
+	talloc_free(args_sigfile_default);
+
 	option->is_default = option_is_default(state, option);
 
 	list_add_tail(&state->script->options, &opt->list);
