@@ -44,7 +44,6 @@ int copy_file_secure_dest(void *ctx, const char *source_file,
 	unsigned char *buffer;
 	ssize_t r;
 	size_t l1;
-	mode_t oldmask;
 
 	source_handle = fopen(source_file, "r");
 	if (!source_handle) {
@@ -53,9 +52,7 @@ int copy_file_secure_dest(void *ctx, const char *source_file,
 			return -1;
 	}
 
-	oldmask = umask(0644);
 	destination_fd = mkstemp(template);
-	umask(oldmask);
 	if (destination_fd < 0) {
 		pb_log("%s: unable to create temp file, %m\n", __func__);
 		fclose(source_handle);
