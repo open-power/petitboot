@@ -19,7 +19,7 @@ pb_add () {
 
 	# Collect relevant DHCP response parameters into $paramstr
 	for name in pxeconffile pxepathprefix reboottime bootfile mac ip \
-	        siaddr serverid tftp
+	        siaddr serverid tftp ipv6 bootfile_url bootfile_param
 	do
 		value=$(eval "echo \${$name}")
 		[ -n "$value" ] || continue;
