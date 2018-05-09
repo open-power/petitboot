@@ -110,6 +110,7 @@ struct interface_info {
 	char		*name;
 	bool		link;
 	char		*address;
+	char		*address_v6;
 };
 
 struct blockdev_info {

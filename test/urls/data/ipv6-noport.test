@@ -1,0 +1,7 @@
+http://[1080:0:0:0:8:800:200C:417A]/index.html
+scheme	http
+host	1080:0:0:0:8:800:200C:417A
+port	(null)
+path	/index.html
+dir	/
+file	index.html

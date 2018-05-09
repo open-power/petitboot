@@ -19,6 +19,7 @@
 #if !defined(_PB_URL_PARSER_H)
 #define _PB_URL_PARSER_H
 
+#include <arpa/inet.h>
 #include <stdbool.h>
 
 /**
@@ -61,6 +62,7 @@ struct pb_url {
 };
 
 bool is_url(const char *str);
+int addr_scheme(const char *address);
 struct pb_url *pb_url_parse(void *ctx, const char *url_str);
 struct pb_url *pb_url_copy(void *ctx, const struct pb_url *url);
 struct pb_url *pb_url_join(void *ctx, const struct pb_url *url, const char *s);

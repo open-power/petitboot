@@ -1,0 +1,7 @@
+http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80/index.html
+scheme	http
+host	FEDC:BA98:7654:3210:FEDC:BA98:7654:3210
+port	80
+path	/index.html
+dir	/
+file	index.html

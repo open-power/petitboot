@@ -20,6 +20,9 @@ test_urls_parse_url_LDADD = $(core_lib)
 url_TESTS = \
 	test/urls/data/double-slash.test \
 	test/urls/data/http-simple.test \
+	test/urls/data/ipv6-full.test \
+	test/urls/data/ipv6-multidirs.test \
+	test/urls/data/ipv6-noport.test \
 	test/urls/data/join-full.test \
 	test/urls/data/join-absolute.test \
 	test/urls/data/join-relative.test \

@@ -197,18 +197,34 @@ struct pb_url *pb_url_parse(void *ctx, const char *url_str)
 			goto fail;
 		}
 
-		col = strchr(p, ':');
+		col = strrchr(p, ':');
+		if (col <= p)
+			col = NULL;
+		if (col && strchr(col , ']')) {
+			/*
+			 * This is likely an IPv6 address with no port.
+			 * See https://www.ietf.org/rfc/rfc2732.txt
+			 */
+			col = NULL;
+		}
 
 		if (col) {
 			len = path - col - 1;
 			url->port = len ? talloc_strndup(url, col + 1, len)
 				: NULL;
 			len = col - p;
-			url->host = len ? talloc_strndup(url, p, len) : NULL;
 		} else {
 			url->port = NULL;
-			url->host = talloc_strndup(url, p, path - p);
+			len = path - p;
 		}
+
+		if (p[0] == '[' && p[len - 1] == ']')
+			/* IPv6 */
+			url->host = talloc_strndup(url, p + 1, len - 2);
+		else
+			/* IPv4 */
+			url->host = talloc_strndup(url, p, len);
+
 
 		/* remove multiple leading slashes */
 		for (; *path && *(path+1) == '/'; path++)
@@ -231,13 +247,32 @@ bool is_url(const char *str)
 	return strstr(str, "://") != NULL;
 }
 
+int addr_scheme(const char *address)
+{
+	uint8_t buf[sizeof(struct in6_addr)];
+	int rc;
+
+	rc = inet_pton(AF_INET, address , buf);
+	if (rc == 1)
+		return AF_INET;
+	rc = inet_pton(AF_INET6, address , buf);
+	if (rc == 1)
+		return AF_INET6;
+
+	return 0;
+}
+
 char *pb_url_to_string(struct pb_url *url)
 {
 	const struct pb_scheme_info *scheme = pb_url_scheme_info(url->scheme);
 	assert(scheme);
 
-	return talloc_asprintf(url, "%s://%s%s", scheme->str,
-			scheme->has_host ? url->host : "", url->path);
+	if (scheme->has_host && addr_scheme(url->host) == AF_INET6)
+		return talloc_asprintf(url, "%s://[%s]%s", scheme->str,
+				url->host, url->path);
+	else
+		return talloc_asprintf(url, "%s://%s%s", scheme->str,
+				scheme->has_host ? url->host : "", url->path);
 }
 
 static void pb_url_update_full(struct pb_url *url)

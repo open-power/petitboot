@@ -1,0 +1,7 @@
+tftp://[fd69:d65f:b8b5:61::1]/installers/ubuntu-18.04/vmlinux
+scheme	tftp
+host	fd69:d65f:b8b5:61::1
+port	(null)
+path	/installers/ubuntu-18.04/vmlinux
+dir	/installers/ubuntu-18.04/
+file	vmlinux
