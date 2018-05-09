@@ -1374,10 +1374,15 @@ int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event)
 {
 	struct discover_context *ctx;
+	const char *ip;
+
+	if (event_get_param(event, "ipv6"))
+		ip = event_get_param(event, "ipv6");
+	else
+		ip = event_get_param(event, "ip");
 
 	device_handler_status_dev_info(handler, dev,
-			_("Processing DHCP lease response (ip: %s)"),
-			event_get_param(event, "ip"));
+			_("Processing DHCP lease response (ip: %s)"), ip);
 
 	pending_network_jobs_start();
 
@@ -1475,32 +1480,44 @@ void device_handler_update_config(struct device_handler *handler,
 static char *device_from_addr(void *ctx, struct pb_url *url)
 {
 	char *ipaddr, *buf, *tok, *dev = NULL;
+	bool ipv6_route;
 	const char *delim = " ";
-	struct sockaddr_in *ip;
-	struct sockaddr_in si;
+	struct sockaddr_in *ipv4;
+	struct sockaddr_in6 *ipv6;
 	struct addrinfo *res;
 	struct process *p;
 	int rc;
 
-	/* Note: IPv4 only */
-	rc = inet_pton(AF_INET, url->host, &(si.sin_addr));
-	if (rc > 0) {
-		ipaddr = url->host;
-	} else {
-		/* need to turn hostname into a valid IP */
-		rc = getaddrinfo(url->host, NULL, NULL, &res);
-		if (rc) {
-			pb_debug("%s: Invalid URL\n",__func__);
-			return NULL;
-		}
-		ipaddr = talloc_array(ctx,char,INET_ADDRSTRLEN);
-		ip = (struct sockaddr_in *) res->ai_addr;
-		inet_ntop(AF_INET, &(ip->sin_addr), ipaddr, INET_ADDRSTRLEN);
-		freeaddrinfo(res);
+	/* Confirm url->host is either a valid hostname, or a
+	 * valid IPv4 or IPv6 address */
+	rc = getaddrinfo(url->host, NULL, NULL, &res);
+	if (rc) {
+		pb_debug("%s: Invalid URL\n",__func__);
+		return NULL;
 	}
+
+	switch (res->ai_family) {
+	case AF_INET:	/* ipv4 */
+		ipaddr = talloc_array(ctx,char,INET_ADDRSTRLEN);
+		ipv4 = (struct sockaddr_in *) res->ai_addr;
+		inet_ntop(AF_INET, &(ipv4->sin_addr), ipaddr, INET_ADDRSTRLEN);
+		ipv6_route = false;
+		break;
+	case AF_INET6:	/* ipv6 */
+		ipaddr = talloc_array(ctx,char,INET6_ADDRSTRLEN);
+		ipv6 = (struct sockaddr_in6 *) res->ai_addr;
+		inet_ntop(AF_INET6, &(ipv6->sin6_addr), ipaddr, INET6_ADDRSTRLEN);
+		ipv6_route = true;
+		break;
+	default:	/* error */
+		freeaddrinfo(res);
+		return NULL;
+	}
+	freeaddrinfo(res);
 
 	const char *argv[] = {
 		pb_system_apps.ip,
+		ipv6_route ? "-6" : "-4",
 		"route", "show", "to", "match",
 		ipaddr,
 		NULL

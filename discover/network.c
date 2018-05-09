@@ -53,6 +53,7 @@ struct interface {
 
 	struct list_item list;
 	struct process *udhcpc_process;
+	struct process *udhcpc6_process;
 	struct discover_device *dev;
 	bool ready;
 };
@@ -279,6 +280,13 @@ static int interface_change(struct interface *interface, bool up)
 		process_stop_async(interface->udhcpc_process);
 		process_release(interface->udhcpc_process);
 	}
+	if (!up && interface->udhcpc6_process) {
+		/* we don't care about the callback from here */
+		interface->udhcpc6_process->exit_cb = NULL;
+		interface->udhcpc6_process->data = NULL;
+		process_stop_async(interface->udhcpc6_process);
+		process_release(interface->udhcpc6_process);
+	}
 
 	if (!up) {
 		rc = process_run_simple(interface, pb_system_apps.ip,
@@ -312,9 +320,17 @@ static int interface_down(struct interface *interface)
 static void udhcpc_process_exit(struct process *process)
 {
 	struct interface *interface = process->data;
-	pb_debug("udhcp client [pid %d] for interface %s exited, rc %d\n",
-			process->pid, interface->name, process->exit_status);
-	interface->udhcpc_process = NULL;
+
+	if (process == interface->udhcpc_process) {
+		pb_debug("udhcpc client [pid %d] for interface %s exited, rc %d\n",
+				process->pid, interface->name, process->exit_status);
+		interface->udhcpc_process = NULL;
+	} else {
+		pb_debug("udhcpc6 client [pid %d] for interface %s exited, rc %d\n",
+				process->pid, interface->name, process->exit_status);
+		interface->udhcpc6_process = NULL;
+	}
+
 	process_release(process);
 }
 
@@ -322,10 +338,10 @@ static void configure_interface_dhcp(struct network *network,
 		struct interface *interface)
 {
 	const struct platform *platform;
-	char pidfile[256], id[10];
-	struct process *process;
+	char pidfile[256], idv4[10], idv6[10];
+	struct process *p_v4, *p_v6;
 	int rc;
-	const char *argv[] = {
+	const char *argv_ipv4[] = {
 		pb_system_apps.udhcpc,
 		"-R",
 		"-f",
@@ -334,7 +350,21 @@ static void configure_interface_dhcp(struct network *network,
 		"-O", "reboottime",
 		"-p", pidfile,
 		"-i", interface->name,
-		"-x", id, /* [11,12] - dhcp client identifier */
+		"-x", idv4, /* [11,12] - dhcp client identifier */
+		NULL,
+	};
+
+	const char *argv_ipv6[] = {
+		pb_system_apps.udhcpc6,
+		"-R",
+		"-f",
+		"-O", "bootfile_url",
+		"-O", "bootfile_param",
+		"-O", "pxeconffile",
+		"-O", "pxepathprefix",
+		"-p", pidfile,
+		"-i", interface->name,
+		"-x", idv6, /* [15,16] - dhcp client identifier */
 		NULL,
 	};
 
@@ -345,24 +375,40 @@ static void configure_interface_dhcp(struct network *network,
 			PIDFILE_BASE, interface->name);
 
 	platform = platform_get();
-	if (platform && platform->dhcp_arch_id != 0xffff)
-		snprintf(id, sizeof(id), "0x5d:%04x", platform->dhcp_arch_id);
-	else
-		argv[11] = NULL;
+	if (platform && platform->dhcp_arch_id != 0xffff) {
+		snprintf(idv6, sizeof(idv6), "0x3d:%04x",
+				platform->dhcp_arch_id);
+		snprintf(idv4, sizeof(idv4), "0x5d:%04x",
+				platform->dhcp_arch_id);
+	} else {
+		argv_ipv4[11] = argv_ipv6[15] =  NULL;
+	}
 
-	process = process_create(interface);
+	p_v4 = process_create(interface);
+	p_v4->path = pb_system_apps.udhcpc;
+	p_v4->argv = argv_ipv4;
+	p_v4->exit_cb = udhcpc_process_exit;
+	p_v4->data = interface;
 
-	process->path = pb_system_apps.udhcpc;
-	process->argv = argv;
-	process->exit_cb = udhcpc_process_exit;
-	process->data = interface;
-
-	rc = process_run_async(process);
-
+	pb_log("Running DHCPv4 client\n");
+	rc = process_run_async(p_v4);
 	if (rc)
-		process_release(process);
+		process_release(p_v4);
 	else
-		interface->udhcpc_process = process;
+		interface->udhcpc_process = p_v4;
+
+	pb_log("Running DHCPv6 client\n");
+	p_v6 = process_create(interface);
+	p_v6->path = pb_system_apps.udhcpc6;
+	p_v6->argv = argv_ipv6;
+	p_v6->exit_cb = udhcpc_process_exit;
+	p_v6->data = interface;
+
+	rc = process_run_async(p_v6);
+	if (rc)
+		process_release(p_v6);
+	else
+		interface->udhcpc6_process = p_v6;
 
 	return;
 }
