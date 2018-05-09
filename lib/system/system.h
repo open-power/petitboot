@@ -13,6 +13,7 @@ struct pb_system_apps {
 	const char *wget;
 	const char *ip;
 	const char *udhcpc;
+	const char *udhcpc6;
 	const char *vgscan;
 	const char *vgchange;
 	const char *pb_plugin;
