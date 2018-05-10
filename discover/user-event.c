@@ -251,13 +251,14 @@ static char *parse_ip_addr(struct discover_context *ctx, const char *ip)
 struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 		struct event *event, bool *is_complete)
 {
-	const char *conffile, *pathprefix, *host, *bootfile;
+	const char *conffile, *pathprefix, *host, *bootfile, *bootfile_url;
 	char *p, *basedir, *url_str;
 	struct pb_url *url;
 
 	conffile = event_get_param(event, "pxeconffile");
 	pathprefix = event_get_param(event, "pxepathprefix");
 	bootfile = event_get_param(event, "bootfile");
+	bootfile_url = event_get_param(event, "bootfile_url");
 
 	/* If we're given a conf file, we're able to generate a complete URL to
 	 * the configuration file, and the parser doesn't need to do any
@@ -288,6 +289,12 @@ struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 	host = parse_host_addr(event);
 	if (!host) {
 		pb_log("%s: host address not found\n", __func__);
+
+		/* No full URLs and no host address? Check for DHCPv6 options */
+		if (bootfile_url && is_url(bootfile_url)) {
+			*is_complete = true;
+			return pb_url_parse(ctx, bootfile_url);
+		}
 		return NULL;
 	}
 
