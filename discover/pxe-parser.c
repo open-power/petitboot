@@ -260,6 +260,97 @@ static void pxe_load_next_filename(struct conf_context *conf)
 }
 
 /*
+ * Parse a limited set of iPXE commands. This is handled separately from
+ * conf_parse_buf() since not all commands will have a value.
+ */
+static bool ipxe_simple_parser(struct conf_context *ctx, char *buf, int len)
+{
+	struct discover_boot_option *opt;
+	char *p, *name, *value;
+	struct pb_url *url;
+
+	p = strstr(buf, "#!ipxe");
+
+	/* Only try to parse this if the ipxe header is right at the start */
+	if (!p || p != buf)
+		return false;
+	p = strchr(buf, '\n') + 1;
+
+	opt = discover_boot_option_create(ctx->dc, ctx->dc->device);
+
+	opt->option->id = talloc_asprintf(opt, "%s@%p",
+			ctx->dc->device->device->id, opt);
+	opt->option->type = DISCOVER_BOOT_OPTION;
+
+	while (p && p <= buf + len) {
+
+		p = conf_get_pair(ctx, p, &name, &value, ' ', '\n');
+
+		/* The 'boot' command appears by itself without options */
+		if (!name && value && streq(value, "boot")) {
+			opt->option->is_default = true;
+			continue;
+		}
+
+		/* All other parameters require a value */
+		if (!value) {
+			pb_debug("%s: '%s' missing value\n", __func__, name);
+			continue;
+		}
+
+		if (streq(name, "kernel")) {
+			char *args, *name = NULL, *saveptr = NULL, *tmp;
+
+			/*
+			 * value is of the form:
+			 * boot_image [--name option_name ] [option args ...]
+			 */
+			tmp = strtok_r(value, " ", &saveptr);
+			if (!tmp) {
+				pb_log("%s: malformed kernel statement\n", __func__);
+				break;
+			}
+
+			url = pxe_url_join(ctx->dc, ctx->dc->conf_url, tmp);
+			opt->boot_image = create_url_resource(opt, url);
+
+			tmp = strtok_r(NULL, " ", &saveptr);
+			if (!tmp)
+				continue;
+			if (streq(tmp, "--name")) {
+				tmp = strtok_r(NULL, " ", &saveptr);
+				name = talloc_asprintf(opt, "%s",
+						tmp ?: "malformed ipxe option");
+				args = strtok_r(NULL, " ", &saveptr);
+			} else
+				args = tmp;
+
+			while (args) {
+				pxe_append_string(opt, args);
+				args = strtok_r(NULL, " ", &saveptr);
+			}
+
+			opt->option->name = name ?: talloc_asprintf(opt,
+					"ipxe option (%s)", url->full);
+			continue;
+		}
+
+		if (streq(name, "initrd")) {
+			url = pxe_url_join(ctx->dc, ctx->dc->conf_url, value);
+			opt->initrd = create_url_resource(opt, url);
+			continue;
+		}
+	}
+
+	if (opt->boot_image)
+		discover_context_add_boot_option(ctx->dc, opt);
+	else
+		pb_debug("ipxe file did not contain a valid option\n");
+
+	return true;
+}
+
+/*
  * Callback for asynchronous loads from pxe_parse()
  * @param result Result of load_url_async()
  * @param data   Pointer to associated conf_context
@@ -309,9 +400,10 @@ static void pxe_conf_parse_cb(struct load_url_result *result, void *data)
 	 * Parse the first successfully downloaded file. We only want to parse
 	 * the first because otherwise we could parse options from both a
 	 * machine-specific config and a 'fallback' default config
+	 * We also check if the file is in the limited ipxe format.
 	 */
-
-	conf_parse_buf(conf, buf, len);
+	if (!ipxe_simple_parser(conf, buf, len))
+		conf_parse_buf(conf, buf, len);
 
 	/* We may be called well after the original caller of iterate_parsers(),
 	 * commit any new boot options ourselves */

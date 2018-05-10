@@ -64,6 +64,9 @@ parser_TESTS = \
 	test/parser/test-pxe-initrd-in-append \
 	test/parser/test-pxe-mac-without-conf \
 	test/parser/test-pxe-ip-without-conf \
+	test/parser/test-pxe-ipxe \
+	test/parser/test-pxe-ipxe-named \
+	test/parser/test-pxe-ipxe-default \
 	test/parser/test-pxe-non-url-conf \
 	test/parser/test-pxe-local \
 	test/parser/test-pxe-ipappend \
