@@ -25,6 +25,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <fcntl.h>
+#include <locale.h>
 #include <sys/types.h>
 
 #include <log/log.h>
@@ -34,7 +35,9 @@
 #include <util/util.h>
 #include <i18n/i18n.h>
 
-#include "gpg.h"
+#include <gpgme.h>
+
+#include "security.h"
 
 /*
  * If --with-signed-boot is enabled lib/security provides the ability to handle
@@ -44,21 +47,6 @@
  * a full trusted-boot implementation. Petitboot can not and will not be able
  * to guarantee secure boot by itself.
  */
-
-struct pb_url * gpg_get_signature_url(void *ctx, struct pb_url *base_file)
-{
-	struct pb_url *signature_file = NULL;
-
-	signature_file = pb_url_copy(ctx, base_file);
-	talloc_free(signature_file->file);
-	signature_file->file = talloc_asprintf(signature_file,
-		"%s.sig", base_file->file);
-	talloc_free(signature_file->path);
-	signature_file->path = talloc_asprintf(signature_file,
-		"%s.sig", base_file->path);
-
-	return signature_file;
-}
 
 int decrypt_file(const char *filename,
 	FILE *authorized_signatures_handle, const char *keyring_path)
@@ -362,181 +350,6 @@ int verify_file_signature(const char *plaintext_filename,
 	return 0;
 }
 
-int gpg_validate_boot_files(struct boot_task *boot_task) {
-	int result = 0;
-	char *kernel_filename = NULL;
-	char *initrd_filename = NULL;
-	char *dtb_filename = NULL;
-
-	FILE *authorized_signatures_handle = NULL;
-
-	char cmdline_template[] = "/tmp/petitbootXXXXXX";
-	int cmdline_fd = mkstemp(cmdline_template);
-	FILE *cmdline_handle = NULL;
-
-	const char* local_initrd_signature = (boot_task->verify_signature) ?
-		boot_task->local_initrd_signature : NULL;
-	const char* local_dtb_signature = (boot_task->verify_signature) ?
-		boot_task->local_dtb_signature : NULL;
-	const char* local_image_signature = (boot_task->verify_signature) ?
-		boot_task->local_image_signature : NULL;
-	const char* local_cmdline_signature =
-		(boot_task->verify_signature || boot_task->decrypt_files) ?
-		boot_task->local_cmdline_signature : NULL;
-
-	if ((!boot_task->verify_signature) && (!boot_task->decrypt_files))
-		return result;
-
-	/* Load authorized signatures file */
-	authorized_signatures_handle = fopen(LOCKDOWN_FILE, "r");
-	if (!authorized_signatures_handle) {
-		pb_log("%s: unable to read lockdown file\n", __func__);
-		return KEXEC_LOAD_SIG_SETUP_INVALID;
-	}
-
-	/* Copy files to temporary directory for verification / boot */
-	result = copy_file_secure_dest(boot_task,
-		boot_task->local_image,
-		&kernel_filename);
-	if (result) {
-		pb_log("%s: image copy failed: (%d)\n",
-			__func__, result);
-		return result;
-	}
-	if (boot_task->local_initrd) {
-		result = copy_file_secure_dest(boot_task,
-			boot_task->local_initrd,
-			&initrd_filename);
-		if (result) {
-			pb_log("%s: initrd copy failed: (%d)\n",
-				__func__, result);
-			return result;
-		}
-	}
-	if (boot_task->local_dtb) {
-		result = copy_file_secure_dest(boot_task,
-			boot_task->local_dtb,
-			&dtb_filename);
-		if (result) {
-			pb_log("%s: dtb copy failed: (%d)\n",
-				__func__, result);
-			return result;
-		}
-	}
-	boot_task->local_image_override = talloc_strdup(boot_task,
-		kernel_filename);
-	if (boot_task->local_initrd)
-		boot_task->local_initrd_override = talloc_strdup(boot_task,
-			initrd_filename);
-	if (boot_task->local_dtb)
-		boot_task->local_dtb_override = talloc_strdup(boot_task,
-			dtb_filename);
-
-	/* Write command line to temporary file for verification */
-	if (cmdline_fd < 0) {
-		/* mkstemp failed */
-		pb_log("%s: failed: unable to create command line"
-			" temporary file for verification\n",
-			__func__);
-		result = -1;
-	}
-	else {
-		cmdline_handle = fdopen(cmdline_fd, "w");
-	}
-	if (!cmdline_handle) {
-		/* Failed to open file */
-		pb_log("%s: failed: unable to write command line"
-			" temporary file for verification\n",
-			__func__);
-		result = -1;
-	}
-	else {
-		fwrite(boot_task->args, sizeof(char),
-			strlen(boot_task->args), cmdline_handle);
-		fflush(cmdline_handle);
-	}
-
-	if (boot_task->verify_signature) {
-		/* Check signatures */
-		if (verify_file_signature(kernel_filename,
-			local_image_signature,
-			authorized_signatures_handle,
-			"/etc/gpg"))
-			result = KEXEC_LOAD_SIGNATURE_FAILURE;
-		if (verify_file_signature(cmdline_template,
-			local_cmdline_signature,
-			authorized_signatures_handle,
-			"/etc/gpg"))
-			result = KEXEC_LOAD_SIGNATURE_FAILURE;
-
-		if (boot_task->local_initrd_signature)
-			if (verify_file_signature(initrd_filename,
-				local_initrd_signature,
-				authorized_signatures_handle,
-				"/etc/gpg"))
-				result = KEXEC_LOAD_SIGNATURE_FAILURE;
-		if (boot_task->local_dtb_signature)
-			if (verify_file_signature(dtb_filename,
-				local_dtb_signature,
-				authorized_signatures_handle,
-				"/etc/gpg"))
-				result = KEXEC_LOAD_SIGNATURE_FAILURE;
-
-		/* Clean up */
-		if (cmdline_handle) {
-			fclose(cmdline_handle);
-			unlink(cmdline_template);
-		}
-		fclose(authorized_signatures_handle);
-	} else if (boot_task->decrypt_files) {
-		/* Decrypt files */
-		if (decrypt_file(kernel_filename,
-			authorized_signatures_handle,
-			"/etc/gpg"))
-			result = KEXEC_LOAD_DECRYPTION_FALURE;
-		if (verify_file_signature(cmdline_template,
-			local_cmdline_signature,
-			authorized_signatures_handle,
-			"/etc/gpg"))
-			result = KEXEC_LOAD_SIGNATURE_FAILURE;
-		if (boot_task->local_initrd)
-			if (decrypt_file(initrd_filename,
-				authorized_signatures_handle,
-				"/etc/gpg"))
-				result = KEXEC_LOAD_DECRYPTION_FALURE;
-		if (boot_task->local_dtb)
-			if (decrypt_file(dtb_filename,
-				authorized_signatures_handle,
-				"/etc/gpg"))
-				result = KEXEC_LOAD_DECRYPTION_FALURE;
-
-		/* Clean up */
-		if (cmdline_handle) {
-			fclose(cmdline_handle);
-			unlink(cmdline_template);
-		}
-		fclose(authorized_signatures_handle);
-	}
-
-	return result;
-}
-
-void gpg_validate_boot_files_cleanup(struct boot_task *boot_task) {
-	if ((boot_task->verify_signature) || (boot_task->decrypt_files)) {
-		unlink(boot_task->local_image_override);
-		if (boot_task->local_initrd_override)
-			unlink(boot_task->local_initrd_override);
-		if (boot_task->local_dtb_override)
-			unlink(boot_task->local_dtb_override);
-
-		talloc_free(boot_task->local_image_override);
-		if (boot_task->local_initrd_override)
-			talloc_free(boot_task->local_initrd_override);
-		if (boot_task->local_dtb_override)
-			talloc_free(boot_task->local_dtb_override);
-	}
-}
-
 int lockdown_status() {
 	/* assume most restrictive lockdown type */
 	int ret = PB_LOCKDOWN_SIGN;
@@ -559,8 +372,8 @@ int lockdown_status() {
 		authorized_signatures_handle)) != -1) {
 		auth_sig_len = strlen(auth_sig_line);
 		while ((auth_sig_line[auth_sig_len-1] == '\n')
-			|| (auth_sig_line[auth_sig_len-1] == '\r'))
-		auth_sig_len--;
+		    || (auth_sig_line[auth_sig_len-1] == '\r'))
+			auth_sig_len--;
 		auth_sig_line[auth_sig_len] = 0;
 		if (strcmp(auth_sig_line, "ENCRYPTED") == 0) {
 			/* first line indicates encrypted files
@@ -571,5 +384,6 @@ int lockdown_status() {
 	}
 	free(auth_sig_line);
 
-	return ret;
+    return ret;
 }
+

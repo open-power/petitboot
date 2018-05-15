@@ -18,14 +18,20 @@ noinst_LTLIBRARIES += $(core_lib)
 
 lib_libpbcore_la_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
-	-DPREFIX='"$(prefix)"'
+	-DPREFIX='"$(prefix)"' \
+	$(OPENSSL_INCLUDES)
 
-if WITH_GPGME
-gpg_int_SOURCES = lib/security/gpg.h \
-	lib/security/gpg.c
-else
-gpg_int_SOURCES =
-endif
+lib_libpbcore_la_LIBADD = \
+	$(GPGME_LIBS) \
+	$(OPENSSL_LIBS)
+
+lib_libpbcore_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(OPENSSL_LDFLAGS)
+
+lib_libpbcore_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GPGME_CFLAGS)
 
 lib_libpbcore_la_SOURCES = \
 	lib/ccan/endian/endian.h \
@@ -59,19 +65,27 @@ lib_libpbcore_la_SOURCES = \
 	lib/util/util.h \
 	lib/flash/config.h \
 	lib/flash/flash.h \
-	$(gpg_int_SOURCES)
+	lib/security/security.h
 
 if ENABLE_MTD
 lib_libpbcore_la_SOURCES += \
 	lib/flash/flash.c
 
-lib_libpbcore_la_CPPFLAGS += \
-	$(AM_CPPFLAGS)
-
-lib_libpbcore_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
+lib_libpbcore_la_LDFLAGS += \
 	$(LIBFLASH_LIBS)
+endif
 
+if WITH_GPGME
 lib_libpbcore_la_SOURCES += \
-	lib/flash/flash.c
+	lib/security/common.c \
+	lib/security/gpg.c
+else
+if WITH_OPENSSL
+lib_libpbcore_la_SOURCES += \
+	lib/security/common.c \
+	lib/security/openssl.c
+else
+lib_libpbcore_la_SOURCES += \
+	lib/security/none.c
+endif
 endif
