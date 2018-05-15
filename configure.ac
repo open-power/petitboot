@@ -181,59 +181,42 @@ AS_IF(
 
 AC_ARG_WITH(
 	[signed-boot],
-	[AS_HELP_STRING([--with-signed-boot],
-		[build kernel signature checking support [default=no]]
+	[AS_HELP_STRING([--with-signed-boot=@<:@no|yes|gpgme|openssl@:>@],
+			[Build kernel signature checking support with specified
+			 crypto pacakge. A @<:@yes@:>@ value will first check
+			 for gpgme then openssl and use the first found.
+			 @<:@default=no@:>@]
 	)],
-	[],
+	[AS_IF([test "x$with_signed_boot" = xno],[],
+	       [test "x$with_signed_boot" = xyes],
+			[AM_PATH_GPGME([1.0.0],
+				[sboot=gpgme],
+				[AX_CHECK_OPENSSL(
+					[sboot=openssl],
+					[AC_MSG_FAILURE([--with-signed-boot=yes specified but gpgme or openssl not found])]
+				)]
+			)],
+	       [test "x$with_signed_boot" = xgpgme],
+			[AM_PATH_GPGME([1.0.0],
+				[sboot=gpgme],
+				[AC_MSG_FAILURE([--with-signed-boot=gpgme specified but gpgme not found])]
+			)],
+	       [test "x$with_signed_boot" = xopenssl],
+			[AX_CHECK_OPENSSL(
+				[sboot=openssl],
+				[AC_MSG_FAILURE([--with-signed-boot=openssl specified but openssl not found])]
+			)],
+	       [AC_MSG_FAILURE([--with-signed-boot given invalid option: $with_signed_boot])]
+	)],
 	[with_signed_boot=no]
 )
 
-AM_CONDITIONAL(
-	[WITH_SIGNED_BOOT],
-	[test "x$with_signed_boot" = "xyes"])
-
-AS_IF(
-	[test "x$with_signed_boot" = "xyes"],
-	[PKG_CHECK_MODULES(
-		[GPGME],
-		[gpgme >= 1.0.0],
-		[SAVE_LIBS="$LIBS" LIBS="$LIBS $gpgme_LIBS"
-			AC_CHECK_LIB(
-				[gpgme],
-				[gpgme_op_verify],
-				[],
-				[AC_MSG_FAILURE([--with-signed-boot was given but the test for gpgme failed.])]
-			)
-			LIBS="$SAVE_LIBS"
-		],
-		[AM_PATH_GPGME([1.0.0], [SAVE_LIBS="$LIBS" LIBS="$LIBS $gpgme_LIBS"
-			AC_CHECK_LIB(
-				[gpgme],
-				[gpgme_op_verify],
-				[],
-				[AC_MSG_FAILURE([--with-signed-boot was given but the test for gpgme failed.])]
-			)
-			LIBS="$SAVE_LIBS"],
-			[AC_MSG_RESULT([$gpgme_PKG_ERRORS])
-				AC_MSG_FAILURE([ Consider adjusting PKG_CONFIG_PATH environment variable])
-			])
-		]
-	)]
-)
-
-AS_IF(
-	[test "x$with_signed_boot" = "xyes"],
-	[SAVE_CPPFLAGS="$CPPFLAGS" CPPFLAGS="$CPPFLAGS $gpgme_CFLAGS"
-		AC_CHECK_HEADERS(
-			[gpgme.h],
-			[],
-			[AC_MSG_FAILURE([ --with-signed-boot given but gpgme.h not found])]
-		)
-		CPPFLAGS="$SAVE_CPPFLAGS"
-	]
-)
-
-AM_CONDITIONAL([WITH_GPGME], [test "x$with_signed_boot" = "xyes"])
+AM_CONDITIONAL([WITH_GPGME], [test "x$sboot" = xgpgme])
+AM_CONDITIONAL([WITH_OPENSSL], [test "x$sboot" = xopenssl])
+AM_CONDITIONAL([WITH_SIGNED_BOOT], [test "x$with_signed_boot" != xno])
+AM_COND_IF([WITH_SIGNED_BOOT],
+	   [AC_DEFINE([SIGNED_BOOT], 1, [Define if you have signed boot enabled])],
+	   [])
 
 AC_ARG_VAR(
 	[lockdown_file],
@@ -241,6 +224,20 @@ AC_ARG_VAR(
 )
 AS_IF([test "x$lockdown_file" = x], [lockdown_file="/etc/pb-lockdown"])
 AC_DEFINE_UNQUOTED(LOCKDOWN_FILE, "$lockdown_file", [Lockdown file location])
+
+AC_ARG_VAR(
+	[KEYRING_PATH],
+	[Path to keyring (gpgme home dir) @<:@default="/etc/gpg"@:>@]
+)
+AS_IF([test "x$KEYRING_PATH" = x], [KEYRING_PATH="/etc/gpg"])
+AC_DEFINE_UNQUOTED(KEYRING_PATH, "$KEYRING_PATH", [gpgme home dir])
+
+AC_ARG_VAR(
+	[VERIFY_DIGEST],
+	[Signed boot signature verification digest algorithm to use (only valid in openssl) @<:@default="sha256"@:>@]
+)
+AS_IF([test "x$VERIFY_DIGEST" = x], [VERIFY_DIGEST="sha256"])
+AC_DEFINE_UNQUOTED(VERIFY_DIGEST, "$VERIFY_DIGEST", [openssl verify dgst])
 
 AC_ARG_ENABLE(
 	[busybox],
