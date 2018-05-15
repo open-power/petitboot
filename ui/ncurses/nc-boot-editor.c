@@ -636,7 +636,7 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 	if (!boot_editor)
 		return NULL;
 
-#if defined(HAVE_LIBGPGME)
+#if defined(SIGNED_BOOT)
 	if (access(LOCKDOWN_FILE, F_OK) == -1)
 		boot_editor->use_signature_files = false;
 	else
