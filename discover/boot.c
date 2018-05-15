@@ -26,7 +26,7 @@
 #include "resource.h"
 #include "platform.h"
 
-#include <security/gpg.h>
+#include <security/security.h>
 
 static const char *boot_hook_dir = PKG_SYSCONF_DIR "/boot.d";
 enum {
@@ -72,7 +72,7 @@ static int kexec_load(struct boot_task *boot_task)
 	boot_task->local_dtb_override = NULL;
 	boot_task->local_image_override = NULL;
 
-	if ((result = gpg_validate_boot_files(boot_task))) {
+	if ((result = validate_boot_files(boot_task))) {
 		if (result == KEXEC_LOAD_DECRYPTION_FALURE) {
 			pb_log("%s: Aborting kexec due to"
 				" decryption failure\n", __func__);
@@ -144,7 +144,7 @@ static int kexec_load(struct boot_task *boot_task)
 	}
 
 abort_kexec:
-	gpg_validate_boot_files_cleanup(boot_task);
+	validate_boot_files_cleanup(boot_task);
 
 	return result;
 }
@@ -598,21 +598,21 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	if (boot_task->verify_signature) {
 		/* Generate names of associated signature files and load */
 		if (image) {
-			image_sig = gpg_get_signature_url(ctx, image);
+			image_sig = get_signature_url(ctx, image);
 			tmp = add_boot_resource(boot_task,
 					_("kernel image signature"), image_sig,
 					&boot_task->local_image_signature);
 			rc |= start_url_load(boot_task, tmp);
 		}
 		if (initrd) {
-			initrd_sig = gpg_get_signature_url(ctx, initrd);
+			initrd_sig = get_signature_url(ctx, initrd);
 			tmp = add_boot_resource(boot_task,
 					_("initrd signature"), initrd_sig,
 					&boot_task->local_initrd_signature);
 			rc |= start_url_load(boot_task, tmp);
 		}
 		if (dtb) {
-			dtb_sig = gpg_get_signature_url(ctx, dtb);
+			dtb_sig = get_signature_url(ctx, dtb);
 			tmp = add_boot_resource(boot_task,
 					_("dtb signature"), dtb_sig,
 					&boot_task->local_dtb_signature);
