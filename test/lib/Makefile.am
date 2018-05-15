@@ -25,7 +25,14 @@ lib_TESTS = \
 	test/lib/test-process-stdout-eintr \
 	test/lib/test-fold
 
+if WITH_OPENSSL
+lib_TESTS += \
+	test/lib/test-security-openssl-verify \
+	test/lib/test-security-openssl-decrypt
+endif
+
 $(lib_TESTS): LIBS += $(core_lib)
+$(lib_TESTS): AM_CPPFLAGS += -DTEST_LIB_DATA_BASE='"$(abs_top_srcdir)/test/lib/data"'
 
 check_PROGRAMS += $(lib_TESTS)
 TESTS += $(lib_TESTS)

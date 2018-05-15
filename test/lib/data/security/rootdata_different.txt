@@ -1,0 +1,2 @@
+This is a test of the petitboot security library.
+This is not only a test, it's an adventure.
