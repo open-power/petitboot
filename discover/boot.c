@@ -76,13 +76,13 @@ static int kexec_load(struct boot_task *boot_task)
 		if (result == KEXEC_LOAD_DECRYPTION_FALURE) {
 			pb_log("%s: Aborting kexec due to"
 				" decryption failure\n", __func__);
-			goto abort_kexec;
 		}
 		if (result == KEXEC_LOAD_SIGNATURE_FAILURE) {
 			pb_log("%s: Aborting kexec due to signature"
 				" verification failure\n", __func__);
-			goto abort_kexec;
 		}
+
+		goto abort_kexec;
 	}
 
 	const char* local_initrd = (boot_task->local_initrd_override) ?
