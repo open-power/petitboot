@@ -31,6 +31,8 @@
 #include <libflash/file.h>
 #include <libflash/ecc.h>
 
+#define SECURE_BOOT_HEADERS_SIZE 4096
+#define ROM_MAGIC_NUMBER 0x17082011
 
 struct flash_info {
 	/* Device information */
@@ -148,6 +150,16 @@ out:
 	return NULL;
 }
 
+/* See stb_is_container() in Skiboot */
+static bool is_signed(char *buffer, uint32_t len)
+{
+	if (!buffer || len <= SECURE_BOOT_HEADERS_SIZE)
+		return false;
+	if (be32_to_cpu(*(uint32_t *)buffer) != ROM_MAGIC_NUMBER)
+		return false;
+	return true;
+}
+
 int flash_parse_version(void *ctx, char ***versions, bool current)
 {
 	char *saveptr, *tok,  **tmp, *buffer;
@@ -181,6 +193,10 @@ int flash_parse_version(void *ctx, char ***versions, bool current)
 		pb_log("Failed to read VERSION partition\n");
 		goto out;
 	}
+
+	/* Check if this partition is signed */
+	if (is_signed(buffer, len))
+		buffer += SECURE_BOOT_HEADERS_SIZE;
 
 	/* open-power-platform */
 	tok = strtok_r(buffer, delim, &saveptr);
