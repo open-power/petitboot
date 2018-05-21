@@ -20,10 +20,11 @@
 
 ### Run an interactive pb-builder container
 
+As root:
+
+    ./build-pb --interactive
+
+
 As current user:
 
     docker run --rm -it --user $(id -u):$(id -g) -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v $(pwd):/opt/pb -w /opt/pb $(./docker/build-pb -t) bash
-
-As root:
-
-    docker run --rm -it -v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -v $(pwd):/opt/pb -w /opt/pb $(./docker/build-pb -t) bash
