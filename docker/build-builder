@@ -8,7 +8,8 @@ name="$(basename $0)"
 
 source ${TOP_DIR}/docker/builder-include
 
-: ${DOCKER_FILE:="${TOP_DIR}/docker/Dockerfile.builder.$(arch)"}
+: ${DOCKER_FILE:="${TOP_DIR}/docker/Dockerfile.builder"}
+: ${DOCKER_FROM:="$(docker_from)"}
 
 usage () {
 	echo "${name} - Builds a docker image that contains tools for building petitboot." >&2
@@ -22,6 +23,7 @@ usage () {
 	echo "  -v --verbose  - Verbose execution." >&2
 	echo "Environment:" >&2
 	echo "  DOCKER_FILE   - Default: '${DOCKER_FILE}'" >&2
+	echo "  DOCKER_FROM   - Default: '${DOCKER_FROM}'" >&2
 	echo "  DOCKER_TAG    - Default: '${DOCKER_TAG}'" >&2
 	echo "Examples:" >&2
 	echo "  ${name} -v"
@@ -87,6 +89,22 @@ if [[ -n "${tag}" ]]; then
 	exit 0
 fi
 
+version () {
+	echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
+}
+
+# Support for docker versions older than 17.05.
+# See https://github.com/moby/moby/issues/32457
+if [[ $(version "$(docker version --format '{{.Server.Version}}')") < $(version "17.05") ]]; then
+	tmp_file="${DOCKER_FILE}.tmp"
+	trap "rm -f ${tmp_file}" EXIT
+
+	cp -f ${DOCKER_FILE} ${tmp_file}
+	DOCKER_FILE=${tmp_file}
+	sed --in-place "s|ARG DOCKER_FROM||" ${tmp_file}
+	sed --in-place "s|\${DOCKER_FROM}|${DOCKER_FROM}|" ${tmp_file}
+fi
+
 if [[ -n "${purge}" ]] && docker inspect --type image ${DOCKER_TAG} >/dev/null 2>/dev/null; then
 	echo "Removing docker image: ${DOCKER_TAG}" >&2
 	run_cmd "docker rmi --force ${DOCKER_TAG}"
@@ -99,6 +117,10 @@ fi
 echo "Building docker image: ${DOCKER_TAG}" >&2
 
 cd ${TOP_DIR}
-run_cmd "docker build --file ${DOCKER_FILE} --tag ${DOCKER_TAG} ."
+run_cmd "docker build \
+	--file "${DOCKER_FILE}" \
+	--build-arg DOCKER_FROM=${DOCKER_FROM} \
+	--tag ${DOCKER_TAG} \
+	."
 
 show_tag

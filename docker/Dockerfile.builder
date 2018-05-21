@@ -1,6 +1,8 @@
 # Image for compiling petitboot.
 
-FROM arm64v8/ubuntu:17.10
+ARG DOCKER_FROM
+
+FROM ${DOCKER_FROM}
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
