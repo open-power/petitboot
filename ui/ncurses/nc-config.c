@@ -1029,8 +1029,8 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 
 	widget_textbox_set_fixed_size(screen->widgets.ip_addr_f);
 	widget_textbox_set_fixed_size(screen->widgets.ip_mask_f);
-	widget_textbox_set_validator_ipv4(screen->widgets.ip_addr_f);
-	widget_textbox_set_validator_integer(screen->widgets.ip_mask_f, 1, 31);
+	widget_textbox_set_validator_ip(screen->widgets.ip_addr_f);
+	widget_textbox_set_validator_integer(screen->widgets.ip_mask_f, 1, 127);
 
 	screen->widgets.gateway_l = widget_new_label(set, 0, 0, _("Gateway:"));
 	screen->widgets.gateway_f = widget_new_textbox(set, 0, 0, 16, gw);
@@ -1038,7 +1038,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 		widget_new_label(set, 0, 0, _("(eg. 192.168.0.1)"));
 
 	widget_textbox_set_fixed_size(screen->widgets.gateway_f);
-	widget_textbox_set_validator_ipv4(screen->widgets.gateway_f);
+	widget_textbox_set_validator_ip(screen->widgets.gateway_f);
 
 	screen->widgets.url_l = widget_new_label(set, 0, 0, _("URL:"));
 	screen->widgets.url_f = widget_new_textbox(set, 0, 0, 32, url);
@@ -1059,7 +1059,7 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.dns_help_l =
 		widget_new_label(set, 0, 0, _("(eg. 192.168.0.2)"));
 
-	widget_textbox_set_validator_ipv4_multi(screen->widgets.dns_f);
+	widget_textbox_set_validator_ip_multi(screen->widgets.dns_f);
 
 	screen->widgets.dns_dhcp_help_l = widget_new_label(set, 0, 0,
 			_("(if not provided by DHCP server)"));

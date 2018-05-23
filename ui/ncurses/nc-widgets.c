@@ -44,8 +44,10 @@
 #  error "Curses form.h not found."
 #endif
 
-#include <string.h>
+#include <arpa/inet.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <talloc/talloc.h>
 #include <types/types.h>
@@ -83,7 +85,8 @@ struct nc_widgetset {
 	FIELD	*cur_field;
 
 	/* custom validators */
-	FIELDTYPE *ipv4_multi_type;
+	FIELDTYPE *ip_multi_type;
+	FIELDTYPE *ip_type;
 	FIELDTYPE *url_type;
 };
 
@@ -415,54 +418,88 @@ void widget_textbox_set_validator_url(struct nc_widget_textbox *textbox)
 	set_field_type(textbox->widget.field, textbox->set->url_type);
 }
 
-void widget_textbox_set_validator_ipv4(struct nc_widget_textbox *textbox)
+static bool check_ip_field(FIELD *field,
+		const void *arg __attribute__((unused)))
 {
-	set_field_type(textbox->widget.field, TYPE_IPV4);
+	char *str;
+	int rc;
+
+	str = strip_string(field_buffer(field, 0));
+
+	rc = addr_scheme(str);
+
+	return (rc == AF_INET || rc == AF_INET6);
 }
 
-static bool check_ipv4_multi_char(int c,
-		const void *arg __attribute__((unused)))
+
+static bool check_ipv6_multi_char(int c)
+{
+	return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ||
+	       c == ':' || c == ' ';
+}
+
+static bool check_ipv4_multi_char(int c)
 {
 	return isdigit(c) || c == '.' || c == ' ';
 }
 
-static bool check_ipv4_multi_field(FIELD *field,
+static bool check_ip_multi_field(FIELD *field,
 		const void *arg __attribute__((unused)))
 {
-	char *buf = field_buffer(field, 0);
-	unsigned int ip[4];
-	int n, len;
+	char *buf, *tok, *saveptr;
+	bool result;
+	int type;
 
-	while (*buf != '\0') {
-		n = sscanf(buf, "%u.%u.%u.%u%n",
-				&ip[0], &ip[1], &ip[2], &ip[3], &len);
-		if (n != 4)
-			return false;
+	/* Use strdup directly since we can't easily reach a talloc parent */
+	buf = strdup(strip_string(field_buffer(field, 0)));
+	if (!buf)
+		/* We tried */
+		return true;
 
-		if (ip[0] > 255 || ip[1] > 255 || ip[2] > 255 || ip[3] > 255)
-			return false;
+	result = false;
+	tok = strtok_r(buf, " ", &saveptr);
+	if (!tok || *tok == '\0')
+		goto err;
 
-		for (buf += len; *buf != '\0'; buf++) {
-			if (isspace(*buf))
-				continue;
-			else if (isdigit(*buf))
-				break;
-			else
-				return false;
-		}
+	while (tok) {
+		type = addr_scheme(tok);
+		if (!(type == AF_INET || type == AF_INET6))
+			goto err;
+
+		tok = strtok_r(NULL, " ", &saveptr);
 	}
+	result = true;
 
-	return true;
+err:
+	free(buf);
+	return result;
 }
 
-void widget_textbox_set_validator_ipv4_multi(struct nc_widget_textbox *textbox)
+static bool check_ip_multi_char(int c, const void *arg __attribute__((unused)))
 {
-	if (!textbox->set->ipv4_multi_type) {
-		textbox->set->ipv4_multi_type = new_fieldtype(
-				check_ipv4_multi_field,
-				check_ipv4_multi_char);
+	return (check_ipv4_multi_char(c) || check_ipv6_multi_char(c));
+}
+
+void widget_textbox_set_validator_ip(struct nc_widget_textbox *textbox)
+{
+	if (!textbox->set->ip_type) {
+		textbox->set->ip_type = new_fieldtype(check_ip_field, NULL);
 	}
-	set_field_type(textbox->widget.field, textbox->set->ipv4_multi_type);
+	set_field_type(textbox->widget.field, textbox->set->ip_type);
+}
+
+/*
+ * In a perfect world we would use link_fieldtype() but segfaults do not
+ * enhance the user experience.
+ */
+void widget_textbox_set_validator_ip_multi(struct nc_widget_textbox *textbox)
+{
+	if (!textbox->set->ip_multi_type) {
+		textbox->set->ip_multi_type = new_fieldtype(
+						check_ip_multi_field,
+						check_ip_multi_char);
+	}
+	set_field_type(textbox->widget.field, textbox->set->ip_multi_type);
 }
 
 static void subset_update_order(struct nc_widget_subset *subset)
@@ -1201,8 +1238,12 @@ static int widgetset_destructor(void *ptr)
 {
 	struct nc_widgetset *set = ptr;
 	free_form(set->form);
-	if (set->ipv4_multi_type)
-		free_fieldtype(set->ipv4_multi_type);
+	if (set->ip_type)
+		free_fieldtype(set->ip_type);
+	if (set->ip_multi_type)
+		free_fieldtype(set->ip_multi_type);
+	if (set->url_type)
+		free_fieldtype(set->url_type);
 	return 0;
 }
 
