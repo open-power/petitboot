@@ -4,6 +4,7 @@
 #include <talloc/talloc.h>
 #include <process/process.h>
 #include <log/log.h>
+#include <url/url.h>
 
 #include "discover-server.h"
 #include "platform.h"
@@ -32,7 +33,7 @@ void system_info_set_interface_address(unsigned int hwaddr_size,
 {
 	struct interface_info *if_info;
 	unsigned int i;
-	char mac[20];
+	char mac[20], **if_addr, *new_addr, *subnet;
 
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		if_info = sysinfo->interfaces[i];
@@ -43,11 +44,24 @@ void system_info_set_interface_address(unsigned int hwaddr_size,
 		if (memcmp(if_info->hwaddr, hwaddr, hwaddr_size))
 			continue;
 
+		/*
+		 * Don't include the subnet from a static config, and check if
+		 * we're updating the IPv4 or IPv6 address.
+		 * */
+		if ((subnet = strchr(address, '/')))
+			new_addr = talloc_strndup(if_info, address, subnet - address);
+		else
+			new_addr = talloc_strdup(if_info, address);
+		if (addr_scheme(new_addr) == AF_INET)
+			if_addr = &if_info->address;
+		else
+			if_addr = &if_info->address_v6;
+
 		/* Found an existing interface. Notify clients if a new address
 		 * is set */
-		if (!if_info->address || strcmp(if_info->address, address)) {
-			talloc_free(if_info->address);
-			if_info->address = talloc_strdup(if_info, address);
+		if (!*if_addr || strcmp(*if_addr, address)) {
+			talloc_free(*if_addr);
+			*if_addr = new_addr;
 			discover_server_notify_system_info(server, sysinfo);
 			return;
 		}
