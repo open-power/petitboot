@@ -3,11 +3,13 @@
 #endif
 
 #include <assert.h>
+#include <netdb.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include <talloc/talloc.h>
 #include <system/system.h>
@@ -547,6 +549,7 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 {
 	struct load_url_result *result;
 	struct load_task *task;
+	struct addrinfo *res;
 	int flags = 0;
 
 	if (!url)
@@ -579,7 +582,8 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 
 	/* If the url is remote but network is not yet available queue up this
 	 * load for later */
-	if (!system_info_network_available() && url->scheme != pb_url_file) {
+	if (url->scheme != pb_url_file &&
+			getaddrinfo(url->host, NULL, NULL, &res) != 0) {
 		pb_log("load task for %s queued pending network\n", url->full);
 		pending_network_jobs_add(task, flags);
 		task->result->status = LOAD_ASYNC;

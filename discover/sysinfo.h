@@ -7,7 +7,6 @@ struct discover_server;
 
 const struct system_info *system_info_get(void);
 
-bool system_info_network_available(void);
 void system_info_set_interface_address(unsigned int hwaddr_size,
 		uint8_t *hwaddr, const char *address);
 void system_info_register_interface(unsigned int hwaddr_size, uint8_t *hwaddr,
