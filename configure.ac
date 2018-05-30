@@ -343,6 +343,7 @@ DEFINE_HOST_PROG(VGCHANGE, vgchange, [/usr/sbin/vgchange])
 DEFINE_HOST_PROG(PB_PLUGIN, pb-plugin, [/usr/sbin/pb-plugin])
 DEFINE_HOST_PROG(PB_EXEC, pb-exec, [/usr/sbin/pb-exec])
 DEFINE_HOST_PROG(SH, sh, [/bin/sh])
+DEFINE_HOST_PROG(SCSI_RESCAN, scsi-rescan, [/usr/sbin/scsi-rescan])
 
 AC_ARG_WITH(
     [tftp],

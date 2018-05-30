@@ -12,7 +12,8 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-dist_sbin_SCRIPTS += utils/pb-udhcpc utils/pb-plugin utils/pb-sos utils/pb-exec
+dist_sbin_SCRIPTS += utils/pb-udhcpc utils/pb-plugin utils/pb-sos \
+		     utils/pb-exec utils/scsi-rescan
 dist_pkglibexec_SCRIPTS = utils/pb-console
 sbin_PROGRAMS += utils/pb-event utils/pb-config
 

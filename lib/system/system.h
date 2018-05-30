@@ -18,6 +18,7 @@ struct pb_system_apps {
 	const char *pb_plugin;
 	const char *pb_exec;
 	const char *sh;
+	const char *scsi_rescan;
 };
 
 extern const struct pb_system_apps pb_system_apps;
