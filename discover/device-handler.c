@@ -456,6 +456,9 @@ void device_handler_reinit(struct device_handler *handler)
 		discover_server_notify_config(handler->server, config);
 	}
 
+	/* Force rediscovery on SCSI devices */
+	process_run_simple(handler, pb_system_apps.scsi_rescan, NULL);
+
 	device_handler_reinit_sources(handler);
 }
 

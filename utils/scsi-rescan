@@ -1,0 +1,5 @@
+#/bin/sh
+
+for host in /sys/class/scsi_host/host*; do
+	echo "- - -" > ${host}/scan
+done
