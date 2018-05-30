@@ -506,7 +506,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 	struct rtattr *attr;
 	unsigned int mtu;
 	uint8_t ifaddr[6];
-	char ifname[IFNAMSIZ+1];
+	char ifname[IFNAMSIZ];
 	int attrlen, type;
 
 
@@ -534,6 +534,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 
 		case IFLA_IFNAME:
 			strncpy(ifname, data, IFNAMSIZ);
+			ifname[IFNAMSIZ - 1] = '\0';
 			have_ifname = true;
 			break;
 
@@ -565,7 +566,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 		interface->ifindex = info->ifi_index;
 		interface->state = IFSTATE_NEW;
 		memcpy(interface->hwaddr, ifaddr, sizeof(interface->hwaddr));
-		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
+		strncpy(interface->name, ifname, sizeof(interface->name));
 
 		list_for_each_entry(&network->interfaces, tmp, list)
 			if (memcmp(interface->hwaddr, tmp->hwaddr,
@@ -583,7 +584,7 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 	/* A repeated RTM_NEWLINK can represent an interface name change */
 	if (strncmp(interface->name, ifname, IFNAMSIZ)) {
 		pb_debug("ifname update: %s -> %s\n", interface->name, ifname);
-		strncpy(interface->name, ifname, sizeof(interface->name) - 1);
+		strncpy(interface->name, ifname, sizeof(interface->name));
 		talloc_free(interface->dev->device->id);
 		interface->dev->device->id =
 			talloc_strdup(interface->dev->device, ifname);
