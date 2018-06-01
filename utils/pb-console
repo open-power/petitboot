@@ -94,7 +94,7 @@ then
 
 	if [ "$detach" = 1 ]
 	then
-		$getty $login_arg "$@" &
+		setsid -c $getty $login_arg "$@" &
 		exit
 	else
 		exec $getty $login_arg "$@"
