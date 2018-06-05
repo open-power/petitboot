@@ -206,31 +206,17 @@ void cui_resize(struct cui *cui)
 void cui_on_exit(struct pmenu *menu)
 {
 	struct cui *cui = cui_from_pmenu(menu);
-	char *sh_cmd;
 
 	cui_cancel_autoboot_on_exit(cui);
 
-	sh_cmd = talloc_asprintf(cui,
-		"echo \"Exiting petitboot. Type 'exit' to return.\";\
-		 echo \"You may run 'pb-sos' to gather diagnostic data\";\
-		 %s", pb_system_apps.sh);
-
-	if (!sh_cmd) {
-		pb_log("Failed to allocate shell arguments\n");
-		return;
-	}
-
 	const char *argv[] = {
 		pb_system_apps.sh,
-		"-c",
-		sh_cmd,
 		NULL
 	};
 
 	cui_run_cmd(cui, argv);
 
 	nc_scr_status_printf(cui->current, _("Returned from shell"));
-	talloc_free(sh_cmd);
 }
 
 /**
@@ -263,11 +249,9 @@ int cui_run_cmd(struct cui *cui, const char **cmd_argv)
 
 	nc_scr_status_printf(cui->current, _("Running %s..."), cmd_argv[0]);
 
-	nc_scr_unpost(cui->current);
+	def_prog_mode();
 	clear();
 	refresh();
-
-	def_prog_mode();
 	endwin();
 
 	result = process_run_sync(process);
