@@ -122,6 +122,8 @@ fi
 # show particularly important messages
 dmesg -n 1
 
+trap '' SIGINT
+
 while :
 do
 	$ui $verbose_opt
