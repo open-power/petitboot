@@ -18,6 +18,9 @@ LABEL hyphen
 KERNEL /test/vmlinuz
 APPEND -
 
+LABEL onlyglobal
+KERNEL /only/vmlinuz
+
 #endif
 
 void run_test(struct parser_test *test)
@@ -31,8 +34,9 @@ void run_test(struct parser_test *test)
 
 	ctx = test->ctx;
 
-	check_boot_option_count(ctx, 3);
-	opt = get_boot_option(ctx, 2);
+	check_boot_option_count(ctx, 4);
+
+	opt = get_boot_option(ctx, 3);
 
 	check_name(opt, "linux");
 	check_resolved_local_resource(opt->boot_image, ctx->device, "/vmlinuz");
@@ -40,17 +44,24 @@ void run_test(struct parser_test *test)
 	check_args(opt, "console=ttyS0 console=tty0");
 	check_not_present_resource(opt->initrd);
 
-	opt = get_boot_option(ctx, 1);
+	opt = get_boot_option(ctx, 2);
 
 	check_name(opt, "backup");
 	check_resolved_local_resource(opt->boot_image, ctx->device, "/backup/vmlinuz");
 	check_args(opt, "console=ttyS0 root=/dev/sdb");
 	check_resolved_local_resource(opt->initrd, ctx->device, "/boot/initrd");
 
-	opt = get_boot_option(ctx, 0);
+	opt = get_boot_option(ctx, 1);
 
 	check_name(opt, "hyphen");
 	check_resolved_local_resource(opt->boot_image, ctx->device, "/test/vmlinuz");
 	check_args(opt, "");
+	check_not_present_resource(opt->initrd);
+
+	opt = get_boot_option(ctx, 0);
+
+	check_name(opt, "onlyglobal");
+	check_resolved_local_resource(opt->boot_image, ctx->device, "/only/vmlinuz");
+	check_args(opt, "console=ttyS0");
 	check_not_present_resource(opt->initrd);
 }

@@ -36,6 +36,6 @@ void run_test(struct parser_test *test)
 
 	check_name(opt, "backup");
 	check_resolved_local_resource(opt->boot_image, ctx->device, "/backup/vmlinuz");
-	check_args(opt, " root=/dev/sdb");
+	check_args(opt, "root=/dev/sdb");
 	check_resolved_local_resource(opt->initrd, ctx->device, "/boot/initrd");
 }

@@ -32,5 +32,5 @@ void run_test(struct parser_test *test)
 	check_name(opt, "boot");
 	check_resolved_local_resource(opt->boot_image, ctx->device, "/vmlinuz");
 	check_is_default(opt);
-	check_args(opt, " console=ttyS0,115200n8 console=tty0");
+	check_args(opt, "console=ttyS0,115200n8 console=tty0");
 }

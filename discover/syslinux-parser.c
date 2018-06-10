@@ -338,11 +338,13 @@ static void syslinux_finalize(struct conf_context *conf)
 			/* '-' can signal do not use global APPEND */
 			if (!strcmp(syslinux_opt->append, "-"))
 				opt->boot_args = talloc_strdup(opt, "");
-			else
+			else if (global_append)
 				opt->boot_args = talloc_asprintf(opt, "%s %s",
 								 global_append,
 								 syslinux_opt->append);
-		} else
+			else
+				opt->boot_args = talloc_strdup(opt, syslinux_opt->append);
+		} else if (global_append)
 			opt->boot_args = talloc_strdup(opt, global_append);
 
 		if (!opt->boot_args)
@@ -455,13 +457,10 @@ static int syslinux_parse(struct discover_context *dc)
 	/*
 	 * set the global defaults
 	 * by spec 'default' defaults to 'linux' and
-	 * 'implicit' defaults to '1', we also just set
-	 * and empty string in 'append' to make it easier
-	 * in syslinux_finish
+	 * 'implicit' defaults to '1'
 	 */
 	conf_set_global_option(conf, "default", "linux");
 	conf_set_global_option(conf, "implicit", "1");
-	conf_set_global_option(conf, "append", "");
 
 	for (filename = syslinux_conf_files; *filename; filename++) {
 		/*
