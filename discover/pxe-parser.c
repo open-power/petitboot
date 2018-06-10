@@ -41,6 +41,7 @@ static void pxe_finish(struct conf_context *conf)
 		if (info->proxy)
 			info->opt->proxy = talloc_strdup(info->opt, info->proxy);
 		discover_context_add_boot_option(conf->dc, info->opt);
+		info->opt = NULL;
 	}
 }
 

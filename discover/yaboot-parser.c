@@ -172,6 +172,7 @@ static void yaboot_finish(struct conf_context *conf)
 		state->opt->option->is_default = true;
 
 	discover_context_add_boot_option(conf->dc, state->opt);
+	state->opt = NULL;
 }
 
 static void yaboot_process_pair(struct conf_context *conf, const char *name,

@@ -408,6 +408,7 @@ static void syslinux_finalize(struct conf_context *conf)
 		conf_strip_str(opt->description);
 
 		discover_context_add_boot_option(dc, d_opt);
+		d_opt = NULL;
 		continue;
 
 fail:
