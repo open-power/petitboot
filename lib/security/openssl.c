@@ -456,8 +456,10 @@ int lockdown_status(void)
 	int ret = PB_LOCKDOWN_SIGN;
 	PKCS12 *p12 = NULL;
 
+#if !defined(HARD_LOCKDOWN)
 	if (access(LOCKDOWN_FILE, F_OK) == -1)
 		return PB_LOCKDOWN_NONE;
+#endif
 
 	/* determine lockdown type */
 
@@ -471,6 +473,6 @@ int lockdown_status(void)
 		fclose(authorized_signatures_handle);
 	}
 
-    return ret;
+	return ret;
 }
 

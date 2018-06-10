@@ -637,9 +637,11 @@ struct boot_editor *boot_editor_init(struct cui *cui,
 		return NULL;
 
 #if defined(SIGNED_BOOT)
+#if !defined(HARD_LOCKDOWN)
 	if (access(LOCKDOWN_FILE, F_OK) == -1)
 		boot_editor->use_signature_files = false;
 	else
+#endif
 		boot_editor->use_signature_files = true;
 #else
 	boot_editor->use_signature_files = false;

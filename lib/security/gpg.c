@@ -354,8 +354,10 @@ int lockdown_status() {
 	/* assume most restrictive lockdown type */
 	int ret = PB_LOCKDOWN_SIGN;
 
+#if !defined(HARD_LOCKDOWN)
 	if (access(LOCKDOWN_FILE, F_OK) == -1)
 		return PB_LOCKDOWN_NONE;
+#endif
 
 	/* determine lockdown type */
 	FILE *authorized_signatures_handle = NULL;

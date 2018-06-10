@@ -239,6 +239,14 @@ AC_ARG_VAR(
 AS_IF([test "x$VERIFY_DIGEST" = x], [VERIFY_DIGEST="sha256"])
 AC_DEFINE_UNQUOTED(VERIFY_DIGEST, "$VERIFY_DIGEST", [openssl verify dgst])
 
+AC_ARG_ENABLE([hard-lockdown],
+	      [AS_HELP_STRING([--enable-hard-lockdown],
+			      [if signed boot configured, the absence of the
+			       LOCKDOWN_FILE does not disable signed boot at
+			       runtime @<:@default=no@:>@])],
+	      [AC_DEFINE(HARD_LOCKDOWN, 1, [Enable hard lockdown])],
+	      [])
+
 AC_ARG_ENABLE(
 	[busybox],
 	[AS_HELP_STRING(

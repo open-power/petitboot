@@ -61,10 +61,14 @@ static void cui_cancel_autoboot_on_exit(struct cui *cui);
 
 static bool lockdown_active(void)
 {
+#if defined(SIGNED_BOOT) && defined(HARD_LOCKDOWN)
+	return true;
+#else
 	bool lockdown = false;
 	if (access(LOCKDOWN_FILE, F_OK) != -1)
 		lockdown = true;
 	return lockdown;
+#endif
 }
 
 static void cui_start(void)
