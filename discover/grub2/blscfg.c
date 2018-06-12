@@ -15,7 +15,11 @@
 #include "discover/parser-conf.h"
 #include "discover/parser.h"
 
-#define BLS_DIR "/loader/entries"
+static const char *const bls_dirs[] = {
+	"/loader/entries",
+	"/boot/loader/entries",
+	NULL
+};
 
 struct bls_state {
 	struct discover_boot_option *opt;
@@ -195,8 +199,10 @@ int builtin_blscfg(struct grub2_script *script,
 	struct conf_context *conf;
 	struct bls_state *state;
 	char *buf, *filename;
+	const char * const *dir;
 	const char *blsdir;
 	int n, len, rc = -1;
+	struct stat statbuf;
 
 	conf = talloc_zero(dc, struct conf_context);
 	if (!conf)
@@ -209,7 +215,17 @@ int builtin_blscfg(struct grub2_script *script,
 
 	blsdir = script_env_get(script, "blsdir");
 	if (!blsdir)
-		blsdir = BLS_DIR;
+		for (dir = bls_dirs; *dir; dir++)
+			if (!parser_stat_path(dc, dc->device, *dir, &statbuf)) {
+				blsdir = *dir;
+				break;
+			}
+
+	if (!blsdir) {
+		device_handler_status_dev_info(dc->handler, dc->device,
+					       _("BLS directory wasn't found"));
+		goto err;
+	}
 
 	n = parser_scandir(dc, blsdir, &bls_entries, bls_filter, bls_sort);
 	if (n <= 0)
@@ -249,7 +265,7 @@ int builtin_blscfg(struct grub2_script *script,
 	if (n > 0) {
 		device_handler_status_dev_info(dc->handler, dc->device,
 					       _("Scanning %s failed"),
-					       BLS_DIR);
+					       blsdir);
 		do {
 			free(bls_entries[n]);
 		} while (n-- > 0);
