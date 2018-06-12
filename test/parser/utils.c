@@ -325,6 +325,9 @@ int parser_scandir(struct discover_context *ctx, const char *dirname,
 		if (f->dev != ctx->device)
 			continue;
 
+		if (strlen(f->name) <= strlen(dirname))
+			continue;
+
 		filename = strrchr(f->name, '/');
 		if (!filename)
 			continue;
