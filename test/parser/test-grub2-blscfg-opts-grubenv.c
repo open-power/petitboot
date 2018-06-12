@@ -22,7 +22,7 @@ void run_test(struct parser_test *test)
 			     "title Fedora (4.15.2-302.fc28.x86_64) 28 (Twenty Eight)\n"
 			     "linux /vmlinuz-4.15.2-302.fc28.x86_64\n"
 			     "initrd /initramfs-4.15.2-302.fc28.x86_64.img\n"
-			     "options $kernelopts\n");
+			     "options $kernelopts debug\n");
 
 	test_read_conf_embedded(test, "/boot/grub2/grub.cfg");
 
@@ -32,5 +32,5 @@ void run_test(struct parser_test *test)
 
 	opt = get_boot_option(ctx, 0);
 
-	check_args(opt, "root=/dev/mapper/fedora-root ro rd.lvm.lv=fedora/root");
+	check_args(opt, "root=/dev/mapper/fedora-root ro rd.lvm.lv=fedora/root debug");
 }
