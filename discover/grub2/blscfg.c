@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
@@ -34,54 +35,106 @@ struct bls_state {
 	const char *dtb;
 };
 
+static char *field_append(struct bls_state *state, int type, char *buffer,
+			  char *start, char *end)
+{
+	char *temp = talloc_strndup(state, start, end - start + 1);
+	const char *field = temp;
+
+	if (type == GRUB2_WORD_VAR) {
+		field = script_env_get(state->script, temp);
+		if (!field)
+			return buffer;
+	}
+
+	if (!buffer)
+		buffer = talloc_strdup(state->opt, field);
+	else
+		buffer = talloc_asprintf_append(buffer, "%s", field);
+
+	return buffer;
+}
+
+static char *expand_field(struct bls_state *state, char *value)
+{
+	char *buffer = NULL;
+	char *start = value;
+	char *end = value;
+	int type = GRUB2_WORD_TEXT;
+
+	while (*value) {
+		if (*value == '$') {
+			if (start != end) {
+				buffer = field_append(state, type, buffer,
+						      start, end);
+				if (!buffer)
+					return NULL;
+			}
+
+			type = GRUB2_WORD_VAR;
+			start = value + 1;
+		} else if (type == GRUB2_WORD_VAR) {
+			if (!isalnum(*value) && *value != '_') {
+				buffer = field_append(state, type, buffer,
+						      start, end);
+				type = GRUB2_WORD_TEXT;
+				start = value;
+			}
+		}
+
+		end = value;
+		value++;
+	}
+
+	if (start != end) {
+		buffer = field_append(state, type, buffer,
+				      start, end);
+		if (!buffer)
+			return NULL;
+	}
+
+	return buffer;
+}
+
 static void bls_process_pair(struct conf_context *conf, const char *name,
 			     char *value)
 {
 	struct bls_state *state = conf->parser_info;
 	struct discover_boot_option *opt = state->opt;
 	struct boot_option *option = opt->option;
-	const char *boot_args;
 
 	if (streq(name, "title")) {
-		state->title = talloc_strdup(state, value);
+		state->title = expand_field(state, value);
 		return;
 	}
 
 	if (streq(name, "version")) {
-		state->version = talloc_strdup(state, value);
+		state->version = expand_field(state, value);
 		return;
 	}
 
 	if (streq(name, "machine-id")) {
-		state->machine_id = talloc_strdup(state, value);
+		state->machine_id = expand_field(state, value);
 		return;
 	}
 
 	if (streq(name, "linux")) {
-		state->image = talloc_strdup(state, value);
+		state->image = expand_field(state, value);
 		return;
 	}
 
 	if (streq(name, "initrd")) {
-		state->initrd = talloc_strdup(state, value);
+		state->initrd = expand_field(state, value);
 		return;
 	}
 
 	if (streq(name, "devicetree")) {
-		state->dtb = talloc_strdup(state, value);
+		state->dtb = expand_field(state, value);
 		return;
 	}
 
 	if (streq(name, "options")) {
-		if (value[0] == '$') {
-			boot_args = script_env_get(state->script, value + 1);
-			if (!boot_args)
-				return;
-
-			option->boot_args = talloc_strdup(opt, boot_args);
-		} else {
-			option->boot_args = talloc_strdup(opt, value);
-		}
+		option->boot_args = expand_field(state, value);
 		return;
 	}
 }
