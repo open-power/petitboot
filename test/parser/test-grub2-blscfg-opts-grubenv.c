@@ -10,6 +10,8 @@ void run_test(struct parser_test *test)
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
 
+	test_add_dir(test, test->ctx->device, "/loader/entries");
+
 	test_add_file_string(test, test->ctx->device,
 			     "/boot/grub2/grubenv",
 			     "# GRUB Environment Block\n"
