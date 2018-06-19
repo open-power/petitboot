@@ -81,6 +81,7 @@ struct device_handler {
 	struct autoboot_option	*temp_autoboot;
 
 	struct discover_boot_option *default_boot_option;
+	struct discover_boot_option *last_boot_option;
 	int			default_boot_option_priority;
 
 	struct list		unresolved_boot_options;
@@ -755,6 +756,8 @@ static int default_timeout(void *arg)
 		return 0;
 
 	opt = handler->default_boot_option;
+
+	handler->last_boot_option = opt;
 
 	if (handler->sec_to_boot) {
 		countdown_status(handler, opt, handler->sec_to_boot);
@@ -1453,12 +1456,21 @@ static struct discover_boot_option *find_boot_option_by_id(
 }
 
 void device_handler_boot(struct device_handler *handler,
-		struct boot_command *cmd)
+		bool change_default, struct boot_command *cmd)
 {
 	struct discover_boot_option *opt = NULL;
 
 	if (cmd->option_id && strlen(cmd->option_id))
 		opt = find_boot_option_by_id(handler, cmd->option_id);
+
+	/* Don't allow a normal client to change the default */
+	if (!change_default && handler->last_boot_option &&
+			opt != handler->last_boot_option) {
+		pb_log("Non-root user tried to change boot option\n");
+		device_handler_status_err(handler,
+				"Must be root to change default boot option\n");
+		return;
+	}
 
 	if (handler->pending_boot)
 		boot_cancel(handler->pending_boot);

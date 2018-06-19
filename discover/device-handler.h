@@ -161,7 +161,7 @@ struct discover_boot_option *device_handler_find_option_by_name(
 		struct device_handler *handler, const char *device,
 		const char *name);
 void device_handler_boot(struct device_handler *handler,
-		struct boot_command *cmd);
+		bool change_default, struct boot_command *cmd);
 void device_handler_cancel_default(struct device_handler *handler);
 void device_handler_update_config(struct device_handler *handler,
 		struct config *config);
