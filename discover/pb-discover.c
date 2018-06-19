@@ -189,6 +189,9 @@ int main(int argc, char *argv[])
 	if (config_get()->debug)
 		pb_log_set_debug(true);
 
+	if (platform_restrict_clients())
+		discover_server_set_auth_mode(server, true);
+
 	system_info_init(server);
 
 	handler = device_handler_init(server, waitset, opts.dry_run == opt_yes);

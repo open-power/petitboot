@@ -12,6 +12,8 @@ struct platform {
 	void		(*pre_boot)(struct platform *,
 				const struct config *);
 	int		(*get_sysinfo)(struct platform *, struct system_info *);
+	bool		(*restrict_clients)(struct platform *);
+	int		(*set_password)(struct platform *, const char *hash);
 	uint16_t	dhcp_arch_id;
 	void		*platform_data;
 };
@@ -20,6 +22,8 @@ int platform_init(void *ctx);
 int platform_fini(void);
 const struct platform *platform_get(void);
 int platform_get_sysinfo(struct system_info *info);
+bool platform_restrict_clients(void);
+int platform_set_password(const char *hash);
 void platform_pre_boot(void);
 
 /* configuration interface */

@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
 
@@ -507,7 +508,7 @@ static int user_event_boot(struct user_event *uev, struct event *event)
 		cmd->boot_args = talloc_strdup(cmd, event_get_param(event, "args"));
 	}
 
-	device_handler_boot(handler, cmd);
+	device_handler_boot(handler, false, cmd);
 
 	talloc_free(cmd);
 
@@ -748,6 +749,10 @@ struct user_event *user_event_init(struct device_handler *handler,
 		pb_log("Error binding event handler socket: %s\n",
 			strerror(errno));
 	}
+
+	/* Don't allow events from non-priviledged users */
+	chown(PBOOT_USER_EVENT_SOCKET, 0, 0);
+	chmod(PBOOT_USER_EVENT_SOCKET, 0660);
 
 	waiter_register_io(waitset, uev->socket, WAIT_IN,
 			user_event_process, uev);

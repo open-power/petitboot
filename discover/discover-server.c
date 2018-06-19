@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -10,11 +11,15 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <asm/byteorder.h>
+#include <grp.h>
+#include <sys/stat.h>
 
 #include <pb-config/pb-config.h>
 #include <talloc/talloc.h>
 #include <waiter/waiter.h>
 #include <log/log.h>
+#include <crypt/crypt.h>
+#include <i18n/i18n.h>
 
 #include "pb-protocol/pb-protocol.h"
 #include "list/list.h"
@@ -31,6 +36,7 @@ struct discover_server {
 	struct list clients;
 	struct list status;
 	struct device_handler *device_handler;
+	bool restrict_clients;
 };
 
 struct client {
@@ -39,6 +45,8 @@ struct client {
 	struct waiter *waiter;
 	int fd;
 	bool remote_closed;
+	bool can_modify;
+	struct waiter *auth_waiter;
 };
 
 
@@ -64,6 +72,9 @@ static int client_destructor(void *arg)
 
 	if (client->waiter)
 		waiter_remove(client->waiter);
+
+	if (client->auth_waiter)
+		waiter_remove(client->auth_waiter);
 
 	list_remove(&client->list);
 
@@ -245,11 +256,134 @@ static int write_config_message(struct discover_server *server,
 	return client_write_message(server, client, message);
 }
 
+static int write_authenticate_message(struct discover_server *server,
+		struct client *client)
+{
+	struct pb_protocol_message *message;
+	struct auth_message auth_msg;
+	int len;
+
+	auth_msg.op = AUTH_MSG_RESPONSE;
+	auth_msg.authenticated = client->can_modify;
+
+	len = pb_protocol_authenticate_len(&auth_msg);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_AUTHENTICATE, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_authenticate(&auth_msg, message->payload, len);
+
+	return client_write_message(server, client, message);
+}
+
+static int client_auth_timeout(void *arg)
+{
+	struct client *client = arg;
+	int rc;
+
+	client->auth_waiter = NULL;
+	client->can_modify = false;
+
+	rc = write_authenticate_message(client->server, client);
+	if (rc)
+		pb_log("failed to send client auth timeout\n");
+
+	return 0;
+}
+
+static int discover_server_handle_auth_message(struct client *client,
+		struct auth_message *auth_msg)
+{
+	struct status *status;
+	char *hash;
+	int rc;
+
+	status = talloc_zero(client, struct status);
+
+	switch (auth_msg->op) {
+	case AUTH_MSG_REQUEST:
+		if (!crypt_check_password(auth_msg->password)) {
+			rc = -1;
+			pb_log("Client failed to authenticate\n");
+			status->type = STATUS_ERROR;
+			status->message = talloc_asprintf(status,
+					_("Password incorrect"));
+		} else {
+			client->can_modify = true;
+			rc = write_authenticate_message(client->server,
+					client);
+			if (client->auth_waiter)
+				waiter_remove(client->auth_waiter);
+			client->auth_waiter = waiter_register_timeout(
+					client->server->waitset,
+					300000, /* 5 min */
+					client_auth_timeout, client);
+			pb_log("Client authenticated\n");
+			status->type = STATUS_INFO;
+			status->message = talloc_asprintf(status,
+					_("Authenticated successfully"));
+		}
+		break;
+	case AUTH_MSG_SET:
+		if (client->server->restrict_clients) {
+			if (!crypt_check_password(auth_msg->set_password.password)) {
+				rc = -1;
+				pb_log("Wrong password for set request\n");
+				status->type = STATUS_ERROR;
+				status->message = talloc_asprintf(status,
+						_("Password incorrect"));
+				break;
+			}
+		}
+
+		rc = crypt_set_password(auth_msg,
+				auth_msg->set_password.new_password);
+		if (rc) {
+			pb_log("Failed to set password\n");
+			status->type = STATUS_ERROR;
+			status->message = talloc_asprintf(status,
+					_("Error setting password"));
+		} else {
+			if (!auth_msg->set_password.new_password ||
+				!strlen(auth_msg->set_password.new_password)) {
+				platform_set_password("");
+				discover_server_set_auth_mode(client->server,
+						false);
+				pb_log("Password cleared\n");
+			} else {
+				hash = crypt_get_hash(auth_msg);
+				platform_set_password(hash);
+				talloc_free(hash);
+				discover_server_set_auth_mode(client->server,
+						true);
+			}
+			pb_log("System password changed\n");
+			status->type = STATUS_ERROR;
+			status->message = talloc_asprintf(status,
+					_("Password updated successfully"));
+		}
+		break;
+	default:
+		pb_log("%s: unknown op\n", __func__);
+		rc = -1;
+		break;
+	}
+
+	write_boot_status_message(client->server, client, status);
+	talloc_free(status);
+
+	return rc;
+}
+
 static int discover_server_process_message(void *arg)
 {
 	struct autoboot_option *autoboot_opt;
 	struct pb_protocol_message *message;
 	struct boot_command *boot_command;
+	struct auth_message *auth_msg;
+	struct status *status;
 	struct client *client = arg;
 	struct config *config;
 	char *url;
@@ -262,6 +396,56 @@ static int discover_server_process_message(void *arg)
 		return 0;
 	}
 
+	/*
+	 * If crypt support is enabled, non-authorised clients can only delay
+	 * boot, not configure options or change the default boot option.
+	 */
+	if (!client->can_modify) {
+		switch (message->action) {
+		case PB_PROTOCOL_ACTION_BOOT:
+			boot_command = talloc(client, struct boot_command);
+
+			rc = pb_protocol_deserialise_boot_command(boot_command,
+					message);
+			if (rc) {
+				pb_log("%s: no boot command?", __func__);
+				return 0;
+			}
+
+			device_handler_boot(client->server->device_handler,
+					client->can_modify, boot_command);
+			break;
+		case PB_PROTOCOL_ACTION_CANCEL_DEFAULT:
+			device_handler_cancel_default(client->server->device_handler);
+			break;
+		case PB_PROTOCOL_ACTION_AUTHENTICATE:
+			auth_msg = talloc(client, struct auth_message);
+			rc = pb_protocol_deserialise_authenticate(
+					auth_msg, message);
+			if (rc) {
+				pb_log("Couldn't parse client's auth request\n");
+				break;
+			}
+
+			rc = discover_server_handle_auth_message(client,
+					auth_msg);
+			talloc_free(auth_msg);
+			break;
+		default:
+			pb_log("non-root client tried to perform action %d\n",
+					message->action);
+			status = talloc_zero(client, struct status);
+			if (status) {
+				status->type = STATUS_ERROR;
+				status->message = talloc_asprintf(status,
+						"Client must run as root to make changes");
+				write_boot_status_message(client->server, client,
+						status);
+				talloc_free(status);
+			}
+		}
+		return 0;
+	}
 
 	switch (message->action) {
 	case PB_PROTOCOL_ACTION_BOOT:
@@ -275,7 +459,7 @@ static int discover_server_process_message(void *arg)
 		}
 
 		device_handler_boot(client->server->device_handler,
-				boot_command);
+				client->can_modify, boot_command);
 		break;
 
 	case PB_PROTOCOL_ACTION_CANCEL_DEFAULT:
@@ -327,6 +511,19 @@ static int discover_server_process_message(void *arg)
 				autoboot_opt);
 		break;
 
+	/* For AUTH_MSG_SET */
+	case PB_PROTOCOL_ACTION_AUTHENTICATE:
+		auth_msg = talloc(client, struct auth_message);
+		rc = pb_protocol_deserialise_authenticate(
+				auth_msg, message);
+		if (rc) {
+			pb_log("Couldn't parse client's auth request\n");
+			break;
+		}
+
+		rc = discover_server_handle_auth_message(client, auth_msg);
+		talloc_free(auth_msg);
+		break;
 	default:
 		pb_log_fn("invalid action %d\n", message->action);
 		return 0;
@@ -336,12 +533,27 @@ static int discover_server_process_message(void *arg)
 	return 0;
 }
 
+void discover_server_set_auth_mode(struct discover_server *server,
+		bool restrict_clients)
+{
+	struct client *client;
+
+	server->restrict_clients = restrict_clients;
+
+	list_for_each_entry(&server->clients, client, list) {
+		client->can_modify = !restrict_clients;
+		write_authenticate_message(server, client);
+	}
+}
+
 static int discover_server_process_connection(void *arg)
 {
 	struct discover_server *server = arg;
 	struct statuslog_entry *entry;
 	int fd, rc, i, n_devices, n_plugins;
 	struct client *client;
+	struct ucred ucred;
+	socklen_t len;
 
 	/* accept the incoming connection */
 	fd = accept(server->socket, NULL, NULL);
@@ -361,6 +573,30 @@ static int discover_server_process_connection(void *arg)
 	client->waiter = waiter_register_io(server->waitset, client->fd,
 				WAIT_IN, discover_server_process_message,
 				client);
+
+	/*
+	 * get some info on the connecting process - if the client is being
+	 * run as root allow them to make changes
+	 */
+	if (server->restrict_clients) {
+		len = sizeof(struct ucred);
+		rc = getsockopt(client->fd, SOL_SOCKET, SO_PEERCRED, &ucred,
+				&len);
+		if (rc) {
+			pb_log("Failed to get socket info - restricting client\n");
+			client->can_modify = false;
+		} else {
+			pb_log("Client details: pid: %d, uid: %d, egid: %d\n",
+					ucred.pid, ucred.uid, ucred.gid);
+			client->can_modify = ucred.uid == 0;
+		}
+	} else
+		client->can_modify = true;
+
+	/* send auth status to client */
+	rc = write_authenticate_message(server, client);
+	if (rc)
+		return 0;
 
 	/* send sysinfo to client */
 	rc = write_system_info_message(server, client, system_info_get());
@@ -508,6 +744,7 @@ struct discover_server *discover_server_init(struct waitset *waitset)
 {
 	struct discover_server *server;
 	struct sockaddr_un addr;
+	struct group *group;
 
 	server = talloc(NULL, struct discover_server);
 	if (!server)
@@ -527,13 +764,19 @@ struct discover_server *discover_server_init(struct waitset *waitset)
 	}
 
 	talloc_set_destructor(server, server_destructor);
-
 	addr.sun_family = AF_UNIX;
 	strcpy(addr.sun_path, PB_SOCKET_PATH);
 
 	if (bind(server->socket, (struct sockaddr *)&addr, sizeof(addr))) {
 		pb_log("error binding server socket: %s\n", strerror(errno));
 		goto out_err;
+	}
+
+	/* Allow all clients to communicate on this socket */
+	group = getgrnam("petitgroup");
+	if (group) {
+		chown(PB_SOCKET_PATH, 0, group->gr_gid);
+		chmod(PB_SOCKET_PATH, 0660);
 	}
 
 	if (listen(server->socket, 8)) {

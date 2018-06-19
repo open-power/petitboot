@@ -213,6 +213,19 @@ int platform_get_sysinfo(struct system_info *info)
 	return -1;
 }
 
+bool platform_restrict_clients(){
+	if (platform && platform->restrict_clients)
+		return platform->restrict_clients(platform);
+	return false;
+}
+
+int platform_set_password(const char *hash)
+{
+	if (platform && platform->set_password)
+		return platform->set_password(platform, hash);
+	return -1;
+}
+
 int config_set(struct config *newconfig)
 {
 	int rc;
