@@ -379,6 +379,25 @@ int pb_protocol_temp_autoboot_len(const struct autoboot_option *opt)
 	return len;
 }
 
+int pb_protocol_authenticate_len(struct auth_message *msg)
+{
+	switch (msg->op) {
+	case AUTH_MSG_REQUEST:
+		/* enum + password + length */
+		return 4 + 4 + optional_strlen(msg->password);
+	case AUTH_MSG_RESPONSE:
+		/* enum + bool */
+		return 4 + 4;
+	case AUTH_MSG_SET:
+		/* enum + password + password */
+		return 4 + 4 + optional_strlen(msg->set_password.password) +
+			4 + optional_strlen(msg->set_password.new_password);
+	default:
+		pb_log("%s: invalid input\n", __func__);
+		return 0;
+	}
+}
+
 int pb_protocol_serialise_device(const struct device *dev,
 		char *buf, int buf_len)
 {
@@ -698,6 +717,39 @@ int pb_protocol_serialise_temp_autoboot(const struct autoboot_option *opt,
 		pos += pb_protocol_serialise_string(pos, opt->uuid);
 	}
 
+	(void)buf_len;
+
+	return 0;
+}
+
+int pb_protocol_serialise_authenticate(struct auth_message *msg,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
+
+	*(enum auth_msg_type *)pos = msg->op;
+	pos += sizeof(enum auth_msg_type);
+
+	switch(msg->op) {
+	case AUTH_MSG_REQUEST:
+		pos += pb_protocol_serialise_string(pos, msg->password);
+		break;
+	case AUTH_MSG_RESPONSE:
+		*(bool *)pos = msg->authenticated;
+		pos += sizeof(bool);
+		break;
+	case AUTH_MSG_SET:
+		pos += pb_protocol_serialise_string(pos,
+				msg->set_password.password);
+		pos += pb_protocol_serialise_string(pos,
+				msg->set_password.new_password);
+		break;
+	default:
+		pb_log("%s: invalid msg\n", __func__);
+		return -1;
+	};
+
+	assert(pos <= buf + buf_len);
 	(void)buf_len;
 
 	return 0;
@@ -1345,4 +1397,40 @@ int pb_protocol_deserialise_temp_autoboot(struct autoboot_option *opt,
 
 out:
 	return rc;
+}
+
+int pb_protocol_deserialise_authenticate(struct auth_message *msg,
+		const struct pb_protocol_message *message)
+{
+	unsigned int len;
+	const char *pos;
+
+	len = message->payload_len;
+	pos = message->payload;
+
+	msg->op = *(enum auth_msg_type *)pos;
+	pos += sizeof(enum auth_msg_type);
+
+	switch (msg->op) {
+	case AUTH_MSG_REQUEST:
+		if (read_string(msg, &pos, &len, &msg->password))
+			return -1;
+		break;
+	case AUTH_MSG_RESPONSE:
+		msg->authenticated = *(bool *)pos;
+		pos += sizeof(bool);
+		break;
+	case AUTH_MSG_SET:
+		if (read_string(msg, &pos, &len, &msg->set_password.password))
+			return -1;
+		if (read_string(msg, &pos, &len,
+					&msg->set_password.new_password))
+			return -1;
+		break;
+	default:
+		pb_log("%s: unable to parse\n", __func__);
+		return -1;
+	}
+
+	return 0;
 }
