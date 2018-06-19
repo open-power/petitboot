@@ -22,6 +22,7 @@ const char **common_known_params(void)
 		"petitboot,console",
 		"petitboot,http_proxy",
 		"petitboot,https_proxy",
+		"petitboot,password",
 		NULL,
 	};
 

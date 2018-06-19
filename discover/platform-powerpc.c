@@ -14,6 +14,7 @@
 #include <list/list.h>
 #include <log/log.h>
 #include <process/process.h>
+#include <crypt/crypt.h>
 
 #include "hostboot.h"
 #include "platform.h"
@@ -598,6 +599,7 @@ err:
 static int load_config(struct platform *p, struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
+	const char *hash;
 	int rc;
 
 	rc = parse_nvram(platform);
@@ -621,6 +623,14 @@ static int load_config(struct platform *p, struct config *config)
 		get_ipmi_network_override(platform, config);
 
 	config_get_active_consoles(config);
+
+
+	hash = param_list_get_value(platform->params, "petitboot,password");
+	if (hash) {
+		rc = crypt_set_password_hash(platform, hash);
+		if (rc)
+			pb_log("Failed to set password hash\n");
+	}
 
 	return 0;
 }
@@ -689,6 +699,23 @@ static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 	return 0;
 }
 
+static bool restrict_clients(struct platform *p)
+{
+	struct platform_powerpc *platform = to_platform_powerpc(p);
+
+	return param_list_get_value(platform->params, "petitboot,password") != NULL;
+}
+
+static int set_password(struct platform *p, const char *hash)
+{
+	struct platform_powerpc *platform = to_platform_powerpc(p);
+
+	param_list_set(platform->params, "petitboot,password", hash, true);
+	write_nvram(platform);
+
+	return 0;
+}
+
 static bool probe(struct platform *p, void *ctx)
 {
 	struct platform_powerpc *platform;
@@ -742,6 +769,8 @@ static struct platform platform_powerpc = {
 	.save_config		= save_config,
 	.pre_boot		= pre_boot,
 	.get_sysinfo		= get_sysinfo,
+	.restrict_clients	= restrict_clients,
+	.set_password		= set_password,
 };
 
 register_platform(platform_powerpc);
