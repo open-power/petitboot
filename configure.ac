@@ -76,6 +76,27 @@ AC_CHECK_LIB([devmapper], [dm_task_create],
 	[AC_MSG_FAILURE([The libdevmapper development library is required by petitboot.  Try installing the package libdevmapper-dev or device-mapper-devel.])]
 )
 
+AC_ARG_ENABLE(
+	[crypt],
+	[AS_HELP_STRING(
+		[--enable-crypt],
+		[Include crypt support to enable password use [default=no]]
+	)],
+	[],
+	[enable_crypt=no]
+)
+AM_CONDITIONAL([ENABLE_CRYPT], [test "x$enable_crypt" = "xyes"])
+AS_IF([test "x$enable_crypt" = "xyes"],
+      [AC_DEFINE(CRYPT_SUPPORT, 1, [Enable crypt/password support])],
+      []
+)
+AS_IF([test "x$enable_crypt" = "xyes"],
+	AC_CHECK_LIB([crypt], [crypt],
+		[CRYPT_LIBS=-lcrypt],
+		[AC_MSG_FAILURE([shadow/crypt libs required])]
+	)
+)
+
 AC_ARG_WITH([fdt],
 	AS_HELP_STRING([--without-fdt],
 		[Build without libfdt (default: no)]))
@@ -455,6 +476,7 @@ AS_IF(
  
 AC_SUBST([UDEV_LIBS])
 AC_SUBST([DEVMAPPER_LIBS])
+AC_SUBST([CRYPT_LIBS])
 AC_SUBST([FDT_LIBS])
 AC_SUBST([LIBFLASH_LIBS])
 AC_SUBST([LIBTOOL_DEPS])

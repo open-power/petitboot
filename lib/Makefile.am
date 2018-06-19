@@ -35,6 +35,7 @@ lib_libpbcore_la_CFLAGS = \
 
 lib_libpbcore_la_SOURCES = \
 	lib/ccan/endian/endian.h \
+	lib/crypt/crypt.h \
 	lib/file/file.h \
 	lib/file/file.c \
 	lib/fold/fold.h \
@@ -92,4 +93,12 @@ else
 lib_libpbcore_la_SOURCES += \
 	lib/security/none.c
 endif
+endif
+
+if ENABLE_CRYPT
+lib_libpbcore_la_SOURCES += \
+	lib/crypt/crypt.c
+
+lib_libpbcore_la_LDFLAGS += \
+	$(CRYPT_LIBS)
 endif
