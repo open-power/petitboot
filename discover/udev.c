@@ -241,7 +241,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 static int udev_check_interface_ready(struct device_handler *handler,
 		struct udev_device *dev)
 {
-	const char *name, *name_path, *ifindex, *interface, *mac_name;
+	const char *name, *ifindex, *interface, *mac_name;
 	uint8_t *mac;
 	char byte[3];
 	unsigned int i, j;
@@ -253,13 +253,12 @@ static int udev_check_interface_ready(struct device_handler *handler,
 		return -1;
 	}
 
-	name_path = udev_device_get_property_value(dev, "ID_NET_NAME_PATH");
 	ifindex = udev_device_get_property_value(dev, "IFINDEX");
 	interface = udev_device_get_property_value(dev, "INTERFACE");
 	mac_name = udev_device_get_property_value(dev, "ID_NET_NAME_MAC");
 
 	/* Physical interfaces should have all of these properties */
-	if (!name_path || !ifindex || !interface || !mac_name) {
+	if (!ifindex || !interface || !mac_name) {
 		pb_debug("%s: interface %s missing properties\n",
 				__func__, name);
 		return -1;
