@@ -28,6 +28,7 @@
 #include <i18n/i18n.h>
 #include <log/log.h>
 
+#include "ui/common/discover-client.h"
 #include "nc-cui.h"
 #include "nc-add-url.h"
 #include "nc-widgets.h"
@@ -111,14 +112,37 @@ static void add_url_screen_process_key(struct nc_scr *scr, int key)
 		cui_show_help(screen->cui, _("Retrieve Config"),
 			&add_url_help_text);
 
-	} else if (handled) {
+	} else if (handled && (screen->cui->current == scr)) {
 		pad_refresh(screen);
 	}
+}
+
+static int screen_process_form(struct add_url_screen *screen)
+{
+	char *url;
+	int rc;
+
+	url = widget_textbox_get_value(screen->widgets.url_f);
+	if (!url || !strlen(url))
+		return 0;
+
+	/* Once we have all the info we need, tell the server */
+	rc = cui_send_url(screen->cui, url);
+
+	if (rc)
+		pb_log("cui_send_retreive failed!\n");
+	else
+		pb_debug("add_url url sent!\n");
+	return 0;
 }
 
 static int add_url_screen_post(struct nc_scr *scr)
 {
 	struct add_url_screen *screen = add_url_screen_from_scr(scr);
+
+	if (screen->exit)
+		screen->on_exit(screen->cui);
+
 	widgetset_post(screen->widgetset);
 	nc_scr_frame_draw(scr);
 	if (screen->need_redraw) {
@@ -142,34 +166,29 @@ struct nc_scr *add_url_screen_scr(struct add_url_screen *screen)
 	return &screen->scr;
 }
 
-static int screen_process_form(struct add_url_screen *screen)
+static void add_url_process_cb(struct nc_scr *scr)
 {
-	char *url;
-	int rc;
+	struct add_url_screen *screen = add_url_screen_from_scr(scr);
 
-	url = widget_textbox_get_value(screen->widgets.url_f);
-	if (!url || !strlen(url))
-		return 0;
-
-	/* Once we have all the info we need, tell the server */
-	rc = cui_send_url(screen->cui, url);
-
-	if (rc)
-		pb_log("cui_send_retreive failed!\n");
-	else
-		pb_debug("add_url url sent!\n");
-	return 0;
+	if (!screen_process_form(screen))
+		screen->exit = true;
 }
 
 static void ok_click(void *arg)
 {
 	struct add_url_screen *screen = arg;
-	if (screen_process_form(screen))
-		/* errors are written to the status line, so we'll need
-		 * to refresh */
-		wrefresh(screen->scr.main_ncw);
-	else
-		screen->exit = true;
+
+	if (discover_client_authenticated(screen->cui->client)) {
+		if (screen_process_form(screen))
+			/* errors are written to the status line, so we'll need
+			 * to refresh */
+			wrefresh(screen->scr.main_ncw);
+		else
+			screen->exit = true;
+	} else {
+		cui_show_auth(screen->cui, screen->scr.main_ncw, false,
+				add_url_process_cb);
+	}
 }
 
 static void help_click(void *arg)

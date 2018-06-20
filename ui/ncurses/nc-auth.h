@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 IBM Corporation
+ *  Copyright (C) 2018 IBM Corporation
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,18 +15,19 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _NC_PLUGIN_H
-#define _NC_PLUGIN_H
+#ifndef _NC_AUTH_H
+#define _NC_AUTH_H
 
 #include "nc-cui.h"
 
-struct plugin_screen;
+struct auth_screen;
 
-struct plugin_screen *plugin_screen_init(struct cui *cui,
-		struct pmenu_item *item,
-                void (*on_exit)(struct cui *));
+struct auth_screen *auth_screen_init(struct cui *cui,
+		WINDOW *pad, bool set_password,
+		void (callback)(struct nc_scr *),
+		void (*on_exit)(struct cui *));
 
-struct nc_scr *plugin_screen_scr(struct plugin_screen *screen);
-void plugin_screen_update(struct plugin_screen *screen);
+struct nc_scr *auth_screen_scr(struct auth_screen *screen);
+struct nc_scr *auth_screen_return_scr(struct auth_screen *screen);
 
-#endif /* defined _NC_PLUGIN_H */
+#endif /* define _NC_AUTH_H */

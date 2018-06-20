@@ -57,7 +57,9 @@ ui_ncurses_libpbnc_la_SOURCES = \
 	ui/ncurses/nc-plugin.c \
 	ui/ncurses/nc-plugin.h \
 	ui/ncurses/nc-plugin-help.c \
-	ui/ncurses/nc-plugin-menu-help.c
+	ui/ncurses/nc-plugin-menu-help.c \
+	ui/ncurses/nc-auth.c \
+	ui/ncurses/nc-auth.h
 
 sbin_PROGRAMS += ui/ncurses/petitboot-nc
 

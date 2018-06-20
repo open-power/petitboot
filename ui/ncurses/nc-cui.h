@@ -73,6 +73,7 @@ struct cui {
 	struct help_screen *help_screen;
 	struct subset_screen *subset_screen;
 	struct statuslog_screen *statuslog_screen;
+	struct auth_screen *auth_screen;
 	struct pjs *pjs;
 	void *platform_info;
 	unsigned int default_item;
@@ -98,9 +99,13 @@ void cui_show_subset(struct cui *cui, const char *title,
 void cui_show_add_url(struct cui *cui);
 void cui_show_plugin(struct pmenu_item *item);
 void cui_show_plugin_menu(struct cui *cui);
+void cui_show_auth(struct cui *cui, WINDOW *parent, bool set_password,
+		void (*callback)(struct nc_scr *));
 int cui_send_config(struct cui *cui, struct config *config);
 int cui_send_url(struct cui *cui, char *url);
 int cui_send_plugin_install(struct cui *cui, char *file);
+int cui_send_authenticate(struct cui *cui, char *password);
+int cui_send_set_password(struct cui *cui, char *password, char *new_password);
 void cui_send_reinit(struct cui *cui);
 
 /* convenience routines */
@@ -112,6 +117,7 @@ void cui_abort_on_exit(struct pmenu *menu);
 void cui_on_open(struct pmenu *menu);
 int cui_run_cmd(struct cui *cui, const char **cmd_argv);
 int cui_run_cmd_from_item(struct pmenu_item *item);
+void cui_update_language(struct cui *cui, const char *lang);
 
 static inline struct cui *cui_from_arg(void *arg)
 {

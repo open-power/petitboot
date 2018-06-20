@@ -29,11 +29,12 @@
 #include <log/log.h>
 #include <i18n/i18n.h>
 
+#include "ui/common/discover-client.h"
 #include "nc-cui.h"
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	48
+#define N_FIELDS	49
 
 extern struct help_text config_help_text;
 
@@ -51,7 +52,6 @@ struct config_screen {
 
 	bool			exit;
 	bool			show_help;
-	bool			show_subset;
 	bool			need_redraw;
 	bool			need_update;
 
@@ -118,6 +118,8 @@ struct config_screen {
 		struct nc_widget_label		*manual_console_l;
 		struct nc_widget_label		*current_console_l;
 
+		struct nc_widget_button		*update_password_l;
+
 		struct nc_widget_label		*net_override_l;
 		struct nc_widget_label		*safe_mode;
 		struct nc_widget_button		*ok_b;
@@ -175,7 +177,7 @@ static void config_screen_process_key(struct nc_scr *scr, int key)
 		cui_show_help(screen->cui, _("System Configuration"),
 				&config_help_text);
 
-	} else if (handled && !screen->show_subset) {
+	} else if (handled && (screen->cui->current == scr)) {
 		pad_refresh(screen);
 	}
 }
@@ -370,15 +372,39 @@ static int screen_process_form(struct config_screen *screen)
 	return 0;
 }
 
+static void config_screen_config_cb(struct nc_scr *scr)
+{
+	struct config_screen *screen = config_screen_from_scr(scr);
+
+	if (!screen_process_form(screen))
+		screen->exit = true;
+}
+
+#ifdef CRYPT_SUPPORT
+static void password_click(void *arg)
+{
+	struct config_screen *screen = arg;
+
+	screen->need_update = true;
+	cui_show_auth(screen->cui, screen->scr.main_ncw, true, NULL);
+}
+#endif
+
 static void ok_click(void *arg)
 {
 	struct config_screen *screen = arg;
-	if (screen_process_form(screen))
-		/* errors are written to the status line, so we'll need
-		 * to refresh */
-		wrefresh(screen->scr.main_ncw);
-	else
-		screen->exit = true;
+
+	if (discover_client_authenticated(screen->cui->client)) {
+		if (screen_process_form(screen))
+			/* errors are written to the status line, so we'll need
+			 * to refresh */
+			wrefresh(screen->scr.main_ncw);
+		else
+			screen->exit = true;
+	} else {
+		cui_show_auth(screen->cui, screen->scr.main_ncw, false,
+				config_screen_config_cb);
+	}
 }
 
 static void help_click(void *arg)
@@ -650,6 +676,12 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 					screen->widgets.current_console_l), false);
 	}
 
+#ifdef CRYPT_SUPPORT
+	widget_move(widget_button_base(screen->widgets.update_password_l),
+			y, screen->field_x);
+	y += 2;
+#endif
+
 	if (screen->net_override) {
 		widget_move(widget_label_base(screen->widgets.net_override_l),
 				y, screen->label_x);
@@ -705,7 +737,6 @@ static void config_screen_add_device(void *arg)
 {
 	struct config_screen *screen = arg;
 
-	screen->show_subset = true;
 	cui_show_subset(screen->cui, _("Select a boot device to add"),
 			screen->widgets.boot_order_f);
 }
@@ -1113,6 +1144,11 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 				ttyname(STDIN_FILENO));
 	screen->widgets.current_console_l = widget_new_label(set, 0 , 0, tty);
 
+#ifdef CRYPT_SUPPORT
+	screen->widgets.update_password_l = widget_new_button(set, 0, 0, 30,
+			_("Update system password"), password_click, screen);
+#endif
+
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 10, _("OK"),
 			ok_click, screen);
 	screen->widgets.help_b = widget_new_button(set, 0, 0, 10, _("Help"),
@@ -1212,7 +1248,12 @@ void config_screen_update(struct config_screen *screen,
 static int config_screen_post(struct nc_scr *scr)
 {
 	struct config_screen *screen = config_screen_from_scr(scr);
-	screen->show_subset = false;
+
+	/* We may have been posted after an auth action completed */
+	if (screen->exit) {
+		screen->on_exit(screen->cui);
+		return 0;
+	}
 
 	if (screen->need_update) {
 		config_screen_draw(screen, screen->cui->config,
@@ -1262,7 +1303,6 @@ struct config_screen *config_screen_init(struct cui *cui,
 	screen->field_x = 17;
 
 	screen->ipmi_override = false;
-	screen->show_subset = false;
 
 	screen->scr.frame.ltitle = talloc_strdup(screen,
 			_("Petitboot System Configuration"));

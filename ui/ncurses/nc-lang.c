@@ -29,11 +29,12 @@
 #include <i18n/i18n.h>
 #include <pb-config/pb-config.h>
 
+#include "ui/common/discover-client.h"
 #include "nc-cui.h"
 #include "nc-lang.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	5
+#define N_FIELDS	7
 
 static struct lang {
 	const char	*name;
@@ -69,6 +70,9 @@ struct lang_screen {
 	struct {
 		struct nc_widget_select		*lang_f;
 		struct nc_widget_label		*lang_l;
+
+		struct nc_widget_label		*save_l;
+		struct nc_widget_checkbox	*save_cb;
 
 		struct nc_widget_label		*safe_mode;
 		struct nc_widget_button		*ok_b;
@@ -115,10 +119,53 @@ static void lang_screen_process_key(struct nc_scr *scr, int key)
 
 	if (screen->exit) {
 		screen->on_exit(screen->cui);
-
-	} else if (handled) {
+	} else if (handled && (screen->cui->current == scr)) {
 		pad_refresh(screen);
 	}
+}
+
+static const char *lang_get_lang_name(struct lang_screen *screen)
+{
+	struct lang *lang;
+	int idx;
+
+	idx = widget_select_get_value(screen->widgets.lang_f);
+
+	/* Option -1 ("Unknown") can only be populated from the current
+	 * language, so there's no change here */
+	if (idx == -1)
+		return NULL;
+
+	lang = &languages[idx];
+
+	return lang->name;
+}
+
+static int lang_process_form(struct lang_screen *screen)
+{
+	struct config *config;
+	const char *lang;
+	int rc;
+
+	config = config_copy(screen, screen->cui->config);
+
+	lang = lang_get_lang_name(screen);
+
+	if (!lang || (config->lang && !strcmp(lang, config->lang)))
+		return 0;
+
+	config->lang = talloc_strdup(screen, lang);
+
+	config->safe_mode = false;
+	rc = cui_send_config(screen->cui, config);
+	talloc_free(config);
+
+	if (rc)
+		pb_log("cui_send_config failed!\n");
+	else
+		pb_debug("config sent!\n");
+
+	return 0;
 }
 
 static void lang_screen_resize(struct nc_scr *scr)
@@ -130,6 +177,10 @@ static void lang_screen_resize(struct nc_scr *scr)
 static int lang_screen_post(struct nc_scr *scr)
 {
 	struct lang_screen *screen = lang_screen_from_scr(scr);
+
+	if (screen->exit)
+		screen->on_exit(screen->cui);
+
 	widgetset_post(screen->widgetset);
 	nc_scr_frame_draw(scr);
 	wrefresh(screen->scr.main_ncw);
@@ -149,49 +200,39 @@ struct nc_scr *lang_screen_scr(struct lang_screen *screen)
 	return &screen->scr;
 }
 
-static int lang_process_form(struct lang_screen *screen)
+static void lang_screen_update_cb(struct nc_scr *scr)
 {
-	struct config *config;
-	struct lang *lang;
-	int idx, rc;
+	struct lang_screen *screen = lang_screen_from_scr(scr);
 
-	config = config_copy(screen, screen->cui->config);
-
-	idx = widget_select_get_value(screen->widgets.lang_f);
-
-	/* Option -1 ("Unknown") can only be populated from the current
-	 * language, so there's no change here */
-	if (idx == -1)
-		return 0;
-
-	lang = &languages[idx];
-
-	if (config->lang && !strcmp(lang->name, config->lang))
-		return 0;
-
-	config->lang = talloc_strdup(screen, lang->name);
-
-	config->safe_mode = false;
-	rc = cui_send_config(screen->cui, config);
-	talloc_free(config);
-
-	if (rc)
-		pb_log("cui_send_config failed!\n");
-	else
-		pb_debug("config sent!\n");
-
-	return 0;
+	if (!lang_process_form(screen))
+		screen->exit = true;
 }
 
 static void ok_click(void *arg)
 {
 	struct lang_screen *screen = arg;
-	if (lang_process_form(screen))
-		/* errors are written to the status line, so we'll need
-		 * to refresh */
-		wrefresh(screen->scr.main_ncw);
-	else
+	const char *lang;
+
+	if (!widget_checkbox_get_value(screen->widgets.save_cb)) {
+		/* Just update the client display */
+		lang = lang_get_lang_name(screen);
+		if (lang)
+			cui_update_language(screen->cui, lang);
 		screen->exit = true;
+		return;
+	}
+
+	if (discover_client_authenticated(screen->cui->client)) {
+		if (lang_process_form(screen))
+			/* errors are written to the status line, so we'll need
+			 * to refresh */
+			wrefresh(screen->scr.main_ncw);
+		else
+			screen->exit = true;
+	} else {
+		cui_show_auth(screen->cui, screen->scr.main_ncw, false,
+				lang_screen_update_cb);
+	}
 }
 
 static void cancel_click(void *arg)
@@ -219,6 +260,10 @@ static void lang_screen_layout_widgets(struct lang_screen *screen)
 	y += layout_pair(screen, y, screen->widgets.lang_l,
 			widget_select_base(screen->widgets.lang_f));
 
+	y += 1;
+
+	y += layout_pair(screen, y, screen->widgets.save_l,
+			widget_checkbox_base(screen->widgets.save_cb));
 	y += 1;
 
 	if (screen->cui->config->safe_mode) {
@@ -289,6 +334,10 @@ static void lang_screen_setup_widgets(struct lang_screen *screen,
 					label, true);
 	}
 
+	screen->widgets.save_l = widget_new_label(set, 0, 0,
+			_("Save changes?"));
+	screen->widgets.save_cb = widget_new_checkbox(set, 0, 0, false);
+
 	if (config->safe_mode)
 		screen->widgets.safe_mode = widget_new_label(set, 0, 0,
 			 _("Selecting 'OK' will exit safe mode"));
@@ -325,7 +374,7 @@ static void lang_screen_draw(struct lang_screen *screen,
 	bool repost = false;
 	int height;
 
-	height = ARRAY_SIZE(languages) + 4;
+	height = ARRAY_SIZE(languages) + N_FIELDS + 4;
 	if (!screen->pad || getmaxy(screen->pad) < height) {
 		if (screen->pad)
 			delwin(screen->pad);

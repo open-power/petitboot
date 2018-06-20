@@ -40,6 +40,8 @@
 
 extern const struct help_text plugin_help_text;
 
+static void plugin_run_command(void *arg);
+
 struct plugin_screen {
 	struct nc_scr		scr;
 	struct cui		*cui;
@@ -48,6 +50,7 @@ struct plugin_screen {
 
 	bool			exit;
 	bool			show_help;
+	bool			show_auth_run;
 	bool			need_redraw;
 	void			(*on_exit)(struct cui *);
 
@@ -160,7 +163,7 @@ static void plugin_screen_process_key(struct nc_scr *scr, int key)
 		cui_show_help(screen->cui, _("Petitboot Plugin"),
 				&plugin_help_text);
 
-	} else if (handled) {
+	} else if (handled && (screen->cui->current == scr)) {
 		pad_refresh(screen);
 	}
 }
@@ -178,6 +181,12 @@ static int plugin_screen_post(struct nc_scr *scr)
 	}
 	wrefresh(screen->scr.main_ncw);
 	pad_refresh(screen);
+
+	if (screen->show_auth_run) {
+		screen->show_auth_run = false;
+		plugin_run_command(screen);
+	}
+
 	return 0;
 }
 
@@ -232,28 +241,21 @@ static void plugin_run_command(void *arg)
 	talloc_free(cmd);
 }
 
-/* Call pb-plugin to install a plugin specified by plugin_file */
-int plugin_install_plugin(struct pmenu_item *item)
+static void plugin_run_command_check(void *arg)
 {
-	struct cui *cui = cui_from_item(item);
-	struct cui_opt_data *cod = cod_from_item(item);
-	int rc;
+	struct plugin_screen *screen = arg;
 
-	assert(cui->current == &cui->plugin_menu->scr);
+	if (discover_client_authenticated(screen->cui->client)) {
+		plugin_run_command(screen);
+		return;
+	}
 
-	nc_scr_status_printf(cui->current, _("Installing plugin %s"),
-			cod->pd->plugin_file);
-
-	rc = cui_send_plugin_install(cui, cod->pd->plugin_file);
-
-	if (rc) {
-		pb_log("cui_send_plugin_install failed!\n");
-		nc_scr_status_printf(cui->current,
-				_("Failed to send install request"));
-	} else
-		pb_debug("cui_send_plugin_install sent!\n");
-
-	return rc;
+	/*
+	 * Don't supply a callback as we want to handle running the command
+	 * from the plugin screen.
+	 */
+	screen->show_auth_run = true;
+	cui_show_auth(screen->cui, screen->scr.main_ncw, false, NULL);
 }
 
 static void plugin_screen_setup_widgets(struct plugin_screen *screen)
@@ -291,7 +293,7 @@ static void plugin_screen_setup_widgets(struct plugin_screen *screen)
 	}
 
 	screen->widgets.run_b = widget_new_button(set, 0, 0, 30,
-			_("Run selected command"), plugin_run_command, screen);
+			_("Run selected command"), plugin_run_command_check, screen);
 }
 
 static int layout_pair(struct plugin_screen *screen, int y,

@@ -47,6 +47,7 @@
 #include "nc-statuslog.h"
 #include "nc-subset.h"
 #include "nc-plugin.h"
+#include "nc-auth.h"
 #include "console-codes.h"
 
 extern const struct help_text main_menu_help_text;
@@ -58,6 +59,7 @@ static struct pmenu *main_menu_init(struct cui *cui);
 static struct pmenu *plugin_menu_init(struct cui *cui);
 
 static void cui_cancel_autoboot_on_exit(struct cui *cui);
+static void cui_auth_exit(struct cui *cui);
 
 static struct {
 	int key;
@@ -331,10 +333,38 @@ static int menu_statuslog_execute(struct pmenu_item *item)
 	return 0;
 }
 
+static void menu_reinit_cb(struct nc_scr *scr)
+{
+	struct pmenu *menu = pmenu_from_scr(scr);
+
+	cui_send_reinit(cui_from_pmenu(menu));
+}
+
 static int menu_reinit_execute(struct pmenu_item *item)
 {
-	if (cui_from_item(item)->client)
-		cui_send_reinit(cui_from_item(item));
+	struct cui *cui = cui_from_item(item);
+
+	if (!cui->client)
+		return 0;
+
+	/* If we don't need to authenticate, send the reinit immediately */
+	if (discover_client_authenticated(cui->client)) {
+		cui_send_reinit(cui);
+		return 0;
+	}
+
+	if (!cui->current)
+		return 0;
+
+	if (cui->auth_screen)
+		return 0;
+
+	cui->auth_screen = auth_screen_init(cui, cui->current->main_ncw,
+			false, menu_reinit_cb, cui_auth_exit);
+
+	if (cui->auth_screen)
+		cui_set_current(cui, auth_screen_scr(cui->auth_screen));
+
 	return 0;
 }
 
@@ -349,6 +379,26 @@ static int menu_plugin_execute(struct pmenu_item *item)
 {
 	if (cui_from_item(item)->client)
 		cui_show_plugin_menu(cui_from_item(item));
+	return 0;
+}
+
+static void cui_boot_cb(struct nc_scr *scr)
+{
+	struct pmenu *menu = pmenu_from_scr(scr);
+
+	if (pmenu_find_selected(menu))
+		cui_boot(pmenu_find_selected(menu));
+}
+
+static int cui_boot_check(struct pmenu_item *item)
+{
+	struct cui *cui = cui_from_item(item);
+
+	if (discover_client_authenticated(cui->client))
+		return cui_boot(item);
+
+	cui_show_auth(cui, item->pmenu->scr.main_ncw, false, cui_boot_cb);
+
 	return 0;
 }
 
@@ -383,7 +433,7 @@ static void cui_boot_editor_on_exit(struct cui *cui,
 		}
 
 		item->on_edit = cui_item_edit;
-		item->on_execute = cui_boot;
+		item->on_execute = cui_boot_check;
 		item->data = cod;
 
 		talloc_steal(item, cod);
@@ -440,6 +490,52 @@ void cui_item_new(struct pmenu *menu)
 	cui->boot_editor = boot_editor_init(cui, NULL, cui->sysinfo,
 					cui_boot_editor_on_exit);
 	cui_set_current(cui, boot_editor_scr(cui->boot_editor));
+}
+
+
+/* Call pb-plugin to install a plugin specified by plugin_file */
+static int cui_install_plugin(struct pmenu_item *item)
+{
+	struct cui *cui = cui_from_item(item);
+	struct cui_opt_data *cod = cod_from_item(item);
+	int rc;
+
+	rc = cui_send_plugin_install(cui, cod->pd->plugin_file);
+
+	if (rc) {
+		pb_log("cui_send_plugin_install failed!\n");
+		nc_scr_status_printf(cui->current,
+				_("Failed to send install request"));
+	} else {
+		nc_scr_status_printf(cui->current, _("Installing plugin %s"),
+				cod->pd->plugin_file);
+		pb_debug("cui_send_plugin_install sent!\n");
+	}
+
+	return rc;
+}
+
+static void cui_plugin_install_cb(struct nc_scr *scr)
+{
+	struct pmenu *menu = pmenu_from_scr(scr);
+
+	if (pmenu_find_selected(menu))
+		cui_install_plugin(pmenu_find_selected(menu));
+	else
+		pb_debug("%s: no current item\n", __func__);
+}
+
+static int cui_plugin_install_check(struct pmenu_item *item)
+{
+	struct cui *cui = cui_from_item(item);
+
+	if (discover_client_authenticated(cui->client))
+		return cui_install_plugin(item);
+
+	cui_show_auth(cui, item->pmenu->scr.main_ncw, false,
+			cui_plugin_install_cb);
+
+	return 0;
 }
 
 static void cui_sysinfo_exit(struct cui *cui)
@@ -578,6 +674,39 @@ void cui_show_subset(struct cui *cui, const char *title,
 
 	if (cui->subset_screen)
 		cui_set_current(cui, subset_screen_scr(cui->subset_screen));
+}
+
+static void cui_auth_exit(struct cui *cui)
+{
+	struct nc_scr *return_scr = auth_screen_return_scr(cui->auth_screen);
+
+	/*
+	 * Destroy the auth screen first so that the subwindow is cleaned up
+	 * before the return_scr posts. If we don't do this operations on the
+	 * main_ncw can cause a blank screen at first (eg. status update).
+	 */
+	nc_scr_unpost(cui->current);
+	talloc_free(cui->auth_screen);
+	cui->auth_screen = NULL;
+
+	cui->current = return_scr;
+	nc_scr_post(cui->current);
+}
+
+void cui_show_auth(struct cui *cui, WINDOW *parent, bool set_password,
+		void (*callback)(struct nc_scr *))
+{
+	if (!cui->current)
+		return;
+
+	if (cui->auth_screen)
+		return;
+
+	cui->auth_screen = auth_screen_init(cui, parent, set_password,
+			callback, cui_auth_exit);
+
+	if (cui->auth_screen)
+		cui_set_current(cui, auth_screen_scr(cui->auth_screen));
 }
 
 /**
@@ -814,10 +943,10 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 
 	if (plugin_option) {
 		i->on_edit = NULL;
-		i->on_execute = plugin_install_plugin;
+		i->on_execute = cui_plugin_install_check;
 	} else {
 		i->on_edit = cui_item_edit;
-		i->on_execute = cui_boot;
+		i->on_execute = cui_boot_check;
 	}
 
 	i->data = cod = talloc(i, struct cui_opt_data);
@@ -1247,7 +1376,7 @@ static void cui_update_sysinfo(struct system_info *sysinfo, void *arg)
 	cui_update_mm_title(cui);
 }
 
-static void cui_update_language(struct cui *cui, char *lang)
+void cui_update_language(struct cui *cui, const char *lang)
 {
 	bool repost_menu;
 	char *cur_lang;
@@ -1309,6 +1438,17 @@ int cui_send_url(struct cui *cui, char * url)
 int cui_send_plugin_install(struct cui *cui, char *file)
 {
 	return discover_client_send_plugin_install(cui->client, file);
+}
+
+int cui_send_authenticate(struct cui *cui, char *password)
+{
+	return discover_client_send_authenticate(cui->client, password);
+}
+
+int cui_send_set_password(struct cui *cui, char *password, char *new_password)
+{
+	return discover_client_send_set_password(cui->client, password,
+			new_password);
 }
 
 void cui_send_reinit(struct cui *cui)

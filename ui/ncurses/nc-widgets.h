@@ -16,6 +16,7 @@
  */
 
 #ifndef NC_WIDGETS_H
+#define NC_WIDGETS_H
 
 struct nc_widgetset;
 struct nc_widget_label;
@@ -27,6 +28,8 @@ struct nc_widget_label *widget_new_label(struct nc_widgetset *set,
 		int y, int x, char *str);
 struct nc_widget_checkbox *widget_new_checkbox(struct nc_widgetset *set,
 		int y, int x, bool checked);
+struct nc_widget_textbox *widget_new_textbox_hidden(struct nc_widgetset *set,
+		int y, int x, int len, char *str, bool hide_input);
 struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
 		int y, int x, int len, char *str);
 struct nc_widget_subset *widget_new_subset(struct nc_widgetset *set,

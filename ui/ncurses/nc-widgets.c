@@ -365,8 +365,8 @@ static int textbox_destructor(void *ptr)
 	return 0;
 }
 
-struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
-		int y, int x, int len, char *str)
+struct nc_widget_textbox *widget_new_textbox_hidden(struct nc_widgetset *set,
+		int y, int x, int len, char *str, bool hide_input)
 {
 	struct nc_widget_textbox *textbox;
 	FIELD *f;
@@ -383,6 +383,8 @@ struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
 	textbox->widget.unfocussed_attr = A_UNDERLINE;
 
 	field_opts_off(f, O_STATIC | O_WRAP | O_BLANK);
+	if (hide_input)
+		field_opts_off(f, O_PUBLIC);
 	set_field_buffer(f, 0, str);
 	set_field_back(f, textbox->widget.unfocussed_attr);
 	set_field_userptr(f, &textbox->widget);
@@ -391,6 +393,12 @@ struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
 	talloc_set_destructor(textbox, textbox_destructor);
 
 	return textbox;
+}
+
+struct nc_widget_textbox *widget_new_textbox(struct nc_widgetset *set,
+		int y, int x, int len, char *str)
+{
+	return widget_new_textbox_hidden(set, y, x, len, str, false);
 }
 
 void widget_textbox_set_fixed_size(struct nc_widget_textbox *textbox)
