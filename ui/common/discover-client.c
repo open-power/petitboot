@@ -1,4 +1,8 @@
 
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
+
 #include <assert.h>
 #include <errno.h>
 #include <unistd.h>
@@ -22,6 +26,7 @@ struct discover_client {
 	struct discover_client_ops ops;
 	int n_devices;
 	struct device **devices;
+	bool authenticated;
 };
 
 static int discover_client_destructor(void *arg)
@@ -171,6 +176,7 @@ static int discover_client_process(void *arg)
 {
 	struct discover_client *client = arg;
 	struct pb_protocol_message *message;
+	struct auth_message *auth_msg;
 	struct plugin_option *p_opt;
 	struct system_info *sysinfo;
 	struct boot_option *opt;
@@ -266,6 +272,20 @@ static int discover_client_process(void *arg)
 	case PB_PROTOCOL_ACTION_PLUGINS_REMOVE:
 		plugins_remove(client);
 		break;
+	case PB_PROTOCOL_ACTION_AUTHENTICATE:
+		auth_msg = talloc_zero(ctx, struct auth_message);
+
+		rc = pb_protocol_deserialise_authenticate(auth_msg, message);
+		if (rc || auth_msg->op != AUTH_MSG_RESPONSE) {
+			pb_log("%s: invalid auth message? (%d)\n",
+					__func__, rc);
+			goto out;
+		}
+
+		pb_log("Client %sauthenticated by server\n",
+				client->authenticated ? "" : "un");
+		client->authenticated = auth_msg->authenticated;
+		break;
 	default:
 		pb_log_fn("unknown action %d\n", message->action);
 	}
@@ -311,6 +331,13 @@ struct discover_client* discover_client_init(struct waitset *waitset,
 	waiter_register_io(waitset, client->fd, WAIT_IN,
 			discover_client_process, client);
 
+	/* Assume this client can't make changes if crypt support is enabled */
+#ifdef CRYPT_SUPPORT
+	client->authenticated = false;
+#else
+	client->authenticated = true;
+#endif
+
 	return client;
 
 out_err:
@@ -331,6 +358,11 @@ struct device *discover_client_get_device(struct discover_client *client,
 		return NULL;
 
 	return client->devices[index];
+}
+
+bool discover_client_authenticated(struct discover_client *client)
+{
+	return client->authenticated;
 }
 
 static void create_boot_command(struct boot_command *command,
@@ -469,5 +501,54 @@ int discover_client_send_temp_autoboot(struct discover_client *client,
 
 	pb_protocol_serialise_temp_autoboot(opt, message->payload, len);
 
+	return pb_protocol_write_message(client->fd, message);
+}
+
+int discover_client_send_authenticate(struct discover_client *client,
+		char *password)
+{
+	struct pb_protocol_message *message;
+	struct auth_message auth_msg;
+	int len;
+
+	auth_msg.op = AUTH_MSG_REQUEST;
+	auth_msg.password = password;
+
+	len = pb_protocol_authenticate_len(&auth_msg);
+
+	message = pb_protocol_create_message(client,
+				PB_PROTOCOL_ACTION_AUTHENTICATE, len);
+	if (!message)
+		return -1;
+
+	pb_log("serialising auth message..\n");
+	pb_protocol_serialise_authenticate(&auth_msg, message->payload, len);
+
+	pb_log("sending auth message..\n");
+	return pb_protocol_write_message(client->fd, message);
+}
+
+int discover_client_send_set_password(struct discover_client *client,
+		char *password, char *new_password)
+{
+	struct pb_protocol_message *message;
+	struct auth_message auth_msg;
+	int len;
+
+	auth_msg.op = AUTH_MSG_SET;
+	auth_msg.set_password.password = password;
+	auth_msg.set_password.new_password = new_password;
+
+	len = pb_protocol_authenticate_len(&auth_msg);
+
+	message = pb_protocol_create_message(client,
+				PB_PROTOCOL_ACTION_AUTHENTICATE, len);
+	if (!message)
+		return -1;
+
+	pb_log("serialising auth message..\n");
+	pb_protocol_serialise_authenticate(&auth_msg, message->payload, len);
+
+	pb_log("sending auth message..\n");
 	return pb_protocol_write_message(client->fd, message);
 }

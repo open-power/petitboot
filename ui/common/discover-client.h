@@ -71,6 +71,12 @@ int discover_client_device_count(struct discover_client *client);
 struct device *discover_client_get_device(struct discover_client *client,
 		int index);
 
+/**
+ * Get the client's authentication status. This is only useful if Petitboot
+ * has been built with crypt support.
+ */
+bool discover_client_authenticated(struct discover_client *client);
+
 /* Tell the discover server to boot an image
  * @param client A pointer to the discover client
  * @param boot_command The command to boot
@@ -101,6 +107,12 @@ int discover_client_send_url(struct discover_client *client, char *url);
 /* Send plugin file path to discover server to install */
 int discover_client_send_plugin_install(struct discover_client *client,
 		char *file);
+/* Authenticate with pb-discover to allow modification */
+int discover_client_send_authenticate(struct discover_client *client,
+		char *password);
+/* Set a new system password, authenticating with the current password */
+int discover_client_send_set_password(struct discover_client *client,
+		char *password, char *new_password);
 
 /* send a temporary autoboot override */
 int discover_client_send_temp_autoboot(struct discover_client *client,
