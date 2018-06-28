@@ -392,9 +392,14 @@ static void cui_boot_cb(struct nc_scr *scr)
 
 static int cui_boot_check(struct pmenu_item *item)
 {
+	struct cui_opt_data *cod = cod_from_item(item);
 	struct cui *cui = cui_from_item(item);
 
 	if (discover_client_authenticated(cui->client))
+		return cui_boot(item);
+
+	/* Client doesn't need authentication to boot the default option */
+	if (cui->default_item == cod->opt_hash)
 		return cui_boot(item);
 
 	cui_show_auth(cui, item->pmenu->scr.main_ncw, false, cui_boot_cb);
@@ -932,8 +937,9 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	dev_hdr = pmenu_find_device(menu, dev, opt);
 
 	/* All actual boot entries are 'tabbed' across */
-	name = talloc_asprintf(menu, "%s%s",
-			tab, opt->name ? : "Unknown Name");
+	name = talloc_asprintf(menu, "%s%s%s",
+			tab, opt->is_autoboot_default ? "(*) " : "",
+			opt->name ? : "Unknown Name");
 
 	/* Save the item in opt->ui_info for cui_device_remove() */
 	opt->ui_info = i = pmenu_item_create(menu, name);
@@ -1018,6 +1024,27 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 			pb_log_fn("set_menu_items failed: %d\n", result);
 	}
 
+	/* Update the default option */
+	if (opt->is_autoboot_default) {
+		struct cui_opt_data *tmp;
+		struct pmenu_item *item;
+		unsigned int j;
+		if (cui->default_item) {
+			for (j = 0; j < cui->main->item_count; j++) {
+				item = item_userptr(cui->main->items[j]);
+				tmp = cod_from_item(item);
+				if (tmp->opt_hash == cui->default_item) {
+					char *label =  talloc_asprintf(menu, "%s%s",
+							tab, tmp->name ? : "Unknown Name");
+					pmenu_item_update(item, label);
+					talloc_free(label);
+					break;
+				}
+			}
+		}
+		cui->default_item = cod->opt_hash;
+	}
+
 	/* Re-attach the items array. */
 	result = set_menu_items(menu->ncm, menu->items);
 
@@ -1062,6 +1089,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 static void cui_device_remove(struct device *dev, void *arg)
 {
 	struct cui *cui = cui_from_arg(arg);
+	struct cui_opt_data *cod;
 	struct boot_option *opt;
 	unsigned int i;
 	int rows, cols, top, last;
@@ -1084,6 +1112,9 @@ static void cui_device_remove(struct device *dev, void *arg)
 
 	list_for_each_entry(&dev->boot_options, opt, list) {
 		struct pmenu_item *item = pmenu_item_from_arg(opt->ui_info);
+		cod = cod_from_item(item);
+		if (cui->default_item == cod->opt_hash)
+			cui->default_item = 0;
 
 		assert(pb_protocol_device_cmp(dev, cod_from_item(item)->dev));
 		if (opt->type == DISCOVER_PLUGIN_OPTION)

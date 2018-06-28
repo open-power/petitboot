@@ -54,6 +54,7 @@ struct boot_option {
 	char		*boot_args;
 	char		*args_sig_file;
 	bool		is_default;
+	bool		is_autoboot_default;
 
 	struct list_item	list;
 

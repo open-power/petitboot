@@ -204,6 +204,7 @@ int pb_protocol_boot_option_len(const struct boot_option *opt)
 		4 + optional_strlen(opt->boot_args) +
 		4 + optional_strlen(opt->args_sig_file) +
 		sizeof(opt->is_default) +
+		sizeof(opt->is_autoboot_default) +
 		sizeof(opt->type);
 }
 
@@ -433,6 +434,8 @@ int pb_protocol_serialise_boot_option(const struct boot_option *opt,
 	pos += pb_protocol_serialise_string(pos, opt->args_sig_file);
 
 	*(bool *)pos = opt->is_default;
+	pos += sizeof(bool);
+	*(bool *)pos = opt->is_autoboot_default;
 	pos += sizeof(bool);
 
 	*(uint32_t *)pos = __cpu_to_be32(opt->type);
@@ -923,6 +926,9 @@ int pb_protocol_deserialise_boot_option(struct boot_option *opt,
 	if (len < sizeof(bool))
 		goto out;
 	opt->is_default = *(bool *)(pos);
+	pos += sizeof(bool);
+	len -= sizeof(bool);
+	opt->is_autoboot_default = *(bool *)(pos);
 	pos += sizeof(bool);
 	len -= sizeof(bool);
 

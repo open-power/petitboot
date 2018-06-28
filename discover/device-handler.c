@@ -930,6 +930,10 @@ static void set_default(struct device_handler *handler,
 		return;
 	}
 
+	if (handler->default_boot_option)
+		handler->default_boot_option->option->is_autoboot_default = false;
+	opt->option->is_autoboot_default = true;
+
 	handler->sec_to_boot = config_get()->autoboot_timeout_sec;
 	handler->default_boot_option = opt;
 	handler->default_boot_option_priority = new_prio;
