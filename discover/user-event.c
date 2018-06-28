@@ -390,6 +390,9 @@ static int user_event_dhcp(struct user_event *uev, struct event *event)
 
 	uint8_t hwaddr[MAC_ADDR_SIZE];
 
+	if (!event_get_param(event, "mac") || !event_get_param(event, "ip"))
+		return -1;
+
 	sscanf(event_get_param(event, "mac"),
 	       "%hhX:%hhX:%hhX:%hhX:%hhX:%hhX",
 	       hwaddr, hwaddr + 1, hwaddr + 2,
@@ -411,6 +414,7 @@ static int user_event_add(struct user_event *uev, struct event *event)
 	struct device_handler *handler = uev->handler;
 	struct discover_context *ctx;
 	struct discover_device *dev;
+	int rc;
 
 	/* In case this is a network interface, try to refer to it by UUID */
 	dev = discover_device_create(handler, event_get_param(event, "mac"),
@@ -418,7 +422,11 @@ static int user_event_add(struct user_event *uev, struct event *event)
 	dev->device->id = talloc_strdup(dev, event->device);
 	ctx = device_handler_discover_context_create(handler, dev);
 
-	parse_user_event(ctx, event);
+	rc = parse_user_event(ctx, event);
+	if (rc) {
+		pb_log("parse_user_event returned %d\n", rc);
+		return rc;
+	}
 
 	device_handler_discover_context_commit(handler, ctx);
 
