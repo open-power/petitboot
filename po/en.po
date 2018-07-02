@@ -270,7 +270,7 @@ msgid "Enabled"
 msgstr ""
 
 msgid "Add Device"
-msgstr "Add Device:"
+msgstr "Add Device"
 
 msgid "Clear"
 msgstr ""
@@ -279,7 +279,7 @@ msgid "Clear & Boot Any"
 msgstr ""
 
 msgid "Boot Order:"
-msgstr "Boot Order"
+msgstr "Boot Order:"
 
 msgid "(None)"
 msgstr ""
@@ -293,7 +293,7 @@ msgid "net:  %s [mac: %s]"
 msgstr "net:  %s [mac: %s]"
 
 msgid "Any Device"
-msgstr "Any Device:"
+msgstr "Any Device"
 
 #, c-format
 msgid "Any %s device"
@@ -379,7 +379,7 @@ msgid "Selecting 'OK' will exit safe mode"
 msgstr "Selecting 'OK' will exit safe mode"
 
 msgid "Disk R/W:"
-msgstr "Disk R/W"
+msgstr "Disk R/W:"
 
 msgid "Prevent all writes to disk"
 msgstr ""
