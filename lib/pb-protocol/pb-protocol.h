@@ -26,6 +26,7 @@ enum pb_protocol_action {
 	PB_PROTOCOL_ACTION_PLUGIN_OPTION_ADD	= 0xc,
 	PB_PROTOCOL_ACTION_PLUGINS_REMOVE	= 0xd,
 	PB_PROTOCOL_ACTION_PLUGIN_INSTALL	= 0xe,
+	PB_PROTOCOL_ACTION_TEMP_AUTOBOOT	= 0xf,
 };
 
 struct pb_protocol_message {
@@ -44,6 +45,7 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo);
 int pb_protocol_config_len(const struct config *config);
 int pb_protocol_url_len(const char *url);
 int pb_protocol_plugin_option_len(const struct plugin_option *opt);
+int pb_protocol_temp_autoboot_len(const struct autoboot_option *opt);
 int pb_protocol_device_cmp(const struct device *a, const struct device *b);
 
 int pb_protocol_boot_option_cmp(const struct boot_option *a,
@@ -67,6 +69,8 @@ int pb_protocol_serialise_config(const struct config *config,
 		char *buf, int buf_len);
 int pb_protocol_serialise_url(const char *url, char *buf, int buf_len);
 int pb_protocol_serialise_plugin_option(const struct plugin_option *opt,
+		char *buf, int buf_len);
+int pb_protocol_serialise_temp_autoboot(const struct autoboot_option *opt,
 		char *buf, int buf_len);
 
 int pb_protocol_write_message(int fd, struct pb_protocol_message *message);
@@ -95,5 +99,7 @@ int pb_protocol_deserialise_config(struct config *config,
 		const struct pb_protocol_message *message);
 
 int pb_protocol_deserialise_plugin_option(struct plugin_option *opt,
+		const struct pb_protocol_message *message);
+int pb_protocol_deserialise_temp_autoboot(struct autoboot_option *opt,
 		const struct pb_protocol_message *message);
 #endif /* _PB_PROTOCOL_H */

@@ -363,6 +363,21 @@ int pb_protocol_plugin_option_len(const struct plugin_option *opt)
 	return len;
 }
 
+int pb_protocol_temp_autoboot_len(const struct autoboot_option *opt)
+{
+	unsigned int len = 0;
+
+	/* boot_type */
+	len += 4;
+
+	if (opt->boot_type == BOOT_DEVICE_TYPE)
+		len += 4;
+	else
+		len += optional_strlen(opt->uuid);
+
+	return len;
+}
+
 int pb_protocol_serialise_device(const struct device *dev,
 		char *buf, int buf_len)
 {
@@ -658,6 +673,26 @@ int pb_protocol_serialise_plugin_option(const struct plugin_option *opt,
 		pos += pb_protocol_serialise_string(pos, opt->executables[i]);
 
 	assert(pos <= buf + buf_len);
+	(void)buf_len;
+
+	return 0;
+}
+
+int pb_protocol_serialise_temp_autoboot(const struct autoboot_option *opt,
+		char *buf, int buf_len)
+{
+	char *pos = buf;
+
+	*(uint32_t *)pos = __cpu_to_be32(opt->boot_type);
+	pos += 4;
+
+	if (opt->boot_type == BOOT_DEVICE_TYPE) {
+		*(uint32_t *)pos = __cpu_to_be32(opt->type);
+		pos += 4;
+	} else {
+		pos += pb_protocol_serialise_string(pos, opt->uuid);
+	}
+
 	(void)buf_len;
 
 	return 0;
@@ -1262,6 +1297,41 @@ int pb_protocol_deserialise_plugin_option(struct plugin_option *opt,
 	}
 
 	rc = 0;
+out:
+	return rc;
+}
+
+int pb_protocol_deserialise_temp_autoboot(struct autoboot_option *opt,
+		const struct pb_protocol_message *message)
+{
+	unsigned int len, tmp;
+	const char *pos;
+	int rc = -1;
+	char *str;
+
+	len = message->payload_len;
+	pos = message->payload;
+
+	if (read_u32(&pos, &len, &tmp))
+		goto out;
+
+	opt->boot_type = tmp;
+	if (opt->boot_type == BOOT_DEVICE_TYPE) {
+		if (read_u32(&pos, &len, &tmp))
+			goto out;
+		opt->type = tmp;
+
+	} else if (opt->boot_type == BOOT_DEVICE_UUID) {
+		if (read_string(opt, &pos, &len, &str))
+			goto out;
+		opt->uuid = str;
+
+	} else {
+		return -1;
+	}
+
+	rc = 0;
+
 out:
 	return rc;
 }
