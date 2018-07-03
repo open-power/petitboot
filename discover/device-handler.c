@@ -797,24 +797,31 @@ static bool ipmi_device_type_matches(enum ipmi_bootdev ipmi_type,
 	return false;
 }
 
+static bool autoboot_option_matches(struct autoboot_option *opt,
+		struct discover_device *dev)
+{
+	if (opt->boot_type == BOOT_DEVICE_UUID)
+		if (!strcmp(opt->uuid, dev->uuid))
+			return true;
+
+	if (opt->boot_type == BOOT_DEVICE_TYPE)
+		if (opt->type == dev->device->type ||
+		    opt->type == DEVICE_TYPE_ANY)
+			return true;
+
+	return false;
+}
+
 static int autoboot_option_priority(const struct config *config,
 				struct discover_boot_option *opt)
 {
-	enum device_type type = opt->device->device->type;
-	const char *uuid = opt->device->uuid;
 	struct autoboot_option *auto_opt;
 	unsigned int i;
 
 	for (i = 0; i < config->n_autoboot_opts; i++) {
 		auto_opt = &config->autoboot_opts[i];
-		if (auto_opt->boot_type == BOOT_DEVICE_UUID)
-			if (!strcmp(auto_opt->uuid, uuid))
-				return DEFAULT_PRIORITY_LOCAL_FIRST + i;
-
-		if (auto_opt->boot_type == BOOT_DEVICE_TYPE)
-			if (auto_opt->type == type ||
-			    auto_opt->type == DEVICE_TYPE_ANY)
-				return DEFAULT_PRIORITY_LOCAL_FIRST + i;
+		if (autoboot_option_matches(auto_opt, opt->device))
+			return DEFAULT_PRIORITY_LOCAL_FIRST + i;
 	}
 
 	return -1;
