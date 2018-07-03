@@ -49,6 +49,8 @@ enum default_priority {
 	DEFAULT_PRIORITY_DISABLED	= 0xff,
 };
 
+static int default_rescan_timeout = 5 * 60; /* seconds */
+
 struct progress_info {
 	unsigned int			percentage;
 	unsigned long			size;		/* size in bytes */
@@ -418,10 +420,13 @@ void device_handler_reinit(struct device_handler *handler)
 
 	/* drop all devices */
 	for (i = 0; i < handler->n_devices; i++) {
+		struct discover_device *device = handler->devices[i];
 		discover_server_notify_device_remove(handler->server,
-				handler->devices[i]->device);
-		ramdisk = handler->devices[i]->ramdisk;
-		talloc_free(handler->devices[i]);
+				device->device);
+		ramdisk = device->ramdisk;
+		if (device->requery_waiter)
+			waiter_remove(device->requery_waiter);
+		talloc_free(device);
 		talloc_free(ramdisk);
 	}
 
@@ -459,6 +464,9 @@ void device_handler_remove(struct device_handler *handler,
 {
 	struct discover_boot_option *opt, *tmp;
 	unsigned int i;
+
+	if (device->requery_waiter)
+		waiter_remove(device->requery_waiter);
 
 	list_for_each_entry_safe(&device->boot_options, opt, tmp, list) {
 		if (opt == handler->default_boot_option) {
@@ -699,7 +707,17 @@ void device_handler_status_download_remove(struct device_handler *handler,
 
 static void device_handler_boot_status_cb(void *arg, struct status *status)
 {
-	device_handler_status(arg, status);
+	struct device_handler *handler = arg;
+
+	/* boot had failed; update handler state to allow a new default if one
+	 * is found later
+	 */
+	if (status->type == STATUS_ERROR) {
+		handler->pending_boot = NULL;
+		handler->default_boot_option = NULL;
+	}
+
+	device_handler_status(handler, status);
 }
 
 static void countdown_status(struct device_handler *handler,
@@ -1162,6 +1180,109 @@ out:
 	return 0;
 }
 
+struct requery_data {
+	struct device_handler	*handler;
+	struct discover_device	*device;
+};
+
+static int device_handler_requery_timeout_fn(void *data)
+{
+	struct discover_boot_option *opt, *tmp;
+	struct requery_data *rqd = data;
+	struct device_handler *handler;
+	struct discover_device *device;
+
+	handler = rqd->handler;
+	device = rqd->device;
+
+	talloc_free(rqd);
+
+	/* network_requery_device may re-add a timeout, so clear the device
+	 * waiter here, so we can potentially start a new one. */
+	device->requery_waiter = NULL;
+
+	/* We keep the device around, but get rid of the parsed boot
+	 * options on that device. That involves delaring out the lists,
+	 * and potentially cancelling a default.
+	 */
+	list_for_each_entry_safe(&handler->unresolved_boot_options,
+			opt, tmp, list) {
+		if (opt->device != device)
+			continue;
+		list_remove(&opt->list);
+		talloc_free(opt);
+	}
+
+	list_for_each_entry_safe(&device->boot_options, opt, tmp, list) {
+		if (opt == handler->default_boot_option) {
+			pb_log("Default option %s cancelled since device is being requeried",
+					opt->option->name);
+			device_handler_cancel_default(handler);
+		}
+		list_remove(&opt->list);
+		talloc_free(opt);
+	}
+
+	discover_server_notify_device_remove(handler->server, device->device);
+	device->notified = false;
+
+	network_requery_device(handler->network, device);
+
+	return 0;
+}
+
+/* Schedule a requery in timeout (seconds).
+ *
+ * Special values of timeout:
+ *   0: no requery
+ *  -1: use default
+ */
+void device_handler_start_requery_timeout( struct device_handler *handler,
+		struct discover_device *dev, int timeout)
+{
+	struct requery_data *rqd;
+
+	if (dev->requery_waiter)
+		return;
+
+	if (timeout == -1)
+		timeout = default_rescan_timeout;
+	else if (timeout == 0)
+		return;
+
+	rqd = talloc(dev, struct requery_data);
+	rqd->handler = handler;
+	rqd->device = dev;
+
+	pb_debug("starting requery timeout for device %s, in %d sec\n",
+			dev->device->id, timeout);
+
+	dev->requery_waiter = waiter_register_timeout(handler->waitset,
+			timeout * 1000, device_handler_requery_timeout_fn, rqd);
+}
+
+static int event_requery_timeout(struct event *event)
+{
+	int timeout = -1;
+	unsigned long x;
+	const char *str;
+	char *endp;
+
+	if (!event)
+		return timeout;
+
+	str = event_get_param(event, "reboottime");
+	if (!str)
+		return timeout;
+
+	x = strtoul(str, &endp, 0);
+	if (endp != str)
+		timeout = x;
+
+	return timeout;
+}
+
+
 /* Incoming dhcp event */
 int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event)
@@ -1178,6 +1299,9 @@ int device_handler_dhcp(struct device_handler *handler,
 	ctx = device_handler_discover_context_create(handler, dev);
 	talloc_steal(ctx, event);
 	ctx->event = event;
+
+	device_handler_start_requery_timeout(handler, dev,
+			event_requery_timeout(event));
 
 	iterate_parsers(ctx);
 

@@ -51,3 +51,10 @@ uint8_t *find_mac_by_name(void *ctx, struct network *network,
 	return talloc_memdup(ctx, &interface->hwaddr,
 			     sizeof(uint8_t) * HWADDR_SIZE);
 }
+
+void network_requery_device(struct network *network,
+		struct discover_device *dev)
+{
+	(void)network;
+	(void)dev;
+}

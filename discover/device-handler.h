@@ -38,6 +38,8 @@ struct discover_device {
 
 	struct list		boot_options;
 	struct list		params;
+
+	struct waiter		*requery_waiter;
 };
 
 struct discover_boot_option {
@@ -102,6 +104,8 @@ int device_handler_dhcp(struct device_handler *handler,
 		struct discover_device *dev, struct event *event);
 void device_handler_remove(struct device_handler *handler,
 		struct discover_device *device);
+void device_handler_start_requery_timeout( struct device_handler *handler,
+		struct discover_device *dev, int timeout);
 
 void device_handler_status(struct device_handler *handler,
 		struct status *status);
