@@ -26,5 +26,14 @@ option.\n\
 To retreive new boot options from a remote configuration file, select \
 the 'Retrieve config from URL' option.\n\
 \n\
+To restrict petitboot to only autobooting from a specific device type, the \
+following keys are available:\n\
+\n\
+  F10: Only autoboot from disk\n\
+  F11: Only autoboot from USB devices\n\
+  F12: Only autoboot from network\n\
+\n\
+Unlike other keys, these do not cancel automatic boot.\n\
+\n\
 To close the Petitboot interface, type X (exit).\n"
 );

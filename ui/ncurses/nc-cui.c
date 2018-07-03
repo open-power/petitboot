@@ -59,6 +59,27 @@ static struct pmenu *plugin_menu_init(struct cui *cui);
 
 static void cui_cancel_autoboot_on_exit(struct cui *cui);
 
+static struct {
+	int key;
+	struct autoboot_option opt;
+} autoboot_override_keys[] = {
+	{ KEY_F(10), {
+			.boot_type = BOOT_DEVICE_TYPE,
+			.type = DEVICE_TYPE_DISK,
+		},
+	},
+	{ KEY_F(11), {
+			.boot_type = BOOT_DEVICE_TYPE,
+			.type = DEVICE_TYPE_USB,
+		},
+	},
+	{ KEY_F(12), {
+			.boot_type = BOOT_DEVICE_TYPE,
+			.type = DEVICE_TYPE_NETWORK,
+		},
+	},
+};
+
 static bool lockdown_active(void)
 {
 #if defined(SIGNED_BOOT) && defined(HARD_LOCKDOWN)
@@ -527,22 +548,50 @@ struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr)
 	return old;
 }
 
+static bool set_temp_autoboot_opt(struct cui *cui, struct autoboot_option *opt)
+{
+	cui->autoboot_opt = opt;
+	if (cui->client)
+		discover_client_send_temp_autoboot(cui->client, opt);
+
+	return true;
+}
+
 static bool key_cancels_boot(int key)
 {
+	unsigned int i;
+
 	if (key == 0xc)
 		return false;
+
+	for (i = 0; i < ARRAY_SIZE(autoboot_override_keys); i++)
+		if (key == autoboot_override_keys[i].key)
+			return false;
 
 	return true;
 }
 
 static bool process_global_keys(struct cui *cui, int key)
 {
+	unsigned int i;
+
 	switch (key) {
 	case 0xc:
 		if (cui->current && cui->current->main_ncw)
 			wrefresh(curscr);
 		return true;
 	}
+
+	/* check for autoboot override keys */
+	for (i = 0; i < ARRAY_SIZE(autoboot_override_keys); i++) {
+		if (key != autoboot_override_keys[i].key)
+			continue;
+
+		pb_log("Sending temporary autoboot override\n");
+		set_temp_autoboot_opt(cui, &autoboot_override_keys[i].opt);
+		return true;
+	}
+
 	return false;
 }
 
@@ -1427,6 +1476,12 @@ static int cui_server_wait(void *arg)
 		if (cui->has_input) {
 			pb_log("Aborting default boot on pb-discover connect\n");
 			discover_client_cancel_default(cui->client);
+		}
+
+		if (cui->autoboot_opt) {
+			pb_log("Sending autoboot override on pb-discover connect\n");
+			discover_client_send_temp_autoboot(cui->client,
+					cui->autoboot_opt);
 		}
 	}
 

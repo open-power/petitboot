@@ -52,6 +52,7 @@ struct cui_opt_data {
 struct cui {
 	enum pb_nc_sig c_sig;
 	bool has_input;
+	struct autoboot_option *autoboot_opt;
 	sig_atomic_t abort;
 	sig_atomic_t resize;
 	struct nc_scr *current;

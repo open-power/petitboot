@@ -102,4 +102,8 @@ int discover_client_send_url(struct discover_client *client, char *url);
 int discover_client_send_plugin_install(struct discover_client *client,
 		char *file);
 
+/* send a temporary autoboot override */
+int discover_client_send_temp_autoboot(struct discover_client *client,
+		const struct autoboot_option *opt);
+
 #endif

@@ -935,12 +935,37 @@ static void set_default(struct device_handler *handler,
 	default_timeout(handler);
 }
 
+static char *autoboot_option_desc(void *ctx, const struct autoboot_option *opt)
+{
+	const char *type, *val;
+
+	if (opt->boot_type == BOOT_DEVICE_TYPE) {
+		type = _("device type");
+		val = device_type_display_name(opt->type);
+	} else if (opt->boot_type == BOOT_DEVICE_UUID) {
+		type = _("device UUID");
+		val = opt->uuid;
+	} else {
+		type = _("unknown specifier");
+		val = NULL;
+	}
+
+	return talloc_asprintf(ctx, "%s = %s", type, val);
+}
+
 void device_handler_apply_temp_autoboot(struct device_handler *handler,
 		struct autoboot_option *opt)
 {
 	unsigned int i;
+	char *desc;
 
 	handler->temp_autoboot = talloc_steal(handler, opt);
+
+	desc = autoboot_option_desc(handler, opt);
+	device_handler_status_info(handler,
+			_("Applying temporary autoboot override: %s"),
+			desc);
+	talloc_free(desc);
 
 	if (!handler->autoboot_enabled)
 		return;

@@ -453,3 +453,21 @@ int discover_client_send_plugin_install(struct discover_client *client,
 
 	return pb_protocol_write_message(client->fd, message);
 }
+
+int discover_client_send_temp_autoboot(struct discover_client *client,
+		const struct autoboot_option *opt)
+{
+	struct pb_protocol_message *message;
+	int len;
+
+	len = pb_protocol_temp_autoboot_len(opt);
+
+	message = pb_protocol_create_message(client,
+			PB_PROTOCOL_ACTION_TEMP_AUTOBOOT, len);
+	if (!message)
+		return -1;
+
+	pb_protocol_serialise_temp_autoboot(opt, message->payload, len);
+
+	return pb_protocol_write_message(client->fd, message);
+}
