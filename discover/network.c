@@ -331,6 +331,7 @@ static void configure_interface_dhcp(struct network *network,
 		"-f",
 		"-O", "pxeconffile",
 		"-O", "pxepathprefix",
+		"-O", "reboottime",
 		"-p", pidfile,
 		"-i", interface->name,
 		"-x", id, /* [11,12] - dhcp client identifier */
@@ -417,6 +418,8 @@ static void configure_interface_static(struct network *network,
 						interface->hwaddr,
 						sizeof(interface->hwaddr)),
 				config->static_config.address);
+		device_handler_start_requery_timeout(network->handler,
+				interface->dev, -1);
 	}
 
 	return;
@@ -496,6 +499,49 @@ static void configure_interface(struct network *network,
 	}
 
 	interface->state = IFSTATE_CONFIGURED;
+}
+
+void network_requery_device(struct network *network,
+		struct discover_device *dev)
+{
+	const struct interface_config *config;
+	struct interface *interface;
+
+	interface = find_interface_by_uuid(network, dev->uuid);
+	if (!interface)
+		return;
+
+	if (interface->udhcpc_process) {
+		interface->udhcpc_process->exit_cb = NULL;
+		interface->udhcpc_process->data = NULL;
+		process_stop_async(interface->udhcpc_process);
+		process_release(interface->udhcpc_process);
+	}
+
+	config = find_config_by_hwaddr(interface->hwaddr);
+
+	if (config && config->ignore)
+		return;
+
+	if (!config || config->method == CONFIG_METHOD_DHCP) {
+		/* Restart DHCP. Once we acquire a lease, we'll re-start
+		 * the requery timeout (based on any reboottime DHCP option)
+		 */
+		configure_interface_dhcp(network, interface);
+
+	} else if (config->method == CONFIG_METHOD_STATIC &&
+			config->static_config.url) {
+		/* Redownload statically-provided URL, and manually restart
+		 * requery timeout */
+		device_handler_process_url(network->handler,
+				config->static_config.url,
+				mac_bytes_to_string(interface->dev,
+						interface->hwaddr,
+						sizeof(interface->hwaddr)),
+				config->static_config.address);
+		device_handler_start_requery_timeout(network->handler,
+				dev, -1);
+	}
 }
 
 static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)

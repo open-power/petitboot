@@ -14,6 +14,8 @@ void network_register_device(struct network *network,
 		struct discover_device *dev);
 void network_unregister_device(struct network *network,
 		struct discover_device *dev);
+void network_requery_device(struct network *network,
+		struct discover_device *dev);
 
 uint8_t *find_mac_by_name(void *ctx, struct network *network,
 		const char *name);
