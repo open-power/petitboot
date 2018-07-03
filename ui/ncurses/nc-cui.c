@@ -527,6 +527,14 @@ struct nc_scr *cui_set_current(struct cui *cui, struct nc_scr *scr)
 	return old;
 }
 
+static bool key_cancels_boot(int key)
+{
+	if (key == 0xc)
+		return false;
+
+	return true;
+}
+
 static bool process_global_keys(struct cui *cui, int key)
 {
 	switch (key) {
@@ -582,7 +590,7 @@ static int cui_process_key(void *arg)
 			}
 		}
 
-		if (!cui->has_input) {
+		if (!cui->has_input && key_cancels_boot(c)) {
 			cui->has_input = true;
 			if (cui->client) {
 				pb_log("UI input received (key = %d), aborting "
