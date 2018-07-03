@@ -167,6 +167,8 @@ void device_handler_process_url(struct device_handler *handler,
 void device_handler_install_plugin(struct device_handler *handler,
 		const char *plugin_file);
 void device_handler_reinit(struct device_handler *handler);
+void device_handler_apply_temp_autoboot(struct device_handler *handler,
+		struct autoboot_option *opt);
 
 int device_request_write(struct discover_device *dev, bool *release);
 void device_release_write(struct discover_device *dev, bool release);

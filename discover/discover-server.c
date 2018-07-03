@@ -247,6 +247,7 @@ static int write_config_message(struct discover_server *server,
 
 static int discover_server_process_message(void *arg)
 {
+	struct autoboot_option *autoboot_opt;
 	struct pb_protocol_message *message;
 	struct boot_command *boot_command;
 	struct client *client = arg;
@@ -311,6 +312,21 @@ static int discover_server_process_message(void *arg)
 		device_handler_install_plugin(client->server->device_handler,
 				url);
 		break;
+
+	case PB_PROTOCOL_ACTION_TEMP_AUTOBOOT:
+		autoboot_opt = talloc_zero(client, struct autoboot_option);
+		rc = pb_protocol_deserialise_temp_autoboot(autoboot_opt,
+				message);
+		if (rc) {
+			pb_log("can't parse temporary autoboot message\n");
+			return 0;
+		}
+
+		device_handler_apply_temp_autoboot(
+				client->server->device_handler,
+				autoboot_opt);
+		break;
+
 	default:
 		pb_log("%s: invalid action %d\n", __func__, message->action);
 		return 0;

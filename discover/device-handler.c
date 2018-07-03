@@ -43,8 +43,9 @@
 #include "ipmi.h"
 
 enum default_priority {
-	DEFAULT_PRIORITY_REMOTE		= 1,
-	DEFAULT_PRIORITY_LOCAL_FIRST	= 2,
+	DEFAULT_PRIORITY_TEMP_USER	= 1,
+	DEFAULT_PRIORITY_REMOTE		= 2,
+	DEFAULT_PRIORITY_LOCAL_FIRST	= 3,
 	DEFAULT_PRIORITY_LOCAL_LAST	= 0xfe,
 	DEFAULT_PRIORITY_DISABLED	= 0xff,
 };
@@ -77,6 +78,7 @@ struct device_handler {
 	struct waiter		*timeout_waiter;
 	bool			autoboot_enabled;
 	unsigned int		sec_to_boot;
+	struct autoboot_option	*temp_autoboot;
 
 	struct discover_boot_option *default_boot_option;
 	int			default_boot_option_priority;
@@ -833,15 +835,27 @@ static int autoboot_option_priority(const struct config *config,
  * for these options.
  */
 static enum default_priority default_option_priority(
+		struct device_handler *handler,
 		struct discover_boot_option *opt)
 {
 	const struct config *config;
 
+	/* Temporary user-provided autoboot options have highest priority */
+	if (handler->temp_autoboot) {
+		if (autoboot_option_matches(handler->temp_autoboot,
+					opt->device))
+			return DEFAULT_PRIORITY_TEMP_USER;
+
+		pb_debug("handler: disabled default priority due to "
+				"temporary user override\n");
+		return DEFAULT_PRIORITY_DISABLED;
+	}
+
 	config = config_get();
 
-	/* We give highest priority to IPMI-configured boot options. If
-	 * we have an IPMI bootdev configuration set, then we don't allow
-	 * any other defaults */
+	/* Next highest priority to IPMI-configured boot options. If we have an
+	 * IPMI bootdev configuration set, then we don't allow any other
+	 * defaults */
 	if (config->ipmi_bootdev) {
 		bool ipmi_match = ipmi_device_type_matches(config->ipmi_bootdev,
 				opt->device->device->type);
@@ -881,7 +895,7 @@ static void set_default(struct device_handler *handler,
 
 	pb_debug("handler: new default option: %s\n", opt->option->id);
 
-	new_prio = default_option_priority(opt);
+	new_prio = default_option_priority(handler, opt);
 
 	/* Anything outside our range prevents a default boot */
 	if (new_prio >= DEFAULT_PRIORITY_DISABLED)
@@ -919,6 +933,43 @@ static void set_default(struct device_handler *handler,
 	       opt->option->id, handler->sec_to_boot);
 
 	default_timeout(handler);
+}
+
+void device_handler_apply_temp_autoboot(struct device_handler *handler,
+		struct autoboot_option *opt)
+{
+	unsigned int i;
+
+	handler->temp_autoboot = talloc_steal(handler, opt);
+
+	if (!handler->autoboot_enabled)
+		return;
+
+	if (!handler->default_boot_option)
+		return;
+
+	if (autoboot_option_matches(opt, handler->default_boot_option->device))
+		return;
+
+	/* cancel the default, and rescan available options */
+	device_handler_cancel_default(handler);
+
+	handler->autoboot_enabled = true;
+
+	for (i = 0; i < handler->n_devices; i++) {
+		struct discover_device *dev = handler->devices[i];
+		struct discover_boot_option *boot_opt;
+
+		if (!autoboot_option_matches(opt, dev))
+			continue;
+
+		list_for_each_entry(&dev->boot_options, boot_opt, list) {
+			if (boot_opt->option->is_default) {
+				set_default(handler, boot_opt);
+				break;
+			}
+		}
+	}
 }
 
 static bool resource_is_resolved(struct resource *res)
