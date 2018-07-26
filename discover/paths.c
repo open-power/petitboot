@@ -586,12 +586,14 @@ struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 
 	/* If the url is remote but network is not yet available queue up this
 	 * load for later */
-	if (url->scheme != pb_url_file &&
-			getaddrinfo(url->host, NULL, NULL, &res) != 0) {
-		pb_log("load task for %s queued pending network\n", url->full);
-		pending_network_jobs_add(task, flags);
-		task->result->status = LOAD_ASYNC;
-		return task->result;
+	if (url->scheme != pb_url_file) {
+		if (getaddrinfo(url->host, NULL, NULL, &res) != 0) {
+			pb_log("load task for %s queued pending network\n", url->full);
+			pending_network_jobs_add(task, flags);
+			task->result->status = LOAD_ASYNC;
+			return task->result;
+		}
+		freeaddrinfo(res);
 	}
 
 	switch (url->scheme) {
