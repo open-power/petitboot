@@ -341,6 +341,8 @@ static int check_load(struct boot_task *task, const char *name,
 		return 0;
 	}
 
+	pb_log("Failed to load %s from %s\n", name,
+			pb_url_to_string(result->url));
 	update_status(task->status_fn, task->status_arg,
 			STATUS_ERROR,
 			_("Couldn't load %s from %s"), name,
@@ -451,6 +453,8 @@ no_load:
 					STATUS_ERROR,
 					_("kexec reboot failed"));
 		}
+	} else {
+		pb_log("Failed to load all boot resources\n");
 	}
 }
 
@@ -462,6 +466,8 @@ static int start_url_load(struct boot_task *task, struct boot_resource *res)
 	res->result = load_url_async(task, res->url, boot_process,
 				 task, NULL, task->status_arg);
 	if (!res->result) {
+		pb_log("Error starting load for %s at %s\n",
+				res->name, pb_url_to_string(res->url));
 		update_status(task->status_fn, task->status_arg,
 				STATUS_ERROR, _("Error loading %s"),
 				res->name);

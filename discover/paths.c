@@ -116,6 +116,8 @@ static void load_url_process_exit(struct process *process)
 	} else {
 		result->status = LOAD_ERROR;
 		load_url_result_cleanup_local(result);
+		pb_debug("Download client stdout buffer:\n%s\n",
+				process->stdout_buf);
 	}
 
 	if (result->status == LOAD_OK && process->stdout_data)
