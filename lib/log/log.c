@@ -1,6 +1,8 @@
 
 #include <assert.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "log.h"
 
@@ -9,8 +11,17 @@ static bool debug;
 
 static void __log(const char *fmt, va_list ap)
 {
+	char hms[20] = {'\0'};
+	time_t t;
+
 	if (!logf)
 		return;
+
+	/* Add timestamp */
+	t = time(NULL);
+	strftime(hms, sizeof(hms), "%T", localtime(&t));
+	fprintf(logf, "[%s] ", hms);
+
 	vfprintf(logf, fmt, ap);
 	fflush(logf);
 }
