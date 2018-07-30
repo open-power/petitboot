@@ -184,8 +184,10 @@ static int busybox_progress_cb(void *arg)
 				}
 	}
 
-	if (rc != 3)
+	if (rc != 3) {
 		percentage = size = 0;
+		suffix = ' ';
+	}
 
 	device_handler_status_download(handler, procinfo,
 			percentage, size, suffix);
