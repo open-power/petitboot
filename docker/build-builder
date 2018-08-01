@@ -120,6 +120,8 @@ cd ${TOP_DIR}
 run_cmd "docker build \
 	--file "${DOCKER_FILE}" \
 	--build-arg DOCKER_FROM=${DOCKER_FROM} \
+	--build-arg http_proxy=${http_proxy} \
+	--build-arg https_proxy=${https_proxy} \
 	--tag ${DOCKER_TAG} \
 	."
 
