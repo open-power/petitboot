@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y \
 	libuv-dev \
 	libdevmapper-dev \
 	libncurses-dev \
+	libgpgme11-dev \
+	libssl-dev \
 	pkg-config \
 	&& rm -rf /var/lib/apt/lists/*
 
