@@ -12,21 +12,24 @@ usage () {
 	echo "${name} - Builds the petitboot programs using a pb-builder container." >&2
 	echo "Usage: ${name} [flags]" >&2
 	echo "Option flags:" >&2
-	echo "  -c --check       - Run 'make check'." >&2
-	echo "  -d --dry-run     - Do not run docker commands." >&2
-	echo "  -h --help        - Show this help and exit." >&2
-	echo "  -i --interactive - Run an interactive pb-builder container." >&2
-	echo "  -t --tag         - Print Docker tag to stdout and exit." >&2
-	echo "  -v --verbose     - Verbose execution." >&2
+	echo "  -c --check              - Run 'make check'." >&2
+	echo "  -d --dry-run            - Do not run docker commands." >&2
+	echo "  -h --help               - Show this help and exit." >&2
+	echo "  -i --interactive        - Run an interactive pb-builder container." >&2
+	echo "  -o --configure-opts     - Extra arguments for configure." >&2
+	echo "  -t --tag                - Print Docker tag to stdout and exit." >&2
+	echo "  -v --verbose            - Verbose execution." >&2
 	echo "Environment:" >&2
-	echo "  DOCKER_TAG       - Default: '${DOCKER_TAG}'" >&2
+	echo "  DOCKER_TAG              - Default: '${DOCKER_TAG}'" >&2
+	echo "  CFLAGS                  - Default: '${CFLAGS}'" >&2
+	echo "  LDFLAGS                 - Default: '${LDFLAGS}'" >&2
 	echo "Examples:" >&2
 	echo "  ${name} -vc"
 	echo "  ${name} -v"
 }
 
-short_opts="cdhitv"
-long_opts="check,dry-run,help,interactive,tag,verbose"
+short_opts="cdhio:tv"
+long_opts="check,dry-run,help,interactive,configure-opts:,tag,verbose"
 
 opts=$(getopt --options ${short_opts} --long ${long_opts} -n "${name}" -- "$@")
 
@@ -53,6 +56,11 @@ while true ; do
 		;;
 	-i | --interactive)
 		interactive=1
+		shift
+		;;
+	-o | --configure-opts)
+		shift
+		configure_opts=${1}
 		shift
 		;;
 	-t | --tag)
@@ -112,8 +120,10 @@ else
 	docker_extra="true"
 fi
 
+flags="CFLAGS=${CFLAGS} LDFLAGS=${LDFLAGS}"
+
 cd "${TOP_DIR}"
 docker_args="${docker_base_args} ${docker_user_args}"
 run_cmd "docker run ${docker_args} ${DOCKER_TAG} /bin/bash \
 	-e ${bash_debug} \
-	-c './bootstrap && ./configure --with-ncurses && make && ${docker_extra}'"
+	-c './bootstrap && ${flags} ./configure ${configure_opts[@]} && make && ${docker_extra}'"
