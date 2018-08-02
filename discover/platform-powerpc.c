@@ -680,7 +680,7 @@ static void update_bootdev_config(struct platform_powerpc *platform,
 		talloc_free(boot_str);
 }
 
-static int update_config(struct platform_powerpc *platform,
+static void update_config(struct platform_powerpc *platform,
 		struct config *config, struct config *defaults)
 {
 	char *tmp = NULL;
@@ -697,14 +697,6 @@ static int update_config(struct platform_powerpc *platform,
 	else
 		val = tmp = talloc_asprintf(platform, "%d",
 				config->autoboot_timeout_sec);
-
-	if (config->ipmi_bootdev == IPMI_BOOTDEV_INVALID &&
-	    platform->clear_ipmi_bootdev) {
-		platform->clear_ipmi_bootdev(platform,
-				config->ipmi_bootdev_persistent);
-		config->ipmi_bootdev = IPMI_BOOTDEV_NONE;
-		config->ipmi_bootdev_persistent = false;
-	}
 
 	update_string_config(platform, "petitboot,timeout", val);
 	if (tmp)
@@ -732,8 +724,6 @@ static int update_config(struct platform_powerpc *platform,
 	update_network_config(platform, config);
 
 	update_bootdev_config(platform, config);
-
-	return write_nvram(platform);
 }
 
 static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
@@ -1154,15 +1144,22 @@ static int save_config(struct platform *p, struct config *config)
 {
 	struct platform_powerpc *platform = to_platform_powerpc(p);
 	struct config *defaults;
-	int rc;
+
+	if (config->ipmi_bootdev == IPMI_BOOTDEV_INVALID &&
+	    platform->clear_ipmi_bootdev) {
+		platform->clear_ipmi_bootdev(platform,
+				config->ipmi_bootdev_persistent);
+		config->ipmi_bootdev = IPMI_BOOTDEV_NONE;
+		config->ipmi_bootdev_persistent = false;
+	}
 
 	defaults = talloc_zero(platform, struct config);
 	config_set_defaults(defaults);
 
-	rc = update_config(platform, config, defaults);
+	update_config(platform, config, defaults);
 
 	talloc_free(defaults);
-	return rc;
+	return write_nvram(platform);
 }
 
 static void pre_boot(struct platform *p, const struct config *config)
