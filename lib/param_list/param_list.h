@@ -5,6 +5,7 @@
 
 #include <list/list.h>
 
+/* struct param - Name/value pairs of zero terminated strings. */
 struct param {
 	char *name;
 	char *value;

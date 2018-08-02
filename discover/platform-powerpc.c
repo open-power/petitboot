@@ -14,6 +14,7 @@
 #include <talloc/talloc.h>
 #include <list/list.h>
 #include <log/log.h>
+#include <param_list/param_list.h>
 #include <process/process.h>
 #include <types/types.h>
 #include <url/url.h>
@@ -27,15 +28,8 @@ static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
 static const char *devtree_dir = "/proc/device-tree/";
 
-struct param {
-	char			*name;
-	char			*value;
-	bool			modified;
-	struct list_item	list;
-};
-
 struct platform_powerpc {
-	struct list	params;
+	struct param_list params;
 	struct ipmi	*ipmi;
 	bool		ipmi_bootdev_persistent;
 	int		(*get_ipmi_bootdev)(
@@ -49,38 +43,8 @@ struct platform_powerpc {
 	void		(*get_platform_versions)(struct system_info *info);
 };
 
-static const char *known_params[] = {
-	"auto-boot?",
-	"petitboot,network",
-	"petitboot,timeout",
-	"petitboot,bootdevs",
-	"petitboot,language",
-	"petitboot,debug?",
-	"petitboot,write?",
-	"petitboot,snapshots?",
-	"petitboot,console",
-	"petitboot,http_proxy",
-	"petitboot,https_proxy",
-	NULL,
-};
-
 #define to_platform_powerpc(p) \
 	(struct platform_powerpc *)(p->platform_data)
-
-static bool param_is_known(const char *param, unsigned int len)
-{
-	const char *known_param;
-	unsigned int i;
-
-	for (i = 0; known_params[i]; i++) {
-		known_param = known_params[i];
-		if (len == strlen(known_param) &&
-				!strncmp(param, known_param, len))
-			return true;
-	}
-
-	return false;
-}
 
 static int parse_nvram_params(struct platform_powerpc *platform,
 		char *buf, int len)
@@ -110,7 +74,6 @@ static int parse_nvram_params(struct platform_powerpc *platform,
 
 	for (pos = buf + i; pos < buf + len; pos += paramlen + 1) {
 		unsigned int namelen;
-		struct param *param;
 		char *newline;
 
 		newline = strchr(pos, '\n');
@@ -130,16 +93,13 @@ static int parse_nvram_params(struct platform_powerpc *platform,
 		if (namelen == 0)
 			continue;
 
-		if (!param_is_known(name, namelen))
+		if (!param_list_is_known_n(&platform->params, name, namelen))
 			continue;
 
+		*value = '\0';
 		value++;
 
-		param = talloc(platform, struct param);
-		param->modified = false;
-		param->name = talloc_strndup(platform, name, namelen);
-		param->value = talloc_strdup(platform, value);
-		list_add(&platform->params, &param->list);
+		param_list_set(&platform->params, name, value, false);
 	}
 
 	return 0;
@@ -189,7 +149,7 @@ static int write_nvram(struct platform_powerpc *platform)
 	process->path = "nvram";
 	process->argv = argv;
 
-	list_for_each_entry(&platform->params, param, list) {
+	param_list_for_each(&platform->params, param) {
 		char *paramstr;
 
 		if (!param->modified)
@@ -213,43 +173,6 @@ static int write_nvram(struct platform_powerpc *platform)
 
 	process_release(process);
 	return rc;
-}
-
-static const char *get_param(struct platform_powerpc *platform,
-		const char *name)
-{
-	struct param *param;
-
-	list_for_each_entry(&platform->params, param, list)
-		if (!strcmp(param->name, name))
-			return param->value;
-	return NULL;
-}
-
-static void set_param(struct platform_powerpc *platform, const char *name,
-		const char *value)
-{
-	struct param *param;
-
-	list_for_each_entry(&platform->params, param, list) {
-		if (strcmp(param->name, name))
-			continue;
-
-		if (!strcmp(param->value, value))
-			return;
-
-		talloc_free(param->value);
-		param->value = talloc_strdup(param, value);
-		param->modified = true;
-		return;
-	}
-
-
-	param = talloc(platform, struct param);
-	param->modified = true;
-	param->name = talloc_strdup(platform, name);
-	param->value = talloc_strdup(platform, value);
-	list_add(&platform->params, &param->list);
 }
 
 static int parse_hwaddr(struct interface_config *ifconf, char *str)
@@ -277,8 +200,7 @@ static int parse_hwaddr(struct interface_config *ifconf, char *str)
 	return 0;
 }
 
-static int parse_one_interface_config(struct config *config,
-		char *confstr)
+static int parse_one_interface_config(struct config *config, char *confstr)
 {
 	struct interface_config *ifconf;
 	char *tok, *tok_gw, *tok_url, *saveptr;
@@ -352,8 +274,7 @@ out_err:
 	return -1;
 }
 
-static int parse_one_dns_config(struct config *config,
-		char *confstr)
+static int parse_one_dns_config(struct config *config, char *confstr)
 {
 	char *tok, *saveptr = NULL;
 
@@ -373,14 +294,11 @@ static int parse_one_dns_config(struct config *config,
 	return 0;
 }
 
-static void populate_network_config(struct platform_powerpc *platform,
-		struct config *config)
+static void populate_network_config(struct config *config, const char *cval)
 {
 	char *val, *saveptr = NULL;
-	const char *cval;
 	int i;
 
-	cval = get_param(platform, "petitboot,network");
 	if (!cval || !strlen(cval))
 		return;
 
@@ -445,8 +363,8 @@ static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
 	return rc;
 }
 
-static void populate_bootdev_config(struct platform_powerpc *platform,
-		struct config *config)
+static void populate_bootdev_config(struct config *config,
+	const struct param_list *pl)
 {
 	struct autoboot_option *opt, *new = NULL;
 	char *pos, *end;
@@ -454,7 +372,7 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 	const char *val;
 
 	/* Check for ordered bootdevs */
-	val = get_param(platform, "petitboot,bootdevs");
+	val = param_list_get_value(pl, "petitboot,bootdevs");
 	if (!val || !strlen(val)) {
 		pos = end = NULL;
 	} else {
@@ -494,8 +412,7 @@ static void populate_bootdev_config(struct platform_powerpc *platform,
 	config->n_autoboot_opts = n_new;
 }
 
-static void populate_config(struct platform_powerpc *platform,
-		struct config *config)
+static void populate_config(struct config *config, const struct param_list *pl)
 {
 	const char *val;
 	char *end;
@@ -503,10 +420,10 @@ static void populate_config(struct platform_powerpc *platform,
 
 	/* if the "auto-boot?' property is present and "false", disable auto
 	 * boot */
-	val = get_param(platform, "auto-boot?");
+	val = param_list_get_value(pl, "auto-boot?");
 	config->autoboot_enabled = !val || strcmp(val, "false");
 
-	val = get_param(platform, "petitboot,timeout");
+	val = param_list_get_value(pl, "petitboot,timeout");
 	if (val) {
 		timeout = strtoul(val, &end, 10);
 		if (end != val) {
@@ -516,37 +433,38 @@ static void populate_config(struct platform_powerpc *platform,
 		}
 	}
 
-	val = get_param(platform, "petitboot,language");
+	val = param_list_get_value(pl, "petitboot,language");
 	config->lang = val ? talloc_strdup(config, val) : NULL;
 
-	populate_network_config(platform, config);
+	val = param_list_get_value(pl, "petitboot,network");
+	populate_network_config(config, val);
 
-	populate_bootdev_config(platform, config);
+	populate_bootdev_config(config, pl);
 
 	if (!config->debug) {
-		val = get_param(platform, "petitboot,debug?");
+		val = param_list_get_value(pl, "petitboot,debug?");
 		config->debug = val && !strcmp(val, "true");
 	}
 
-	val = get_param(platform, "petitboot,write?");
+	val = param_list_get_value(pl, "petitboot,write?");
 	if (val)
 		config->allow_writes = !strcmp(val, "true");
 
-	val = get_param(platform, "petitboot,snapshots?");
+	val = param_list_get_value(pl, "petitboot,snapshots?");
 	if (val)
 		config->disable_snapshots = !strcmp(val, "false");
 
-	val = get_param(platform, "petitboot,console");
+	val = param_list_get_value(pl, "petitboot,console");
 	if (val)
 		config->boot_console = talloc_strdup(config, val);
 	/* If a full path is already set we don't want to override it */
 	config->manual_console = config->boot_console &&
 					!strchr(config->boot_console, '[');
 
-	val = get_param(platform, "petitboot,http_proxy");
+	val = param_list_get_value(pl, "petitboot,http_proxy");
 	if (val)
 		config->http_proxy = talloc_strdup(config, val);
-	val = get_param(platform, "petitboot,https_proxy");
+	val = param_list_get_value(pl, "petitboot,https_proxy");
 	if (val)
 		config->https_proxy = talloc_strdup(config, val);
 }
@@ -594,22 +512,8 @@ static char *dns_config_str(void *ctx, const char **dns_servers, int n)
 	return str;
 }
 
-static void update_string_config(struct platform_powerpc *platform,
-		const char *name, const char *value)
-{
-	const char *cur;
-
-	cur = get_param(platform, name);
-
-	/* don't set an empty parameter if it doesn't already exist */
-	if (!cur && !strlen(value))
-		return;
-
-	set_param(platform, name, value);
-}
-
-static void update_network_config(struct platform_powerpc *platform,
-	const char *param_name, const struct config *config)
+static void update_network_config(struct param_list *pl, const char *param_name,
+	const struct config *config)
 {
 	unsigned int i;
 	char *val;
@@ -623,10 +527,10 @@ static void update_network_config(struct platform_powerpc *platform,
 		config->network.interfaces[0]->override)
 		return;
 
-	val = talloc_strdup(platform, "");
+	val = talloc_strdup(pl, "");
 
 	for (i = 0; i < config->network.n_interfaces; i++) {
-		char *iface_str = iface_config_str(platform,
+		char *iface_str = iface_config_str(pl,
 					config->network.interfaces[i]);
 		val = talloc_asprintf_append(val, "%s%s",
 				*val == '\0' ? "" : " ", iface_str);
@@ -634,7 +538,7 @@ static void update_network_config(struct platform_powerpc *platform,
 	}
 
 	if (config->network.n_dns_servers) {
-		char *dns_str = dns_config_str(platform,
+		char *dns_str = dns_config_str(pl,
 						config->network.dns_servers,
 						config->network.n_dns_servers);
 		val = talloc_asprintf_append(val, "%s%s",
@@ -642,13 +546,12 @@ static void update_network_config(struct platform_powerpc *platform,
 		talloc_free(dns_str);
 	}
 
-	update_string_config(platform, param_name, val);
-
+	param_list_set_non_empty(pl, param_name, val, true);
 	talloc_free(val);
 }
 
-static void update_bootdev_config(struct platform_powerpc *platform,
-		const char *param_name, const struct config *config)
+static void update_bootdev_config(struct param_list *pl, const char *param_name,
+	const struct config *config)
 {
 	char *val = NULL, *boot_str = NULL, *tmp = NULL;
 	struct autoboot_option *opt;
@@ -674,14 +577,14 @@ static void update_bootdev_config(struct platform_powerpc *platform,
 			tmp = val = talloc_asprintf_append(val, "%s", boot_str);
 	}
 
-	update_string_config(platform, param_name, val);
+	param_list_set_non_empty(pl, param_name, val, true);
 	talloc_free(tmp);
 	if (boot_str)
 		talloc_free(boot_str);
 }
 
-static void update_config(struct platform_powerpc *platform,
-		struct config *config, struct config *defaults)
+static void update_config(struct param_list *pl, struct config *config,
+	const struct config *defaults)
 {
 	char *tmp = NULL;
 	const char *val;
@@ -690,40 +593,40 @@ static void update_config(struct platform_powerpc *platform,
 		val = "";
 	else
 		val = config->autoboot_enabled ? "true" : "false";
-	update_string_config(platform, "auto-boot?", val);
+
+	param_list_set_non_empty(pl, "auto-boot?", val, true);
 
 	if (config->autoboot_timeout_sec == defaults->autoboot_timeout_sec)
 		val = "";
 	else
-		val = tmp = talloc_asprintf(platform, "%d",
-				config->autoboot_timeout_sec);
+		val = tmp = talloc_asprintf(pl, "%d",
+			config->autoboot_timeout_sec);
 
-	update_string_config(platform, "petitboot,timeout", val);
+	param_list_set_non_empty(pl, "petitboot,timeout", val, true);
 	if (tmp)
 		talloc_free(tmp);
 
 	val = config->lang ?: "";
-	update_string_config(platform, "petitboot,language", val);
+	param_list_set_non_empty(pl, "petitboot,language", val, true);
 
 	if (config->allow_writes == defaults->allow_writes)
 		val = "";
 	else
 		val = config->allow_writes ? "true" : "false";
-	update_string_config(platform, "petitboot,write?", val);
+	param_list_set_non_empty(pl, "petitboot,write?", val, true);
 
 	if (!config->manual_console) {
 		val = config->boot_console ?: "";
-		update_string_config(platform, "petitboot,console", val);
+		param_list_set_non_empty(pl, "petitboot,console", val, true);
 	}
 
 	val = config->http_proxy ?: "";
-	update_string_config(platform, "petitboot,http_proxy", val);
+	param_list_set_non_empty(pl, "petitboot,http_proxy", val, true);
 	val = config->https_proxy ?: "";
-	update_string_config(platform, "petitboot,https_proxy", val);
+	param_list_set_non_empty(pl, "petitboot,https_proxy", val, true);
 
-	update_network_config(platform, "petitboot,network", config);
-
-	update_bootdev_config(platform, "petitboot,bootdevs", config);
+	update_network_config(pl, "petitboot,network", config);
+	update_bootdev_config(pl, "petitboot,bootdevs", config);
 }
 
 static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
@@ -1071,7 +974,8 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 
 	if (!rc && persistent) {
 		/* Write this new config to NVRAM */
-		update_network_config(platform, "petitboot,network", config);
+		update_network_config(&platform->params, "petitboot,network",
+			config);
 		rc = write_nvram(platform);
 		if (rc)
 			pb_log("platform: Failed to save persistent interface override\n");
@@ -1120,7 +1024,7 @@ static int load_config(struct platform *p, struct config *config)
 	if (rc)
 		pb_log_fn("Failed to parse nvram\n");
 
-	populate_config(platform, config);
+	populate_config(config, &platform->params);
 
 	if (platform->get_ipmi_bootdev) {
 		bool bootdev_persistent;
@@ -1156,7 +1060,7 @@ static int save_config(struct platform *p, struct config *config)
 	defaults = talloc_zero(platform, struct config);
 	config_set_defaults(defaults);
 
-	update_config(platform, config, defaults);
+	update_config(&platform->params, config, defaults);
 
 	talloc_free(defaults);
 	return write_nvram(platform);
@@ -1220,7 +1124,7 @@ static bool probe(struct platform *p, void *ctx)
 		return false;
 
 	platform = talloc_zero(ctx, struct platform_powerpc);
-	list_init(&platform->params);
+	param_list_init(&platform->params, common_known_params());
 
 	p->platform_data = platform;
 
