@@ -62,7 +62,7 @@ static int kexec_load(struct boot_task *boot_task)
 	struct process *process;
 	char *s_initrd = NULL;
 	char *s_args = NULL;
-	const char *argv[7];
+	const char *argv[8];
 	char *s_dtb = NULL;
 	const char **p;
 	int result;
@@ -107,27 +107,31 @@ static int kexec_load(struct boot_task *boot_task)
 	*p++ = pb_system_apps.kexec;	/* 1 */
 	*p++ = "-l";			/* 2 */
 
+	if (pb_log_get_debug()) {
+		*p++ = "--debug";	/* 3 */
+	}
+
 	if (local_initrd) {
 		s_initrd = talloc_asprintf(boot_task, "--initrd=%s",
 				local_initrd);
 		assert(s_initrd);
-		*p++ = s_initrd;	 /* 3 */
+		*p++ = s_initrd;	 /* 4 */
 	}
 
 	if (local_dtb) {
 		s_dtb = talloc_asprintf(boot_task, "--dtb=%s",
 						local_dtb);
 		assert(s_dtb);
-		*p++ = s_dtb;		 /* 4 */
+		*p++ = s_dtb;		 /* 5 */
 	}
 
 	s_args = talloc_asprintf(boot_task, "--append=%s",
 				boot_task->args ?: "\"\"");
 	assert(s_args);
-	*p++ = s_args;		/* 5 */
+	*p++ = s_args;			/* 6 */
 
-	*p++ = local_image;		/* 6 */
-	*p++ = NULL;			/* 7 */
+	*p++ = local_image;		/* 7 */
+	*p++ = NULL;			/* 8 */
 
 	result = process_run_sync(process);
 	if (result) {

@@ -26,6 +26,7 @@ void __pb_log_init(FILE *stream, bool debug);
 #endif
 
 void pb_log_set_debug(bool debug);
+bool pb_log_get_debug(void);
 FILE *pb_log_get_stream(void);
 
 #endif /* _LOG_H */

@@ -88,6 +88,11 @@ void pb_log_set_debug(bool _debug)
 	debug = _debug;
 }
 
+bool pb_log_get_debug(void)
+{
+	return debug;
+}
+
 FILE *pb_log_get_stream(void)
 {
 	static FILE *null_stream;
