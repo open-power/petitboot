@@ -26,7 +26,6 @@
 static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
 static const char *devtree_dir = "/proc/device-tree/";
-static const int ipmi_timeout = 10000; /* milliseconds. */
 
 struct param {
 	char			*name;
@@ -986,130 +985,6 @@ static int set_ipmi_os_boot_sensor(struct platform_powerpc *platform)
 	return 0;
 }
 
-static void get_ipmi_bmc_mac(struct platform *p, uint8_t *buf)
-{
-	struct platform_powerpc *platform = p->platform_data;
-	uint16_t resp_len = 8;
-	uint8_t resp[8];
-	uint8_t req[] = { 0x1, 0x5, 0x0, 0x0 };
-	int i, rc;
-
-	rc = ipmi_transaction(platform->ipmi, IPMI_NETFN_TRANSPORT,
-			IPMI_CMD_TRANSPORT_GET_LAN_PARAMS,
-			req, sizeof(req),
-			resp, &resp_len,
-			ipmi_timeout);
-
-	pb_debug("BMC MAC resp [%d][%d]:\n", rc, resp_len);
-
-	if (rc == 0 && resp_len > 0) {
-		for (i = 2; i < resp_len; i++) {
-		        pb_debug(" %x", resp[i]);
-			buf[i - 2] = resp[i];
-		}
-		pb_debug("\n");
-	}
-
-}
-
-/*
- * Retrieve info from the "Get Device ID" IPMI commands.
- * See Chapter 20.1 in the IPMIv2 specification.
- */
-static void get_ipmi_bmc_versions(struct platform *p, struct system_info *info)
-{
-	struct platform_powerpc *platform = p->platform_data;
-	uint16_t resp_len = 16;
-	uint8_t resp[16], bcd;
-	int i, rc;
-
-	/* Retrieve info from current side */
-	rc = ipmi_transaction(platform->ipmi, IPMI_NETFN_APP,
-			IPMI_CMD_APP_GET_DEVICE_ID,
-			NULL, 0,
-			resp, &resp_len,
-			ipmi_timeout);
-
-	pb_debug("BMC version resp [%d][%d]:\n", rc, resp_len);
-	if (resp_len > 0) {
-		for (i = 0; i < resp_len; i++) {
-		        pb_debug(" %x", resp[i]);
-		}
-		pb_debug("\n");
-	}
-
-	if (rc == 0 && (resp_len == 12 || resp_len == 16)) {
-		info->bmc_current = talloc_array(info, char *, 4);
-		info->n_bmc_current = 4;
-
-		info->bmc_current[0] = talloc_asprintf(info, "Device ID: 0x%x",
-						resp[1]);
-		info->bmc_current[1] = talloc_asprintf(info, "Device Rev: 0x%x",
-						resp[2]);
-		bcd = resp[4] & 0x0f;
-		bcd += 10 * (resp[4] >> 4);
-		/* rev1.rev2.aux_revision */
-		info->bmc_current[2] = talloc_asprintf(info,
-				"Firmware version: %u.%02u",
-				resp[3], bcd);
-		if (resp_len == 16) {
-			info->bmc_current[2] = talloc_asprintf_append(
-					info->bmc_current[2],
-					".%02x%02x%02x%02x",
-					resp[12], resp[13], resp[14], resp[15]);
-		}
-		bcd = resp[5] & 0x0f;
-		bcd += 10 * (resp[5] >> 4);
-		info->bmc_current[3] = talloc_asprintf(info, "IPMI version: %u",
-						bcd);
-	} else
-		pb_log("Failed to retrieve Device ID from IPMI\n");
-
-	/* Retrieve info from golden side */
-	memset(resp, 0, sizeof(resp));
-	resp_len = 16;
-	rc = ipmi_transaction(platform->ipmi, IPMI_NETFN_AMI,
-			IPMI_CMD_APP_GET_DEVICE_ID_GOLDEN,
-			NULL, 0,
-			resp, &resp_len,
-			ipmi_timeout);
-
-	pb_debug("BMC golden resp [%d][%d]:\n", rc, resp_len);
-	if (resp_len > 0) {
-		for (i = 0; i < resp_len; i++) {
-		        pb_debug(" %x", resp[i]);
-		}
-		pb_debug("\n");
-	}
-
-	if (rc == 0 && (resp_len == 12 || resp_len == 16)) {
-		info->bmc_golden = talloc_array(info, char *, 4);
-		info->n_bmc_golden = 4;
-
-		info->bmc_golden[0] = talloc_asprintf(info, "Device ID: 0x%x",
-						resp[1]);
-		info->bmc_golden[1] = talloc_asprintf(info, "Device Rev: 0x%x",
-						resp[2]);
-		bcd = resp[4] & 0x0f;
-		bcd += 10 * (resp[4] >> 4);
-		/* rev1.rev2.aux_revision */
-		info->bmc_golden[2] = talloc_asprintf(info,
-				"Firmware version: %u.%02u",
-				resp[3], bcd);
-		if (resp_len == 16) {
-			info->bmc_golden[2] = talloc_asprintf_append(
-					info->bmc_golden[2],
-					".%02x%02x%02x%02x",
-					resp[12], resp[13], resp[14], resp[15]);
-		}
-		bcd = resp[5] & 0x0f;
-		bcd += 10 * (resp[5] >> 4);
-		info->bmc_golden[3] = talloc_asprintf(info, "IPMI version: %u",
-						bcd);
-	} else
-		pb_log("Failed to retrieve Golden Device ID from IPMI\n");
-}
-
 static void get_ipmi_network_override(struct platform_powerpc *platform,
 			struct config *config)
 {
@@ -1320,11 +1195,11 @@ static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 	talloc_free(filename);
 
 	sysinfo->bmc_mac = talloc_zero_size(sysinfo, HWADDR_SIZE);
-	if (platform->ipmi)
-		get_ipmi_bmc_mac(p, sysinfo->bmc_mac);
 
-	if (platform->ipmi)
-		get_ipmi_bmc_versions(p, sysinfo);
+	if (platform->ipmi) {
+		ipmi_get_bmc_mac(platform->ipmi, sysinfo->bmc_mac);
+		ipmi_get_bmc_versions(platform->ipmi, sysinfo);
+	}
 
 	if (platform->get_platform_versions)
 		platform->get_platform_versions(sysinfo);

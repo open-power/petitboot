@@ -29,6 +29,8 @@ enum ipmi_sensor_ids {
 
 struct ipmi;
 
+static const int ipmi_timeout = 10000; /* milliseconds. */
+
 bool ipmi_present(void);
 bool ipmi_bootdev_is_valid(int x);
 struct ipmi *ipmi_open(void *ctx);
@@ -40,6 +42,8 @@ int ipmi_transaction(struct ipmi *ipmi, uint8_t netfn, uint8_t cmd,
 
 int parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 				uint16_t len);
+void ipmi_get_bmc_mac(struct ipmi *ipmi, uint8_t *buf);
+void ipmi_get_bmc_versions(struct ipmi *ipmi, struct system_info *info);
 
 
 #endif /* _IPMI_H */
