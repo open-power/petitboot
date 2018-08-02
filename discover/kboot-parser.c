@@ -145,10 +145,14 @@ static const char *const kboot_conf_files[] = {
 	"/kboot.cnf",
 	"/etc/kboot.conf",
 	"/etc/kboot.cnf",
+	"/boot/kboot.conf",
+	"/boot/kboot.cnf",
 	"/KBOOT.CONF",
 	"/KBOOT.CNF",
 	"/ETC/KBOOT.CONF",
 	"/ETC/KBOOT.CNF",
+	"/BOOT/KBOOT.CONF",
+	"/BOOT/KBOOT.CNF",
 	NULL
 };
 
