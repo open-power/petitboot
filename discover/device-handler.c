@@ -522,6 +522,7 @@ void device_handler_remove(struct device_handler *handler,
 void device_handler_status(struct device_handler *handler,
 		struct status *status)
 {
+	pb_debug("%s: %s\n", __func__, status->message);
 	discover_server_notify_boot_status(handler->server, status);
 }
 

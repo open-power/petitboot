@@ -166,6 +166,7 @@ int platform_init(void *ctx)
 	platform_ctx = talloc_new(ctx);
 
 	for (p = &__start_platforms; p < &__stop_platforms; p++) {
+		pb_debug("%s: Try platform %s\n", __func__, (*p)->name);
 		if (!(*p)->probe(*p, platform_ctx))
 			continue;
 		platform = *p;
