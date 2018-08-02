@@ -609,7 +609,7 @@ static void update_string_config(struct platform_powerpc *platform,
 }
 
 static void update_network_config(struct platform_powerpc *platform,
-	struct config *config)
+	const char *param_name, const struct config *config)
 {
 	unsigned int i;
 	char *val;
@@ -642,13 +642,13 @@ static void update_network_config(struct platform_powerpc *platform,
 		talloc_free(dns_str);
 	}
 
-	update_string_config(platform, "petitboot,network", val);
+	update_string_config(platform, param_name, val);
 
 	talloc_free(val);
 }
 
 static void update_bootdev_config(struct platform_powerpc *platform,
-		struct config *config)
+		const char *param_name, const struct config *config)
 {
 	char *val = NULL, *boot_str = NULL, *tmp = NULL;
 	struct autoboot_option *opt;
@@ -674,7 +674,7 @@ static void update_bootdev_config(struct platform_powerpc *platform,
 			tmp = val = talloc_asprintf_append(val, "%s", boot_str);
 	}
 
-	update_string_config(platform, "petitboot,bootdevs", val);
+	update_string_config(platform, param_name, val);
 	talloc_free(tmp);
 	if (boot_str)
 		talloc_free(boot_str);
@@ -721,9 +721,9 @@ static void update_config(struct platform_powerpc *platform,
 	val = config->https_proxy ?: "";
 	update_string_config(platform, "petitboot,https_proxy", val);
 
-	update_network_config(platform, config);
+	update_network_config(platform, "petitboot,network", config);
 
-	update_bootdev_config(platform, config);
+	update_bootdev_config(platform, "petitboot,bootdevs", config);
 }
 
 static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
@@ -1071,7 +1071,7 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 
 	if (!rc && persistent) {
 		/* Write this new config to NVRAM */
-		update_network_config(platform, config);
+		update_network_config(platform, "petitboot,network", config);
 		rc = write_nvram(platform);
 		if (rc)
 			pb_log("platform: Failed to save persistent interface override\n");
