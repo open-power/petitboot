@@ -23,7 +23,7 @@ struct event {
 	enum event_action action;
 	const char *device;
 
-	struct param {
+	struct event_param {
 		char *name;
 		char *value;
 	} *params;

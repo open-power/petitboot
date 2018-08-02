@@ -80,7 +80,7 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 static void event_parse_params(struct event *event, const char *buf, int len)
 {
 	int param_len, name_len, value_len;
-	struct param *param;
+	struct event_param *param;
 	char *sep;
 
 	for (; len > 0; len -= param_len + 1, buf += param_len + 1) {
@@ -95,7 +95,7 @@ static void event_parse_params(struct event *event, const char *buf, int len)
 
 		/* update the params array */
 		event->params = talloc_realloc(event, event->params,
-					struct param, ++event->n_params);
+					struct event_param, ++event->n_params);
 		param = &event->params[event->n_params - 1];
 
 		sep = memchr(buf, '=', param_len);
@@ -150,7 +150,7 @@ const char *event_get_param(const struct event *event, const char *name)
 
 void event_set_param(struct event *event, const char *name, const char *value)
 {
-	struct param *param;
+	struct event_param *param;
 	int i;
 
 	/* if it's already present, replace the value of the old param */
@@ -165,7 +165,7 @@ void event_set_param(struct event *event, const char *name, const char *value)
 
 	/* not found - create a new param */
 	event->params = talloc_realloc(event, event->params,
-				struct param, ++event->n_params);
+				struct event_param, ++event->n_params);
 	param = &event->params[event->n_params - 1];
 
 	param->name = talloc_strdup(event, name);
