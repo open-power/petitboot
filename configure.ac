@@ -394,6 +394,7 @@ DEFINE_HOST_PROG(PB_PLUGIN, pb-plugin, [/usr/sbin/pb-plugin])
 DEFINE_HOST_PROG(PB_EXEC, pb-exec, [/usr/sbin/pb-exec])
 DEFINE_HOST_PROG(SH, sh, [/bin/sh])
 DEFINE_HOST_PROG(SCSI_RESCAN, scsi-rescan, [/usr/sbin/scsi-rescan])
+DEFINE_HOST_PROG(DMIDECODE, dmidecode, [/sbin/dmidecode])
 
 AC_ARG_WITH(
     [tftp],

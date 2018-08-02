@@ -35,6 +35,7 @@ const struct pb_system_apps pb_system_apps = {
 	.pb_exec	= HOST_PROG_PB_EXEC,
 	.sh		= HOST_PROG_SH,
 	.scsi_rescan	= HOST_PROG_SCSI_RESCAN,
+	.dmidecode	= HOST_PROG_DMIDECODE,
 };
 
 #ifndef TFTP_TYPE
