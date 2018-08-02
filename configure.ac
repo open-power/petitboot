@@ -313,7 +313,7 @@ AC_ARG_ENABLE(
 )
 AS_IF(
 	[test "x$enable_platform_all" = "xyes"],
-	[enable_platform_powerpc="yes"; enable_platform_ps3="yes"]
+	[enable_platform_arm64="yes"; enable_platform_powerpc="yes"; enable_platform_ps3="yes"]
 )
 
 AC_ARG_ENABLE(
@@ -328,9 +328,19 @@ AC_ARG_ENABLE(
 AS_IF(
 	[test "x$enable_platform_auto" = "xyes"],
 	[AS_CASE([$host],
+		[aarch64-*-*],   [enable_platform_arm64="yes"],
 		[powerpc*-*-*],  [enable_platform_powerpc="yes"],
 	)]
 )
+
+AC_ARG_ENABLE(
+	[platform-arm64],
+	[AS_HELP_STRING(
+		[--enable-platform-arm64],
+		[build support for arm64 platforms [default=no]]
+	)]
+)
+AM_CONDITIONAL([PLATFORM_ARM64], [test "x$enable_platform_arm64" = "xyes"])
 
 AC_ARG_ENABLE(
 	[platform-powerpc],

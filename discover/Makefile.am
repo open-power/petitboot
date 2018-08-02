@@ -82,6 +82,10 @@ discover_platform_ro_SOURCES = \
 	discover/dt.h \
 	discover/hostboot.h
 
+if PLATFORM_ARM64
+discover_platform_ro_SOURCES += discover/platform-arm64.c
+endif
+
 if PLATFORM_POWERPC
 discover_platform_ro_SOURCES += discover/platform-powerpc.c
 endif
