@@ -27,6 +27,11 @@ struct process_info;
 
 typedef void	(*process_exit_cb)(struct process *);
 
+struct process_stdout {
+	size_t len;
+	char *buf;
+};
+
 struct process {
 	/* caller-provided configuration */
 	const char		*path;
@@ -63,13 +68,24 @@ struct process *process_create(void *ctx);
  */
 void process_release(struct process *process);
 
-/* Synchronous interface. These functions will all block while waiting for
- * the process to exit.
+/* Synchronous interface. The process_run_sync, process_run_simple and
+ * process_get_stdout functions will all block while waiting for the child
+ * process to exit.  Calls to the variadic versions must have a NULL terminating
+ * argument.  For the process_get_stdout calls stderr will go to the log.
  */
 int process_run_sync(struct process *process);
-int process_run_simple_argv(void *ctx, const char *argv[]);
-int process_run_simple(void *ctx, const char *name, ...)
-	__attribute__((sentinel(0)));
+int process_get_stdout_argv(void *ctx, struct process_stdout **stdout,
+	const char *argv[]);
+int process_get_stdout(void *ctx, struct process_stdout **stdout,
+	const char *path, ...) __attribute__((sentinel(0)));
+
+static inline int process_run_simple_argv(void *ctx, const char *argv[])
+{
+	return process_get_stdout_argv(ctx, NULL, argv);
+}
+#define process_run_simple(_ctx, _path, args...) \
+	process_get_stdout(_ctx, NULL, _path, args)
+
 
 /* Asynchronous interface. When a process is run with process_run_async, the
  * function returns without wait()ing for the child process to exit. If the

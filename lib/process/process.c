@@ -452,48 +452,76 @@ void process_stop_async_all(void)
 	}
 }
 
-int process_run_simple_argv(void *ctx, const char *argv[])
+int process_get_stdout_argv(void *ctx, struct process_stdout **stdout,
+	const char *argv[])
 {
-	struct process *process;
+	struct process *p;
 	int rc;
 
-	process = process_create(ctx);
+	p = process_create(NULL);
+	p->path = argv[0];
+	p->argv = argv;
 
-	process->path = argv[0];
-	process->argv = argv;
+	if (stdout) {
+		p->keep_stdout = true;
+		*stdout = NULL;
+	}
 
-	rc = process_run_sync(process);
+	rc = process_run_sync(p);
 
 	if (!rc)
-		rc = process->exit_status;
+		rc = p->exit_status;
+	else {
+		pb_debug("%s: process_run_sync failed: %s.\n", __func__,
+			p->path);
+		if (stdout)
+			pb_debug("%s: stdout: %s\n\n", __func__, p->stdout_buf);
+		goto exit;
+	}
 
-	process_release(process);
+	if (!stdout)
+		goto exit;
 
+	*stdout = talloc(ctx, struct process_stdout);
+
+	if (!*stdout) {
+		rc = -1;
+		goto exit;
+	}
+
+	(*stdout)->len = p->stdout_len;
+	(*stdout)->buf = talloc_memdup(*stdout, p->stdout_buf,
+		p->stdout_len + 1);
+	(*stdout)->buf[p->stdout_len] = 0;
+
+exit:
+	process_release(p);
 	return rc;
 }
 
-int process_run_simple(void *ctx, const char *name, ...)
+int process_get_stdout(void *ctx, struct process_stdout **stdout,
+	const char *path, ...)
 {
 	int rc, i, n_argv = 1;
 	const char **argv;
 	va_list ap;
 
-	va_start(ap, name);
+	va_start(ap, path);
 	while (va_arg(ap, char *))
 		n_argv++;
 	va_end(ap);
 
 	argv = talloc_array(ctx, const char *, n_argv + 1);
-	argv[0] = name;
+	argv[0] = path;
 
-	va_start(ap, name);
+	va_start(ap, path);
 	for (i = 1; i < n_argv; i++)
 		argv[i] = va_arg(ap, const char *);
 	va_end(ap);
 
 	argv[i] = NULL;
 
-	rc = process_run_simple_argv(ctx, argv);
+	rc = process_get_stdout_argv(ctx, stdout, argv);
 
 	talloc_free(argv);
 
