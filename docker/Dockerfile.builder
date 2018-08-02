@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y \
 	libtool \
 	libuv-dev \
 	libdevmapper-dev \
+	libfdt-dev \
 	libncurses-dev \
 	libgpgme11-dev \
 	libssl-dev \

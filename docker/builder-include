@@ -50,7 +50,7 @@ show_tag () {
 	echo "${DOCKER_TAG}"
 }
 
-: ${VERSION:="1"}
+: ${VERSION:="2"}
 : ${ARCH_TAG:="$(arch_tag)"}
 : ${DOCKER_NAME:="pb-builder"}
 : ${DOCKER_TAG:="${DOCKER_NAME}:${VERSION}${ARCH_TAG}"}
