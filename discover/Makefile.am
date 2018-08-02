@@ -80,11 +80,11 @@ discover_platform_ro_SOURCES = \
 	discover/ipmi.h \
 	discover/dt.c \
 	discover/dt.h \
-	discover/hostboot.h \
-	discover/platform-powerpc.c
+	discover/hostboot.h
 
-discover_platform_ro_CPPFLAGS = \
-	$(AM_CPPFLAGS)
+if PLATFORM_POWERPC
+discover_platform_ro_SOURCES += discover/platform-powerpc.c
+endif
 
 # Build dummy last to put it at the end of the platforms section.
 discover_platform_ro_SOURCES += discover/platform-dummy.c
@@ -98,6 +98,9 @@ discover_platform_ro_LDFLAGS = \
 	$(UDEV_LIBS)
 
 endif
+
+discover_platform_ro_CPPFLAGS = \
+	$(AM_CPPFLAGS)
 
 discover_platform_ro_LINK = \
 	$(LD) -r -o $@

@@ -303,6 +303,44 @@ AS_IF(
 	]
 )
 
+# platform choice
+AC_ARG_ENABLE(
+	[platform-all],
+	[AS_HELP_STRING(
+		[--enable-platform-all],
+		[build support for all platforms [default=no]]
+	)]
+)
+AS_IF(
+	[test "x$enable_platform_all" = "xyes"],
+	[enable_platform_powerpc="yes"; enable_platform_ps3="yes"]
+)
+
+AC_ARG_ENABLE(
+	[platform-auto],
+	[AS_HELP_STRING(
+		[--enable-platform-auto],
+		[auto detect platform support to build [default=yes]]
+	)],
+	[],
+	[enable_platform_auto="yes"]
+)
+AS_IF(
+	[test "x$enable_platform_auto" = "xyes"],
+	[AS_CASE([$host],
+		[powerpc*-*-*],  [enable_platform_powerpc="yes"],
+	)]
+)
+
+AC_ARG_ENABLE(
+	[platform-powerpc],
+	[AS_HELP_STRING(
+		[--enable-platform-powerpc],
+		[build support for powerpc platforms [default=no]]
+	)]
+)
+AM_CONDITIONAL([PLATFORM_POWERPC], [test "x$enable_platform_powerpc" = "xyes"])
+
 AC_ARG_ENABLE(
 	[platform-ps3],
 	[AS_HELP_STRING(
