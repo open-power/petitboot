@@ -67,7 +67,9 @@ lib_libpbcore_la_SOURCES = \
 	lib/flash/flash.h \
 	lib/security/security.h \
 	lib/efi/efivar.h \
-	lib/efi/efivar.c
+	lib/efi/efivar.c \
+	lib/param_list/param_list.c \
+	lib/param_list/param_list.h
 
 if ENABLE_MTD
 lib_libpbcore_la_SOURCES += \
