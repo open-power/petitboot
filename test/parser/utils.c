@@ -371,6 +371,18 @@ err_cleanup:
 	return -1;
 }
 
+bool parser_is_unique(struct discover_context *ctx, struct discover_device *dev,
+	const char *filename, struct list *found_list)
+{
+	(void)ctx;
+	(void)dev;
+	(void)filename;
+	(void)found_list;
+
+	/* Just let the parser process everything. */
+	return true;
+}
+
 struct load_url_result *load_url_async(void *ctx, struct pb_url *url,
 		load_url_complete async_cb, void *async_data,
 		waiter_cb stdout_cb, void *stdout_data)
