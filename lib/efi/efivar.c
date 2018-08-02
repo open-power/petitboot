@@ -24,6 +24,7 @@
 
 #include <linux/fs.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 
 #include "efivar.h"
 #include "log/log.h"
@@ -42,150 +43,150 @@ inline const char *get_efivarfs_path(void)
 	return efivarfs_path;
 }
 
-int efi_del_variable(void *ctx, const char *guidstr,
-		const char *name)
+static int efi_open(const char *name, const char *guidstr, int flags,
+	mode_t mode, char **path)
 {
-	int fd, flag, errno_value;
+	int fd;
+
+	*path = NULL;
+
+	if (!get_efivarfs_path())
+		return -1;
+
+	*path = talloc_asprintf(NULL, "%s%s-%s", get_efivarfs_path(), name, guidstr);
+	if (!*path)
+		return -1;
+
+	flags = flags ? flags : O_RDONLY | O_NONBLOCK;
+
+	fd = open(*path, flags, mode);
+
+	if (fd < 0) {
+		pb_log("%s: open failed %s: %s\n", __func__, *path,
+			strerror(errno));
+		talloc_free(*path);
+		*path = NULL;
+		return -1;
+	}
+
+	return fd;
+}
+
+int efi_del_variable(const char *guidstr, const char *name)
+{
+	int fd, flag;
 	int rc = -1;
-	const char *dir;
 	char *path;
 
-	dir = get_efivarfs_path();
-	if (!dir)
+	fd = efi_open(name, guidstr, 0, 0, &path);
+	if (fd < 0)
 		return -1;
-
-	path = talloc_asprintf(ctx, "%s%s-%s", dir, name, guidstr);
-	if (!path)
-		return -1;
-
-	fd = open(path, O_RDONLY|O_NONBLOCK);
-	if (fd == -1)
-		goto err;
 
 	rc = ioctl(fd, FS_IOC_GETFLAGS, &flag);
 	if (rc == -1)
-		goto err;
+		goto exit;
 
 	flag &= ~FS_IMMUTABLE_FL;
 	rc = ioctl(fd, FS_IOC_SETFLAGS, &flag);
 	if (rc == -1)
-		goto err;
+		goto exit;
 
 	close(fd);
+	fd = 0;
 	rc = unlink(path);
-
-err:
-	errno_value = errno;
-	if (fd > 0)
-		close(fd);
-
-	errno = errno_value;
+exit:
+	talloc_free(path);
+	close(fd);
 	return rc;
 }
 
 int efi_get_variable(void *ctx, const char *guidstr, const char *name,
-		uint8_t **data, size_t *data_size, uint32_t *attributes)
+		struct efi_data **efi_data)
 {
-	int fd, errno_value;
+	int fd;
 	int rc = -1;
-	void *p, *buf;
-	size_t bufsize = 4096;
-	size_t filesize = 0;
-	ssize_t sz;
-	const char *dir;
+	char *p;
+	char buf[4096];
+	ssize_t total;
+	ssize_t count;
 	char *path;
 
-	dir = get_efivarfs_path();
-	if (!dir)
-		return EFAULT;
+	*efi_data = NULL;
 
-	path = talloc_asprintf(ctx, "%s%s-%s", dir, name, guidstr);
-	if (!path)
-		return ENOMEM;
-
-	fd = open(path, O_RDONLY|O_NONBLOCK);
+	fd = efi_open(name, guidstr, 0, 0, &path);
 	if (fd < 0)
-		goto err;
+		return -1;
 
-	buf = talloc_size(ctx, bufsize);
-	if (!buf)
-		goto err;
+	for (p = buf, total = 0; ; p = buf + count) {
+		count = read(fd, p, sizeof(buf) - total);
+		if (count < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				continue;
 
-	do {
-		p = buf + filesize;
-		sz = read(fd, p, bufsize);
-		if (sz < 0 && errno == EAGAIN) {
-			continue;
-		} else if (sz == 0) {
-			break;
+			pb_log("%s: read failed %s: (%ld) %s\n", __func__, path,
+				count, strerror(errno));
+			goto exit;
 		}
-		filesize += sz;
-	} while (1);
+		if (p >= (buf + sizeof(buf))) {
+			pb_log("%s: buffer full %s: (%ld)\n", __func__, path,
+				sizeof(buf));
+			goto exit;
+		}
+		if (count == 0)
+			break;
+		total += count;
+	};
 
-	*attributes = *(uint32_t *)buf;
-	*data = (uint8_t *)(buf + sizeof(uint32_t));
-	*data_size = strlen(buf + sizeof(uint32_t));
+	*efi_data = (void*)talloc_zero_array(ctx, char,
+		sizeof (struct efi_data) + total);
+
+	(*efi_data)->attributes = *(uint32_t *)buf;
+	(*efi_data)->data_size = total;
+	(*efi_data)->data = (*efi_data)->fill;
+	memcpy((*efi_data)->data, buf + sizeof (uint32_t), total);
+
 	rc = 0;
-
-err:
-	errno_value = errno;
-	if (fd > 0)
-		close(fd);
-
-	errno = errno_value;
+exit:
+	talloc_free(path);
+	close(fd);
 	return rc;
 }
 
-int efi_set_variable(void *ctx, const char *guidstr, const char *name,
-		uint8_t *data, size_t data_size, uint32_t attributes)
+int efi_set_variable(const char *guidstr, const char *name,
+		const struct efi_data *efi_data)
 {
-	int rc = -1, errno_value;
-	int fd = -1;
-	ssize_t len;
-	const char *dir;
-	char *path;
+	int rc = -1;
+	int fd;
+	ssize_t count;
 	void *buf;
 	size_t bufsize;
-	mode_t mask = 0644;
+	char *path;
 
-	dir = get_efivarfs_path();
-	if (!dir)
-		return EFAULT;
+	efi_del_variable(guidstr, name);
 
-	path = talloc_asprintf(ctx, "%s%s-%s", dir, name, guidstr);
-	if (!path)
-		return ENOMEM;
-
-	if (!access(path, F_OK)) {
-		rc = efi_del_variable(ctx, guidstr, name);
-		if (rc < 0) {
-			goto err;
-		}
-	}
-
-	fd = open(path, O_CREAT|O_WRONLY, mask);
+	fd = efi_open(name, guidstr, O_CREAT | O_WRONLY,
+		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, &path);
 	if (fd < 0)
-		goto err;
+		return -1;
 
-	bufsize = sizeof(uint32_t) + data_size;
-	buf = talloc_size(ctx, bufsize);
+	bufsize = sizeof(uint32_t) + efi_data->data_size;
+	buf = talloc_size(path, bufsize);
 	if (!buf)
-		goto err;
+		goto exit;
 
-	*(uint32_t *)buf = attributes;
-	memcpy(buf + sizeof(uint32_t), data, data_size);
+	*(uint32_t *)buf = efi_data->attributes;
+	memcpy(buf + sizeof(uint32_t), efi_data->data, efi_data->data_size);
 
-	len = write(fd, buf, bufsize);
-	if ((size_t)len != bufsize)
-		goto err;
-	else
-		rc = 0;
+	count = write(fd, buf, bufsize);
+	if ((size_t)count != bufsize) {
+		pb_log("%s: write failed %s: (%ld) %s\n", __func__, name,
+			count, strerror(errno));
+		goto exit;
+	}
+	rc = 0;
 
-err:
-	errno_value = errno;
-	if (fd > 0)
-		close(fd);
-
-	errno = errno_value;
+exit:
+	talloc_free(path);
+	close(fd);
 	return rc;
 }
