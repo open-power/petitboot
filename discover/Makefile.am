@@ -86,6 +86,9 @@ discover_platform_ro_SOURCES = \
 discover_platform_ro_CPPFLAGS = \
 	$(AM_CPPFLAGS)
 
+# Build dummy last to put it at the end of the platforms section.
+discover_platform_ro_SOURCES += discover/platform-dummy.c
+
 if ENABLE_MTD
 discover_platform_ro_SOURCES += \
 	discover/hostboot.c
