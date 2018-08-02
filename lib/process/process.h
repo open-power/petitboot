@@ -87,6 +87,6 @@ bool process_exit_ok(struct process *process);
 
 /* Functions to assist callers using a custom stdout callback */
 struct process *procinfo_get_process(struct process_info *procinfo);
-int process_stdout_custom(struct process_info *procinfo, char **line);
+int process_process_stdout(struct process_info *procinfo, char **line);
 
 #endif /* PROCESS_H */

@@ -158,7 +158,7 @@ static int busybox_progress_cb(void *arg)
 	p = procinfo_get_process(procinfo);
 	handler = p->stdout_data;
 
-	rc = process_stdout_custom(procinfo, &line);
+	rc = process_process_stdout(procinfo, &line);
 
 	if (rc) {
 		/* Unregister ourselves from progress tracking */
