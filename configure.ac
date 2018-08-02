@@ -136,6 +136,13 @@ AM_CONDITIONAL(
 	[test "x$with_twin_x11" = "xyes" || test "x$with_twin_fbdev" = "xyes"])
 
 AS_IF(
+	[test "x$with_twin_x11" != "xyes" && \
+		test "x$with_twin_fbdev" != "xyes" && \
+		test "x$ax_cv_curses" != "xyes"],
+	[AC_MSG_WARN([ No user interface programs configured.  Consider using --with-ncurses, --with-twin-x11 or --with-twin-fbdev'])]
+)
+
+AS_IF(
 	[test "x$with_twin_x11" = "xyes" || test "x$with_twin_fbdev" = "xyes"],
 	[PKG_CHECK_MODULES(
 		[twin],
