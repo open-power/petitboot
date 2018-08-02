@@ -94,7 +94,7 @@ static int get_pkcs12(FILE *keyfile, X509 **cert, EVP_PKEY **priv)
 		 */
 		if (!PKCS12_parse(p12, NULL, priv, cert, NULL) &&
 		    !PKCS12_parse(p12,   "", priv, cert, NULL)) {
-			pb_log("%s: Error parsing OpenSSL PKCS12:\n", __func__);
+			pb_log_fn("Error parsing OpenSSL PKCS12:\n");
 			ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 		} else
 			ok = 1;
@@ -131,7 +131,7 @@ static STACK_OF(X509) *get_cert_stack(FILE *keyfile)
 		if (cert)
 			sk_X509_push(certs, get_cert(keyfile));
 	} else {
-		pb_log("%s: Error allocating OpenSSL X509 stack:\n", __func__);
+		pb_log_fn("Error allocating OpenSSL X509 stack:\n");
 		ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 	}
 
@@ -168,7 +168,7 @@ static EVP_PKEY *get_public_key(FILE *keyfile)
 
 	/* handles both cases */
 	if (!pkey) {
-		pb_log("%s: Error loading OpenSSL public key:\n", __func__);
+		pb_log_fn("Error loading OpenSSL public key:\n");
 		ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 	}
 
@@ -240,7 +240,7 @@ int decrypt_file(const char *filename,
 
 	certs = sk_X509_new_null();
 	if (!certs) {
-		pb_log("%s: Error allocating OpenSSL X509 stack:\n", __func__);
+		pb_log_fn("Error allocating OpenSSL X509 stack:\n");
 		ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 		goto out;
 	}
@@ -268,7 +268,7 @@ int decrypt_file(const char *filename,
 	/* in this mode its attached content */
 	if (!CMS_verify(cms, certs, NULL, content_bio, out_bio,
 			CMS_NO_SIGNER_CERT_VERIFY | CMS_BINARY)) {
-		pb_log("%s: Failed OpenSSL CMS decrypt verify:\n", __func__);
+		pb_log_fn("Failed OpenSSL CMS decrypt verify:\n");
 		ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 		goto out;
 	}
@@ -359,7 +359,7 @@ int verify_file_signature(const char *plaintext_filename,
 
 		if (!CMS_verify(cms, certs, NULL, plaintext_bio, NULL,
 				CMS_DETACHED | CMS_NO_SIGNER_CERT_VERIFY | CMS_BINARY)) {
-			pb_log("%s: Failed OpenSSL CMS verify:\n", __func__);
+			pb_log_fn("Failed OpenSSL CMS verify:\n");
 			ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 			goto out;
 		}
@@ -375,7 +375,7 @@ int verify_file_signature(const char *plaintext_filename,
 		ctx = EVP_MD_CTX_create();
 
 		if (!ctx) {
-			pb_log("%s: Error allocating OpenSSL MD ctx:\n", __func__);
+			pb_log_fn("Error allocating OpenSSL MD ctx:\n");
 			ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 			goto out;
 		}
@@ -385,7 +385,7 @@ int verify_file_signature(const char *plaintext_filename,
 			goto out;
 
 		if (EVP_DigestVerifyInit(ctx, NULL, s_verify_md, NULL, pkey) < 1) {
-			pb_log("%s: Error initializing OpenSSL verify:\n", __func__);
+			pb_log_fn("Error initializing OpenSSL verify:\n");
 			ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 			goto out;
 		}
@@ -425,7 +425,7 @@ int verify_file_signature(const char *plaintext_filename,
 		if (EVP_DigestVerifyFinal(ctx, (unsigned char*)sigbuf, siglen))
 			nok = 0;
 		else {
-			pb_log("%s: Error finalizing OpenSSL verify:\n", __func__);
+			pb_log_fn("Error finalizing OpenSSL verify:\n");
 			ERR_print_errors_cb(&pb_log_print_errors_cb, NULL);
 		}
 	}

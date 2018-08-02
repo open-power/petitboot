@@ -94,13 +94,13 @@ static struct resource *user_event_resource(struct discover_boot_option *opt,
 
 	siaddr = event_get_param(event, "siaddr");
 	if (!siaddr) {
-		pb_log("%s: next server option not found\n", __func__);
+		pb_log_fn("next server option not found\n");
 		return NULL;
 	}
 
 	boot_file = event_get_param(event, "bootfile");
 	if (!boot_file) {
-		pb_log("%s: bootfile not found\n", __func__);
+		pb_log_fn("bootfile not found\n");
 		return NULL;
 	}
 
@@ -148,7 +148,7 @@ static int parse_user_event(struct discover_context *ctx, struct event *event)
 	val = event_get_param(event, "name");
 
 	if (!val) {
-		pb_log("%s: no name found\n", __func__);
+		pb_log_fn("no name found\n");
 		goto fail_opt;
 	}
 
@@ -157,7 +157,7 @@ static int parse_user_event(struct discover_context *ctx, struct event *event)
 
 	d_opt->boot_image = user_event_resource(d_opt, event, false);
 	if (!d_opt->boot_image) {
-		pb_log("%s: no boot image found for %s!\n", __func__,
+		pb_log_fn("no boot image found for %s!\n",
 				opt->name);
 		goto fail_opt;
 	}
@@ -288,7 +288,7 @@ struct pb_url *user_event_parse_conf_url(struct discover_context *ctx,
 
 	host = parse_host_addr(event);
 	if (!host) {
-		pb_log("%s: host address not found\n", __func__);
+		pb_log_fn("host address not found\n");
 
 		/* No full URLs and no host address? Check for DHCPv6 options */
 		if (bootfile_url && is_url(bootfile_url)) {
@@ -362,7 +362,7 @@ char **user_event_parse_conf_filenames(
 	}
 
 	if (!mac_addr && !ip_hex) {
-		pb_log("%s: neither mac nor ip parameter found\n", __func__);
+		pb_log_fn("neither mac nor ip parameter found\n");
 		return NULL;
 	}
 
@@ -672,12 +672,12 @@ static int user_event_process(void *arg)
 	len = recvfrom(uev->socket, buf, PBOOT_USER_EVENT_SIZE, 0, NULL, NULL);
 
 	if (len < 0) {
-		pb_log("%s: socket read failed: %s", __func__, strerror(errno));
+		pb_log_fn("socket read failed: %s\n", strerror(errno));
 		return 0;
 	}
 
 	if (len == 0) {
-		pb_log("%s: empty", __func__);
+		pb_log_fn("empty\n");
 		return 0;
 	}
 

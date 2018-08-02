@@ -81,11 +81,11 @@ static void udev_setup_device_params(struct udev_device *udev,
 static void lvm_vg_search(struct device_handler *handler)
 {
 	if (process_run_simple(handler, pb_system_apps.vgscan, "-qq", NULL))
-		pb_log("%s: Failed to execute vgscan\n", __func__);
+		pb_log_fn("Failed to execute vgscan\n");
 
 	if (process_run_simple(handler, pb_system_apps.vgchange, "-ay", "-qq",
 				NULL))
-		pb_log("%s: Failed to execute vgchange\n", __func__);
+		pb_log_fn("Failed to execute vgchange\n");
 }
 
 static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,

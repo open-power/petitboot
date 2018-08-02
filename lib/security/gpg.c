@@ -73,22 +73,22 @@ int decrypt_file(const char *filename,
 	gpgme_set_locale(NULL, LC_CTYPE, setlocale (LC_CTYPE, NULL));
 	err = gpgme_engine_check_version(GPGME_PROTOCOL_OpenPGP);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: OpenPGP support not available\n", __func__);
+		pb_log_fn("OpenPGP support not available\n");
 		return -1;
 	}
 	err = gpgme_get_engine_info(&enginfo);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: GPG engine failed to initialize\n", __func__);
+		pb_log_fn("GPG engine failed to initialize\n");
 		return -1;
 	}
 	err = gpgme_new(&gpg_context);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: GPG context could not be created\n", __func__);
+		pb_log_fn("GPG context could not be created\n");
 		return -1;
 	}
 	err = gpgme_set_protocol(gpg_context, GPGME_PROTOCOL_OpenPGP);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: GPG protocol could not be set\n", __func__);
+		pb_log_fn("GPG protocol could not be set\n");
 		return -1;
 	}
 	if (keyring_path)
@@ -100,7 +100,7 @@ int decrypt_file(const char *filename,
 			GPGME_PROTOCOL_OpenPGP,
 			enginfo->file_name, enginfo->home_dir);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: Could not set GPG engine information\n", __func__);
+		pb_log_fn("Could not set GPG engine information\n");
 		return -1;
 	}
 	err = gpgme_data_new(&plaintext_data);
@@ -120,7 +120,7 @@ int decrypt_file(const char *filename,
 	err = gpgme_op_decrypt_verify(gpg_context, ciphertext_data,
 		plaintext_data);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: Could not decrypt file\n", __func__);
+		pb_log_fn("Could not decrypt file\n");
 		return -1;
 	}
 	verification_result = gpgme_op_verify_result(gpg_context);
@@ -210,7 +210,7 @@ int decrypt_file(const char *filename,
 	gpgme_release(gpg_context);
 
 	if (!valid) {
-		pb_log("%s: Incorrect GPG signature\n", __func__);
+		pb_log_fn("Incorrect GPG signature\n");
 		return -1;
 	}
 
@@ -242,22 +242,22 @@ int verify_file_signature(const char *plaintext_filename,
 	gpgme_set_locale(NULL, LC_CTYPE, setlocale (LC_CTYPE, NULL));
 	err = gpgme_engine_check_version(GPGME_PROTOCOL_OpenPGP);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: OpenPGP support not available\n", __func__);
+		pb_log_fn("OpenPGP support not available\n");
 		return -1;
 	}
 	err = gpgme_get_engine_info(&enginfo);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: GPG engine failed to initialize\n", __func__);
+		pb_log_fn("GPG engine failed to initialize\n");
 		return -1;
 	}
 	err = gpgme_new(&gpg_context);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: GPG context could not be created\n", __func__);
+		pb_log_fn("GPG context could not be created\n");
 		return -1;
 	}
 	err = gpgme_set_protocol(gpg_context, GPGME_PROTOCOL_OpenPGP);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: GPG protocol could not be set\n", __func__);
+		pb_log_fn("GPG protocol could not be set\n");
 		return -1;
 	}
 	if (keyring_path)
@@ -269,7 +269,7 @@ int verify_file_signature(const char *plaintext_filename,
 			GPGME_PROTOCOL_OpenPGP, enginfo->file_name,
 			enginfo->home_dir);
 	if (err != GPG_ERR_NO_ERROR) {
-		pb_log("%s: Could not set GPG engine information\n", __func__);
+		pb_log_fn("Could not set GPG engine information\n");
 		return -1;
 	}
 	err = gpgme_data_new_from_file(&plaintext_data, plaintext_filename, 1);
@@ -340,7 +340,7 @@ int verify_file_signature(const char *plaintext_filename,
 	gpgme_release(gpg_context);
 
 	if (!valid) {
-		pb_log("%s: Incorrect GPG signature\n", __func__);
+		pb_log_fn("Incorrect GPG signature\n");
 		return -1;
 	}
 

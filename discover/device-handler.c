@@ -675,7 +675,7 @@ void device_handler_status_download(struct device_handler *handler,
 	}
 
 	if (!update) {
-		pb_log("%s: failed to allocate new status\n", __func__);
+		pb_log_fn("failed to allocate new status\n");
 	} else {
 		device_handler_status_info(handler, "%s\n", update);
 		talloc_free(update);
@@ -1568,7 +1568,7 @@ static void process_url_cb(struct load_url_result *result, void *data)
 	const char *mac;
 
 	if (result->status != LOAD_OK) {
-		pb_log("%s: Load failed for %s\n", __func__, result->url->full);
+		pb_log_fn("Load failed for %s\n", result->url->full);
 		return;
 	}
 
@@ -1673,7 +1673,7 @@ static void plugin_install_cb(struct process *process)
 	struct device_handler *handler = process->data;
 
 	if (!handler) {
-		pb_log("%s: Missing data!\n", __func__);
+		pb_log_fn("Missing data!\n");
 		return;
 	}
 
@@ -2206,7 +2206,7 @@ void device_handler_discover_context_commit(
 		struct device_handler *handler __attribute__((unused)),
 		struct discover_context *ctx __attribute__((unused)))
 {
-	pb_log("%s stubbed out for test cases\n", __func__);
+	pb_log_fn("stubbed out for test cases\n");
 }
 
 static void device_handler_update_lang(const char *lang __attribute__((unused)))

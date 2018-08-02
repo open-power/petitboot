@@ -239,7 +239,7 @@ int parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 	i += sizeof(ipsize);
 
 	if (!hwsize || !ipsize) {
-		pb_log("%s: Empty response\n", __func__);
+		pb_log_fn("Empty response\n");
 		return -1;
 	}
 

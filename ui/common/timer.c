@@ -35,7 +35,7 @@
 void ui_timer_init(struct waitset *waitset, struct ui_timer *timer,
 		unsigned int seconds)
 {
-	pb_log("%s: %u\n", __func__, seconds);
+	pb_log_fn("%u\n", seconds);
 	timer->timeout = seconds;
 	timer->waitset = waitset;
 }

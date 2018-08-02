@@ -138,7 +138,7 @@ static bool snapshot_merge_complete(const char *dm_name)
 
 	task = dm_task_create(DM_DEVICE_STATUS);
 	if (!task) {
-		pb_log("%s: Error creating task\n", __func__);
+		pb_log_fn("Error creating task\n");
 		return result;
 	}
 
@@ -198,7 +198,7 @@ static int set_device_active(const char *dm_name, bool active)
 		task = dm_task_create(DM_DEVICE_SUSPEND);
 
 	if (!task) {
-		pb_log("%s: Could not create dm_task\n", __func__);
+		pb_log_fn("Could not create dm_task\n");
 		return rc;
 	}
 
@@ -461,7 +461,7 @@ static int destroy_device(const char *dm_name)
 
 	task = dm_task_create(DM_DEVICE_REMOVE);
 	if (!task) {
-		pb_log("%s: could not create dm_task\n", __func__);
+		pb_log_fn("could not create dm_task\n");
 		return -1;
 	}
 
@@ -543,13 +543,13 @@ static int reload_snapshot(struct discover_device *device, bool merge)
 			 device->ramdisk->base);
 	}
 	if (!target.ttype || !target.params) {
-		pb_log("%s: failed to allocate parameters\n", __func__);
+		pb_log_fn("failed to allocate parameters\n");
 		goto err1;
 	}
 
 	task = dm_task_create(DM_DEVICE_RELOAD);
 	if (!task) {
-		pb_log("%s: Error creating task\n", __func__);
+		pb_log_fn("Error creating task\n");
 		goto err1;
 	}
 
@@ -560,7 +560,7 @@ static int reload_snapshot(struct discover_device *device, bool merge)
 
 	if (!dm_task_add_target(task, target.start_sector, target.end_sector,
 				target.ttype, target.params)) {
-		pb_log("%s: Failed to set target\n", __func__);
+		pb_log_fn("Failed to set target\n");
 		goto err2;
 	}
 
@@ -581,7 +581,7 @@ err1:
 int devmapper_merge_snapshot(struct discover_device *device)
 {
 	if (device->mounted) {
-		pb_log("%s: %s still mounted\n", __func__, device->device->id);
+		pb_log_fn("%s still mounted\n", device->device->id);
 		return -1;
 	}
 

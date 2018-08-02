@@ -407,14 +407,14 @@ static struct pmenu *ps3_mm_init(struct ps3_cui *ps3_cui)
 	m = pmenu_init(ps3_cui->cui, 3, cui_on_exit);
 
 	if (!m) {
-		pb_log("%s: failed\n", __func__);
+		pb_log_fn("failed\n");
 		return NULL;
 	}
 
 	m->n_hot_keys = 2;
 	m->hot_keys = talloc_array(m, hot_key_fn *, m->n_hot_keys);
 	if (!m->hot_keys) {
-		pb_log("%s: failed to allocate hot_keys\n", __func__);
+		pb_log_fn("failed to allocate hot_keys\n");
 		talloc_free(m);
 		return NULL;
 	}
@@ -474,7 +474,7 @@ static struct pmenu *ps3_svm_init(struct ps3_cui *ps3_cui)
 	m = pmenu_init(ps3_cui->cui, 12, ps3_svm_to_mm_helper);
 
 	if (!m) {
-		pb_log("%s: failed\n", __func__);
+		pb_log_fn("failed\n");
 		return NULL;
 	}
 
@@ -621,7 +621,7 @@ int main(int argc, char *argv[])
 	result += sigaction(SIGWINCH, &sa, NULL);
 
 	if (result) {
-		pb_log("%s sigaction failed.\n", __func__);
+		pb_log_fn("sigaction failed.\n");
 		return EXIT_FAILURE;
 	}
 

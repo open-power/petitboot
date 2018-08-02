@@ -138,7 +138,7 @@ twin_pixmap_t *pbt_background_load(twin_screen_t *tscreen,
 	raw_background = twin_jpeg_to_pixmap(filename, TWIN_ARGB32);
 
 	if (!raw_background) {
-		pb_log("%s: loading image '%s' failed\n", __func__, filename);
+		pb_log_fn("loading image '%s' failed\n", filename);
 
 		/* Fallback to a default pattern */
 
@@ -158,7 +158,7 @@ twin_pixmap_t *pbt_background_load(twin_screen_t *tscreen,
 				tscreen->width,
 				tscreen->height);
 	if (!scaled_background) {
-		pb_log("%s: scale '%s' failed\n", __func__, filename);
+		pb_log_fn("scale '%s' failed\n", filename);
 		twin_pixmap_destroy(raw_background);
 		return twin_make_pattern();
 	}
@@ -224,7 +224,7 @@ retry:
 	new.icon = twin_png_to_pixmap(filename, TWIN_ARGB32);
 
 	if (!new.icon) {
-		pb_log("%s: loading image '%s' failed\n", __func__, filename);
+		pb_log_fn("loading image '%s' failed\n", filename);
 
 		if (filename == default_icon_file)
 			return NULL;
@@ -384,7 +384,7 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx,
 	assert(backend && backend < 3);
 
 	if (!scr) {
-		pb_log("%s: alloc pbt_scr failed.\n", __func__);
+		pb_log_fn("alloc pbt_scr failed.\n");
 		goto fail_alloc;
 	}
 
@@ -395,7 +395,7 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx,
 	scr->twin_ctx.backend = backend;
 
 	if (backend == pbt_twin_x11) {
-		pb_log("%s: using twin x11 backend.\n", __func__);
+		pb_log_fn("using twin x11 backend.\n");
 		assert(width > 100);
 		assert(height > 100);
 
@@ -406,7 +406,7 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx,
 			width, height, 0);
 
 		if (!scr->twin_ctx.x11) {
-			pb_log("%s: twin_x11_create_ext failed.\n", __func__);
+			pb_log_fn("twin_x11_create_ext failed.\n");
 			perror("failed to create twin x11 context\n");
 			goto fail_ctx_create;
 		}
@@ -418,14 +418,14 @@ struct pbt_scr *pbt_scr_init(void *talloc_ctx,
 		waiter_fd = ConnectionNumber(scr->twin_ctx.x11->dpy);
 #endif
 	} else if (backend == pbt_twin_fbdev) {
-		pb_log("%s: using twin fbdev backend.\n", __func__);
+		pb_log_fn("using twin fbdev backend.\n");
 #if !defined(HAVE_LIBTWIN_TWIN_FBDEV_H)
 		assert(0);
 #else
 		scr->twin_ctx.fbdev = twin_fbdev_create_ext(-1, SIGUSR1, 0);
 
 		if (!scr->twin_ctx.fbdev) {
-			pb_log("%s: twin_fbdev_create_ext failed.\n", __func__);
+			pb_log_fn("twin_fbdev_create_ext failed.\n");
 			perror("failed to create twin fbdev context\n");
 			goto fail_ctx_create;
 		}

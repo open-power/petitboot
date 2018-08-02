@@ -79,7 +79,7 @@ static int ps3_flash_open(struct ps3_flash_ctx *fc, const char *mode)
 	fc->dev = fopen(flash_dev, mode);
 
 	if (!fc->dev) {
-		pb_log("%s: fopen failed: %s: %s\n", __func__, strerror(errno),
+		pb_log_fn("fopen failed: %s: %s\n", strerror(errno),
 			flash_dev);
 		return -1;
 	}
@@ -89,7 +89,7 @@ static int ps3_flash_open(struct ps3_flash_ctx *fc, const char *mode)
 	result = os_area_fixed_read(&fc->header, &fc->params, fc->dev);
 
 	if (result) {
-		pb_log("%s: os_area_fixed_read failed\n", __func__);
+		pb_log_fn("os_area_fixed_read failed\n");
 		goto fail;
 	}
 
@@ -123,7 +123,7 @@ int ps3_flash_get_values(struct ps3_flash_values *values)
 	ps3_flash_close(&fc);
 
 	if (result) {
-		pb_log("%s: os_area_db_read failed: %s\n", __func__,
+		pb_log_fn("os_area_db_read failed: %s\n",
 			strerror(errno));
 		goto fail;
 	}
@@ -176,14 +176,14 @@ int ps3_flash_set_values(const struct ps3_flash_values *values)
 	result = os_area_db_read(&fc.db, &fc.header, fc.dev);
 
 	if (result) {
-		pb_log("%s: os_area_db_read failed: %s\n", __func__,
+		pb_log_fn("os_area_db_read failed: %s\n",
 			strerror(errno));
-		pb_log("%s: formating db\n", __func__);
+		pb_log_fn("formating db\n");
 
 		result = os_area_db_format(&fc.db, &fc.header, fc.dev);
 
 		if (result) {
-			pb_log("%s: db_format failed: %s\n", __func__,
+			pb_log_fn("db_format failed: %s\n",
 				strerror(errno));
 			goto fail;
 		}
@@ -220,7 +220,7 @@ static int ps3_video_ioctl(int request, unsigned int *mode_id)
 	fd = open(fb_dev, O_RDWR);
 
 	if (fd < 0) {
-		pb_log("%s: open failed: %s: %s\n", __func__, strerror(errno),
+		pb_log_fn("open failed: %s: %s\n", strerror(errno),
 			fb_dev);
 		return -1;
 	}
@@ -230,7 +230,7 @@ static int ps3_video_ioctl(int request, unsigned int *mode_id)
 	close(fd);
 
 	if (result < 0) {
-		pb_log("%s: ioctl failed: %s: %s\n", __func__, strerror(errno),
+		pb_log_fn("ioctl failed: %s: %s\n", strerror(errno),
 			fb_dev);
 		return -1;
 	}
@@ -266,6 +266,6 @@ int ps3_get_video_mode(unsigned int *mode_id)
 
 	result =  ps3_video_ioctl(PS3FB_IOCTL_GETMODE, mode_id);
 
-	pb_log("%s: %u\n", __func__, *mode_id);
+	pb_log_fn("%u\n", *mode_id);
 	return result;
 }

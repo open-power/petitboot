@@ -94,7 +94,7 @@ static int kexec_load(struct boot_task *boot_task)
 
 	process = process_create(boot_task);
 	if (!process) {
-		pb_log("%s: failed to create process\n", __func__);
+		pb_log_fn("failed to create process\n");
 		return -1;
 	}
 
@@ -131,14 +131,14 @@ static int kexec_load(struct boot_task *boot_task)
 
 	result = process_run_sync(process);
 	if (result) {
-		pb_log("%s: failed to run process\n", __func__);
+		pb_log_fn("failed to run process\n");
 		goto abort_kexec;
 	}
 
 	result = process->exit_status;
 
 	if (result) {
-		pb_log("%s: failed: (%d)\n", __func__, result);
+		pb_log_fn("failed: (%d)\n", result);
 		update_status(boot_task->status_fn, boot_task->status_arg,
 				STATUS_ERROR, "%s", process->stdout_buf);
 	}
@@ -170,7 +170,7 @@ static int kexec_reboot(struct boot_task *task)
 	}
 
 	if (result)
-		pb_log("%s: failed: (%d)\n", __func__, result);
+		pb_log_fn("failed: (%d)\n", result);
 
 	/* okay, kexec -e -f */
 	if (result) {
@@ -179,7 +179,7 @@ static int kexec_reboot(struct boot_task *task)
 	}
 
 	if (result)
-		pb_log("%s: failed: (%d)\n", __func__, result);
+		pb_log_fn("failed: (%d)\n", result);
 
 
 	return result;
@@ -423,7 +423,7 @@ static void boot_process(struct load_url_result *result, void *data)
 			_("Performing kexec load"));
 
 	rc = kexec_load(task);
-	pb_log("%s: kexec_load returned %d\n", __func__, rc);
+	pb_log_fn("kexec_load returned %d\n", rc);
 	if (rc == KEXEC_LOAD_DECRYPTION_FALURE) {
 		update_status(task->status_fn, task->status_arg,
 				STATUS_ERROR, _("Decryption failed"));
@@ -526,7 +526,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	} else if (opt && opt->boot_image) {
 		image = opt->boot_image->url;
 	} else {
-		pb_log("%s: no image specified\n", __func__);
+		pb_log_fn("no image specified\n");
 		update_status(status_fn, status_arg, STATUS_INFO,
 				_("Boot failed: no image specified"));
 		return NULL;

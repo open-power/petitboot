@@ -92,7 +92,7 @@ static int process_read_stdout_once(struct process_info *procinfo, char **line)
 	if (rc < 0) {
 		if (errno == EINTR)
 			return 1;
-		pb_log("%s: read failed: %s\n", __func__, strerror(errno));
+		pb_log_fn("read failed: %s\n", strerror(errno));
 		return rc;
 	}
 
@@ -232,7 +232,7 @@ static void sigchld_sigaction(int signo, siginfo_t *info,
 
 	rc = write(procset->sigchld_pipe[1], &pid, sizeof(pid));
 	if (rc != sizeof(pid))
-		pb_log("%s: write failed: %s\n", __func__, strerror(errno));
+		pb_log_fn("write failed: %s\n", strerror(errno));
 }
 
 static int sigchld_pipe_event(void *arg)
@@ -306,7 +306,7 @@ struct procset *process_init(void *ctx, struct waitset *set, bool dry_run)
 
 	rc = pipe(procset->sigchld_pipe);
 	if (rc) {
-		pb_log("%s: pipe() failed: %s\n", __func__, strerror(errno));
+		pb_log_fn("pipe() failed: %s\n", strerror(errno));
 		goto err_free;
 	}
 
@@ -322,7 +322,7 @@ struct procset *process_init(void *ctx, struct waitset *set, bool dry_run)
 
 	rc = sigaction(SIGCHLD, &sa, NULL);
 	if (rc) {
-		pb_log("%s: sigaction() failed: %s\n", __func__,
+		pb_log_fn("sigaction() failed: %s\n",
 				strerror(errno));
 		goto err_remove;
 	}
@@ -374,7 +374,7 @@ static int process_run_common(struct process_info *procinfo)
 
 	pid = fork();
 	if (pid < 0) {
-		pb_log("%s: fork failed: %s\n", __func__, strerror(errno));
+		pb_log_fn("fork failed: %s\n", strerror(errno));
 		return pid;
 	}
 
@@ -410,7 +410,7 @@ int process_run_sync(struct process *process)
 		if (errno == EINTR)
 			continue;
 
-		pb_log("%s: waitpid failed: %s\n", __func__, strerror(errno));
+		pb_log_fn("waitpid failed: %s\n", strerror(errno));
 		return rc;
 	}
 

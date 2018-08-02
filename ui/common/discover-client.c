@@ -197,7 +197,7 @@ static int discover_client_process(void *arg)
 
 		rc = pb_protocol_deserialise_device(dev, message);
 		if (rc) {
-			pb_log("%s: no device?\n", __func__);
+			pb_log_fn("no device?\n");
 			goto out;
 		}
 
@@ -208,7 +208,7 @@ static int discover_client_process(void *arg)
 
 		rc = pb_protocol_deserialise_boot_option(opt, message);
 		if (rc) {
-			pb_log("%s: no boot_option?\n", __func__);
+			pb_log_fn("no boot_option?\n");
 			goto out;
 		}
 
@@ -217,7 +217,7 @@ static int discover_client_process(void *arg)
 	case PB_PROTOCOL_ACTION_DEVICE_REMOVE:
 		dev_id = pb_protocol_deserialise_string(ctx, message);
 		if (!dev_id) {
-			pb_log("%s: no device id?\n", __func__);
+			pb_log_fn("no device id?\n");
 			goto out;
 		}
 		device_remove(client, dev_id);
@@ -227,7 +227,7 @@ static int discover_client_process(void *arg)
 
 		rc = pb_protocol_deserialise_boot_status(status, message);
 		if (rc) {
-			pb_log("%s: invalid status message?\n", __func__);
+			pb_log_fn("invalid status message?\n");
 			goto out;
 		}
 		update_status(client, status);
@@ -237,7 +237,7 @@ static int discover_client_process(void *arg)
 
 		rc = pb_protocol_deserialise_system_info(sysinfo, message);
 		if (rc) {
-			pb_log("%s: invalid sysinfo message?\n", __func__);
+			pb_log_fn("invalid sysinfo message?\n");
 			goto out;
 		}
 		update_sysinfo(client, sysinfo);
@@ -247,7 +247,7 @@ static int discover_client_process(void *arg)
 
 		rc = pb_protocol_deserialise_config(config, message);
 		if (rc) {
-			pb_log("%s: invalid config message?\n", __func__);
+			pb_log_fn("invalid config message?\n");
 			goto out;
 		}
 		update_config(client, config);
@@ -257,7 +257,7 @@ static int discover_client_process(void *arg)
 
 		rc = pb_protocol_deserialise_plugin_option(p_opt, message);
 		if (rc) {
-			pb_log("%s: no plugin_option?\n", __func__);
+			pb_log_fn("no plugin_option?\n");
 			goto out;
 		}
 
@@ -267,7 +267,7 @@ static int discover_client_process(void *arg)
 		plugins_remove(client);
 		break;
 	default:
-		pb_log("%s: unknown action %d\n", __func__, message->action);
+		pb_log_fn("unknown action %d\n", message->action);
 	}
 
 out:
@@ -291,7 +291,7 @@ struct discover_client* discover_client_init(struct waitset *waitset,
 
 	client->fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (client->fd < 0) {
-		pb_log("%s: socket: %s\n", __func__, strerror(errno));
+		pb_log_fn("socket: %s\n", strerror(errno));
 		goto out_err;
 	}
 
@@ -304,7 +304,7 @@ struct discover_client* discover_client_init(struct waitset *waitset,
 	strcpy(addr.sun_path, PB_SOCKET_PATH);
 
 	if (connect(client->fd, (struct sockaddr *)&addr, sizeof(addr))) {
-		pb_log("%s: connect: %s\n", __func__, strerror(errno));
+		pb_log_fn("connect: %s\n", strerror(errno));
 		goto out_err;
 	}
 

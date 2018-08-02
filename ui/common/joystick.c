@@ -47,7 +47,7 @@ int pjs_process_event(const struct pjs *pjs)
 	result = read(pjs->fd, &e, sizeof(e));
 
 	if (result != sizeof(e)) {
-		pb_log("%s: read failed: %s\n", __func__, strerror(errno));
+		pb_log_fn("read failed: %s\n", strerror(errno));
 		return 0;
 	}
 
@@ -86,7 +86,7 @@ struct pjs *pjs_init(void *ctx, int (*map)(const struct js_event *))
 	pjs->fd = open(dev_name, O_RDONLY | O_NONBLOCK);
 
 	if (pjs->fd < 0) {
-		pb_log("%s: open %s failed: %s\n", __func__, dev_name,
+		pb_log_fn("open %s failed: %s\n", dev_name,
 			strerror(errno));
 		goto out_err;
 	}

@@ -169,7 +169,7 @@ static void cui_atexit(void)
 
 void cui_abort(struct cui *cui)
 {
-	pb_log("%s: exiting\n", __func__);
+	pb_log_fn("exiting\n");
 	cui->abort = 1;
 }
 
@@ -254,7 +254,7 @@ int cui_run_cmd(struct cui *cui, const char **cmd_argv)
 	nc_scr_post(cui->current);
 
 	if (result) {
-		pb_log("%s: failed: '%s'\n", __func__, cmd_argv[0]);
+		pb_log_fn("failed: '%s'\n", cmd_argv[0]);
 		nc_scr_status_printf(cui->current, _("Failed: %s"),
 				cmd_argv[0]);
 	}
@@ -688,7 +688,7 @@ static void cui_handle_resize(struct cui *cui)
 	struct winsize ws;
 
 	if (ioctl(1, TIOCGWINSZ, &ws) == -1) {
-		pb_log("%s: ioctl failed: %s\n", __func__, strerror(errno));
+		pb_log_fn("ioctl failed: %s\n", strerror(errno));
 		return;
 	}
 
@@ -783,7 +783,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	result = set_menu_items(menu->ncm, NULL);
 
 	if (result)
-		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
+		pb_log_fn("set_menu_items failed: %d\n", result);
 
 	/* Insert new items at insert_pt. */
 	if (dev_hdr) {
@@ -798,10 +798,10 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	}
 
 	if (plugin_option) {
-		pb_log("%s: adding plugin '%s'\n", __func__, cod->name);
+		pb_log_fn("adding plugin '%s'\n", cod->name);
 		pb_log("   file  '%s'\n", cod->pd->plugin_file);
 	} else {
-		pb_log("%s: adding opt '%s'\n", __func__, cod->name);
+		pb_log_fn("adding opt '%s'\n", cod->name);
 		pb_log("   image  '%s'\n", cod->bd->image);
 		pb_log("   initrd '%s'\n", cod->bd->initrd);
 		pb_log("   args   '%s'\n", cod->bd->args);
@@ -826,14 +826,14 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		}
 		result = set_menu_items(cui->main->ncm, cui->main->items);
 		if (result)
-			pb_log("%s: set_menu_items failed: %d\n", __func__, result);
+			pb_log_fn("set_menu_items failed: %d\n", result);
 	}
 
 	/* Re-attach the items array. */
 	result = set_menu_items(menu->ncm, menu->items);
 
 	if (result)
-		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
+		pb_log_fn("set_menu_items failed: %d\n", result);
 
 	if (0) {
 		pb_log("%s\n", __func__);
@@ -878,7 +878,7 @@ static void cui_device_remove(struct device *dev, void *arg)
 	int rows, cols, top, last;
 	int result;
 
-	pb_log("%s: %p %s\n", __func__, dev, dev->id);
+	pb_log_fn("%p %s\n", dev, dev->id);
 
 	if (cui->current == &cui->main->scr)
 		nc_scr_unpost(cui->current);
@@ -891,7 +891,7 @@ static void cui_device_remove(struct device *dev, void *arg)
 	result |= set_menu_items(cui->plugin_menu->ncm, NULL);
 
 	if (result)
-		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
+		pb_log_fn("set_menu_items failed: %d\n", result);
 
 	list_for_each_entry(&dev->boot_options, opt, list) {
 		struct pmenu_item *item = pmenu_item_from_arg(opt->ui_info);
@@ -948,7 +948,7 @@ static void cui_device_remove(struct device *dev, void *arg)
 	}
 
 	if (result)
-		pb_log("%s: set_menu_items failed: %d\n", __func__, result);
+		pb_log_fn("set_menu_items failed: %d\n", result);
 
 	if (0) {
 		pb_log("%s\n", __func__);
@@ -1300,14 +1300,14 @@ static struct pmenu *main_menu_init(struct cui *cui)
 
 	m = pmenu_init(cui, 9, cui_on_exit);
 	if (!m) {
-		pb_log("%s: failed\n", __func__);
+		pb_log_fn("failed\n");
 		return NULL;
 	}
 
 	m->n_hot_keys = 1;
 	m->hot_keys = talloc_array(m, hot_key_fn, m->n_hot_keys);
 	if (!m->hot_keys) {
-		pb_log("%s: failed to allocate hot_keys\n", __func__);
+		pb_log_fn("failed to allocate hot_keys\n");
 		talloc_free(m);
 		return NULL;
 	}
@@ -1506,7 +1506,7 @@ struct cui *cui_init(void* platform_info,
 
 	cui = talloc_zero(NULL, struct cui);
 	if (!cui) {
-		pb_log("%s: alloc cui failed.\n", __func__);
+		pb_log_fn("alloc cui failed.\n");
 		fprintf(stderr, _("%s: alloc cui failed.\n"), __func__);
 		goto fail_alloc;
 	}
@@ -1526,7 +1526,7 @@ retry_start:
 				&cui_client_ops, cui);
 		if (cui->client || !i)
 			break;
-		pb_log("%s: waiting for server %d\n", __func__, i);
+		pb_log_fn("waiting for server %d\n", i);
 		sleep(1);
 	}
 
@@ -1540,7 +1540,7 @@ retry_start:
 		if (!result)
 			goto retry_start;
 
-		pb_log("%s: discover_client_init failed.\n", __func__);
+		pb_log_fn("discover_client_init failed.\n");
 		fprintf(stderr, _("%s: error: discover_client_init failed.\n"),
 			__func__);
 		fprintf(stderr, _("could not start pb-discover, the petitboot "
@@ -1554,7 +1554,7 @@ retry_start:
 		waiter_register_timeout(cui->waitset, 0,
 					cui_server_wait, cui);
 	} else if (!cui->client) {
-		pb_log("%s: discover_client_init failed.\n", __func__);
+		pb_log_fn("discover_client_init failed.\n");
 		fprintf(stderr, _("%s: error: discover_client_init failed.\n"),
 			__func__);
 		fprintf(stderr, _("check that pb-discover, "
@@ -1653,7 +1653,7 @@ int cui_run(struct cui *cui)
 		int result = waiter_poll(cui->waitset);
 
 		if (result < 0) {
-			pb_log("%s: poll: %s\n", __func__, strerror(errno));
+			pb_log_fn("poll: %s\n", strerror(errno));
 			break;
 		}
 

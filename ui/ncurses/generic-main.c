@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 	result += sigaction(SIGWINCH, &sa, NULL);
 
 	if (result) {
-		pb_log("%s sigaction failed.\n", __func__);
+		pb_log_fn("sigaction failed.\n");
 		return EXIT_FAILURE;
 	}
 

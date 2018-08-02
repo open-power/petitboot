@@ -54,13 +54,13 @@ int copy_file_secure_dest(void *ctx, const char *source_file,
 
 	destination_fd = mkstemp(template);
 	if (destination_fd < 0) {
-		pb_log("%s: unable to create temp file, %m\n", __func__);
+		pb_log_fn("unable to create temp file, %m\n");
 		fclose(source_handle);
 		return -1;
 	}
 	destination_handle = fdopen(destination_fd, "w");
 	if (!destination_handle) {
-		pb_log("%s: unable to open destination file, %m\n", __func__);
+		pb_log_fn("unable to open destination file, %m\n");
 		fclose(source_handle);
 		close(destination_fd);
 		return -1;
@@ -81,7 +81,7 @@ int copy_file_secure_dest(void *ctx, const char *source_file,
 			if (ferror(destination_handle)) {
 				/* General error */
 				result = -1;
-				pb_log("%s: failed: unknown fault\n", __func__);
+				pb_log_fn("failed: unknown fault\n");
 			}
 			else {
 				/* No space on destination device */

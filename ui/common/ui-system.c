@@ -78,7 +78,7 @@ unsigned int pb_elf_hash(const char *str)
 			h ^= g >> 24;
 		h &= ~g;
 	}
-	pb_log("%s: %x\n", __func__, h);
+	pb_log_fn("%x\n", h);
 	return h;
 }
 

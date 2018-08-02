@@ -500,7 +500,7 @@ static int pxe_parse(struct discover_context *dc)
 			file_url = dc->conf_url;
 
 		if (!file_url) {
-			pb_log("%s: Failed to parse conf url!\n", __func__);
+			pb_log_fn("Failed to parse conf url!\n");
 			goto out_conf;
 		}
 

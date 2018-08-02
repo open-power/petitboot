@@ -270,7 +270,7 @@ static int discover_server_process_message(void *arg)
 		rc = pb_protocol_deserialise_boot_command(boot_command,
 				message);
 		if (rc) {
-			pb_log("%s: no boot command?", __func__);
+			pb_log_fn("no boot command?\n");
 			return 0;
 		}
 
@@ -291,7 +291,7 @@ static int discover_server_process_message(void *arg)
 
 		rc = pb_protocol_deserialise_config(config, message);
 		if (rc) {
-			pb_log("%s: no config?", __func__);
+			pb_log_fn("no config?\n");
 			return 0;
 		}
 
@@ -328,7 +328,7 @@ static int discover_server_process_message(void *arg)
 		break;
 
 	default:
-		pb_log("%s: invalid action %d\n", __func__, message->action);
+		pb_log_fn("invalid action %d\n", message->action);
 		return 0;
 	}
 

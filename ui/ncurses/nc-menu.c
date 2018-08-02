@@ -117,7 +117,7 @@ static const char *pmenu_item_label(struct pmenu_item *item, const char *name)
 	label = talloc_array(item, char, len + 1);
 	wcstombs(label, tmp, len + 1);
 
-	pb_log("%s: %s\n", __func__, label);
+	pb_log_fn("%s\n", label);
 
 	talloc_free(tmp);
 	return label;
@@ -357,7 +357,7 @@ static int pmenu_item_get_index(const struct pmenu_item *item)
 			if (item->pmenu->items[i] == item->nci)
 				return i;
 
-	pb_log("%s: not found: %p %s\n", __func__, item,
+	pb_log_fn("not found: %p %s\n", item,
 		(item ? item->nci->name.str : "(null)"));
 	return -1;
 }
@@ -491,7 +491,7 @@ unsigned int pmenu_grow(struct pmenu *menu, unsigned int count)
 
 	assert(item_count(menu->ncm) == 0 && "not disconnected");
 
-	pb_log("%s: %u current + %u new = %u\n", __func__, menu->item_count,
+	pb_log_fn("%u current + %u new = %u\n", menu->item_count,
 		count, menu->item_count + count);
 
 	/* Note that items array has a null terminator. */
@@ -526,7 +526,7 @@ int pmenu_remove(struct pmenu *menu, struct pmenu_item *item)
 
 	assert(menu->item_count);
 
-	pb_log("%s: %u\n", __func__, menu->item_count);
+	pb_log_fn("%u\n", menu->item_count);
 
 	index = pmenu_item_get_index(item);
 

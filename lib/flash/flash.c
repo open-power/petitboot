@@ -94,7 +94,7 @@ static struct flash_info *flash_setup_buffer(void *ctx, const char *partition)
 
 	rc = ffs_init(0, info->size, info->bl, &info->ffs, 1);
 	if (rc) {
-		pb_log("%s: Failed to init ffs\n", __func__);
+		pb_log_fn("Failed to init ffs\n");
 		goto out_flash;
 	}
 
@@ -171,7 +171,7 @@ int flash_parse_version(void *ctx, char ***versions, bool current)
 	len = cur_info->attr_data_len -  ecc_size(cur_info->attr_data_len);
 	buffer = talloc_array(cur_info, char, len);
 	if (!buffer) {
-		pb_log("%s: Failed to init buffer!\n", __func__);
+		pb_log_fn("Failed to init buffer!\n");
 		goto out;
 	}
 
@@ -187,7 +187,7 @@ int flash_parse_version(void *ctx, char ***versions, bool current)
 	if (tok) {
 		tmp = talloc_realloc(ctx, tmp, char *, n + 1);
 		if (!tmp) {
-			pb_log("%s: Failed to allocate memory\n", __func__);
+			pb_log_fn("Failed to allocate memory\n");
 			goto out;
 		}
 		tmp[n++] = talloc_strdup(ctx, tok);
@@ -198,7 +198,7 @@ int flash_parse_version(void *ctx, char ***versions, bool current)
 		/* Ignore leading tab from subsequent lines */
 		tmp = talloc_realloc(ctx, tmp, char *, n + 1);
 		if (!tmp) {
-			pb_log("%s: Failed to reallocate memory\n", __func__);
+			pb_log_fn("Failed to reallocate memory\n");
 			n = 0;
 			goto out;
 		}

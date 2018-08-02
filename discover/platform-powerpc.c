@@ -1193,7 +1193,7 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 	memcpy(&cookie, &resp[i], sizeof(cookie));
 	cookie = __be32_to_cpu(cookie);
 	if (cookie != magic_value) {
-		pb_log("%s: Incorrect cookie %x\n", __func__, cookie);
+		pb_log_fn("Incorrect cookie %x\n", cookie);
 		return;
 	}
 	i += sizeof(cookie);
@@ -1259,7 +1259,7 @@ static int load_config(struct platform *p, struct config *config)
 
 	rc = parse_nvram(platform);
 	if (rc)
-		pb_log("%s: Failed to parse nvram\n", __func__);
+		pb_log_fn("Failed to parse nvram\n");
 
 	populate_config(platform, config);
 

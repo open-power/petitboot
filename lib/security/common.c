@@ -81,7 +81,7 @@ int validate_boot_files(struct boot_task *boot_task) {
     /* Load authorized signatures file */
     authorized_signatures_handle = fopen(LOCKDOWN_FILE, "r");
     if (!authorized_signatures_handle) {
-        pb_log("%s: unable to read lockdown file\n", __func__);
+        pb_log_fn("unable to read lockdown file\n");
         return KEXEC_LOAD_SIG_SETUP_INVALID;
     }
 

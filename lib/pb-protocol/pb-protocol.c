@@ -725,7 +725,7 @@ int pb_protocol_write_message(int fd, struct pb_protocol_message *message)
 	if (!total_len)
 		return 0;
 
-	pb_log("%s: failed: %s\n", __func__, strerror(errno));
+	pb_log_fn("failed: %s\n", strerror(errno));
 	return -1;
 }
 
@@ -735,7 +735,7 @@ struct pb_protocol_message *pb_protocol_create_message(void *ctx,
 	struct pb_protocol_message *message;
 
 	if (payload_len > PB_PROTOCOL_MAX_PAYLOAD_SIZE) {
-		pb_log("%s: payload too big %u/%u\n", __func__, payload_len,
+		pb_log_fn("payload too big %u/%u\n", payload_len,
 			PB_PROTOCOL_MAX_PAYLOAD_SIZE);
 		return NULL;
 	}
@@ -766,7 +766,7 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 	m.action = __be32_to_cpu(m.action);
 
 	if (m.payload_len > PB_PROTOCOL_MAX_PAYLOAD_SIZE) {
-		pb_log("%s: payload too big %u/%u\n", __func__, m.payload_len,
+		pb_log_fn("payload too big %u/%u\n", m.payload_len,
 			PB_PROTOCOL_MAX_PAYLOAD_SIZE);
 		return NULL;
 	}
@@ -779,7 +779,7 @@ struct pb_protocol_message *pb_protocol_read_message(void *ctx, int fd)
 
 		if (rc <= 0) {
 			talloc_free(message);
-			pb_log("%s: failed (%u): %s\n", __func__, len,
+			pb_log_fn("failed (%u): %s\n", len,
 				strerror(errno));
 			return NULL;
 		}

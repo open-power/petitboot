@@ -66,7 +66,7 @@ static int pbt_client_boot(struct pbt_item *item)
 			NULL, opt_data->opt, opt_data->bd);
 
 	if (result) {
-		pb_log("%s: failed: %s\n", __func__, opt_data->bd->image);
+		pb_log_fn("failed: %s\n", opt_data->bd->image);
 		pbt_frame_status_printf(&item->pbt_client->frame,
 				"Failed: kexec %s", opt_data->bd->image);
 	}
@@ -194,7 +194,7 @@ static void pbt_device_remove(struct device *dev, struct pbt_client *client)
 	}
 
 	if (!removed_item) {
-		pb_log("%s: %p %s: unknown device\n", __func__, dev, dev->id);
+		pb_log_fn("%p %s: unknown device\n", dev, dev->id);
 		assert(0 && "unknown device");
 		return;
 	}
@@ -260,7 +260,7 @@ struct pbt_client *pbt_client_init(enum pbt_twin_backend backend,
 	pbt_client = talloc_zero(NULL, struct pbt_client);
 
 	if (!pbt_client) {
-		pb_log("%s: alloc pbt_client failed.\n", __func__);
+		pb_log_fn("alloc pbt_client failed.\n");
 		fprintf(stderr, "%s: alloc pbt_client failed.\n", __func__);
 		goto fail_alloc;
 	}
@@ -288,7 +288,7 @@ retry_start:
 					&pbt_client_ops, pbt_client);
 		if (pbt_client->discover_client || !i)
 			break;
-		pb_log("%s: waiting for server %d\n", __func__, i);
+		pb_log_fn("waiting for server %d\n", i);
 		sleep(1);
 	}
 
@@ -302,7 +302,7 @@ retry_start:
 		if (!result)
 			goto retry_start;
 
-		pb_log("%s: discover_client_init failed.\n", __func__);
+		pb_log_fn("discover_client_init failed.\n");
 		fprintf(stderr, "%s: error: discover_client_init failed.\n",
 			__func__);
 		fprintf(stderr, "could not start pb-discover, the petitboot "
@@ -311,7 +311,7 @@ retry_start:
 	}
 
 	if (!pbt_client->discover_client) {
-		pb_log("%s: discover_client_init failed.\n", __func__);
+		pb_log_fn("discover_client_init failed.\n");
 		fprintf(stderr, "%s: error: discover_client_init failed.\n",
 			__func__);
 		fprintf(stderr, "check that pb-discover, "

@@ -29,14 +29,14 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 	headerlen = strnlen(buf, len);
 
 	if (!headerlen) {
-		pb_log("%s: bad header, no data\n", __func__);
+		pb_log_fn("bad header, no data\n");
 		return -1;
 	}
 
 	/* we should see an <action>@<device>\0 at the head of the buffer */
 	sep = strchr(buf, '@');
 	if (!sep) {
-		pb_log("%s: bad header: %s\n", __func__, buf);
+		pb_log_fn("bad header: %s\n", buf);
 		return -1;
 	}
 
@@ -58,12 +58,12 @@ static int event_parse_ad_header(char *buf, int len, enum event_action *action,
 	else if (streq(buf, "plugin"))
 		*action = EVENT_ACTION_PLUGIN;
 	else {
-		pb_log("%s: unknown action: %s\n", __func__, buf);
+		pb_log_fn("unknown action: %s\n", buf);
 		return -1;
 	}
 
 	if (!*(sep + 1)) {
-		pb_log("%s: bad device: %s\n", __func__, buf);
+		pb_log_fn("bad device: %s\n", buf);
 		return -1;
 	}
 

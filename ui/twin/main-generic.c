@@ -204,7 +204,7 @@ static int run(struct pbt_client *client)
 		int result = waiter_poll(client->waitset);
 
 		if (result < 0) {
-			pb_log("%s: poll: %s\n", __func__, strerror(errno));
+			pb_log_fn("poll: %s\n", strerror(errno));
 			break;
 		}
 
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 	result += sigaction(SIGWINCH, &sa, NULL);
 
 	if (result) {
-		pb_log("%s sigaction failed.\n", __func__);
+		pb_log_fn("sigaction failed.\n");
 		return EXIT_FAILURE;
 	}
 
