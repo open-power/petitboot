@@ -322,7 +322,6 @@ AC_ARG_ENABLE(
 	[],
 	[enable_debug=check]
 )
-#AM_CONDITIONAL([ENABLE_DEBUG], [test "x$enable_debug" = "xyes"])
 
 AC_ARG_ENABLE(
 	[test-valgrind],
