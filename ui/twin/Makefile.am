@@ -38,7 +38,7 @@ ui_twin_libpbt_la_CPPFLAGS = $(ui_twin_common_cppflags)
 
 sbin_PROGRAMS += ui/twin/petitboot-twin
 
-if ENABLE_PS3
+if PLATFORM_PS3
 sbin_PROGRAMS += ui/twin/petitboot-ps3-twin
 endif
 

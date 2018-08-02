@@ -61,7 +61,7 @@ ui_ncurses_libpbnc_la_SOURCES = \
 
 sbin_PROGRAMS += ui/ncurses/petitboot-nc
 
-if ENABLE_PS3
+if PLATFORM_PS3
 sbin_PROGRAMS += ui/ncurses/petitboot-ps3-nc
 endif
 

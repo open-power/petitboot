@@ -304,15 +304,12 @@ AS_IF(
 )
 
 AC_ARG_ENABLE(
-	[ps3],
+	[platform-ps3],
 	[AS_HELP_STRING(
-		[--enable-ps3],
-		[build additional programs for the PS3 game console [default=no]]
-	)],
-	[],
-	[enable_ps3=no]
-)
-AM_CONDITIONAL([ENABLE_PS3], [test "x$enable_ps3" = "xyes"])
+		[--enable-platform-ps3],
+		[build support for the PS3 game console [default=no]]
+	)])
+AM_CONDITIONAL([PLATFORM_PS3], [test "x$enable_platform_ps3" = "xyes"])
 
 AC_ARG_ENABLE(
 	[debug],
