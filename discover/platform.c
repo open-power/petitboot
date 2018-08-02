@@ -560,3 +560,120 @@ void config_populate_all(struct config *config, const struct param_list *pl)
 	if (val)
 		config->https_proxy = talloc_strdup(config, val);
 }
+
+static char *interface_config_str(void *ctx, struct interface_config *config)
+{
+	char *str;
+
+	/* todo: HWADDR size is hardcoded as 6, but we may need to handle
+	 * different hardware address formats */
+	str = talloc_asprintf(ctx, "%02x:%02x:%02x:%02x:%02x:%02x,",
+			config->hwaddr[0], config->hwaddr[1],
+			config->hwaddr[2], config->hwaddr[3],
+			config->hwaddr[4], config->hwaddr[5]);
+
+	if (config->ignore) {
+		str = talloc_asprintf_append(str, "ignore");
+
+	} else if (config->method == CONFIG_METHOD_DHCP) {
+		str = talloc_asprintf_append(str, "dhcp");
+
+	} else if (config->method == CONFIG_METHOD_STATIC) {
+		str = talloc_asprintf_append(str, "static,%s%s%s%s%s",
+				config->static_config.address,
+				config->static_config.gateway ? "," : "",
+				config->static_config.gateway ?: "",
+				config->static_config.url ? "," : "",
+				config->static_config.url ?: "");
+	}
+	return str;
+}
+
+static char *dns_config_str(void *ctx, const char **dns_servers, int n)
+{
+	char *str;
+	int i;
+
+	str = talloc_strdup(ctx, "dns,");
+	for (i = 0; i < n; i++) {
+		str = talloc_asprintf_append(str, "%s%s",
+				i == 0 ? "" : ",",
+				dns_servers[i]);
+	}
+
+	return str;
+}
+
+void params_update_network_values(struct param_list *pl,
+	const char *param_name, const struct config *config)
+{
+	unsigned int i;
+	char *val;
+
+	/*
+	 * Don't store IPMI overrides to NVRAM. If this was a persistent
+	 * override it was already stored in NVRAM by
+	 * get_ipmi_network_override()
+	 */
+	if (config->network.n_interfaces &&
+		config->network.interfaces[0]->override)
+		return;
+
+	val = talloc_strdup(pl, "");
+
+	for (i = 0; i < config->network.n_interfaces; i++) {
+		char *iface_str = interface_config_str(pl,
+					config->network.interfaces[i]);
+		val = talloc_asprintf_append(val, "%s%s",
+				*val == '\0' ? "" : " ", iface_str);
+		talloc_free(iface_str);
+	}
+
+	if (config->network.n_dns_servers) {
+		char *dns_str = dns_config_str(pl,
+						config->network.dns_servers,
+						config->network.n_dns_servers);
+		val = talloc_asprintf_append(val, "%s%s",
+				*val == '\0' ? "" : " ", dns_str);
+		talloc_free(dns_str);
+	}
+
+	param_list_set_non_empty(pl, param_name, val, true);
+
+	talloc_free(val);
+}
+
+void params_update_bootdev_values(struct param_list *pl,
+	const char *param_name, const struct config *config)
+{
+	char *val = NULL, *boot_str = NULL, *tmp = NULL;
+	struct autoboot_option *opt;
+	const char delim = ' ';
+	unsigned int i;
+
+	if (!config->n_autoboot_opts)
+		val = "";
+
+	for (i = 0; i < config->n_autoboot_opts; i++) {
+		opt = &config->autoboot_opts[i];
+		switch (opt->boot_type) {
+			case BOOT_DEVICE_TYPE:
+				boot_str = talloc_asprintf(config, "%s%c",
+						device_type_name(opt->type),
+						delim);
+				break;
+			case BOOT_DEVICE_UUID:
+				boot_str = talloc_asprintf(config, "uuid:%s%c",
+						opt->uuid, delim);
+				break;
+			}
+			tmp = val = talloc_asprintf_append(val, "%s", boot_str);
+	}
+
+	param_list_set_non_empty(pl, param_name, val, true);
+
+	talloc_free(tmp);
+	if (boot_str)
+		talloc_free(boot_str);
+}
+

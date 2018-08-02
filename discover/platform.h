@@ -29,6 +29,11 @@ void config_set_defaults(struct config *config);
 void config_set_autoboot(bool autoboot_enabled);
 void config_populate_all(struct config *config, const struct param_list *pl);
 
+void params_update_network_values(struct param_list *pl,
+	const char *param_name, const struct config *config);
+void params_update_bootdev_values(struct param_list *pl,
+	const char *param_name, const struct config *config);
+
 #define __platform_ptrname(_n) __platform_ ## _n
 #define  _platform_ptrname(_n) __platform_ptrname(_n)
 
