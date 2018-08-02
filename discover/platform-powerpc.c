@@ -148,7 +148,7 @@ static int parse_nvram_params(struct platform_powerpc *platform,
 
 static int parse_nvram(struct platform_powerpc *platform)
 {
-	struct process *process;
+	struct process_stdout *stdout;
 	const char *argv[5];
 	int rc;
 
@@ -158,23 +158,17 @@ static int parse_nvram(struct platform_powerpc *platform)
 	argv[3] = partition;
 	argv[4] = NULL;
 
-	process = process_create(platform);
-	process->path = "nvram";
-	process->argv = argv;
-	process->keep_stdout = true;
+	rc = process_get_stdout_argv(NULL, &stdout, argv);
 
-	rc = process_run_sync(process);
-
-	if (rc || !process_exit_ok(process)) {
+	if (rc) {
 		fprintf(stderr, "nvram process returned "
 				"non-zero exit status\n");
 		rc = -1;
 	} else {
-		rc = parse_nvram_params(platform, process->stdout_buf,
-					    process->stdout_len);
+		rc = parse_nvram_params(platform, stdout->buf, stdout->len);
 	}
 
-	process_release(process);
+	talloc_free(stdout);
 	return rc;
 }
 
