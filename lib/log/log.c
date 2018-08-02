@@ -34,11 +34,42 @@ void pb_log(const char *fmt, ...)
 	va_end(ap);
 }
 
+void _pb_log_fn(const char *func, const char *fmt, ...)
+{
+	va_list ap;
+	pb_log("%s: ", func);
+	va_start(ap, fmt);
+	__log(fmt, ap);
+	va_end(ap);
+}
+
 void pb_debug(const char *fmt, ...)
 {
 	va_list ap;
 	if (!debug)
 		return;
+	va_start(ap, fmt);
+	__log(fmt, ap);
+	va_end(ap);
+}
+
+void _pb_debug_fn(const char *func, const char *fmt, ...)
+{
+	va_list ap;
+	if (!debug)
+		return;
+	pb_log("%s: ", func);
+	va_start(ap, fmt);
+	__log(fmt, ap);
+	va_end(ap);
+}
+
+void _pb_debug_fl(const char *func, int line, const char *fmt, ...)
+{
+	va_list ap;
+	if (!debug)
+		return;
+	pb_log("%s:%d: ", func, line);
 	va_start(ap, fmt);
 	__log(fmt, ap);
 	va_end(ap);
