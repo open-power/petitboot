@@ -2,6 +2,7 @@
 #define PLATFORM_H
 
 #include <types/types.h>
+#include <param_list/param_list.h>
 
 struct platform {
 	const char	*name;
@@ -24,10 +25,9 @@ void platform_pre_boot(void);
 /* configuration interface */
 const struct config *config_get(void);
 int config_set(struct config *config);
-void config_set_autoboot(bool autoboot_enabled);
-
-/* for use by the platform-specific storage code */
 void config_set_defaults(struct config *config);
+void config_set_autoboot(bool autoboot_enabled);
+void config_populate_all(struct config *config, const struct param_list *pl);
 
 #define __platform_ptrname(_n) __platform_ ## _n
 #define  _platform_ptrname(_n) __platform_ptrname(_n)

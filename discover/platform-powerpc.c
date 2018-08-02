@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -14,10 +13,7 @@
 #include <talloc/talloc.h>
 #include <list/list.h>
 #include <log/log.h>
-#include <param_list/param_list.h>
 #include <process/process.h>
-#include <types/types.h>
-#include <url/url.h>
 
 #include "hostboot.h"
 #include "platform.h"
@@ -175,301 +171,7 @@ static int write_nvram(struct platform_powerpc *platform)
 	return rc;
 }
 
-static int parse_hwaddr(struct interface_config *ifconf, char *str)
-{
-	int i;
-
-	if (strlen(str) != strlen("00:00:00:00:00:00"))
-		return -1;
-
-	for (i = 0; i < HWADDR_SIZE; i++) {
-		char byte[3], *endp;
-		unsigned long x;
-
-		byte[0] = str[i * 3 + 0];
-		byte[1] = str[i * 3 + 1];
-		byte[2] = '\0';
-
-		x = strtoul(byte, &endp, 16);
-		if (endp != byte + 2)
-			return -1;
-
-		ifconf->hwaddr[i] = x & 0xff;
-	}
-
-	return 0;
-}
-
-static int parse_one_interface_config(struct config *config, char *confstr)
-{
-	struct interface_config *ifconf;
-	char *tok, *tok_gw, *tok_url, *saveptr;
-
-	ifconf = talloc_zero(config, struct interface_config);
-
-	if (!confstr || !strlen(confstr))
-		goto out_err;
-
-	/* first token should be the mac address */
-	tok = strtok_r(confstr, ",", &saveptr);
-	if (!tok)
-		goto out_err;
-
-	if (parse_hwaddr(ifconf, tok))
-		goto out_err;
-
-	/* second token is the method */
-	tok = strtok_r(NULL, ",", &saveptr);
-	if (!tok || !strlen(tok) || !strcmp(tok, "ignore")) {
-		ifconf->ignore = true;
-
-	} else if (!strcmp(tok, "dhcp")) {
-		ifconf->method = CONFIG_METHOD_DHCP;
-
-	} else if (!strcmp(tok, "static")) {
-		ifconf->method = CONFIG_METHOD_STATIC;
-
-		/* ip/mask, [optional] gateway, [optional] url */
-		tok = strtok_r(NULL, ",", &saveptr);
-		if (!tok)
-			goto out_err;
-		ifconf->static_config.address =
-			talloc_strdup(ifconf, tok);
-
-		/*
-		 * If a url is set but not a gateway, we can accidentally
-		 * interpret the url as the gateway. To avoid changing the
-		 * parameter format check if the "gateway" is actually a
-		 * pb-url if it's the last token.
-		 */
-		tok_gw = strtok_r(NULL, ",", &saveptr);
-		tok_url = strtok_r(NULL, ",", &saveptr);
-
-		if (tok_gw) {
-			if (tok_url || !is_url(tok_gw))
-				ifconf->static_config.gateway =
-					talloc_strdup(ifconf, tok_gw);
-			else
-					tok_url = tok_gw;
-		}
-
-		if (tok_url)
-			ifconf->static_config.url =
-				talloc_strdup(ifconf, tok_url);
-	} else {
-		pb_log("Unknown network configuration method %s\n", tok);
-		goto out_err;
-	}
-
-	config->network.interfaces = talloc_realloc(config,
-			config->network.interfaces,
-			struct interface_config *,
-			++config->network.n_interfaces);
-
-	config->network.interfaces[config->network.n_interfaces - 1] = ifconf;
-
-	return 0;
-out_err:
-	talloc_free(ifconf);
-	return -1;
-}
-
-static int parse_one_dns_config(struct config *config, char *confstr)
-{
-	char *tok, *saveptr = NULL;
-
-	for (tok = strtok_r(confstr, ",", &saveptr); tok;
-			tok = strtok_r(NULL, ",", &saveptr)) {
-
-		char *server = talloc_strdup(config, tok);
-
-		config->network.dns_servers = talloc_realloc(config,
-				config->network.dns_servers, const char *,
-				++config->network.n_dns_servers);
-
-		config->network.dns_servers[config->network.n_dns_servers - 1]
-				= server;
-	}
-
-	return 0;
-}
-
-static void populate_network_config(struct config *config, const char *cval)
-{
-	char *val, *saveptr = NULL;
-	int i;
-
-	if (!cval || !strlen(cval))
-		return;
-
-	val = talloc_strdup(config, cval);
-
-	for (i = 0; ; i++) {
-		char *tok;
-
-		tok = strtok_r(i == 0 ? val : NULL, " ", &saveptr);
-		if (!tok)
-			break;
-
-		if (!strncasecmp(tok, "dns,", strlen("dns,")))
-			parse_one_dns_config(config, tok + strlen("dns,"));
-		else
-			parse_one_interface_config(config, tok);
-
-	}
-
-	talloc_free(val);
-}
-
-static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
-{
-	char *delim = strchr(*pos, ' ');
-	int len, prefix = 0, rc = -1;
-	enum device_type type;
-
-	if (!strncmp(*pos, "uuid:", strlen("uuid:"))) {
-		prefix = strlen("uuid:");
-		opt->boot_type = BOOT_DEVICE_UUID;
-	} else if (!strncmp(*pos, "mac:", strlen("mac:"))) {
-		prefix = strlen("mac:");
-		opt->boot_type = BOOT_DEVICE_UUID;
-	} else {
-		type = find_device_type(*pos);
-		if (type != DEVICE_TYPE_UNKNOWN) {
-			opt->type = type;
-			opt->boot_type = BOOT_DEVICE_TYPE;
-			rc = 0;
-		}
-	}
-
-	if (opt->boot_type == BOOT_DEVICE_UUID) {
-		if (delim)
-			len = (int)(delim - *pos) - prefix;
-		else
-			len = strlen(*pos) - prefix;
-
-		if (len) {
-			opt->uuid = talloc_strndup(ctx, *pos + prefix, len);
-			rc = 0;
-		}
-	}
-
-	/* Always advance pointer to next option or end */
-	if (delim)
-		*pos = delim + 1;
-	else
-		*pos += strlen(*pos);
-
-	return rc;
-}
-
-static void populate_bootdev_config(struct config *config,
-	const struct param_list *pl)
-{
-	struct autoboot_option *opt, *new = NULL;
-	char *pos, *end;
-	unsigned int n_new = 0;
-	const char *val;
-
-	/* Check for ordered bootdevs */
-	val = param_list_get_value(pl, "petitboot,bootdevs");
-	if (!val || !strlen(val)) {
-		pos = end = NULL;
-	} else {
-		pos = talloc_strdup(config, val);
-		end = strchr(pos, '\0');
-	}
-
-	while (pos && pos < end) {
-		opt = talloc(config, struct autoboot_option);
-
-		if (read_bootdev(config, &pos, opt)) {
-			pb_log("bootdev config is in an unknown format "
-			       "(expected uuid:... or mac:...)\n");
-			talloc_free(opt);
-			continue;
-		}
-
-		new = talloc_realloc(config, new, struct autoboot_option,
-				     n_new + 1);
-		new[n_new] = *opt;
-		n_new++;
-		talloc_free(opt);
-
-	}
-
-	if (!n_new) {
-		/* If autoboot has been disabled, clear the default options */
-		if (!config->autoboot_enabled) {
-			talloc_free(config->autoboot_opts);
-			config->n_autoboot_opts = 0;
-		}
-		return;
-	}
-
-	talloc_free(config->autoboot_opts);
-	config->autoboot_opts = new;
-	config->n_autoboot_opts = n_new;
-}
-
-static void populate_config(struct config *config, const struct param_list *pl)
-{
-	const char *val;
-	char *end;
-	unsigned long timeout;
-
-	/* if the "auto-boot?' property is present and "false", disable auto
-	 * boot */
-	val = param_list_get_value(pl, "auto-boot?");
-	config->autoboot_enabled = !val || strcmp(val, "false");
-
-	val = param_list_get_value(pl, "petitboot,timeout");
-	if (val) {
-		timeout = strtoul(val, &end, 10);
-		if (end != val) {
-			if (timeout >= INT_MAX)
-				timeout = INT_MAX;
-			config->autoboot_timeout_sec = (int)timeout;
-		}
-	}
-
-	val = param_list_get_value(pl, "petitboot,language");
-	config->lang = val ? talloc_strdup(config, val) : NULL;
-
-	val = param_list_get_value(pl, "petitboot,network");
-	populate_network_config(config, val);
-
-	populate_bootdev_config(config, pl);
-
-	if (!config->debug) {
-		val = param_list_get_value(pl, "petitboot,debug?");
-		config->debug = val && !strcmp(val, "true");
-	}
-
-	val = param_list_get_value(pl, "petitboot,write?");
-	if (val)
-		config->allow_writes = !strcmp(val, "true");
-
-	val = param_list_get_value(pl, "petitboot,snapshots?");
-	if (val)
-		config->disable_snapshots = !strcmp(val, "false");
-
-	val = param_list_get_value(pl, "petitboot,console");
-	if (val)
-		config->boot_console = talloc_strdup(config, val);
-	/* If a full path is already set we don't want to override it */
-	config->manual_console = config->boot_console &&
-					!strchr(config->boot_console, '[');
-
-	val = param_list_get_value(pl, "petitboot,http_proxy");
-	if (val)
-		config->http_proxy = talloc_strdup(config, val);
-	val = param_list_get_value(pl, "petitboot,https_proxy");
-	if (val)
-		config->https_proxy = talloc_strdup(config, val);
-}
-
-static char *iface_config_str(void *ctx, struct interface_config *config)
+static char *interface_config_str(void *ctx, struct interface_config *config)
 {
 	char *str;
 
@@ -530,7 +232,7 @@ static void update_network_config(struct param_list *pl, const char *param_name,
 	val = talloc_strdup(pl, "");
 
 	for (i = 0; i < config->network.n_interfaces; i++) {
-		char *iface_str = iface_config_str(pl,
+		char *iface_str = interface_config_str(pl,
 					config->network.interfaces[i]);
 		val = talloc_asprintf_append(val, "%s%s",
 				*val == '\0' ? "" : " ", iface_str);
@@ -547,6 +249,7 @@ static void update_network_config(struct param_list *pl, const char *param_name,
 	}
 
 	param_list_set_non_empty(pl, param_name, val, true);
+
 	talloc_free(val);
 }
 
@@ -578,6 +281,7 @@ static void update_bootdev_config(struct param_list *pl, const char *param_name,
 	}
 
 	param_list_set_non_empty(pl, param_name, val, true);
+
 	talloc_free(tmp);
 	if (boot_str)
 		talloc_free(boot_str);
@@ -629,7 +333,7 @@ static void update_config(struct param_list *pl, struct config *config,
 	update_bootdev_config(pl, "petitboot,bootdevs", config);
 }
 
-static void set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
+static void config_set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,
 		bool persistent)
 {
 	config->ipmi_bootdev = bootdev;
@@ -982,7 +686,7 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 	}
 }
 
-static void get_active_consoles(struct config *config)
+static void config_get_active_consoles(struct config *config)
 {
 	struct stat sbuf;
 	char *fsp_prop = NULL;
@@ -1024,7 +728,7 @@ static int load_config(struct platform *p, struct config *config)
 	if (rc)
 		pb_log_fn("Failed to parse nvram\n");
 
-	populate_config(config, &platform->params);
+	config_populate_all(config, &platform->params);
 
 	if (platform->get_ipmi_bootdev) {
 		bool bootdev_persistent;
@@ -1032,14 +736,15 @@ static int load_config(struct platform *p, struct config *config)
 		rc = platform->get_ipmi_bootdev(platform, &bootdev,
 				&bootdev_persistent);
 		if (!rc && ipmi_bootdev_is_valid(bootdev)) {
-			set_ipmi_bootdev(config, bootdev, bootdev_persistent);
+			config_set_ipmi_bootdev(config, bootdev,
+				bootdev_persistent);
 		}
 	}
 
 	if (platform->ipmi)
 		get_ipmi_network_override(platform, config);
 
-	get_active_consoles(config);
+	config_get_active_consoles(config);
 
 	return 0;
 }
