@@ -73,6 +73,36 @@ out:
 	return rc;
 }
 
+bool parser_is_unique(struct discover_context *ctx, struct discover_device *dev,
+	const char *filename, struct list *found_list)
+{
+	struct stat stat;
+	struct parser_found_file *found_file;
+	const struct parser_found_file *entry;
+
+	if (parser_stat_path(ctx, dev, filename, &stat)) {
+		pb_debug("%s: Not found: '%s'\n", __func__, filename);
+		return false;
+	}
+
+	list_for_each_entry(found_list, entry, list) {
+		if (entry->ino == stat.st_ino) {
+			pb_log("%s: Duplicate: '%s' = '%s'\n",
+				__func__, filename, entry->filename);
+			return false;
+		}
+	}
+
+	pb_debug("%s: Found:     '%s'\n", __func__, filename);
+
+	found_file = talloc_zero(found_list, struct parser_found_file);
+	found_file->filename = talloc_strdup(found_file, filename);
+	found_file->ino = stat.st_ino;
+	list_add(found_list, &found_file->list);
+
+	return true;
+}
+
 int parser_replace_file(struct discover_context *ctx,
 		struct discover_device *dev, const char *filename,
 		char *buf, int len)

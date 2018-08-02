@@ -45,6 +45,12 @@ enum generic_icon_type {
 	ICON_TYPE_UNKNOWN
 };
 
+struct parser_found_file {
+	const char *filename;
+	unsigned ino;
+	struct list_item list;
+};
+
 #define streq(a,b) (!strcasecmp((a),(b)))
 
 void parser_init(void);
@@ -84,5 +90,13 @@ int parser_stat_path(struct discover_context *ctx,
 int parser_scandir(struct discover_context *ctx, const char *dirname,
 		   struct dirent ***files, int (*filter)(const struct dirent *),
 		   int (*comp)(const struct dirent **, const struct dirent **));
+
+/* parser_is_unique - Test a file against a list of known files.
+ * If the file @filename exists and the file is not in @found_list add the
+ * file to @found_list and return true.  Use when searching case-insensitive
+ * filesystems.
+ */
+bool parser_is_unique(struct discover_context *ctx, struct discover_device *dev, const char *filename,
+		struct list *found_list);
 
 #endif /* _PARSER_H */
