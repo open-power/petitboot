@@ -23,7 +23,8 @@ lib_TESTS = \
 	test/lib/test-process-parent-stdout \
 	test/lib/test-process-both \
 	test/lib/test-process-stdout-eintr \
-	test/lib/test-fold
+	test/lib/test-fold \
+	test/lib/test-efivar
 
 if WITH_OPENSSL
 lib_TESTS += \

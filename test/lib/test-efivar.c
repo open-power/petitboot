@@ -87,33 +87,38 @@ int main(void)
 {
 	void *ctx = NULL;
 	int rc, errno_value;
-	size_t size;
-	uint8_t *data = NULL;
 	uint32_t attr = DEF_ATTR;
 	char *path = NULL;
+	struct efi_data *efi_data;
 
 	if(!probe())
 		return ENOENT;
 
 	talloc_new(ctx);
-	size = strlen(test_data) + 1;
-	rc = efi_set_variable(ctx, test_efivar_guid, test_varname,
-				(uint8_t *)test_data, size, attr);
 
+	efi_data = talloc_zero(ctx, struct efi_data);
+	efi_data->attributes = attr;
+	efi_data->data = talloc_strdup(efi_data, test_data);
+	efi_data->data_size = strlen(test_data) + 1;
+
+	rc = efi_set_variable(test_efivar_guid, test_varname,
+				efi_data);
+
+	talloc_free(efi_data);
 	rc = efi_get_variable(ctx, test_efivar_guid, test_varname,
-				&data, &size, &attr);
+				&efi_data);
 
-	assert(data != NULL);
-	rc = strcmp((char *)data, test_data);
+	assert(efi_data->data != NULL);
+	rc = strcmp((char *)efi_data->data, test_data);
 	if (rc) {
 		talloc_free(ctx);
 		assert(0);
 	}
 
-	rc = efi_del_variable(ctx, test_efivar_guid, test_varname);
+	rc = efi_del_variable(test_efivar_guid, test_varname);
 
 	rc = efi_get_variable(ctx, test_efivar_guid, test_varname,
-				&data, &size, &attr);
+				&efi_data);
 
 	errno_value = errno;
 	talloc_free(ctx);
