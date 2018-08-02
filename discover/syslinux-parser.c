@@ -36,12 +36,6 @@ struct syslinux_options {
 	char *cfg_dir;
 };
 
-struct conf_file_stat {
-	char *name;
-	struct stat stat;
-	struct list_item list;
-};
-
 static const char *const syslinux_conf_files[] = {
 	"/boot/syslinux/syslinux.cfg",
 	"/syslinux/syslinux.cfg",
@@ -424,24 +418,23 @@ fail:
 
 static int syslinux_parse(struct discover_context *dc)
 {
-	struct conf_file_stat *confcmp, *confdat;
-	struct list processed_conf_files;
 	struct syslinux_options *state;
 	const char * const *filename;
 	struct conf_context *conf;
-	struct stat statbuf;
-	char *cfg_dir;
-	int len, rc;
-	char *buf;
+	struct list *found_list;
 
 	/* Support block device boot only at present */
 	if (dc->event)
 		return -1;
 
 	conf = talloc_zero(dc, struct conf_context);
-
 	if (!conf)
 		return -1;
+
+	found_list = talloc(conf, struct list);
+	if (!found_list)
+		return -1;
+	list_init(found_list);
 
 	conf->dc = dc;
 	conf->global_options = syslinux_global_options,
@@ -452,8 +445,6 @@ static int syslinux_parse(struct discover_context *dc)
 	conf->parser_info = state = talloc_zero(conf, struct syslinux_options);
 	list_init(&state->processed_options);
 
-	list_init(&processed_conf_files);
-
 	/*
 	 * set the global defaults
 	 * by spec 'default' defaults to 'linux' and
@@ -463,36 +454,20 @@ static int syslinux_parse(struct discover_context *dc)
 	conf_set_global_option(conf, "implicit", "1");
 
 	for (filename = syslinux_conf_files; *filename; filename++) {
+		char *cfg_dir;
+		int len, rc;
+		char *buf;
+
 		/*
 		 * guard against duplicate entries in case-insensitive
 		 * filesystems, mainly vfat boot partitions
 		 */
-		rc = parser_stat_path(dc, dc->device, *filename, &statbuf);
-		if (rc)
-			continue;
-
-		rc = 0;
-
-		list_for_each_entry(&processed_conf_files, confcmp, list) {
-			if (confcmp->stat.st_ino == statbuf.st_ino) {
-				pb_log("conf file %s is a path duplicate of %s..skipping\n",
-				       *filename, confcmp->name);
-				rc = 1;
-				break;
-			}
-		}
-
-		if (rc)
+		if (!parser_is_unique(dc, dc->device, *filename, found_list))
 			continue;
 
 		rc = parser_request_file(dc, dc->device, *filename, &buf, &len);
 		if (rc)
 			continue;
-
-		confdat = talloc_zero(conf, struct conf_file_stat);
-		confdat->stat = statbuf;
-		confdat->name = talloc_strdup(confdat, *filename);
-		list_add(&processed_conf_files, &confdat->list);
 
 		/*
 		 * save location of root config file for possible
