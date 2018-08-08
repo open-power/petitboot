@@ -153,7 +153,7 @@ void config_set_defaults(struct config *config)
 	config->debug = config_debug_on_cmdline();
 
 	lang = setlocale(LC_ALL, NULL);
-	pb_log("lang: %s\n", lang);
+	pb_log_fn("lang: %s\n", lang);
 	if (lang && strlen(lang))
 		config->lang = talloc_strdup(config, lang);
 	else
