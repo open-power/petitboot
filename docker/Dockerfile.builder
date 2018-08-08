@@ -17,13 +17,14 @@ RUN apt-get update && apt-get install -y \
 	gcc \
 	git \
 	libtool \
-	libuv-dev \
 	libdevmapper-dev \
 	libfdt-dev \
-	libncurses-dev \
 	libgpgme11-dev \
+	libncurses-dev \
 	libssl-dev \
+	libuv-dev \
 	pkg-config \
+	strace \
 	&& rm -rf /var/lib/apt/lists/*
 
 CMD /bin/bash

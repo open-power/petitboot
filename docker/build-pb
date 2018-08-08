@@ -105,7 +105,7 @@ docker_user_args="-u $(id -u):$(id -g)"
 
 if [[ -n "${interactive}" ]]; then
 	cd "${TOP_DIR}"
-	docker_args="${docker_base_args}"
+	docker_args="${docker_base_args} --privileged"
 	run_cmd "docker run -it ${docker_args} ${DOCKER_TAG} /bin/bash"
 	exit
 fi
