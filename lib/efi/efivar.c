@@ -83,17 +83,32 @@ int efi_del_variable(const char *guidstr, const char *name)
 		return -1;
 
 	rc = ioctl(fd, FS_IOC_GETFLAGS, &flag);
-	if (rc == -1)
+	if (rc == -1 && errno == ENOTTY) {
+		pb_debug_fn("'%s' does not support ioctl_iflags.\n",
+			efivarfs_path);
+		goto delete;
+	} else if (rc == -1) {
+		pb_log_fn("FS_IOC_GETFLAGS failed: (%d) %s\n", errno,
+			strerror(errno));
 		goto exit;
+	}
 
 	flag &= ~FS_IMMUTABLE_FL;
 	rc = ioctl(fd, FS_IOC_SETFLAGS, &flag);
-	if (rc == -1)
+	if (rc == -1) {
+		pb_log_fn("FS_IOC_SETFLAGS failed: (%d) %s\n", errno,
+			strerror(errno));
 		goto exit;
+	}
 
+delete:
 	close(fd);
 	fd = 0;
 	rc = unlink(path);
+	if (rc == -1) {
+		pb_log_fn("unlink failed: (%d) %s\n", errno, strerror(errno));
+		goto exit;
+	}
 exit:
 	talloc_free(path);
 	close(fd);
