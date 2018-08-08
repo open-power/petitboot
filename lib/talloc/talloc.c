@@ -40,13 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#if !defined(NDEBUG)
 #include <assert.h>
-#define TALLOC_ABORT(reason) do{ \
-	fprintf(stderr, "%s: name: %s\n", __func__, tc->name); \
-	assert(0 && reason);} while (0)
-#endif
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -66,6 +60,7 @@
 #include <stdint.h>
 #endif
 
+#include "log/log.h"
 #include "talloc.h"
 
 /* use this to force every realloc to change the pointer, to stress test
@@ -77,12 +72,6 @@
 #define TALLOC_MAGIC 0xe814ec4f
 #define TALLOC_MAGIC_FREE 0x7faebef3
 #define TALLOC_MAGIC_REFERENCE ((const char *)1)
-
-/* by default we abort when given a bad pointer (such as when talloc_free() is
- * called on a pointer that came from malloc() */
-#ifndef TALLOC_ABORT
-#define TALLOC_ABORT(reason) abort()
-#endif
 
 #ifndef discard_const_p
 #if defined(__intptr_t_defined) || defined(HAVE_INTPTR_T)
@@ -126,10 +115,16 @@ static struct talloc_chunk *talloc_chunk_from_ptr(const void *ptr)
 	struct talloc_chunk *tc = discard_const_p(struct talloc_chunk, ptr)-1;
 	if (tc->u.magic != TALLOC_MAGIC) {
 		if (tc->u.magic == TALLOC_MAGIC_FREE) {
-			TALLOC_ABORT("Bad talloc magic value - double free");
+			pb_log("%s: Failed: Bad talloc magic value - double free, for name: %s\n",
+				__func__, tc->name);
+			fprintf(stderr, "%s: name: %s\n", __func__, tc->name);
+			fflush(stderr);
+			assert(0 && "Bad talloc magic value - double free");
 		} else {
-			TALLOC_ABORT("Bad talloc magic value - unknown value");
+			pb_log("%s: Failed: Bad talloc magic value - unknown value\n", __func__);
+			assert(0 && "Bad talloc magic value - unknown value");
 		}
+		abort();
 	}
 
 	return tc;
