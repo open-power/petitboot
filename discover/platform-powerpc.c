@@ -25,7 +25,7 @@ static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
 static const char *devtree_dir = "/proc/device-tree/";
 
 struct platform_powerpc {
-	struct param_list params;
+	struct param_list *params;
 	struct ipmi	*ipmi;
 	bool		ipmi_bootdev_persistent;
 	int		(*get_ipmi_bootdev)(
@@ -89,13 +89,13 @@ static int parse_nvram_params(struct platform_powerpc *platform,
 		if (namelen == 0)
 			continue;
 
-		if (!param_list_is_known_n(&platform->params, name, namelen))
+		if (!param_list_is_known_n(platform->params, name, namelen))
 			continue;
 
 		*value = '\0';
 		value++;
 
-		param_list_set(&platform->params, name, value, false);
+		param_list_set(platform->params, name, value, false);
 	}
 
 	return 0;
@@ -145,7 +145,7 @@ static int write_nvram(struct platform_powerpc *platform)
 	process->path = "nvram";
 	process->argv = argv;
 
-	param_list_for_each(&platform->params, param) {
+	param_list_for_each(platform->params, param) {
 		char *paramstr;
 
 		if (!param->modified)
@@ -562,7 +562,7 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 
 	if (!rc && persistent) {
 		/* Write this new config to NVRAM */
-		params_update_network_values(&platform->params,
+		params_update_network_values(platform->params,
 			"petitboot,network", config);
 		rc = write_nvram(platform);
 		if (rc)
@@ -612,7 +612,7 @@ static int load_config(struct platform *p, struct config *config)
 	if (rc)
 		pb_log_fn("Failed to parse nvram\n");
 
-	config_populate_all(config, &platform->params);
+	config_populate_all(config, platform->params);
 
 	if (platform->get_ipmi_bootdev) {
 		bool bootdev_persistent;
@@ -649,7 +649,7 @@ static int save_config(struct platform *p, struct config *config)
 	defaults = talloc_zero(platform, struct config);
 	config_set_defaults(defaults);
 
-	params_update_all(&platform->params, config, defaults);
+	params_update_all(platform->params, config, defaults);
 
 	talloc_free(defaults);
 	return write_nvram(platform);
@@ -713,7 +713,8 @@ static bool probe(struct platform *p, void *ctx)
 		return false;
 
 	platform = talloc_zero(ctx, struct platform_powerpc);
-	param_list_init(&platform->params, common_known_params());
+	platform->params = talloc_zero(platform, struct param_list);
+	param_list_init(platform->params, common_known_params());
 
 	p->platform_data = platform;
 

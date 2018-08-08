@@ -39,7 +39,7 @@
 static const char *efi_vars_guid = "fb78ab4b-bd43-41a0-99a2-4e74bef9169b";
 
 struct platform_arm64 {
-	struct param_list params;
+	struct param_list *params;
 	struct ipmi *ipmi;
 };
 
@@ -103,7 +103,7 @@ static void get_active_consoles(struct config *config)
 
 static int load_config(struct platform *p, struct config *config)
 {
-	struct param_list *pl = &to_platform_arm64(p)->params;
+	struct param_list *pl = to_platform_arm64(p)->params;
 
 	parse_nvram(pl);
 	config_populate_all(config, pl);
@@ -221,7 +221,7 @@ static void params_update_all(struct param_list *pl,
 
 static int save_config(struct platform *p, struct config *config)
 {
-	struct param_list *pl = &to_platform_arm64(p)->params;
+	struct param_list *pl = to_platform_arm64(p)->params;
 	struct config *defaults;
 
 	defaults = talloc_zero(NULL, struct config);
@@ -259,7 +259,8 @@ static bool probe(struct platform *p, void *ctx)
 	}
 
 	platform = talloc_zero(ctx, struct platform_arm64);
-	param_list_init(&platform->params, common_known_params());
+	platform->params = talloc_zero(platform, struct param_list);
+	param_list_init(platform->params, common_known_params());
 
 	p->platform_data = platform;
 
