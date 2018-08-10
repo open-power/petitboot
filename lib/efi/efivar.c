@@ -17,6 +17,7 @@
  *  Author: Ge Song <ge.song@hxt-semitech.com>
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -25,35 +26,68 @@
 #include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <sys/statfs.h>
 
 #include "efivar.h"
 #include "log/log.h"
 #include "talloc/talloc.h"
 
-static const char *efivarfs_path;
-
-inline void set_efivarfs_path(const char *path)
+void efi_init_mount(struct efi_mount *efi_mount, const char *path,
+	const char *guid)
 {
-	efivarfs_path = path;
+	assert(efi_mount);
+
+	efi_mount->path = path;
+	efi_mount->guid = guid;
+
+	pb_debug_fn("%s--%s", efi_mount->path, efi_mount->guid);
 }
 
-inline const char *get_efivarfs_path(void)
+bool efi_check_mount_magic(const struct efi_mount *efi_mount, bool check_magic)
 {
+	struct statfs s;
 
-	return efivarfs_path;
+	assert(efi_mount);
+
+	if (!efi_mount->guid) {
+		pb_debug_fn("guid not set\n");
+		return false;
+	}
+
+	if (access(efi_mount->path, R_OK | W_OK)) {
+		pb_debug_fn("Can't access %s\n", efi_mount->path);
+		return false;
+	}
+
+	memset(&s, '\0', sizeof(s));
+	if (statfs(efi_mount->path, &s)) {
+		pb_debug_fn("statfs failed: %s: (%d) %s\n", efi_mount->path,
+			errno, strerror(errno));
+		return false;
+	}
+
+	if (check_magic && s.f_type != EFIVARFS_MAGIC) {
+		pb_debug_fn("Bad magic = 0x%lx\n", (unsigned long)s.f_type);
+		return false;
+	}
+
+	return true;
 }
 
-static int efi_open(const char *name, const char *guidstr, int flags,
-	mode_t mode, char **path)
+static int efi_open(const struct efi_mount *efi_mount, const char *name,
+	int flags, mode_t mode, char **path)
 {
 	int fd;
 
+	assert(efi_mount);
+
 	*path = NULL;
 
-	if (!get_efivarfs_path())
+	if (!efi_mount->path || !efi_mount->guid)
 		return -1;
 
-	*path = talloc_asprintf(NULL, "%s%s-%s", get_efivarfs_path(), name, guidstr);
+	*path = talloc_asprintf(NULL, "%s/%s-%s", efi_mount->path, name,
+		efi_mount->guid);
 	if (!*path)
 		return -1;
 
@@ -62,8 +96,8 @@ static int efi_open(const char *name, const char *guidstr, int flags,
 	fd = open(*path, flags, mode);
 
 	if (fd < 0) {
-		pb_log("%s: open failed %s: %s\n", __func__, *path,
-			strerror(errno));
+		pb_log("%s: open failed '%s': (%d) %s\n", __func__, *path,
+			errno, strerror(errno));
 		talloc_free(*path);
 		*path = NULL;
 		return -1;
@@ -72,20 +106,22 @@ static int efi_open(const char *name, const char *guidstr, int flags,
 	return fd;
 }
 
-int efi_del_variable(const char *guidstr, const char *name)
+int efi_del_variable(const struct efi_mount *efi_mount, const char *name)
 {
 	int fd, flag;
 	int rc = -1;
 	char *path;
 
-	fd = efi_open(name, guidstr, 0, 0, &path);
+	assert(efi_mount);
+
+	fd = efi_open(efi_mount, name, 0, 0, &path);
 	if (fd < 0)
 		return -1;
 
 	rc = ioctl(fd, FS_IOC_GETFLAGS, &flag);
 	if (rc == -1 && errno == ENOTTY) {
 		pb_debug_fn("'%s' does not support ioctl_iflags.\n",
-			efivarfs_path);
+			efi_mount->path);
 		goto delete;
 	} else if (rc == -1) {
 		pb_log_fn("FS_IOC_GETFLAGS failed: (%d) %s\n", errno,
@@ -116,8 +152,8 @@ exit:
 	return rc;
 }
 
-int efi_get_variable(void *ctx, const char *guidstr, const char *name,
-		struct efi_data **efi_data)
+int efi_get_variable(void *ctx, const struct efi_mount *efi_mount,
+	const char *name, struct efi_data **efi_data)
 {
 	int fd;
 	int rc = -1;
@@ -127,9 +163,11 @@ int efi_get_variable(void *ctx, const char *guidstr, const char *name,
 	ssize_t count;
 	char *path;
 
+	assert(efi_mount);
+
 	*efi_data = NULL;
 
-	fd = efi_open(name, guidstr, 0, 0, &path);
+	fd = efi_open(efi_mount, name, 0, 0, &path);
 	if (fd < 0)
 		return -1;
 
@@ -139,8 +177,8 @@ int efi_get_variable(void *ctx, const char *guidstr, const char *name,
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
 				continue;
 
-			pb_log("%s: read failed %s: (%ld) %s\n", __func__, path,
-				count, strerror(errno));
+			pb_log("%s: read failed %s: (%ld) (%d) %s\n", __func__, path,
+				count, errno, strerror(errno));
 			goto exit;
 		}
 		if (p >= (buf + sizeof(buf))) {
@@ -169,7 +207,7 @@ exit:
 	return rc;
 }
 
-int efi_set_variable(const char *guidstr, const char *name,
+int efi_set_variable(const struct efi_mount *efi_mount, const char *name,
 		const struct efi_data *efi_data)
 {
 	int rc = -1;
@@ -179,9 +217,11 @@ int efi_set_variable(const char *guidstr, const char *name,
 	size_t bufsize;
 	char *path;
 
-	efi_del_variable(guidstr, name);
+	assert(efi_mount);
 
-	fd = efi_open(name, guidstr, O_CREAT | O_WRONLY,
+	efi_del_variable(efi_mount, name);
+
+	fd = efi_open(efi_mount, name, O_CREAT | O_WRONLY,
 		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, &path);
 	if (fd < 0)
 		return -1;
@@ -196,8 +236,8 @@ int efi_set_variable(const char *guidstr, const char *name,
 
 	count = write(fd, buf, bufsize);
 	if ((size_t)count != bufsize) {
-		pb_log("%s: write failed %s: (%ld) %s\n", __func__, name,
-			count, strerror(errno));
+		pb_log("%s: write failed %s: (%ld) (%d) %s\n", __func__, name,
+			count, errno, strerror(errno));
 		goto exit;
 	}
 	rc = 0;

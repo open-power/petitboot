@@ -19,8 +19,10 @@
 #ifndef EFIVAR_H
 #define EFIVAR_H
 
-#include <linux/magic.h>
+#include <stdbool.h>
 #include <stdint.h>
+
+#include <linux/magic.h>
 
 #define EFI_VARIABLE_NON_VOLATILE                           0x00000001
 #define EFI_VARIABLE_BOOTSERVICE_ACCESS                     0x00000002
@@ -47,13 +49,23 @@ struct efi_data {
 	uint8_t fill[0];
 };
 
-void set_efivarfs_path(const char *path);
-const char *get_efivarfs_path(void);
+struct efi_mount {
+	const char *path;
+	const char *guid;
+};
 
-int efi_get_variable(void *ctx, const char *guidstr, const char *name,
-		struct efi_data **efi_data);
-int efi_set_variable(const char *guidstr, const char *name,
-		const struct efi_data *efi_data);
-int efi_del_variable(const char *guidstr, const char *name);
+void efi_init_mount(struct efi_mount *efi_mount, const char *path,
+	const char *guid);
+bool efi_check_mount_magic(const struct efi_mount *efi_mount, bool check_magic);
+static inline bool efi_check_mount(const struct efi_mount *efi_mount)
+{
+	return efi_check_mount_magic(efi_mount, true);
+}
+
+int efi_get_variable(void *ctx, const struct efi_mount *efi_mount,
+	const char *name, struct efi_data **efi_data);
+int efi_set_variable(const struct efi_mount *efi_mount, const char *name,
+	const struct efi_data *efi_data);
+int efi_del_variable(const struct efi_mount *efi_mount, const char *name);
 
 #endif /* EFIVAR_H */
