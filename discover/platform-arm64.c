@@ -70,10 +70,7 @@ static void write_nvram(const struct param_list *pl)
 	struct efi_data efi_data;
 	struct param *param;
 
-	efi_data.attributes =
-		EFI_VARIABLE_NON_VOLATILE |
-		EFI_VARIABLE_RUNTIME_ACCESS |
-		EFI_VARIABLE_BOOTSERVICE_ACCESS;
+	efi_data.attributes = EFI_DEFALT_ATTRIBUTES;
 
 	param_list_for_each(pl, param) {
 		if (!param->modified)
