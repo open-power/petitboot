@@ -22,7 +22,6 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/statfs.h>
 
 #include "efi/efivar.h"
 #include "file/file.h"
@@ -32,13 +31,11 @@
 #include "talloc/talloc.h"
 #include "types/types.h"
 
-
 #include "ipmi.h"
 #include "platform.h"
 
-static const char *efi_vars_guid = "fb78ab4b-bd43-41a0-99a2-4e74bef9169b";
-
 struct platform_arm64 {
+	const struct efi_mount *efi_mount;
 	struct param_list *params;
 	struct ipmi *ipmi;
 };
@@ -48,27 +45,33 @@ static inline struct platform_arm64 *to_platform_arm64(struct platform *p)
 	return (struct platform_arm64 *)(p->platform_data);
 }
 
-static void parse_nvram(struct param_list *pl)
+static void read_efivars(const struct efi_mount *efi_mount,
+	struct param_list *pl)
 {
 	const char** known;
+
+	if (!efi_mount)
+		return;
 
 	param_list_for_each_known_param(pl, known) {
 		struct efi_data *efi_data;
 
-		if (efi_get_variable(NULL, efi_vars_guid, *known, &efi_data))
+		if (efi_get_variable(NULL, efi_mount, *known, &efi_data))
 			continue;
 
-		param_list_set(pl, *known, efi_data->data,
-			true);
-
+		param_list_set(pl, *known, efi_data->data, true);
 		talloc_free(efi_data);
 	}
 }
 
-static void write_nvram(const struct param_list *pl)
+static void write_efivars(const struct efi_mount *efi_mount,
+	const struct param_list *pl)
 {
 	struct efi_data efi_data;
 	struct param *param;
+
+	if (!efi_mount)
+		return;
 
 	efi_data.attributes = EFI_DEFALT_ATTRIBUTES;
 
@@ -78,7 +81,7 @@ static void write_nvram(const struct param_list *pl)
 
 		efi_data.data = param->value;
 		efi_data.data_size = strlen(param->value) + 1;
-		efi_set_variable(efi_vars_guid, param->name, &efi_data);
+		efi_set_variable(efi_mount, param->name, &efi_data);
 	}
 }
 
@@ -100,9 +103,10 @@ static void get_active_consoles(struct config *config)
 
 static int load_config(struct platform *p, struct config *config)
 {
+	const struct efi_mount *efi_mount = to_platform_arm64(p)->efi_mount;
 	struct param_list *pl = to_platform_arm64(p)->params;
 
-	parse_nvram(pl);
+	read_efivars(efi_mount, pl);
 	config_populate_all(config, pl);
 	get_active_consoles(config);
 
@@ -218,6 +222,7 @@ static void params_update_all(struct param_list *pl,
 
 static int save_config(struct platform *p, struct config *config)
 {
+	const struct efi_mount *efi_mount = to_platform_arm64(p)->efi_mount;
 	struct param_list *pl = to_platform_arm64(p)->params;
 	struct config *defaults;
 
@@ -227,37 +232,25 @@ static int save_config(struct platform *p, struct config *config)
 	params_update_all(pl, config, defaults);
 	talloc_free(defaults);
 
-	write_nvram(pl);
+	write_efivars(efi_mount, pl);
 	
 	return 0;
 }
 
 static bool probe(struct platform *p, void *ctx)
 {
-	static const char *efivars = "/sys/firmware/efi/efivars";
+	static const struct efi_mount efi_mount = {
+		.path = "/sys/firmware/efi/efivars",
+		.guid = "fb78ab4b-bd43-41a0-99a2-4e74bef9169b",
+	};
 	struct platform_arm64 *platform;
-	struct statfs buf;
-
-	if (access(efivars, R_OK | W_OK)) {
-		pb_debug_fn("Can't access %s\n", efivars);
-		return false;
-	}
-
-	memset(&buf, '\0', sizeof(buf));
-	if (statfs(efivars, &buf)) {
-		pb_debug_fn("statfs failed: %s: %s\n", efivars,
-			strerror(errno));
-		return false;
-	}
-
-	if (buf.f_type != EFIVARFS_MAGIC) {
-		pb_debug_fn("Bad magic = 0x%lx\n", (unsigned long)buf.f_type);
-		return false;
-	}
 
 	platform = talloc_zero(ctx, struct platform_arm64);
 	platform->params = talloc_zero(platform, struct param_list);
 	param_list_init(platform->params, common_known_params());
+
+	if (efi_check_mount(&efi_mount))
+		platform->efi_mount = &efi_mount;
 
 	p->platform_data = platform;
 
