@@ -109,6 +109,7 @@ delete:
 		pb_log_fn("unlink failed: (%d) %s\n", errno, strerror(errno));
 		goto exit;
 	}
+	pb_debug_fn("Deleted: '%s'\n", name);
 exit:
 	talloc_free(path);
 	close(fd);
@@ -159,6 +160,7 @@ int efi_get_variable(void *ctx, const char *guidstr, const char *name,
 	(*efi_data)->data_size = total;
 	(*efi_data)->data = (*efi_data)->fill;
 	memcpy((*efi_data)->data, buf + sizeof (uint32_t), total);
+	pb_debug_fn("Found: '%s'='%s'\n", name, (const char *)(*efi_data)->data);
 
 	rc = 0;
 exit:
@@ -199,6 +201,7 @@ int efi_set_variable(const char *guidstr, const char *name,
 		goto exit;
 	}
 	rc = 0;
+	pb_debug_fn("Set: '%s'='%s'\n", name,  (const char *)efi_data->data);
 
 exit:
 	talloc_free(path);
