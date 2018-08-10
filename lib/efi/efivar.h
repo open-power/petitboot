@@ -22,8 +22,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <linux/magic.h>
-
 #define EFI_VARIABLE_NON_VOLATILE                           0x00000001
 #define EFI_VARIABLE_BOOTSERVICE_ACCESS                     0x00000002
 #define EFI_VARIABLE_RUNTIME_ACCESS                         0x00000004
@@ -37,10 +35,6 @@
 	EFI_VARIABLE_RUNTIME_ACCESS | \
 	EFI_VARIABLE_BOOTSERVICE_ACCESS \
 )
-
-#ifndef EFIVARFS_MAGIC
-#define EFIVARFS_MAGIC 0xde5e81e4
-#endif
 
 struct efi_data {
 	uint32_t attributes;

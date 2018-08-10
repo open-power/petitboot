@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include <linux/fs.h>
+#include <linux/magic.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
@@ -31,6 +32,10 @@
 #include "efivar.h"
 #include "log/log.h"
 #include "talloc/talloc.h"
+
+#ifndef EFIVARFS_MAGIC
+#define EFIVARFS_MAGIC 0xde5e81e4
+#endif
 
 void efi_init_mount(struct efi_mount *efi_mount, const char *path,
 	const char *guid)
