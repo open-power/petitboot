@@ -9,7 +9,7 @@
 static FILE *logf;
 static bool debug;
 
-static void __log(const char *fmt, va_list ap)
+static void __log_timestamp(void)
 {
 	char hms[20] = {'\0'};
 	time_t t;
@@ -17,10 +17,15 @@ static void __log(const char *fmt, va_list ap)
 	if (!logf)
 		return;
 
-	/* Add timestamp */
 	t = time(NULL);
 	strftime(hms, sizeof(hms), "%T", localtime(&t));
 	fprintf(logf, "[%s] ", hms);
+}
+
+static void __log(const char *fmt, va_list ap)
+{
+	if (!logf)
+		return;
 
 	vfprintf(logf, fmt, ap);
 	fflush(logf);
@@ -30,6 +35,7 @@ void pb_log(const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
+	__log_timestamp();
 	__log(fmt, ap);
 	va_end(ap);
 }
@@ -49,6 +55,7 @@ void pb_debug(const char *fmt, ...)
 	if (!debug)
 		return;
 	va_start(ap, fmt);
+	__log_timestamp();
 	__log(fmt, ap);
 	va_end(ap);
 }
