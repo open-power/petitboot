@@ -16,117 +16,87 @@
  *  reserved.
  *  Author: Ge Song <ge.song@hxt-semitech.com>
  */
+
 #include <assert.h>
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <linux/limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <sys/stat.h>
 #include <sys/statfs.h>
-#include <unistd.h>
+#include <sys/types.h>
 
 #include "efi/efivar.h"
+#include "log/log.h"
 #include "talloc/talloc.h"
 
-#define DEF_ATTR	(EFI_VARIABLE_NON_VOLATILE | \
-	EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_BOOTSERVICE_ACCESS)
+static const struct efi_mount efi_mount = {
+	.path = "/tmp/pb-test-efivar",
+	.guid = "c9c07add-256e-4452-b911-f8d0d35a1ac7",
+};
+static const char v_name[] = "petitboot-test-one";
+static const char v_data[] = "petitboot-efi-tester";
 
-static const char *test_efivar_guid = "c9c07add-256e-4452-b911-f8d0d35a1ac7";
-static const char *test_varname = "efivartest";
-static const char *test_data = "petitboot";
-
-static char* find_efitest_path(void)
+void finish(int code)
 {
-	static char dir[PATH_MAX] = {0};
-	static bool run = false;
-	char *rest_path = "/efivarfs_data/";
-	char *pos = NULL;
-
-	if (run)
-		return dir;
-
-	readlink("/proc/self/exe", dir, PATH_MAX);
-
-	pos = strrchr(dir, '/');
-	*pos = '\0';
-
-	strcat(dir, rest_path);
-	run = true;
-
-	return dir;
-}
-
-static bool probe(void)
-{
-	char *path;
-	int rc;
-
-	path = find_efitest_path();
-
-	rc = access(path, F_OK);
-	if (rc) {
-		if (errno == ENOENT) {
-			rc = mkdir(path, 0755);
-			if(rc)
-				return false;
-		} else {
-			return false;
-		}
-	}
-
-	set_efivarfs_path(path);
-
-	return true;
+	efi_del_variable(&efi_mount, v_name);
+	rmdir(efi_mount.path);
+	exit(code);
 }
 
 int main(void)
 {
-	void *ctx = NULL;
-	int rc, errno_value;
-	uint32_t attr = DEF_ATTR;
-	char *path = NULL;
 	struct efi_data *efi_data;
+	int rc;
 
-	if(!probe())
-		return ENOENT;
+	__pb_log_init(stderr, true);
 
-	talloc_new(ctx);
-
-	efi_data = talloc_zero(ctx, struct efi_data);
-	efi_data->attributes = attr;
-	efi_data->data = talloc_strdup(efi_data, test_data);
-	efi_data->data_size = strlen(test_data) + 1;
-
-	rc = efi_set_variable(test_efivar_guid, test_varname,
-				efi_data);
-
-	talloc_free(efi_data);
-	rc = efi_get_variable(ctx, test_efivar_guid, test_varname,
-				&efi_data);
-
-	assert(efi_data->data != NULL);
-	rc = strcmp((char *)efi_data->data, test_data);
+	rc = mkdir(efi_mount.path, 0755);
 	if (rc) {
-		talloc_free(ctx);
-		assert(0);
+		if (errno == EEXIST)
+			pb_log("mkdir exists\n");
+		else {
+			pb_log("mkdir failed: (%d) %s\n", errno,
+			       strerror(errno));
+			finish(__LINE__);
+		}
 	}
 
-	rc = efi_del_variable(test_efivar_guid, test_varname);
+	if (!efi_check_mount_magic(&efi_mount, false))
+		finish(__LINE__);
 
-	rc = efi_get_variable(ctx, test_efivar_guid, test_varname,
-				&efi_data);
+	efi_data = talloc_zero(NULL, struct efi_data);
+	efi_data->attributes = EFI_DEFALT_ATTRIBUTES;
+	efi_data->data = talloc_strdup(efi_data, v_data);
+	efi_data->data_size = sizeof(v_data);
 
-	errno_value = errno;
-	talloc_free(ctx);
+	if (efi_set_variable(&efi_mount, v_name, efi_data))
+		finish(__LINE__);
 
-	assert(errno_value == ENOENT);
+	talloc_free(efi_data);
 
-	path = find_efitest_path();
-	rmdir(path);
+	if (efi_get_variable(NULL, &efi_mount, v_name, &efi_data))
+		finish(__LINE__);
 
-	return EXIT_SUCCESS;
+	if (!efi_data->data) {
+		pb_log("No efi_data->data\n");
+		finish(__LINE__);
+	}
+
+	if (strcmp((char *)efi_data->data, v_data)) {
+		pb_log("Bad efi_data->data: '%s' != '%s'\n",
+		       (char *)efi_data->data, v_data);
+		finish(__LINE__);
+	}
+
+	if (efi_del_variable(&efi_mount, v_name))
+		finish(__LINE__);
+
+	/* Get after delete should fail. */
+	if (!efi_get_variable(NULL, &efi_mount, v_name, &efi_data))
+		finish(__LINE__);
+
+	finish(EXIT_SUCCESS);
 }
