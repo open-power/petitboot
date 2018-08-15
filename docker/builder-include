@@ -25,6 +25,7 @@ docker_from() {
 	case "${a}" in
 		amd64) echo "ubuntu:17.10" ;;
 		arm64) echo "arm64v8/ubuntu:17.10" ;;
+		ppc64le) echo "ppc64le/ubuntu:17.10" ;;
 		*)
 			echo "${name}: ERROR: Unknown arch ${a}" >&2
 			exit 1
