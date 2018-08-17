@@ -1,13 +1,17 @@
-language: c
+language: bash
 
 sudo: required
 dist: trusty
 services: docker
-os:
- - linux
- - linux-ppc64le
 
-before_install:
+matrix:
+  include:
+    - os: linux
+      name: "linux"
+    - os: linux-ppc64le
+      name: "linux-ppc64le"
+
+before_script:
  - ./docker/build-builder
 
 script:
