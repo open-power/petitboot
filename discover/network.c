@@ -563,6 +563,12 @@ void network_requery_device(struct network *network,
 		process_stop_async(interface->udhcpc_process);
 		process_release(interface->udhcpc_process);
 	}
+	if (interface->udhcpc6_process) {
+		interface->udhcpc6_process->exit_cb = NULL;
+		interface->udhcpc6_process->data = NULL;
+		process_stop_async(interface->udhcpc6_process);
+		process_release(interface->udhcpc6_process);
+	}
 
 	config = find_config_by_hwaddr(interface->hwaddr);
 
