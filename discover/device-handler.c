@@ -1404,6 +1404,28 @@ int device_handler_dhcp(struct device_handler *handler,
 	return 0;
 }
 
+struct discover_boot_option *device_handler_find_option_by_name(
+		struct device_handler *handler, const char *device,
+		const char *name)
+{
+	size_t len = strlen(name);
+	unsigned int i;
+
+	for (i = 0; i < handler->n_devices; i++) {
+		struct discover_device *dev = handler->devices[i];
+		struct discover_boot_option *opt;
+
+		list_for_each_entry(&dev->boot_options, opt, list)
+			/* Match exactly, partial matches can be quite common */
+			if (strlen(opt->option->name) == len &&
+					!strcmp(opt->option->name, name))
+				if (!dev || !strcmp(opt->option->device_id, device))
+					return opt;
+	}
+
+	return NULL;
+}
+
 static struct discover_boot_option *find_boot_option_by_id(
 		struct device_handler *handler, const char *id)
 {

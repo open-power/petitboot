@@ -482,13 +482,30 @@ static int user_event_url(struct user_event *uev, struct event *event)
 static int user_event_boot(struct user_event *uev, struct event *event)
 {
 	struct device_handler *handler = uev->handler;
-	struct boot_command *cmd = talloc(handler, struct boot_command);
+	struct boot_command *cmd = talloc_zero(handler, struct boot_command);
+	struct discover_boot_option *opt;
+	const char *name;
 
-	cmd->option_id = talloc_strdup(cmd, event_get_param(event, "id"));
-	cmd->boot_image_file = talloc_strdup(cmd, event_get_param(event, "image"));
-	cmd->initrd_file = talloc_strdup(cmd, event_get_param(event, "initrd"));
-	cmd->dtb_file = talloc_strdup(cmd, event_get_param(event, "dtb"));
-	cmd->boot_args = talloc_strdup(cmd, event_get_param(event, "args"));
+	name = event_get_param(event, "name");
+	if (name) {
+		pb_log("Finding boot option %s @ %s\n", name, event->device);
+		opt = device_handler_find_option_by_name(handler,
+				event->device, name);
+		if (!opt) {
+			pb_log("No option with name %s\n", name);
+			return -1;
+		}
+
+		pb_log("Found option with id %s!\n", opt->option->id);
+		cmd->option_id = talloc_strdup(cmd, opt->option->id);
+	} else {
+		pb_log("Booting based on full boot command\n");
+		cmd->option_id = talloc_strdup(cmd, event_get_param(event, "id"));
+		cmd->boot_image_file = talloc_strdup(cmd, event_get_param(event, "image"));
+		cmd->initrd_file = talloc_strdup(cmd, event_get_param(event, "initrd"));
+		cmd->dtb_file = talloc_strdup(cmd, event_get_param(event, "dtb"));
+		cmd->boot_args = talloc_strdup(cmd, event_get_param(event, "args"));
+	}
 
 	device_handler_boot(handler, cmd);
 

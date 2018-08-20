@@ -157,6 +157,9 @@ void discover_device_set_param(struct discover_device *device,
 const char *discover_device_get_param(struct discover_device *device,
 		const char *name);
 
+struct discover_boot_option *device_handler_find_option_by_name(
+		struct device_handler *handler, const char *device,
+		const char *name);
 void device_handler_boot(struct device_handler *handler,
 		struct boot_command *cmd);
 void device_handler_cancel_default(struct device_handler *handler);
