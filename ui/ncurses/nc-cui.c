@@ -220,6 +220,17 @@ void cui_on_exit(struct pmenu *menu)
 }
 
 /**
+ * cui_abort_on_exit - Force an exit of the main loop on menu exit.
+ *                     This is mainly for lockdown situations where
+ *                     the exit then triggers an expected reboot.
+ */
+void cui_abort_on_exit(struct pmenu *menu)
+{
+	struct cui *cui = cui_from_pmenu(menu);
+	cui->abort = 1;
+}
+
+/**
  * cui_run_cmd - A generic cb to run the supplied command.
  */
 
@@ -1298,7 +1309,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 	int result;
 	bool lockdown = lockdown_active();
 
-	m = pmenu_init(cui, 9, cui_on_exit);
+	m = pmenu_init(cui, 9, lockdown ? cui_abort_on_exit : cui_on_exit);
 	if (!m) {
 		pb_log_fn("failed\n");
 		return NULL;

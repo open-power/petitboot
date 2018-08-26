@@ -107,6 +107,7 @@ void cui_send_reinit(struct cui *cui);
 void cui_abort(struct cui *cui);
 void cui_resize(struct cui *cui);
 void cui_on_exit(struct pmenu *menu);
+void cui_abort_on_exit(struct pmenu *menu);
 void cui_on_open(struct pmenu *menu);
 int cui_run_cmd(struct cui *cui, const char **cmd_argv);
 int cui_run_cmd_from_item(struct pmenu_item *item);
