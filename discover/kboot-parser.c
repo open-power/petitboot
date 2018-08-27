@@ -126,6 +126,10 @@ out_add:
 				" dtb=%s", dtb);
 	}
 
+	if (conf_get_global_option(conf, "default"))
+		opt->is_default = streq(opt->name,
+				conf_get_global_option(conf, "default"));
+
 	conf_strip_str(opt->boot_args);
 	conf_strip_str(opt->description);
 
@@ -137,6 +141,7 @@ static struct conf_global_option kboot_global_options[] = {
 	{ .name = "initrd" },
 	{ .name = "root" },
 	{ .name = "video" },
+	{ .name = "default" },
 	{ .name = NULL }
 };
 
@@ -157,7 +162,6 @@ static const char *const kboot_conf_files[] = {
 };
 
 static const char *const kboot_ignored_names[] = {
-	"default",
 	"delay",
 	"message",
 	"timeout",
