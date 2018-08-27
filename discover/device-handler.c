@@ -1191,6 +1191,7 @@ static int device_handler_requery_timeout_fn(void *data)
 	struct requery_data *rqd = data;
 	struct device_handler *handler;
 	struct discover_device *device;
+	bool autoboot;
 
 	handler = rqd->handler;
 	device = rqd->device;
@@ -1213,15 +1214,22 @@ static int device_handler_requery_timeout_fn(void *data)
 		talloc_free(opt);
 	}
 
+	/* Track whether autoboot was enabled, if we cancel a default option
+	 * it will be switched off.
+	 */
+	autoboot = handler->autoboot_enabled;
+
 	list_for_each_entry_safe(&device->boot_options, opt, tmp, list) {
 		if (opt == handler->default_boot_option) {
-			pb_log("Default option %s cancelled since device is being requeried",
+			pb_log("Default option %s cancelled since device is being requeried\n",
 					opt->option->name);
 			device_handler_cancel_default(handler);
 		}
 		list_remove(&opt->list);
 		talloc_free(opt);
 	}
+
+	handler->autoboot_enabled = autoboot;
 
 	discover_server_notify_device_remove(handler->server, device->device);
 	device->notified = false;
