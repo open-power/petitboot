@@ -47,6 +47,7 @@ parser_TESTS = \
 	test/parser/test-grub2-blscfg-opts-config \
 	test/parser/test-grub2-blscfg-opts-grubenv \
 	test/parser/test-kboot-single \
+	test/parser/test-kboot-default \
 	test/parser/test-yaboot-empty \
 	test/parser/test-yaboot-single \
 	test/parser/test-yaboot-partition \
