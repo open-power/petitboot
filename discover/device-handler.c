@@ -1308,7 +1308,7 @@ static int device_handler_requery_timeout_fn(void *data)
 
 	list_for_each_entry_safe(&device->boot_options, opt, tmp, list) {
 		if (opt == handler->default_boot_option) {
-			pb_log("Default option %s cancelled since device is being requeried",
+			pb_log("Default option %s cancelled since device is being requeried\n",
 					opt->option->name);
 			device_handler_cancel_default(handler);
 		}
