@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
 	autoconf \
 	autopoint \
 	bison \
+	clang \
+	clang-tools \
 	flex \
 	gettext \
 	gcc \
