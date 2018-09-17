@@ -116,7 +116,7 @@ fi
 
 echo "Building docker image: ${DOCKER_TAG}" >&2
 
-cd ${TOP_DIR}
+cd ${TOP_DIR}/docker
 run_cmd "docker build \
 	--file "${DOCKER_FILE}" \
 	--build-arg DOCKER_FROM=${DOCKER_FROM} \
