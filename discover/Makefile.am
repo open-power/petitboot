@@ -28,8 +28,6 @@ discover_pb_discover_SOURCES = \
 	discover/devmapper.h \
 	discover/event.c \
 	discover/event.h \
-	discover/params.c \
-	discover/params.h \
 	discover/parser.c \
 	discover/parser.h \
 	discover/parser-conf.c \
