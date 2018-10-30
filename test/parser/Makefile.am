@@ -87,7 +87,11 @@ parser_TESTS = \
 	test/parser/test-syslinux-single-yocto \
 	test/parser/test-syslinux-global-append \
 	test/parser/test-syslinux-explicit \
-	test/parser/test-syslinux-nested-config
+	test/parser/test-syslinux-nested-config \
+	test/parser/test-native-globals \
+	test/parser/test-native-short \
+	test/parser/test-native-simple \
+	test/parser/test-native-strings
 
 
 TESTS += $(parser_TESTS)
@@ -100,7 +104,8 @@ check_DATA += \
 	test/parser/data/yaboot-rh8-ppc64.conf \
 	test/parser/data/syslinux-include-root.cfg \
 	test/parser/data/syslinux-include-nest-1.cfg \
-	test/parser/data/syslinux-include-nest-2.cfg
+	test/parser/data/syslinux-include-nest-2.cfg \
+	test/parser/data/native-short.conf
 
 $(parser_TESTS): AM_CPPFLAGS += \
 		-I$(top_srcdir)/discover \
@@ -133,13 +138,16 @@ test_parser_libtest_ro_SOURCES = \
 	discover/parser-conf.c \
 	discover/user-event.c \
 	discover/event.c \
-	$(discover_grub2_grub2_parser_ro_SOURCES)
+	$(discover_grub2_grub2_parser_ro_SOURCES) \
+	$(discover_native_native_parser_ro_SOURCES)
 
 test_parser_libtest_ro_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(top_srcdir)/discover \
 	-I$(top_srcdir)/discover/grub2 \
 	-I$(top_builddir)/discover/grub2 \
+	-I$(top_srcdir)/discover/native \
+	-I$(top_builddir)/discover/native \
 	-DPETITBOOT_TEST \
 	-DLOCAL_STATE_DIR='"$(localstatedir)"' \
 	-DTEST_CONF_BASE='"$(top_srcdir)/test/parser/data"'

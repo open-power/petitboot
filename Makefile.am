@@ -50,6 +50,7 @@ CLEANFILES =
 
 include lib/Makefile.am
 include discover/grub2/Makefile.am
+include discover/native/Makefile.am
 include discover/Makefile.am
 include test/Makefile.am
 include test/lib/Makefile.am

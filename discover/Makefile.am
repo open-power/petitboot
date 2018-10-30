@@ -55,6 +55,7 @@ discover_pb_discover_SOURCES = \
 
 discover_pb_discover_LDADD = \
 	discover/grub2/grub2-parser.ro \
+	discover/native/native-parser.ro \
 	discover/platform.ro \
 	$(core_lib) \
 	$(UDEV_LIBS)
