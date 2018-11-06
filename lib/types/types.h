@@ -97,6 +97,7 @@ struct status {
 	} type;
 	char	*message;
 	bool	backlog;
+	bool	boot_active;
 };
 
 struct statuslog_entry {

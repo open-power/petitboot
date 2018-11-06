@@ -46,6 +46,7 @@ static void __attribute__((format(__printf__, 4, 5))) update_status(
 
 	status.type = type;
 	status.backlog = false;
+	status.boot_active = type == STATUS_INFO;
 
 	pb_debug("boot status: [%d] %s\n", type, status.message);
 
@@ -531,7 +532,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		image = opt->boot_image->url;
 	} else {
 		pb_log_fn("no image specified\n");
-		update_status(status_fn, status_arg, STATUS_INFO,
+		update_status(status_fn, status_arg, STATUS_ERROR,
 				_("Boot failed: no image specified"));
 		return NULL;
 	}
@@ -585,7 +586,7 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		} else {
 			pb_log("%s: no command line signature file"
 				" specified\n", __func__);
-			update_status(status_fn, status_arg, STATUS_INFO,
+			update_status(status_fn, status_arg, STATUS_ERROR,
 					_("Boot failed: no command line"
 						" signature file specified"));
 			talloc_free(boot_task);
@@ -654,7 +655,7 @@ void boot_cancel(struct boot_task *task)
 {
 	task->cancelled = true;
 
-	update_status(task->status_fn, task->status_arg, STATUS_INFO,
+	update_status(task->status_fn, task->status_arg, STATUS_ERROR,
 			_("Boot cancelled"));
 
 	cleanup_cancellations(task, NULL);

@@ -534,6 +534,7 @@ static void _device_handler_vstatus(struct device_handler *handler,
 	status.type = type;
 	status.message = talloc_vasprintf(handler, fmt, ap);
 	status.backlog = false;
+	status.boot_active = false;
 
 	device_handler_status(handler, &status);
 

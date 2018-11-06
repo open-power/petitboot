@@ -92,16 +92,30 @@ static bool lockdown_active(void)
 #endif
 }
 
+static void cui_set_curses_options(bool curses_mode)
+{
+	if (curses_mode) {
+		cbreak();			/* Disable line buffering. */
+		noecho();			/* Disable getch() echo. */
+		nonl();				/* Disable new-line translation. */
+		intrflush(stdscr, FALSE);	/* Disable interrupt flush. */
+		curs_set(0);			/* Make cursor invisible */
+		nodelay(stdscr, TRUE);		/* Enable non-blocking getch() */
+	} else {
+		nocbreak();			/* Enable line buffering. */
+		echo();				/* Enable getch() echo. */
+		nl();				/* Enable new-line translation. */
+		intrflush(stdscr, TRUE);	/* Enable interrupt flush. */
+		curs_set(1);			/* Make cursor visible */
+		nodelay(stdscr, FALSE);		/* Disable non-blocking getch() */
+	}
+}
+
 static void cui_start(void)
 {
 	initscr();			/* Initialize ncurses. */
-	cbreak();			/* Disable line buffering. */
-	noecho();			/* Disable getch() echo. */
 	keypad(stdscr, TRUE);		/* Enable num keypad keys. */
-	nonl();				/* Disable new-line translation. */
-	intrflush(stdscr, FALSE);	/* Disable interrupt flush. */
-	curs_set(0);			/* Make cursor invisible */
-	nodelay(stdscr, TRUE);		/* Enable non-blocking getch() */
+	cui_set_curses_options(true);
 
 	/* We may be operating with an incorrect $TERM type; in this case
 	 * the keymappings will be slightly broken. We want at least
@@ -650,6 +664,12 @@ static int cui_process_key(void *arg)
 			}
 		}
 
+		if (cui->preboot_mode) {
+			/* Turn curses options back on if the user interacts */
+			cui->preboot_mode = false;
+			cui_set_curses_options(true);
+		}
+
 		if (!cui->has_input && key_cancels_boot(c)) {
 			cui->has_input = true;
 			if (cui->client) {
@@ -980,8 +1000,21 @@ static void cui_update_status(struct status *status, void *arg)
 	statuslog_append_steal(cui, cui->statuslog, status);
 
 	/* Ignore status messages from the backlog */
-	if (!status->backlog)
-		nc_scr_status_printf(cui->current, "%s", status->message);
+	if (status->backlog)
+		return;
+
+	nc_scr_status_printf(cui->current, "%s", status->message);
+
+	if (cui->preboot_mode &&
+		(!status->boot_active || status->type == STATUS_ERROR)) {
+		cui_set_curses_options(true);
+		cui->preboot_mode = false;
+	} else {
+		cui->preboot_mode = status->boot_active &&
+						status->type == STATUS_INFO;
+		if (cui->preboot_mode)
+			cui_set_curses_options(false);
+	}
 }
 
 /*

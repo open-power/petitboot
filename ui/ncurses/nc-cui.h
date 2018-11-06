@@ -77,6 +77,7 @@ struct cui {
 	void *platform_info;
 	unsigned int default_item;
 	int (*on_boot)(struct cui *cui, struct cui_opt_data *cod);
+	bool preboot_mode;
 };
 
 struct cui *cui_init(void* platform_info,

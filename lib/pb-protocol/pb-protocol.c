@@ -223,7 +223,7 @@ int pb_protocol_boot_status_len(const struct status *status)
 	return  4 +	/* type */
 		4 + optional_strlen(status->message) +
 		4 +	/* backlog */
-		4;
+		4;	/* boot_active */
 }
 
 int pb_protocol_system_info_len(const struct system_info *sysinfo)
@@ -455,6 +455,9 @@ int pb_protocol_serialise_boot_status(const struct status *status,
 	pos += pb_protocol_serialise_string(pos, status->message);
 
 	*(bool *)pos = __cpu_to_be32(status->backlog);
+	pos += sizeof(bool);
+
+	*(bool *)pos = __cpu_to_be32(status->boot_active);
 	pos += sizeof(bool);
 
 	assert(pos <= buf + buf_len);
@@ -951,6 +954,10 @@ int pb_protocol_deserialise_boot_status(struct status *status,
 	/* backlog */
 	status->backlog = *(bool *)pos;
 	pos += sizeof(status->backlog);
+
+	/* boot_active */
+	status->boot_active = *(bool *)pos;
+	pos += sizeof(status->boot_active);
 
 	rc = 0;
 
