@@ -19,6 +19,7 @@
 #include <assert.h>
 
 #include <util/util.h>
+#include <talloc/talloc.h>
 
 static const char hex[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 			    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', };
@@ -46,4 +47,20 @@ void mac_str(uint8_t *mac, unsigned int maclen, char *buf, unsigned int buflen)
 	*(pos - 1) = '\0';
 
 	return;
+}
+
+char *format_buffer(void *ctx, const uint8_t *buf, unsigned int len)
+{
+	char *str;
+	unsigned int i;
+
+	if (len == 0)
+		return "";
+
+	str = talloc_asprintf(ctx, "0x%02x%s", buf[0], len > 1 ? " " : "");
+	for (i = 1; i < len; i++)
+		str = talloc_asprintf_append(str, "0x%02x%s", buf[i],
+			((i + 1) % 8 == 0 && i != len - 1) ? "\n" : " ");
+
+	return str;
 }

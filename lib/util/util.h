@@ -50,6 +50,7 @@
 	do { (void)sizeof(char[(x)?1:-1]); } while (0)
 
 void mac_str(uint8_t *mac, unsigned int maclen, char *buf, unsigned int buflen);
+char *format_buffer(void *ctx, const uint8_t *buf, unsigned int len);
 
 #endif /* UTIL_H */
 

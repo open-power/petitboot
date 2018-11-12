@@ -326,6 +326,7 @@ void ipmi_get_bmc_mac(struct ipmi *ipmi, uint8_t *buf)
 	uint16_t resp_len = 8;
 	uint8_t resp[8];
 	uint8_t req[] = { 0x1, 0x5, 0x0, 0x0 };
+	char *debug_buf;
 	int i, rc;
 
 	rc = ipmi_transaction(ipmi, IPMI_NETFN_TRANSPORT,
@@ -334,14 +335,15 @@ void ipmi_get_bmc_mac(struct ipmi *ipmi, uint8_t *buf)
 			resp, &resp_len,
 			ipmi_timeout);
 
-	pb_debug_fn("BMC MAC resp [%d][%d]:\n", rc, resp_len);
+	debug_buf = format_buffer(ipmi, resp, resp_len);
+	pb_debug_fn("BMC MAC resp [%d][%d]:\n%s\n",
+			rc, resp_len, debug_buf);
+	talloc_free(debug_buf);
 
 	if (rc == 0 && resp_len > 0) {
 		for (i = 2; i < resp_len; i++) {
-		        pb_debug(" %x", resp[i]);
 			buf[i - 2] = resp[i];
 		}
-		pb_debug("\n");
 	}
 
 }
@@ -354,7 +356,8 @@ void ipmi_get_bmc_versions(struct ipmi *ipmi, struct system_info *info)
 {
 	uint16_t resp_len = 16;
 	uint8_t resp[16], bcd;
-	int i, rc;
+	char *debug_buf;
+	int rc;
 
 	/* Retrieve info from current side */
 	rc = ipmi_transaction(ipmi, IPMI_NETFN_APP,
@@ -363,13 +366,10 @@ void ipmi_get_bmc_versions(struct ipmi *ipmi, struct system_info *info)
 			resp, &resp_len,
 			ipmi_timeout);
 
-	pb_debug_fn("BMC version resp [%d][%d]:\n", rc, resp_len);
-	if (resp_len > 0) {
-		for (i = 0; i < resp_len; i++) {
-		        pb_debug(" %x", resp[i]);
-		}
-		pb_debug("\n");
-	}
+	debug_buf = format_buffer(ipmi, resp, resp_len);
+	pb_debug_fn("BMC version resp [%d][%d]:\n%s\n",
+			rc, resp_len, debug_buf);
+	talloc_free(debug_buf);
 
 	if (rc == 0 && (resp_len == 12 || resp_len == 16)) {
 		info->bmc_current = talloc_array(info, char *, 4);
@@ -407,13 +407,10 @@ void ipmi_get_bmc_versions(struct ipmi *ipmi, struct system_info *info)
 			resp, &resp_len,
 			ipmi_timeout);
 
-	pb_debug_fn("BMC golden resp [%d][%d]:\n", rc, resp_len);
-	if (resp_len > 0) {
-		for (i = 0; i < resp_len; i++) {
-		        pb_debug(" %x", resp[i]);
-		}
-		pb_debug("\n");
-	}
+	debug_buf = format_buffer(ipmi, resp, resp_len);
+	pb_debug_fn("BMC golden resp [%d][%d]:\n%s\n",
+			rc, resp_len, debug_buf);
+	talloc_free(debug_buf);
 
 	if (rc == 0 && (resp_len == 12 || resp_len == 16)) {
 		info->bmc_golden = talloc_array(info, char *, 4);

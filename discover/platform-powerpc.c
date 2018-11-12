@@ -368,6 +368,7 @@ static int get_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
 {
 	uint16_t resp_len;
 	uint8_t resp[8];
+	char *debug_buf;
 	int rc;
 	uint8_t req[] = {
 		0x05, /* parameter selector: boot flags */
@@ -392,10 +393,9 @@ static int get_ipmi_bootdev_ipmi(struct platform_powerpc *platform,
 		return -1;
 	}
 
-	pb_debug("IPMI get_bootdev response:\n");
-	for (int i = 0; i < resp_len; i++)
-		pb_debug("%x ", resp[i]);
-	pb_debug("\n");
+	debug_buf = format_buffer(platform, resp, resp_len);
+	pb_debug_fn("IPMI get_bootdev response:\n%s\n", debug_buf);
+	talloc_free(debug_buf);
 
 	if (resp[0] != 0) {
 		pb_log("platform: non-zero completion code %d from IPMI req\n",
@@ -472,6 +472,7 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 	uint16_t min_len = 12, resp_len = 53, version;
 	const uint32_t magic_value = 0x21706221;
 	uint8_t resp[resp_len];
+	char *debug_buf;
 	uint32_t cookie;
 	bool persistent;
 	int i, rc;
@@ -487,17 +488,9 @@ static void get_ipmi_network_override(struct platform_powerpc *platform,
 			resp, &resp_len,
 			ipmi_timeout);
 
-	pb_debug("IPMI net override resp [%d][%d]:\n", rc, resp_len);
-	if (resp_len > 0) {
-		for (i = 0; i < resp_len; i++) {
-		        pb_debug(" %02x", resp[i]);
-			if (i && (i + 1) % 16 == 0 && i != resp_len - 1)
-				pb_debug("\n");
-			else if (i && (i + 1) % 8 == 0)
-				pb_debug(" ");
-		}
-		pb_debug("\n");
-	}
+	debug_buf = format_buffer(platform, resp, resp_len);
+	pb_debug_fn("IPMI net override response:\n%s\n", debug_buf);
+	talloc_free(debug_buf);
 
 	if (rc) {
 		pb_debug("IPMI network config option unavailable\n");
