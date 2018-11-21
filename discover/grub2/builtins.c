@@ -356,6 +356,10 @@ static struct {
 		.fn = builtin_initrd,
 	},
 	{
+		.name = "initrd16",
+		.fn = builtin_initrd,
+	},
+	{
 		.name = "search",
 		.fn = builtin_search,
 	},
