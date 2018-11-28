@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
 "Report-Msgid-Bugs-To: https://lists.ozlabs.org/listinfo/petitboot\n"
-"POT-Creation-Date: 2018-05-29 16:53+1000\n"
+"POT-Creation-Date: 2018-11-29 10:59+1100\n"
 "PO-Revision-Date: 2014-06-24 13:56+0800\n"
 "Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
 "Language-Team: French\n"
@@ -93,8 +93,8 @@ msgid "%u downloads in progress..."
 msgstr "%u téléchargement(s) en cours..."
 
 #, c-format
-msgid "%u %s downloading: %.0f%% - %lu%cB"
-msgstr "%u %s en cours de téléchargement : %.0f%% - %lu%cB"
+msgid "%u %s downloading: %.0f%% - %<PRIu64>%cB"
+msgstr "%u %s en cours de téléchargement : %.0f%% - %<PRIu64>%cB"
 
 msgid "item"
 msgid_plural "items"
@@ -104,6 +104,19 @@ msgstr[1] "éléments"
 #, c-format
 msgid "Booting in %d sec: [%s] %s"
 msgstr "Amorçage dans %d seconde(s) : [%s] %s"
+
+msgid "device type"
+msgstr ""
+
+msgid "device UUID"
+msgstr ""
+
+msgid "unknown specifier"
+msgstr ""
+
+#, c-format
+msgid "Applying temporary autoboot override: %s"
+msgstr ""
 
 #. TRANSLATORS: this string will be passed the type of the
 #. device (eg "disk" or "network"), which will be translated
@@ -429,8 +442,15 @@ msgid "User item %u"
 msgstr "Elément utilisateur %u"
 
 #, c-format
+msgid "Plugins (%u)"
+msgstr "Plug-in (%u)"
+
+#, c-format
 msgid "  %s [installed]"
 msgstr ""
+
+msgid "Plugins (0)"
+msgstr "Plug-in (0)"
 
 #, c-format
 msgid "SAFE MODE: select '%s' to continue"
@@ -457,9 +477,6 @@ msgstr "Journal d'état du système"
 
 msgid "Retrieve config from URL"
 msgstr "Récupérer la config depuis une URL"
-
-msgid "Plugins (0)"
-msgstr "Plug-in (0)"
 
 msgid "Reboot"
 msgstr "Réamorcer"
@@ -582,6 +599,10 @@ msgstr " Adresse IP : %s"
 msgid "none"
 msgstr "néant"
 
+#, c-format
+msgid " IPv6 Address: %s"
+msgstr " Adresse IPv6 : %s"
+
 #. TRANSLATORS: these "up" / "down" strings refer to the
 #. * link status for a network connection.
 #, c-format
@@ -631,6 +652,15 @@ msgid ""
 "\n"
 "To retreive new boot options from a remote configuration file, select the "
 "'Retrieve config from URL' option.\n"
+"\n"
+"To restrict petitboot to only autobooting from a specific device type, the "
+"following keys are available:\n"
+"\n"
+"  F10: Only autoboot from disk\n"
+"  F11: Only autoboot from USB devices\n"
+"  F12: Only autoboot from network\n"
+"\n"
+"Unlike other keys, these do not cancel automatic boot.\n"
 "\n"
 "To close the Petitboot interface, type X (exit).\n"
 msgstr ""

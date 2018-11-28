@@ -323,6 +323,51 @@ static int cui_boot(struct pmenu_item *item)
 	return 0;
 }
 
+static int menu_sysinfo_execute(struct pmenu_item *item)
+{
+	cui_show_sysinfo(cui_from_item(item));
+	return 0;
+}
+
+static int menu_config_execute(struct pmenu_item *item)
+{
+	cui_show_config(cui_from_item(item));
+	return 0;
+}
+
+static int menu_lang_execute(struct pmenu_item *item)
+{
+	cui_show_lang(cui_from_item(item));
+	return 0;
+}
+
+static int menu_statuslog_execute(struct pmenu_item *item)
+{
+	cui_show_statuslog(cui_from_item(item));
+	return 0;
+}
+
+static int menu_reinit_execute(struct pmenu_item *item)
+{
+	if (cui_from_item(item)->client)
+		cui_send_reinit(cui_from_item(item));
+	return 0;
+}
+
+static int menu_add_url_execute(struct pmenu_item *item)
+{
+	if (cui_from_item(item)->client)
+		cui_show_add_url(cui_from_item(item));
+	return 0;
+}
+
+static int menu_plugin_execute(struct pmenu_item *item)
+{
+	if (cui_from_item(item)->client)
+		cui_show_plugin_menu(cui_from_item(item));
+	return 0;
+}
+
 static void cui_boot_editor_on_exit(struct cui *cui,
 		struct pmenu_item *item,
 		struct pb_boot_data *bd)
@@ -846,10 +891,10 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		result = set_menu_items(cui->main->ncm, NULL);
 		for (j = 0 ; j < cui->main->item_count; j++) {
 			item = item_userptr(cui->main->items[j]);
-			if (strncmp(item->nci->name.str, "Plugins", strlen("Plugins")))
+			if (item->on_execute != menu_plugin_execute)
 				continue;
 			cui->n_plugins++;
-			char *label = talloc_asprintf(item, "Plugins (%u)",
+			char *label = talloc_asprintf(item, _("Plugins (%u)"),
 					cui->n_plugins);
 			pmenu_item_update(item, label);
 			talloc_free(label);
@@ -1147,10 +1192,10 @@ static int cui_plugins_remove(void *arg)
 	set_menu_items(cui->main->ncm, NULL);
 	for (i = 0; i < cui->main->item_count; i++) {
 		item = item_userptr(cui->main->items[i]);
-		if (strncmp(item->nci->name.str, "Plugins", strlen("Plugins")))
+		if (item->on_execute != menu_plugin_execute)
 			continue;
 		cui->n_plugins = 0;
-		pmenu_item_update(item, "Plugins (0)");
+		pmenu_item_update(item, _("Plugins (0)"));
 		break;
 	}
 
@@ -1285,51 +1330,6 @@ int cui_send_plugin_install(struct cui *cui, char *file)
 void cui_send_reinit(struct cui *cui)
 {
 	discover_client_send_reinit(cui->client);
-}
-
-static int menu_sysinfo_execute(struct pmenu_item *item)
-{
-	cui_show_sysinfo(cui_from_item(item));
-	return 0;
-}
-
-static int menu_config_execute(struct pmenu_item *item)
-{
-	cui_show_config(cui_from_item(item));
-	return 0;
-}
-
-static int menu_lang_execute(struct pmenu_item *item)
-{
-	cui_show_lang(cui_from_item(item));
-	return 0;
-}
-
-static int menu_statuslog_execute(struct pmenu_item *item)
-{
-	cui_show_statuslog(cui_from_item(item));
-	return 0;
-}
-
-static int menu_reinit_execute(struct pmenu_item *item)
-{
-	if (cui_from_item(item)->client)
-		cui_send_reinit(cui_from_item(item));
-	return 0;
-}
-
-static int menu_add_url_execute(struct pmenu_item *item)
-{
-	if (cui_from_item(item)->client)
-		cui_show_add_url(cui_from_item(item));
-	return 0;
-}
-
-static int menu_plugin_execute(struct pmenu_item *item)
-{
-	if (cui_from_item(item)->client)
-		cui_show_plugin_menu(cui_from_item(item));
-	return 0;
 }
 
 /**
