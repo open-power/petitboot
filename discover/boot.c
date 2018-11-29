@@ -521,25 +521,31 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 	update_status(status_fn, status_arg, STATUS_INFO,
 			_("Booting %s"), boot_desc);
 
+	boot_task = talloc_zero(ctx, struct boot_task);
+	boot_task->dry_run = dry_run;
+	boot_task->status_fn = status_fn;
+	boot_task->status_arg = status_arg;
+
 	if (cmd && cmd->boot_image_file) {
-		image = pb_url_parse(opt, cmd->boot_image_file);
+		image = pb_url_parse(boot_task, cmd->boot_image_file);
 	} else if (opt && opt->boot_image) {
 		image = opt->boot_image->url;
 	} else {
 		pb_log("%s: no image specified\n", __func__);
 		update_status(status_fn, status_arg, STATUS_INFO,
 				_("Boot failed: no image specified"));
+		talloc_free(boot_task);
 		return NULL;
 	}
 
 	if (cmd && cmd->initrd_file) {
-		initrd = pb_url_parse(opt, cmd->initrd_file);
+		initrd = pb_url_parse(boot_task, cmd->initrd_file);
 	} else if (opt && opt->initrd) {
 		initrd = opt->initrd->url;
 	}
 
 	if (cmd && cmd->dtb_file) {
-		dtb = pb_url_parse(opt, cmd->dtb_file);
+		dtb = pb_url_parse(boot_task, cmd->dtb_file);
 	} else if (opt && opt->dtb) {
 		dtb = opt->dtb->url;
 	}
@@ -549,10 +555,6 @@ struct boot_task *boot(void *ctx, struct discover_boot_option *opt,
 		setenv("https_proxy", opt->proxy, 1);
 	}
 
-	boot_task = talloc_zero(ctx, struct boot_task);
-	boot_task->dry_run = dry_run;
-	boot_task->status_fn = status_fn;
-	boot_task->status_arg = status_arg;
 	list_init(&boot_task->resources);
 
 	lockdown_type = lockdown_status();
