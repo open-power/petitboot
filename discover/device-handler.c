@@ -1389,8 +1389,11 @@ void device_handler_update_config(struct device_handler *handler,
 	int rc;
 
 	rc = config_set(config);
-	if (rc)
+	if (rc) {
+		device_handler_status_err(handler,
+				"Failed to update configuration!");
 		return;
+	}
 
 	discover_server_notify_config(handler->server, config);
 	device_handler_update_lang(config->lang);
