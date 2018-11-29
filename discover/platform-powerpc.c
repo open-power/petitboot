@@ -27,7 +27,6 @@ static const char *devtree_dir = "/proc/device-tree/";
 struct platform_powerpc {
 	struct param_list *params;
 	struct ipmi	*ipmi;
-	bool		ipmi_bootdev_persistent;
 	int		(*get_ipmi_bootdev)(
 				struct platform_powerpc *platform,
 				uint8_t *bootdev, bool *persistent);
