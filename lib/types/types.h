@@ -188,6 +188,7 @@ struct config {
 
 	unsigned int		ipmi_bootdev;
 	bool			ipmi_bootdev_persistent;
+	bool			ipmi_bootdev_mailbox;
 
 	char			*http_proxy;
 	char			*https_proxy;

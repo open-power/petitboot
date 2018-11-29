@@ -31,6 +31,8 @@ const struct config *config_get(void);
 int config_set(struct config *config);
 void config_set_defaults(struct config *config);
 void config_set_autoboot(bool autoboot_enabled);
+void config_populate_bootdev(struct config *config,
+	const struct param_list *pl);
 void config_populate_all(struct config *config, const struct param_list *pl);
 
 void params_update_network_values(struct param_list *pl,

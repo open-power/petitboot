@@ -468,7 +468,7 @@ static int read_bootdev(void *ctx, char **pos, struct autoboot_option *opt)
 	return rc;
 }
 
-static void config_populate_bootdev(struct config *config,
+void config_populate_bootdev(struct config *config,
 	const struct param_list *pl)
 {
 	struct autoboot_option *opt, *new = NULL;
