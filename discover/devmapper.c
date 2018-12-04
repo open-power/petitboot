@@ -457,24 +457,32 @@ static int destroy_device(const char *dm_name)
 {
 	struct dm_task *task;
 	uint32_t cookie;
-	int rc = -1;
+	int rc, retries = 0;
 
+retry:
 	task = dm_task_create(DM_DEVICE_REMOVE);
 	if (!task) {
-		pb_log_fn("could not create dm_task\n");
+		pb_debug_fn("could not create dm_task\n");
 		return -1;
 	}
 
 	if (!dm_task_set_name(task, dm_name)) {
-		pb_log("No dm device named '%s'\n", dm_name);
+		rc = dm_task_get_errno(task);
+		pb_debug_fn("Couldn't set name for %s, %s (%d)\n",
+				dm_name, strerror(rc), rc);
 		goto out;
 	}
 
-	if (!set_cookie(task, &cookie))
+	if (!set_cookie(task, &cookie)) {
+		rc = dm_task_get_errno(task);
+		pb_debug_fn("set_cookie failed, %s (%d)\n", strerror(rc), rc);
 		goto out;
+	}
 
 	if (!dm_task_run(task)) {
-		pb_log("Unable to remove device '%s'\n", dm_name);
+		rc = dm_task_get_errno(task);
+		pb_debug_fn("Unable to remove device '%s', %s (%d)\n",
+				dm_name, strerror(rc), rc);
 		goto out;
 	}
 
@@ -485,6 +493,12 @@ static int destroy_device(const char *dm_name)
 
 out:
 	dm_task_destroy(task);
+	if (rc == EBUSY && retries < 5) {
+		pb_log_fn("Device busy, retry %d..\n", retries);
+		usleep(100000);
+		retries++;
+		goto retry;
+	}
 	return rc;
 }
 
