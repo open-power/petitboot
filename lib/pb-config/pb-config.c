@@ -83,6 +83,7 @@ struct config *config_copy(void *ctx, const struct config *src)
 
 	dest->ipmi_bootdev = src->ipmi_bootdev;
 	dest->ipmi_bootdev_persistent = src->ipmi_bootdev_persistent;
+	dest->ipmi_bootdev_mailbox = src->ipmi_bootdev_mailbox;
 
 	dest->allow_writes = src->allow_writes;
 

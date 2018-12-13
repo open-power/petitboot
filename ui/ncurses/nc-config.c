@@ -34,7 +34,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	49
+#define N_FIELDS	51
 
 extern struct help_text config_help_text;
 
@@ -67,6 +67,7 @@ struct config_screen {
 
 	bool			autoboot_enabled;
 	bool			ipmi_override;
+	bool			ipmi_mailbox;
 	bool			net_override;
 
 	struct {
@@ -85,6 +86,9 @@ struct config_screen {
 		struct nc_widget_label		*ipmi_type_l;
 		struct nc_widget_label		*ipmi_clear_l;
 		struct nc_widget_button		*ipmi_clear_b;
+
+		struct nc_widget_label		*ipmi_mailbox_l;
+		struct nc_widget_button		*ipmi_mailbox_b;
 
 		struct nc_widget_label		*network_l;
 		struct nc_widget_select		*network_f;
@@ -439,6 +443,27 @@ static void ipmi_clear_click(void *arg)
 	screen->exit = true;
 }
 
+static void ipmi_clear_mailbox_click(void *arg)
+{
+	struct config_screen *screen = arg;
+	struct config *config;
+	int rc;
+
+	config = config_copy(screen, screen->cui->config);
+	config->ipmi_bootdev_mailbox = false;
+	config->safe_mode = false;
+
+	rc = cui_send_config(screen->cui, config);
+	talloc_free(config);
+
+	if (rc)
+		pb_log("cui_send_config failed!\n");
+	else
+		pb_debug("config sent!\n");
+	screen->exit = true;
+}
+
+
 static int layout_pair(struct config_screen *screen, int y,
 		struct nc_widget_label *label,
 		struct nc_widget *field)
@@ -542,6 +567,18 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		widget_set_visible(wl, true);
 		widget_set_visible(wf, true);
 		widget_move(wl, y, screen->label_x);
+		widget_move(wf, y, screen->field_x);
+		y += 1;
+	}
+
+	if (screen->ipmi_mailbox) {
+		wl = widget_label_base(screen->widgets.ipmi_mailbox_l);
+		widget_set_visible(wl, true);
+		widget_move(wl, y, screen->label_x);
+		y += 1;
+
+		wf = widget_button_base(screen->widgets.ipmi_mailbox_b);
+		widget_set_visible(wf, true);
 		widget_move(wf, y, screen->field_x);
 		y += 1;
 	}
@@ -988,6 +1025,16 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 				_("Clear IPMI override now"),
 				ipmi_clear_click, screen);
 		screen->ipmi_override = true;
+	}
+
+	if (config->ipmi_bootdev_mailbox) {
+		screen->widgets.ipmi_mailbox_l = widget_new_label(set, 0, 0,
+				_("IPMI boot order mailbox config present"));
+		screen->widgets.ipmi_mailbox_b = widget_new_button(set, 0, 0,
+				strncols(_("Clear IPMI boot order mailbox now")) + 10,
+				_("Clear IPMI boot order mailbox now"),
+				ipmi_clear_mailbox_click, screen);
+		screen->ipmi_mailbox = true;
 	}
 
 	screen->widgets.network_l = widget_new_label(set, 0, 0, _("Network:"));
