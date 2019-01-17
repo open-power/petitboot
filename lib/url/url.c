@@ -265,14 +265,21 @@ int addr_scheme(const char *address)
 char *pb_url_to_string(struct pb_url *url)
 {
 	const struct pb_scheme_info *scheme = pb_url_scheme_info(url->scheme);
+	char *str, *port;
 	assert(scheme);
 
+	port = url->port ? talloc_asprintf(url, ":%s", url->port) : NULL;
+
 	if (scheme->has_host && addr_scheme(url->host) == AF_INET6)
-		return talloc_asprintf(url, "%s://[%s]%s", scheme->str,
-				url->host, url->path);
+		str = talloc_asprintf(url, "%s://[%s]%s%s", scheme->str,
+				url->host, port ?: "", url->path);
 	else
-		return talloc_asprintf(url, "%s://%s%s", scheme->str,
-				scheme->has_host ? url->host : "", url->path);
+		str = talloc_asprintf(url, "%s://%s%s%s", scheme->str,
+				scheme->has_host ? url->host : "",
+				port ?: "", url->path);
+
+	talloc_free(port);
+	return str;
 }
 
 static void pb_url_update_full(struct pb_url *url)
