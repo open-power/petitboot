@@ -65,6 +65,7 @@ parser_TESTS = \
 	test/parser/test-pxe-non-url-pathprefix-with-conf \
 	test/parser/test-pxe-pathprefix-discover \
 	test/parser/test-pxe-pathprefix-discover-mac \
+	test/parser/test-pxe-pathprefix-port \
 	test/parser/test-pxe-path-resolve-relative \
 	test/parser/test-pxe-path-resolve-absolute \
 	test/parser/test-pxe-discover-bootfile-root \

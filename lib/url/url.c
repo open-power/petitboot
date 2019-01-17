@@ -234,10 +234,17 @@ bool is_url(const char *str)
 char *pb_url_to_string(struct pb_url *url)
 {
 	const struct pb_scheme_info *scheme = pb_url_scheme_info(url->scheme);
+	char *str, *port;
 	assert(scheme);
 
-	return talloc_asprintf(url, "%s://%s%s", scheme->str,
-			scheme->has_host ? url->host : "", url->path);
+	port = url->port ? talloc_asprintf(url, ":%s", url->port) : NULL;
+
+	str = talloc_asprintf(url, "%s://%s%s%s", scheme->str,
+			scheme->has_host ? url->host : "",
+			port ?: "", url->path);
+
+	talloc_free(port);
+	return str;
 }
 
 static void pb_url_update_full(struct pb_url *url)
