@@ -365,13 +365,29 @@ static int discover_server_handle_auth_message(struct client *client,
 					_("Password updated successfully"));
 		}
 		break;
+	case AUTH_MSG_DECRYPT:
+		if (!client->can_modify) {
+			pb_log("Unauthenticated client tried to open encrypted device %s\n",
+					auth_msg->decrypt_dev.device_id);
+			rc = -1;
+			status->type = STATUS_ERROR;
+			status->message = talloc_asprintf(status,
+					_("Must authenticate before opening encrypted device"));
+			break;
+		}
+
+		device_handler_open_encrypted_dev(client->server->device_handler,
+				auth_msg->decrypt_dev.password,
+				auth_msg->decrypt_dev.device_id);
+		break;
 	default:
 		pb_log("%s: unknown op\n", __func__);
 		rc = -1;
 		break;
 	}
 
-	write_boot_status_message(client->server, client, status);
+	if (status->message)
+		write_boot_status_message(client->server, client, status);
 	talloc_free(status);
 
 	return rc;

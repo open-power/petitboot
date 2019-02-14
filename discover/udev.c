@@ -106,7 +106,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		"swap",
 		NULL,
 	};
-	bool cdrom, usb;
+	bool cdrom, usb, luks = false;
 
 	typestr = udev_device_get_devtype(dev);
 	if (!typestr) {
@@ -142,11 +142,18 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		}
 	}
 
-	/* Ignore any device mapper devices that aren't logical volumes */
+	/*
+	 * Ignore any device mapper devices that aren't logical volumes or
+	 * opened encrypted devices
+	 */
 	devname = udev_device_get_property_value(dev, "DM_NAME");
-	if (devname && ! udev_device_get_property_value(dev, "DM_LV_NAME")) {
-		pb_debug("SKIP: dm-device %s\n", devname);
-		return 0;
+	if (devname) {
+		if (device_handler_found_crypt_device(udev->handler, devname)) {
+			luks = true;
+		} else if (!udev_device_get_property_value(dev, "DM_LV_NAME")) {
+			pb_debug("SKIP: dm-device %s\n", devname);
+			return 0;
+		}
 	}
 
 	type = udev_device_get_property_value(dev, "ID_FS_TYPE");
@@ -216,15 +223,31 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	usb = !!udev_device_get_property_value(dev, "ID_USB_DRIVER");
 	if (cdrom)
 		ddev->device->type = DEVICE_TYPE_OPTICAL;
+	else if (strncmp(type, "crypto_LUKS", strlen("crypto_LUKS")) == 0)
+		ddev->device->type = DEVICE_TYPE_LUKS;
 	else
 		ddev->device->type = usb ? DEVICE_TYPE_USB : DEVICE_TYPE_DISK;
 
 	udev_setup_device_params(dev, ddev);
 
+	/*
+	 * Don't perform discovery on encrypted devices, just register and
+	 * notify clients.
+	 */
+	if (ddev->device->type == DEVICE_TYPE_LUKS) {
+		pb_log("Notifying clients about encrypted device %s\n",
+				name);
+		device_handler_add_encrypted_dev(udev->handler, ddev);
+		return 0;
+	}
+
 	/* Create a snapshot for all disk devices */
 	if ((ddev->device->type == DEVICE_TYPE_DISK ||
 	     ddev->device->type == DEVICE_TYPE_USB))
 		devmapper_init_snapshot(udev->handler, ddev);
+
+	/* Note if this is an opened LUKS device */
+	ddev->crypt_device = luks;
 
 	device_handler_discover(udev->handler, ddev);
 

@@ -116,3 +116,9 @@ void discover_server_notify_plugins_remove(struct discover_server *server)
 {
 	(void)server;
 }
+
+int devmapper_destroy_snapshot(struct discover_device *device)
+{
+	(void)device;
+	return 0;
+}

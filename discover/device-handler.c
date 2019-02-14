@@ -60,6 +60,13 @@ struct progress_info {
 	struct list_item	list;
 };
 
+struct crypt_info {
+	struct discover_device	*source_device;
+	char			*dm_name;
+
+	struct list_item	list;
+};
+
 struct device_handler {
 	struct discover_server	*server;
 	int			dry_run;
@@ -95,6 +102,8 @@ struct device_handler {
 	struct plugin_option	**plugins;
 	unsigned int		n_plugins;
 	bool			plugin_installing;
+
+	struct list		crypt_devices;
 };
 
 static int mount_device(struct discover_device *dev);
@@ -265,8 +274,29 @@ void device_handler_destroy(struct device_handler *handler)
 static int destroy_device(void *arg)
 {
 	struct discover_device *dev = arg;
+	struct process *p;
 
 	umount_device(dev);
+
+	devmapper_destroy_snapshot(dev);
+
+	if (dev->crypt_device) {
+		const char *argv[] = {
+			pb_system_apps.cryptsetup,
+			"luksClose",
+			dev->device->id,
+			NULL
+		};
+
+		p = process_create(dev);
+		p->path = pb_system_apps.cryptsetup;
+		p->argv = argv;
+
+		if (process_run_async(p)) {
+			pb_log("Failed to run cryptsetup\n");
+			return -1;
+		}
+	}
 
 	return 0;
 }
@@ -376,6 +406,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 	list_init(&handler->unresolved_boot_options);
 
 	list_init(&handler->progress);
+	list_init(&handler->crypt_devices);
 
 	/* set up our mount point base */
 	pb_mkdir_recursive(mount_base());
@@ -399,6 +430,7 @@ struct device_handler *device_handler_init(struct discover_server *server,
 void device_handler_reinit(struct device_handler *handler)
 {
 	struct discover_boot_option *opt, *tmp;
+	struct crypt_info *crypt, *c;
 	struct ramdisk_device *ramdisk;
 	struct config *config;
 	unsigned int i;
@@ -448,6 +480,11 @@ void device_handler_reinit(struct device_handler *handler)
 	handler->n_plugins = 0;
 
 	discover_server_notify_plugins_remove(handler->server);
+
+	/* forget encrypted devices */
+	list_for_each_entry_safe(&handler->crypt_devices, crypt, c, list)
+		talloc_free(crypt);
+	list_init(&handler->crypt_devices);
 
 	set_env_variables(config_get());
 
@@ -1228,6 +1265,116 @@ void device_handler_release_ramdisk(struct discover_device *device)
 	ramdisk->sectors = 0;
 
 	device->ramdisk = NULL;
+}
+
+/*
+ * Check if a device name matches the name of an encrypted device that has been
+ * opened. If it matches remove it from the list and remove the original crypt
+ * discover device.
+ */
+bool device_handler_found_crypt_device(struct device_handler *handler,
+		const char *name)
+{
+	struct crypt_info *crypt, *c;
+
+	list_for_each_entry_safe(&handler->crypt_devices, crypt, c, list) {
+		if (!strncmp(crypt->dm_name, name, strlen(crypt->dm_name))) {
+			device_handler_remove(handler, crypt->source_device);
+			list_remove(&crypt->list);
+			talloc_free(crypt);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static void cryptsetup_cb(struct process *process)
+{
+	struct device_handler *handler = process->data;
+	struct crypt_info *crypt, *c;
+
+	if (process->exit_status == 0)
+		return;
+	device_handler_status_err(handler,
+			_("Failed to open encrypted device %s"),
+			process->argv[2]);
+
+	/*
+	 * Failed to open the device; stop tracking it, but don't remove
+	 * the source device.
+	 */
+	list_for_each_entry_safe(&handler->crypt_devices, crypt, c, list) {
+		if (!strncmp(crypt->dm_name, process->argv[3],
+					strlen(crypt->dm_name))) {
+			list_remove(&crypt->list);
+			talloc_free(crypt);
+			break;
+		}
+	}
+}
+
+void device_handler_open_encrypted_dev(struct device_handler *handler,
+		char *password, char *device_id)
+{
+	struct discover_device *dev;
+	struct crypt_info *crypt;
+	const char *device_path, **argv;
+	struct process *p;
+	char *name;
+	int result;
+
+	dev = device_lookup_by_id(handler, device_id);
+	if (!dev) {
+		pb_log_fn("Can't find device %s\n", device_id);
+		device_handler_status_err(handler,
+				_("Encrypted device %s does not exist"),
+				device_id);
+		return;
+	}
+
+	device_path = dev->device_path;
+	name = talloc_asprintf(handler, "luks_%s", device_id);
+
+	p = process_create(handler);
+	/* talloc argv under the process so we can access it in cryptsetup_cb */
+	argv = talloc_zero_array(p, const char *, 6);
+	argv[0] = talloc_strdup(argv, pb_system_apps.cryptsetup);
+	argv[1] = talloc_asprintf(argv, "luksOpen");
+	argv[2] = talloc_strdup(argv, device_path);
+	argv[3] = talloc_strdup(argv, name);
+	argv[4] = talloc_asprintf(argv, "-");
+	argv[5] = NULL;
+
+	p->path = pb_system_apps.cryptsetup;
+	p->argv = (const char **)argv;
+	p->exit_cb = cryptsetup_cb;
+	p->data = handler;
+	p->keep_stdout = true;
+	p->pipe_stdin = talloc_asprintf(p, "%s\n", password);
+
+	result = process_run_async(p);
+	if (result) {
+		pb_log("Failed to run cryptsetup\n");
+		return;
+	}
+
+	crypt = talloc(handler, struct crypt_info);
+	crypt->source_device = dev;
+	crypt->dm_name = name;
+	talloc_steal(crypt, name);
+	list_add(&handler->crypt_devices, &crypt->list);
+}
+
+void device_handler_add_encrypted_dev(struct device_handler *handler,
+		struct discover_device *dev)
+{
+	system_info_register_blockdev(dev->device->id, dev->uuid, "");
+	discover_server_notify_device_add(handler->server,
+					  dev->device);
+	dev->notified = true;
+	if (!device_lookup_by_uuid(handler, dev->uuid))
+		device_handler_add_device(handler, dev);
 }
 
 /* Start discovery on a hotplugged device. The device will be in our devices
@@ -2121,7 +2268,6 @@ static int umount_device(struct discover_device *dev)
 		return -1;
 
 	dev->mounted = false;
-	devmapper_destroy_snapshot(dev);
 
 	pb_rmdir_recursive(mount_base(), dev->mount_path);
 

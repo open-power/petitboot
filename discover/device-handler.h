@@ -33,6 +33,7 @@ struct discover_device {
 	bool			mounted;
 	bool			mounted_rw;
 	bool			unmount;
+	bool			crypt_device;
 
 	bool			notified;
 
@@ -89,6 +90,9 @@ const struct plugin_option *device_handler_get_plugin(
 struct network *device_handler_get_network(
 		const struct device_handler *handler);
 
+bool device_handler_found_crypt_device(struct device_handler *handler,
+		const char *name);
+
 struct discover_device *discover_device_create(struct device_handler *handler,
 		const char *uuid, const char *id);
 void device_handler_add_device(struct device_handler *handler,
@@ -98,6 +102,10 @@ void device_handler_add_ramdisk(struct device_handler *handler,
 struct ramdisk_device *device_handler_get_ramdisk(
 		struct device_handler *handler);
 void device_handler_release_ramdisk(struct discover_device *device);
+void device_handler_open_encrypted_dev(struct device_handler *handler,
+		char *password, char *device_id);
+void device_handler_add_encrypted_dev(struct device_handler *handler,
+		struct discover_device *dev);
 int device_handler_discover(struct device_handler *handler,
 		struct discover_device *dev);
 int device_handler_dhcp(struct device_handler *handler,
