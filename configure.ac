@@ -426,6 +426,7 @@ DEFINE_HOST_PROG(PB_EXEC, pb-exec, [/usr/sbin/pb-exec])
 DEFINE_HOST_PROG(SH, sh, [/bin/sh])
 DEFINE_HOST_PROG(SCSI_RESCAN, scsi-rescan, [/usr/sbin/scsi-rescan])
 DEFINE_HOST_PROG(DMIDECODE, dmidecode, [/sbin/dmidecode])
+DEFINE_HOST_PROG(CRYPTSETUP, CRYPTSETUP, [/usr/sbin/cryptsetup])
 
 AC_ARG_WITH(
     [tftp],

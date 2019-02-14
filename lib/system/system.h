@@ -21,6 +21,7 @@ struct pb_system_apps {
 	const char *sh;
 	const char *scsi_rescan;
 	const char *dmidecode;
+	const char *cryptsetup;
 };
 
 extern const struct pb_system_apps pb_system_apps;
