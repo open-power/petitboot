@@ -24,6 +24,7 @@ struct auth_screen;
 
 struct auth_screen *auth_screen_init(struct cui *cui,
 		WINDOW *pad, bool set_password,
+		const struct device *dev,
 		void (callback)(struct nc_scr *),
 		void (*on_exit)(struct cui *));
 

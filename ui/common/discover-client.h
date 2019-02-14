@@ -113,6 +113,9 @@ int discover_client_send_authenticate(struct discover_client *client,
 /* Set a new system password, authenticating with the current password */
 int discover_client_send_set_password(struct discover_client *client,
 		char *password, char *new_password);
+/* Send a password to open an encrypted device */
+int discover_client_send_open_luks_device(struct discover_client *client,
+		char *password, char *device_id);
 
 /* send a temporary autoboot override */
 int discover_client_send_temp_autoboot(struct discover_client *client,

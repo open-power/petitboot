@@ -360,7 +360,7 @@ static int menu_reinit_execute(struct pmenu_item *item)
 		return 0;
 
 	cui->auth_screen = auth_screen_init(cui, cui->current->main_ncw,
-			false, menu_reinit_cb, cui_auth_exit);
+			false, NULL, menu_reinit_cb, cui_auth_exit);
 
 	if (cui->auth_screen)
 		cui_set_current(cui, auth_screen_scr(cui->auth_screen));
@@ -403,6 +403,35 @@ static int cui_boot_check(struct pmenu_item *item)
 		return cui_boot(item);
 
 	cui_show_auth(cui, item->pmenu->scr.main_ncw, false, cui_boot_cb);
+
+	return 0;
+}
+
+static void cui_luks_cb(struct nc_scr *scr)
+{
+	struct cui_opt_data *cod;
+	struct pmenu_item *item;
+	struct pmenu *menu;
+	struct cui *cui;
+
+	menu = pmenu_from_scr(scr);
+	item = pmenu_find_selected(menu);
+	cod = cod_from_item(item);
+	cui = cui_from_item(item);
+
+	cui_show_open_luks(cui, scr->main_ncw, cod->dev);
+}
+
+static int cui_open_luks_device(struct pmenu_item *item)
+{
+	struct cui_opt_data *cod = cod_from_item(item);
+	struct cui *cui = cui_from_item(item);
+
+	if (discover_client_authenticated(cui->client))
+		cui_show_open_luks(cui, item->pmenu->scr.main_ncw, cod->dev);
+	else
+		cui_show_auth(cui, item->pmenu->scr.main_ncw, false,
+				cui_luks_cb);
 
 	return 0;
 }
@@ -707,13 +736,28 @@ void cui_show_auth(struct cui *cui, WINDOW *parent, bool set_password,
 	if (cui->auth_screen)
 		return;
 
-	cui->auth_screen = auth_screen_init(cui, parent, set_password,
+	cui->auth_screen = auth_screen_init(cui, parent, set_password, NULL,
 			callback, cui_auth_exit);
 
 	if (cui->auth_screen)
 		cui_set_current(cui, auth_screen_scr(cui->auth_screen));
 }
 
+void cui_show_open_luks(struct cui *cui, WINDOW *parent,
+		const struct device *dev)
+{
+	if (!cui->current)
+		return;
+
+	if (cui->auth_screen)
+		return;
+
+	cui->auth_screen = auth_screen_init(cui, parent, false, dev,
+			NULL, cui_auth_exit);
+
+	if (cui->auth_screen)
+		cui_set_current(cui, auth_screen_scr(cui->auth_screen));
+}
 /**
  * cui_set_current - Set the currently active screen and redraw it.
  */
@@ -899,7 +943,7 @@ static void cui_handle_resize(struct cui *cui)
 }
 
 /**
- * cui_device_add - Client device_add callback.
+ * cui_boot_option_add - Client boot_option_add callback.
  *
  * Creates menu_items for all the device boot_options and inserts those
  * menu_items into the main menu.  Redraws the main menu if it is active.
@@ -1075,6 +1119,113 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 	if (cui->current == &menu->scr)
 		nc_scr_post(cui->current);
 	if (plugin_option && cui->current == &cui->main->scr)
+		nc_scr_post(cui->current);
+
+	return 0;
+}
+
+/**
+ * cui_device_add - Client device_add callback
+ *
+ * For ncurses this is only used to specially handle encrypted devices and
+ * create a special device header for them.
+ * Normal devices are handled as part of the cui_boot_option_add() process.
+ */
+static int cui_device_add(struct device *dev, void *arg)
+{
+	struct cui *cui = cui_from_arg(arg);
+	struct pmenu *menu = cui->main;
+	struct pmenu_item *dev_hdr;
+	unsigned int insert_pt, i;
+	struct cui_opt_data *cod;
+	struct blockdev_info *bd;
+	struct system_info *sys;
+	int result, rows, cols;
+	ITEM *selected;
+	char *name;
+
+	/* Nothing to do */
+	if (dev->type != DEVICE_TYPE_LUKS) {
+		pb_log("Ignoring dev %s with type %s\n",
+				dev->id, device_type_display_name(dev->type));
+		return 0;
+	}
+
+	pb_log("Creating header for encrypted device %s\n", dev->id);
+
+	/* Create a dev_hdr for the encrypted device */
+	/* Find block info */
+	sys = cui->sysinfo;
+	name = NULL;
+	for (i = 0; sys && i < sys->n_blockdevs; i++) {
+		bd = sys->blockdevs[i];
+		if (!strcmp(dev->id, bd->name)) {
+			name = talloc_asprintf(menu, "[%s: %s / %s]",
+				device_type_display_name(dev->type),
+				bd->name, bd->uuid);
+			break;
+		}
+	}
+	if (!name) {
+		name = talloc_asprintf(menu, "[%s: \"%s\"]",
+			device_type_display_name(dev->type),
+			dev->id);
+	}
+
+	dev_hdr = pmenu_item_create(menu, name);
+	if (!dev_hdr) {
+		pb_log_fn("Failed to create header item\n");
+		return -1;
+	}
+	talloc_free(name);
+
+	dev_hdr->on_execute = cui_open_luks_device;
+
+	cod = talloc_zero(dev_hdr, struct cui_opt_data);
+	cod->name = talloc_strdup(dev_hdr, dev->id);
+	cod->dev = dev;
+	dev_hdr->data = cod;
+
+	if (cui->current == &cui->main->scr)
+		nc_scr_unpost(cui->current);
+
+	/* This disconnects items array from menu. */
+	result = set_menu_items(menu->ncm, NULL);
+
+	if (result) {
+		pb_log_fn("set_menu_items failed: %d\n", result);
+		return -1;
+	}
+
+	insert_pt = pmenu_grow(menu, 1);
+	pmenu_item_insert(menu, dev_hdr, insert_pt);
+	pb_log("Added header for encrypted device %s\n", dev->id);
+
+	selected = current_item(menu->ncm);
+	menu_format(menu->ncm, &rows, &cols);
+
+	/* Re-attach the items array. */
+	result = set_menu_items(menu->ncm, menu->items);
+
+	if (result)
+		pb_log_fn("set_menu_items failed: %d\n", result);
+
+	if (!item_visible(selected)) {
+		int idx, top;
+
+		top = top_row(menu->ncm);
+		idx = item_index(selected);
+
+		/* If our index is above the current top row, align
+		 * us to the new top. Otherwise, align us to the new
+		 * bottom */
+		top = top < idx ? idx - rows + 1 : idx;
+
+		set_top_row(menu->ncm, top);
+		set_current_item(menu->ncm, selected);
+	}
+
+	if (cui->current == &menu->scr)
 		nc_scr_post(cui->current);
 
 	return 0;
@@ -1482,6 +1633,12 @@ int cui_send_set_password(struct cui *cui, char *password, char *new_password)
 			new_password);
 }
 
+int cui_send_open_luks_device(struct cui *cui, char *password, char *device_id)
+{
+	return discover_client_send_open_luks_device(cui->client, password,
+			device_id);
+}
+
 void cui_send_reinit(struct cui *cui)
 {
 	discover_client_send_reinit(cui->client);
@@ -1629,7 +1786,7 @@ fail_setup:
 }
 
 static struct discover_client_ops cui_client_ops = {
-	.device_add = NULL,
+	.device_add = cui_device_add,
 	.boot_option_add = cui_boot_option_add,
 	.device_remove = cui_device_remove,
 	.plugin_option_add = cui_plugin_option_add,

@@ -42,6 +42,7 @@ struct auth_screen {
 	void 			(*process_key)(struct nc_scr *, int);
 
 	bool			set_password;
+	const struct device	*dev;
 	void			(*callback)(struct nc_scr *);
 	int			offset_y;
 	int			label_x;
@@ -144,6 +145,9 @@ static void ok_click(void *arg)
 	if (screen->set_password) {
 		new_password = widget_textbox_get_value(screen->widgets.new_f);
 		rc = cui_send_set_password(screen->cui, password, new_password);
+	} else if (screen->dev) {
+		rc = cui_send_open_luks_device(screen->cui, password,
+				screen->dev->id);
 	} else
 		rc = cui_send_authenticate(screen->cui, password);
 
@@ -194,6 +198,7 @@ static void auth_screen_layout_widgets(struct auth_screen *screen)
 static void auth_screen_draw(struct auth_screen *screen)
 {
 	struct nc_widgetset *set;
+	char *label;
 
 	set = widgetset_create(screen, screen->scr.main_ncw,
 			screen->scr.sub_ncw);
@@ -203,10 +208,20 @@ static void auth_screen_draw(struct auth_screen *screen)
 	}
 	screen->widgetset = set;
 
-	screen->widgets.title_a_l = widget_new_label(set, 0, 0,
-			_("This action requires authorisation."));
-	screen->widgets.title_b_l = widget_new_label(set, 0, 0,
-			_("Please enter the system password."));
+	if (screen->dev) {
+		label = talloc_asprintf(screen,
+				_("Opening encrypted device %s"),
+				screen->dev->id);
+		screen->widgets.title_a_l = widget_new_label(set, 0, 0, label);
+		screen->widgets.title_b_l = widget_new_label(set, 0, 0,
+				_("Please enter the disk password."));
+		talloc_free(label);
+	} else {
+		screen->widgets.title_a_l = widget_new_label(set, 0, 0,
+				_("This action requires authorisation."));
+		screen->widgets.title_b_l = widget_new_label(set, 0, 0,
+				_("Please enter the system password."));
+	}
 
 	screen->widgets.password_f = widget_new_textbox_hidden(set, 0, 0,
 			COLS - 20 - 20, "", true);
@@ -236,6 +251,7 @@ static int auth_screen_destroy(void *arg)
 
 struct auth_screen *auth_screen_init(struct cui *cui,
 		WINDOW *parent, bool set_password,
+		const struct device *dev,
 		void (*callback)(struct nc_scr *),
 		void (*on_exit)(struct cui *))
 {
@@ -246,6 +262,11 @@ struct auth_screen *auth_screen_init(struct cui *cui,
 	if (!cui || !parent)
 		return NULL;
 
+	if (set_password && dev) {
+		pb_log_fn("Incorrect parameters (set_password and device)\n");
+		return NULL;
+	}
+
 	screen = talloc_zero(cui, struct auth_screen);
 	if (!screen)
 		return NULL;
@@ -254,6 +275,7 @@ struct auth_screen *auth_screen_init(struct cui *cui,
 	screen->cui = cui;
 	screen->return_scr = cui->current;
 	screen->set_password = set_password;
+	screen->dev = dev;
 	screen->callback = callback;
 	screen->on_exit = on_exit;
 	screen->label_x = 5;

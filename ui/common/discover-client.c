@@ -552,3 +552,28 @@ int discover_client_send_set_password(struct discover_client *client,
 	pb_log("sending auth message..\n");
 	return pb_protocol_write_message(client->fd, message);
 }
+
+int discover_client_send_open_luks_device(struct discover_client *client,
+		char *password, char *device_id)
+{
+	struct pb_protocol_message *message;
+	struct auth_message auth_msg;
+	int len;
+
+	auth_msg.op = AUTH_MSG_DECRYPT;
+	auth_msg.decrypt_dev.password = password;
+	auth_msg.decrypt_dev.device_id = device_id;
+
+	len = pb_protocol_authenticate_len(&auth_msg);
+
+	message = pb_protocol_create_message(client,
+				PB_PROTOCOL_ACTION_AUTHENTICATE, len);
+	if (!message)
+		return -1;
+
+	pb_log("serialising auth message..\n");
+	pb_protocol_serialise_authenticate(&auth_msg, message->payload, len);
+
+	pb_log("sending auth message..\n");
+	return pb_protocol_write_message(client->fd, message);
+}

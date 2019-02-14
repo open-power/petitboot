@@ -101,11 +101,14 @@ void cui_show_plugin(struct pmenu_item *item);
 void cui_show_plugin_menu(struct cui *cui);
 void cui_show_auth(struct cui *cui, WINDOW *parent, bool set_password,
 		void (*callback)(struct nc_scr *));
+void cui_show_open_luks(struct cui *cui, WINDOW *parent,
+		const struct device *dev);
 int cui_send_config(struct cui *cui, struct config *config);
 int cui_send_url(struct cui *cui, char *url);
 int cui_send_plugin_install(struct cui *cui, char *file);
 int cui_send_authenticate(struct cui *cui, char *password);
 int cui_send_set_password(struct cui *cui, char *password, char *new_password);
+int cui_send_open_luks_device(struct cui *cui, char *password, char *device_id);
 void cui_send_reinit(struct cui *cui);
 
 /* convenience routines */
