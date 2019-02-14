@@ -16,6 +16,8 @@ static const char *device_type_string(enum device_type type)
 		return "optical";
 	case DEVICE_TYPE_ANY:
 		return "any";
+	case DEVICE_TYPE_LUKS:
+		return "encrypted";
 	case DEVICE_TYPE_UNKNOWN:
 		return "unknown";
 	}

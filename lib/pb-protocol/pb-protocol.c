@@ -394,6 +394,10 @@ int pb_protocol_authenticate_len(struct auth_message *msg)
 		/* enum + password + password */
 		return 4 + 4 + optional_strlen(msg->set_password.password) +
 			4 + optional_strlen(msg->set_password.new_password);
+	case AUTH_MSG_DECRYPT:
+		/* enum + password + device id */
+		return 4 + 4 + optional_strlen(msg->decrypt_dev.password) +
+			4 + optional_strlen(msg->decrypt_dev.device_id);
 	default:
 		pb_log("%s: invalid input\n", __func__);
 		return 0;
@@ -749,6 +753,12 @@ int pb_protocol_serialise_authenticate(struct auth_message *msg,
 				msg->set_password.password);
 		pos += pb_protocol_serialise_string(pos,
 				msg->set_password.new_password);
+		break;
+	case AUTH_MSG_DECRYPT:
+		pos += pb_protocol_serialise_string(pos,
+				msg->decrypt_dev.password);
+		pos += pb_protocol_serialise_string(pos,
+				msg->decrypt_dev.device_id);
 		break;
 	default:
 		pb_log("%s: invalid msg\n", __func__);
@@ -1437,6 +1447,13 @@ int pb_protocol_deserialise_authenticate(struct auth_message *msg,
 			return -1;
 		if (read_string(msg, &pos, &len,
 					&msg->set_password.new_password))
+			return -1;
+		break;
+	case AUTH_MSG_DECRYPT:
+		if (read_string(msg, &pos, &len, &msg->decrypt_dev.password))
+			return -1;
+		if (read_string(msg, &pos, &len,
+					&msg->decrypt_dev.device_id))
 			return -1;
 		break;
 	default:

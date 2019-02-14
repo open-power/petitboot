@@ -35,6 +35,8 @@ const char *device_type_display_name(enum device_type type)
 		return _("Network");
 	case DEVICE_TYPE_ANY:
 		return _("Any");
+	case DEVICE_TYPE_LUKS:
+		return _("Encrypted Device");
 	case DEVICE_TYPE_UNKNOWN:
 	default:
 		return _("Unknown");
@@ -54,6 +56,8 @@ const char *device_type_name(enum device_type type)
 		return "network";
 	case DEVICE_TYPE_ANY:
 		return "any";
+	case DEVICE_TYPE_LUKS:
+		return "encrypted";
 	case DEVICE_TYPE_UNKNOWN:
 	default:
 		return "unknown";
@@ -72,6 +76,8 @@ enum device_type find_device_type(const char *str)
 		return DEVICE_TYPE_NETWORK;
 	if (!strncmp(str, "any", strlen("any")))
 		return DEVICE_TYPE_ANY;
+	if (!strncmp(str, "encrypted", strlen("encrypted")))
+		return DEVICE_TYPE_LUKS;
 
 	return DEVICE_TYPE_UNKNOWN;
 }

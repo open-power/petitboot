@@ -40,6 +40,7 @@ enum auth_msg_type {
 	AUTH_MSG_REQUEST,
 	AUTH_MSG_RESPONSE,
 	AUTH_MSG_SET,
+	AUTH_MSG_DECRYPT,
 };
 
 struct auth_message {
@@ -51,6 +52,10 @@ struct auth_message {
 			char	*password;
 			char	*new_password;
 		} set_password;
+		struct {
+			char	*password;
+			char	*device_id;
+		} decrypt_dev;
 	};
 };
 
