@@ -43,6 +43,7 @@ struct process {
 	void			*data;
 	waiter_cb		stdout_cb;
 	void			*stdout_data;
+	char			*pipe_stdin;
 
 	/* runtime data */
 	pid_t			pid;

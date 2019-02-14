@@ -50,6 +50,7 @@ struct process_info {
 	int			stdout_buf_len;
 	struct waiter		*stdout_waiter;
 	int			stdout_pipe[2];
+	int			stdin_pipe[2];
 	void			*orig_ctx;
 };
 
@@ -130,12 +131,37 @@ static int process_setup_stdout_pipe(struct process_info *procinfo)
 	return 0;
 }
 
+static void process_setup_stdin_parent(struct process_info *procinfo)
+{
+	FILE *in;
+
+	if (!procinfo->process.pipe_stdin)
+		return;
+
+	close(procinfo->stdin_pipe[0]);
+	in = fdopen(procinfo->stdin_pipe[1], "w");
+	if (!in) {
+		pb_log_fn("Failed to open stdin\n");
+		return;
+	}
+	fputs(procinfo->process.pipe_stdin, in);
+	fflush(in);
+}
+
+static void process_setup_stdin_child(struct process_info *procinfo)
+{
+	if (procinfo->process.pipe_stdin) {
+		close(procinfo->stdin_pipe[1]);
+		dup2(procinfo->stdin_pipe[0], STDIN_FILENO);
+	}
+}
 static void process_setup_stdout_parent(struct process_info *procinfo)
 {
 	if (!procinfo->process.keep_stdout || procinfo->process.raw_stdout)
 		return;
 
 	close(procinfo->stdout_pipe[1]);
+
 }
 
 static void process_setup_stdout_child(struct process_info *procinfo)
@@ -350,6 +376,11 @@ static int process_run_common(struct process_info *procinfo)
 	rc = process_setup_stdout_pipe(procinfo);
 	if (rc)
 		return rc;
+	if (procinfo->process.pipe_stdin) {
+		rc = pipe(procinfo->stdin_pipe);
+		if (rc)
+			return rc;
+	}
 
 	pid = fork();
 	if (pid < 0) {
@@ -359,6 +390,7 @@ static int process_run_common(struct process_info *procinfo)
 
 	if (pid == 0) {
 		process_setup_stdout_child(procinfo);
+		process_setup_stdin_child(procinfo);
 		if (procset->dry_run)
 			exit(EXIT_SUCCESS);
 		execvp(process->path, (char * const *)process->argv);
@@ -366,6 +398,7 @@ static int process_run_common(struct process_info *procinfo)
 	}
 
 	process_setup_stdout_parent(procinfo);
+	process_setup_stdin_parent(procinfo);
 	process->pid = pid;
 
 	return 0;
