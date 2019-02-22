@@ -15,16 +15,8 @@ if head=$(git rev-parse --short=8 --verify HEAD 2>/dev/null); then
 		suffix=-dirty
 	fi
 
-	if tag=$(git describe --tags --exact-match 2>/dev/null); then
-		# use a tag; remove any 'v' prefix from v<VERSION> tags
-		tag=${tag#v}
-		version=$(printf "%s%s" ${tag} ${suffix})
-	else
-		# Use the git commit revision for the package version, and add
-		# a date prefix for easy comparisons.
-		date=$(git log --pretty=format:"%ct" -1 HEAD)
-		version=$(printf "%($datefmt)T.g%s%s" ${date} ${head} ${suffix})
-	fi
+	tag=$(git describe --tags 2>/dev/null)
+	version=$(printf "%s%s" ${tag} ${suffix})
 else
 	# Check if a specific version is set, eg: by buildroot
 	if [ ! -z "$PETITBOOT_VERSION" ];
