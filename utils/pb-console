@@ -135,12 +135,11 @@ fi
 dmesg -n 1
 
 trap '' SIGINT
+trap 'reset; echo "SIGTERM received, booting..."; sleep 2' SIGTERM
 
 while :
 do
 	$ui $verbose_opt
 	reset
-	echo "Exiting petitboot. Type 'exit' to return."
-	echo "You may run 'pb-sos' to gather diagnostic data"
 	$shell
 done
