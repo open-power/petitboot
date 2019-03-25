@@ -657,10 +657,10 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		break;
 	case EVENT_ACTION_URL:
 		result = user_event_url(uev, event);
-		goto out;
+		break;
 	case EVENT_ACTION_DHCP:
 		result = user_event_dhcp(uev, event);
-		goto out;
+		break;
 	case EVENT_ACTION_BOOT:
 		result = user_event_boot(uev, event);
 		break;
@@ -671,13 +671,17 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 		result = user_event_plugin(uev, event);
 		break;
 	default:
+		result = -1;
 		break;
 	}
 
+	if (result)
+		pb_log_fn("failed to handle action %d\n", event->action);
+
 	/* user_event_url() and user_event_dhcp() will steal the event context,
 	 * but all others still need to free */
-	talloc_free(event);
-out:
+	if (talloc_parent(event) == uev)
+		talloc_free(event);
 	return;
 }
 
@@ -751,8 +755,11 @@ struct user_event *user_event_init(struct device_handler *handler,
 	}
 
 	/* Don't allow events from non-priviledged users */
-	chown(PBOOT_USER_EVENT_SOCKET, 0, 0);
-	chmod(PBOOT_USER_EVENT_SOCKET, 0660);
+	if (chown(PBOOT_USER_EVENT_SOCKET, 0, 0))
+		pb_log_fn("Error setting socket ownership: %m\n");
+	errno = 0;
+	if (chmod(PBOOT_USER_EVENT_SOCKET, 0660))
+		pb_log_fn("Error setting socket permissions: %m\n");
 
 	waiter_register_io(waitset, uev->socket, WAIT_IN,
 			user_event_process, uev);

@@ -1209,7 +1209,7 @@ void device_handler_add_ramdisk(struct device_handler *handler,
 	}
 
 	handler->ramdisks[i] = dev;
-	i = handler->n_ramdisks++;
+	handler->n_ramdisks++;
 }
 
 struct ramdisk_device *device_handler_get_ramdisk(

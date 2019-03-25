@@ -1052,7 +1052,9 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		struct pmenu_item *item;
 		unsigned int j;
 		result = set_menu_items(cui->main->ncm, NULL);
-		for (j = 0 ; j < cui->main->item_count; j++) {
+		if (result)
+			pb_log_fn("unset_menu_items failed: %d\n", result);
+		for (j = 0 ; j < cui->main->item_count && !result; j++) {
 			item = item_userptr(cui->main->items[j]);
 			if (item->on_execute != menu_plugin_execute)
 				continue;

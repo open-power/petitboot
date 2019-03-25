@@ -450,7 +450,8 @@ static void load_local(struct load_task *task)
 		result->status = LOAD_OK;
 	}
 
-	task->async_cb(task->result, task->async_data);
+	if (task->async_cb)
+		task->async_cb(task->result, task->async_data);
 }
 
 static void load_url_async_start_pending(struct load_task *task, int flags)

@@ -292,9 +292,14 @@ static bool ipxe_simple_parser(struct conf_context *ctx, char *buf, int len)
 			continue;
 		}
 
+		if (!name) {
+			pb_debug_fn("missing name from conf_get_pair\n");
+			continue;
+		}
+
 		/* All other parameters require a value */
 		if (!value) {
-			pb_debug("%s: '%s' missing value\n", __func__, name);
+			pb_debug_fn("'%s' missing value\n", name);
 			continue;
 		}
 

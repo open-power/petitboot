@@ -298,7 +298,7 @@ static int discover_server_handle_auth_message(struct client *client,
 {
 	struct status *status;
 	char *hash;
-	int rc;
+	int rc = 0;
 
 	status = talloc_zero(client, struct status);
 
@@ -403,7 +403,7 @@ static int discover_server_process_message(void *arg)
 	struct client *client = arg;
 	struct config *config;
 	char *url;
-	int rc;
+	int rc = 0;
 
 	message = pb_protocol_read_message(client, client->fd);
 
@@ -460,7 +460,7 @@ static int discover_server_process_message(void *arg)
 				talloc_free(status);
 			}
 		}
-		return 0;
+		return rc;
 	}
 
 	switch (message->action) {
@@ -537,7 +537,7 @@ static int discover_server_process_message(void *arg)
 			break;
 		}
 
-		rc = discover_server_handle_auth_message(client, auth_msg);
+		discover_server_handle_auth_message(client, auth_msg);
 		talloc_free(auth_msg);
 		break;
 	default:
@@ -791,8 +791,11 @@ struct discover_server *discover_server_init(struct waitset *waitset)
 	/* Allow all clients to communicate on this socket */
 	group = getgrnam("petitgroup");
 	if (group) {
-		chown(PB_SOCKET_PATH, 0, group->gr_gid);
-		chmod(PB_SOCKET_PATH, 0660);
+		if (chown(PB_SOCKET_PATH, 0, group->gr_gid))
+			pb_log_fn("Error setting socket ownership: %m\n");
+		errno = 0;
+		if (chmod(PB_SOCKET_PATH, 0660))
+			pb_log_fn("Error setting socket permissions: %m\n");
 	}
 
 	if (listen(server->socket, 8)) {

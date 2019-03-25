@@ -86,6 +86,8 @@ int builtin_load_env(struct grub2_script *script,
 
 	if (!rc) {
 		rc = parse_buf_to_env(script, buf, len);
+		if (rc)
+			pb_debug_fn("Failed to set env\n");
 		talloc_free(buf);
 	}
 

@@ -306,7 +306,6 @@ int parse_ipmi_interface_override(struct config *config, uint8_t *buf,
 			return -1;
 		}
 		ifconf->static_config.gateway = gatewaystr;
-		i += ipsize;
 	}
 
 	ifconf->override = true;

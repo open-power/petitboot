@@ -213,6 +213,8 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 		/* Then start the new image. */
 		opt = state_start_new_option(conf, state);
+		if (!opt)
+			pb_debug_fn("new opt is NULL\n");
 
 		state->boot_image = talloc_strdup(state, value);
 
@@ -235,6 +237,8 @@ static void yaboot_process_pair(struct conf_context *conf, const char *name,
 
 		/* Then start the new image. */
 		opt = state_start_new_option(conf, state);
+		if (!opt)
+			pb_debug_fn("new opt is NULL\n");
 
 		if (*value == '/') {
 			state->boot_image = talloc_strdup(state, value);

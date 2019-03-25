@@ -227,7 +227,7 @@ static void process_expansions(struct grub2_script *script,
 	}
 
 	/* we may have allocated an extra argv element but not populated it */
-	if (!argv->argv[argv->argc - 1])
+	if (argv->argv && !argv->argv[argv->argc - 1])
 		argv->argc--;
 }
 
@@ -488,6 +488,9 @@ static void set_fallback_default(struct grub2_script *script)
 void script_execute(struct grub2_script *script)
 {
 	struct discover_boot_option *opt, *tmp;
+
+	if (!script)
+		return;
 
 	init_env(script);
 	statements_execute(script, script->statements);

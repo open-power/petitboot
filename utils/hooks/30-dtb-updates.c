@@ -605,7 +605,7 @@ out:
 int main(void)
 {
 	struct offb_ctx *ctx;
-	int rc;
+	int rc = 0;
 
 	ctx = talloc_zero(NULL, struct offb_ctx);
 

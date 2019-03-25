@@ -99,13 +99,17 @@ int pb_protocol_serialise_string(char *pos, const char *str)
 {
 	int len = 0;
 
+	if (!pos)
+		return 0;
+
 	if (str)
 		len = strlen(str);
 
 	*(uint32_t *)pos = __cpu_to_be32(len);
 	pos += sizeof(uint32_t);
 
-	memcpy(pos, str, len);
+	if (str)
+		memcpy(pos, str, len);
 
 	return len + sizeof(uint32_t);
 }
@@ -417,9 +421,8 @@ int pb_protocol_serialise_device(const struct device *dev,
 	pos += pb_protocol_serialise_string(pos, dev->icon_file);
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_boot_option(const struct boot_option *opt,
@@ -447,9 +450,8 @@ int pb_protocol_serialise_boot_option(const struct boot_option *opt,
 	pos += 4;
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_boot_command(const struct boot_command *boot,
@@ -466,9 +468,8 @@ int pb_protocol_serialise_boot_command(const struct boot_command *boot,
 	pos += pb_protocol_serialise_string(pos, boot->console);
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_boot_status(const struct status *status,
@@ -488,9 +489,8 @@ int pb_protocol_serialise_boot_status(const struct status *status,
 	pos += sizeof(bool);
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
@@ -561,9 +561,8 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 	pos += HWADDR_SIZE;
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 static int pb_protocol_serialise_config_interface(char *buf,
@@ -669,9 +668,8 @@ int pb_protocol_serialise_config(const struct config *config,
 	pos += pb_protocol_serialise_string(pos, config->lang);
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_url(const char *url, char *buf, int buf_len)
@@ -681,9 +679,8 @@ int pb_protocol_serialise_url(const char *url, char *buf, int buf_len)
 	pos += pb_protocol_serialise_string(pos, url);
 
 	assert(pos <=buf+buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_plugin_option(const struct plugin_option *opt,
@@ -707,9 +704,8 @@ int pb_protocol_serialise_plugin_option(const struct plugin_option *opt,
 		pos += pb_protocol_serialise_string(pos, opt->executables[i]);
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_temp_autoboot(const struct autoboot_option *opt,
@@ -727,9 +723,9 @@ int pb_protocol_serialise_temp_autoboot(const struct autoboot_option *opt,
 		pos += pb_protocol_serialise_string(pos, opt->uuid);
 	}
 
-	(void)buf_len;
+	assert(pos <= buf + buf_len);
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_serialise_authenticate(struct auth_message *msg,
@@ -766,9 +762,8 @@ int pb_protocol_serialise_authenticate(struct auth_message *msg,
 	};
 
 	assert(pos <= buf + buf_len);
-	(void)buf_len;
 
-	return 0;
+	return (pos <= buf + buf_len) ? 0 : -1;
 }
 
 int pb_protocol_write_message(int fd, struct pb_protocol_message *message)
@@ -948,7 +943,7 @@ int pb_protocol_deserialise_boot_option(struct boot_option *opt,
 	if (read_u32(&pos, &len, &opt->type))
 		return -1;
 
-	rc = 0;
+	rc = (pos <= message->payload + message->payload_len) ? 0 : -1;
 
 out:
 	return rc;

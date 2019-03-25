@@ -101,7 +101,6 @@ static void event_parse_params(struct event *event, const char *buf, int len)
 		sep = memchr(buf, '=', param_len);
 		if (!sep) {
 			name_len = param_len;
-			value_len = 0;
 			param->value = "";
 		} else {
 			name_len = sep - buf;

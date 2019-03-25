@@ -43,6 +43,9 @@ struct config *config_copy(void *ctx, const struct config *src)
 	struct config *dest;
 	unsigned int i;
 
+	if (!src)
+		return NULL;
+
 	dest = talloc_zero(ctx, struct config);
 	dest->autoboot_enabled = src->autoboot_enabled;
 	dest->autoboot_timeout_sec = src->autoboot_timeout_sec;
@@ -88,11 +91,14 @@ struct config *config_copy(void *ctx, const struct config *src)
 	dest->allow_writes = src->allow_writes;
 
 	dest->n_consoles = src->n_consoles;
-	if (src->consoles)
+	if (src->consoles) {
 		dest->consoles = talloc_array(dest, char *, src->n_consoles);
-	for (i = 0; i < src->n_consoles && src->n_consoles; i++)
-		dest->consoles[i] = talloc_strdup(dest->consoles,
+		for (i = 0; i < src->n_consoles && src->n_consoles; i++)
+			if (src->consoles[i])
+				dest->consoles[i] = talloc_strdup(
+						dest->consoles,
 						src->consoles[i]);
+	}
 
 	if (src->boot_console)
 		dest->boot_console = talloc_strdup(dest, src->boot_console);
