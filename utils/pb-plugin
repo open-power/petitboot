@@ -232,8 +232,8 @@ do_install()
 	done
 
 	pb-event plugin@local \
-		name=$PLUGIN_NAME id=$PLUGIN_ID version=$PLUGIN_VERSION \
-		vendor=$PLUGIN_VENDOR vendor_id=$PLUGIN_VENDOR_ID \
+		name="$PLUGIN_NAME" id=$PLUGIN_ID version=$PLUGIN_VERSION \
+		vendor="$PLUGIN_VENDOR" vendor_id=$PLUGIN_VENDOR_ID \
 		date=$PLUGIN_DATE executables="$PLUGIN_EXECUTABLES" \
 		source_file=$url installed="yes"
 
