@@ -8,11 +8,29 @@ matrix:
   include:
     - os: linux
       name: "linux"
+      env: DOCS="true"
     - os: linux-ppc64le
       name: "linux-ppc64le"
+
+addons:
+  apt:
+    packages:
+      - python-pip
 
 before_script:
  - ./docker/build-builder
 
+install:
+ - "sudo pip install sphinx"
 script:
  - ./docker/build-pb --check --verbose --configure-opts "--enable-platform-arm64 --enable-platform-powerpc"
+ - if [ "$DOCS" == "true" ]; then cd doc/; make html; fi
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  local_dir: "doc/_build/html"
+  on:
+    branch: master
+    condition: "$DOCS = true"
