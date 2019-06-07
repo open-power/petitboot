@@ -7,7 +7,7 @@ With autoboot enabled Petitboot will consider the relative priority of each new 
 
 Note that a boot option must be marked for autoboot ("default") in its own configuration file for Petitboot to autoboot it. For example:
 
-.. code-block::
+.. code-block:: none
 
    default linux
 

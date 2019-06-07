@@ -13,7 +13,7 @@ Plugin usage and the plugin ABI are well documented in the OpenPOWER docs reposi
 
 Petitboot will scan local devices for pb-plugin files, and will also recognise the "plugin" label in PXE network files, eg:
 
-.. code-block::
+.. code-block:: none
 
    label Install Ubuntu 18.04
 	kernel tftp://server/ubuntu-18.04-ppc64el/vmlinux

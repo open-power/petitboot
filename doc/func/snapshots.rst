@@ -19,7 +19,7 @@ Manual interaction
 
 Any writes to a block device first mounted by Petitboot will by default be thrown away. If a user makes changes to a disk or USB device for example that they want to preserve they can tell Petitboot to merge these writes to the source device with the "sync" event. For example if the user had written something to the sda2 partition, in the shell they can run:
 
-.. code-block::
+.. code-block:: none
 
    pb-event sync@sda2
 
@@ -27,7 +27,7 @@ Petitboot will handle the merging itself and remount the device read-only.
 
 If desired snapshots can also be disabled via the "petitboot,snapshots?" parameter. For example:
 
-.. code-block::
+.. code-block:: none
 
    nvram --update-config petitboot,snapshots?=false
 
