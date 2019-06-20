@@ -19,6 +19,8 @@ parser_TESTS = \
 	test/parser/test-grub2-noeol \
 	test/parser/test-grub2-menuentry-formats \
 	test/parser/test-grub2-if-formats \
+	test/parser/test-grub2-default-id \
+	test/parser/test-grub2-default-id-space \
 	test/parser/test-grub2-default-index \
 	test/parser/test-grub2-default-multiword \
 	test/parser/test-grub2-implicit-default-unset \
