@@ -3,10 +3,10 @@
 
 #if 0 /* PARSER_EMBEDDED_CONFIG */
 set default="Multiple word option"
-menuentry 'Non-defalt option' {
+menuentry 'Non-defalt option' --id=option0 {
 	linux /vmlinux.non-default
 }
-menuentry 'Multiple word option' {
+menuentry 'Multiple word option' --id=option1 {
 	linux   /vmlinux
 }
 #endif

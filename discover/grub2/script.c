@@ -117,12 +117,10 @@ static bool option_is_default(struct grub2_script *script,
 	if (end != var && *end == '\0')
 		return default_idx == script->n_options;
 
-	/* if we don't have an explicit id for this option, fall back to
-	 * the name */
-	if (!id)
-		id = opt->option->name;
+	if (id && !strcmp(id, var))
+		return true;
 
-	return !strcmp(id, var);
+	return !strcmp(opt->option->name, var);
 }
 
 static void append_text_to_current_arg(struct grub2_argv *argv,
