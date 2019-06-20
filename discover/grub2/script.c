@@ -339,9 +339,16 @@ int statement_menuentry_execute(struct grub2_script *script,
 	 * implementation to get --id= working.
 	 */
 	for (i = 1; i < st->argv->argc; ++i) {
-		if (strncmp("--id=", st->argv->argv[i], 5) == 0) {
-			id = st->argv->argv[i] + 5;
-			break;
+		if (strncmp("--id", st->argv->argv[i], strlen("--id")) == 0) {
+			if (strlen(st->argv->argv[i]) > strlen("--id=")) {
+				id = st->argv->argv[i] + strlen("--id=");
+				break;
+			}
+
+			if (i + 1 < st->argv->argc) {
+				id = st->argv->argv[i + 1];
+				break;
+			}
 		}
 	}
 	if (st->argv->argc > 0)
