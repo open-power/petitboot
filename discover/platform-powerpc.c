@@ -440,7 +440,7 @@ static int get_ipmi_boot_mailbox_block(struct platform_powerpc *platform,
 		char *buf, uint8_t block)
 {
 	size_t blocksize = 16;
-	uint8_t resp[3 + 16];
+	uint8_t resp[3 + 1 + 16];
 	uint16_t resp_len;
 	char *debug_buf;
 	int rc;
@@ -462,7 +462,7 @@ static int get_ipmi_boot_mailbox_block(struct platform_powerpc *platform,
 	}
 
 	if (resp_len < sizeof(resp)) {
-		if (resp_len < 3) {
+		if (resp_len < 4) {
 			pb_log("platform: unexpected length (%d) in "
 					"boot options mailbox response\n",
 					resp_len);
@@ -474,7 +474,7 @@ static int get_ipmi_boot_mailbox_block(struct platform_powerpc *platform,
 			return 0;
 		}
 
-		blocksize = sizeof(resp) - 3;
+		blocksize = sizeof(resp) - 4;
 		pb_debug_fn("Mailbox block %hu returns only %zu bytes in block\n",
 				block, blocksize);
 	}
@@ -502,7 +502,14 @@ static int get_ipmi_boot_mailbox_block(struct platform_powerpc *platform,
 		return -1;
 	}
 
-	memcpy(buf, &resp[3], blocksize);
+	/* check for block number */
+	if (resp[3] != block) {
+		pb_debug("platform: returned boot mailbox block doesn't match "
+				  "requested\n");
+		return -1;
+	}
+
+	memcpy(buf, &resp[4], blocksize);
 
 	return blocksize;
 }
