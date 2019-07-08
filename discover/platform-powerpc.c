@@ -473,12 +473,7 @@ static int get_ipmi_boot_mailbox_block(struct platform_powerpc *platform,
 		return -1;
 	}
 
-	if (resp_len == 4) {
-		pb_debug_fn("block %hu empty\n", block);
-		return 0;
-	}
-
-	blocksize = sizeof(resp) - 4;
+	blocksize = resp_len - 4;
 	pb_debug_fn("Mailbox block %hu returns only %zu bytes in block\n",
 			block, blocksize);
 
@@ -511,6 +506,12 @@ static int get_ipmi_boot_mailbox_block(struct platform_powerpc *platform,
 				  "requested\n");
 		return -1;
 	}
+
+	if (!blocksize) {
+		pb_debug_fn("block %hu empty\n", block);
+		return 0;
+	}
+
 
 	memcpy(buf, &resp[4], blocksize);
 
