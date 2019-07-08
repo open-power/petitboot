@@ -536,6 +536,7 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 	 * on higher numbers.
 	 */
 	for (i = 0; i < UCHAR_MAX; i++) {
+		uint8_t *boot_opt_data;
 		int block_size = get_ipmi_boot_mailbox_block(platform, &mailbox, i);
 		if (block_size < CHASSIS_BOOT_MBOX_IANA_SZ && i == 0) {
 			/*
@@ -552,9 +553,12 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 		if (i == 0) {
 			/*
 			 * The first three bytes of block zero are an IANA
-			 * Enterprise ID number. Check it matches the IBM
-			 * number, '2'.
+			 * Enterprise ID number
 			 */
+			block_size -= CHASSIS_BOOT_MBOX_IANA_SZ;
+			boot_opt_data = &mailbox.b0.data;
+
+			/* Check IANA matches the IBM number, '2' */
 			if (mailbox.b0.iana[0] != 0x02 ||
 				mailbox.b0.iana[1] != 0x00 ||
 				mailbox.b0.iana[2] != 0x00) {
@@ -564,6 +568,8 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 						mailbox.b0.iana[2]);
 				return -1;
 			}
+		} else {
+			boot_opt_data = &mailbox.data;
 		}
 
 		mailbox_buffer = talloc_realloc(platform, mailbox_buffer,
@@ -572,7 +578,7 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 			pb_log_fn("Failed to allocate mailbox buffer\n");
 			return -1;
 		}
-		memcpy(mailbox_buffer + mailbox_size, &mailbox.data, block_size);
+		memcpy(mailbox_buffer + mailbox_size, boot_opt_data, block_size);
 		mailbox_size += block_size;
 	}
 
@@ -583,10 +589,10 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 	else
 		pb_debug_fn("%hu blocks read (%zu bytes)\n", i, mailbox_size);
 
-	if (mailbox_size < 3 + strlen("petitboot,bootdevs="))
+	if (mailbox_size < strlen("petitboot,bootdevs="))
 		return -1;
 
-	prefix = talloc_strndup(mailbox_buffer, mailbox_buffer + 3,
+	prefix = talloc_strndup(mailbox_buffer, mailbox_buffer,
 			strlen("petitboot,bootdevs="));
 	if (!prefix) {
 		pb_log_fn("Couldn't check prefix\n");
@@ -604,9 +610,9 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 	}
 
 	/* Don't include IANA number in buffer */
-	content_size = mailbox_size - 3 - strlen("petitboot,bootdevs=");
+	content_size = mailbox_size - strlen("petitboot,bootdevs=");
 	*buf = talloc_memdup(platform,
-			mailbox_buffer + 3 + strlen("petitboot,bootdevs="),
+			mailbox_buffer + strlen("petitboot,bootdevs="),
 			content_size + 1);
 	(*buf)[content_size] = '\0';
 
