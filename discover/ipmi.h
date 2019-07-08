@@ -29,6 +29,29 @@ enum ipmi_sensor_ids {
 
 struct ipmi;
 
+#define CHASSIS_BOOT_MBOX_IANA_SZ 3
+#define CHASSIS_BOOT_MBOX_DATA_SZ 16
+#define CHASSIS_BOOT_MBOX_BLOCK0_DATA_SZ \
+	(CHASSIS_BOOT_MBOX_DATA_SZ - CHASSIS_BOOT_MBOX_IANA_SZ)
+
+typedef struct __attribute__((packed)) {
+	uint8_t iana[CHASSIS_BOOT_MBOX_IANA_SZ];
+	uint8_t data[CHASSIS_BOOT_MBOX_BLOCK0_DATA_SZ];
+} mbox_block0_t;
+
+typedef union {
+	uint8_t data[CHASSIS_BOOT_MBOX_DATA_SZ];
+	mbox_block0_t b0;
+} mbox_t;
+
+typedef struct __attribute__((packed)) {
+	uint8_t cc;
+	uint8_t param_version;
+	uint8_t param_valid;
+	uint8_t block_selector;
+	mbox_t mbox;
+} ipmi_mbox_response_t;
+
 static const int ipmi_timeout = 10000; /* milliseconds. */
 
 bool ipmi_present(void);
