@@ -141,5 +141,5 @@ while :
 do
 	$ui $verbose_opt
 	reset
-	$shell -m
+	$shell -ml
 done
