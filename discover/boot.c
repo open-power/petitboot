@@ -448,6 +448,24 @@ static void cleanup_cancellations(struct boot_task *task,
 		talloc_free(task);
 }
 
+static bool preboot_check(struct boot_task *task)
+{
+	const char *local_image = (task->local_image_override) ?
+		task->local_image_override : task->local_image;
+
+	char *preboot_check_err_msg = NULL;
+	bool preboot_check_ret = platform_preboot_check(local_image,
+						&preboot_check_err_msg);
+
+	if (preboot_check_err_msg) {
+		update_status(task->status_fn, task->status_arg,
+				STATUS_ERROR, "%s", preboot_check_err_msg);
+		talloc_free(preboot_check_err_msg);
+	}
+
+	return preboot_check_ret;
+}
+
 static void boot_process(struct load_url_result *result, void *data)
 {
 	struct boot_task *task = data;
@@ -470,6 +488,9 @@ static void boot_process(struct load_url_result *result, void *data)
 	}
 
 	run_boot_hooks(task);
+
+	if (!preboot_check(task))
+		return;
 
 	update_status(task->status_fn, task->status_arg, STATUS_INFO,
 			_("Performing kexec load"));

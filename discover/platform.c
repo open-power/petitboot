@@ -207,6 +207,17 @@ void platform_pre_boot(void)
 		platform->pre_boot(platform, config);
 }
 
+bool platform_preboot_check(const char *image, char **err_msg)
+{
+	const struct config *config = config_get();
+
+	if (platform && config && platform->preboot_check)
+		return platform->preboot_check(platform, config,
+                                    image, err_msg);
+
+    return true;
+}
+
 int platform_get_sysinfo(struct system_info *info)
 {
 	if (platform && platform->get_sysinfo)

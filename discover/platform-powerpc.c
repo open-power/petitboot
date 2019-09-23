@@ -21,6 +21,7 @@
 #include "platform.h"
 #include "ipmi.h"
 #include "dt.h"
+#include "elf.h"
 
 static const char *partition = "common";
 static const char *sysparams_dir = "/sys/firmware/opal/sysparams/";
@@ -945,6 +946,47 @@ static void pre_boot(struct platform *p, const struct config *config)
 		platform->set_os_boot_sensor(platform);
 }
 
+static bool preboot_check(struct platform *p,
+			const struct config *config,
+			const char *image,
+			char **err_msg)
+{
+	struct platform_powerpc *platform = p->platform_data;
+	unsigned int *ppc_cap_bitmap = NULL;
+	bool ultravisor_enabled;
+	struct stat statbuf;
+	bool ret = true;
+
+	/* check if ultravisor-system is enabled */
+	ultravisor_enabled = stat("/proc/device-tree/ibm,ultravisor",
+				&statbuf) == 0;
+
+	/* if ultravisor-system is disabled, continue the boot process */
+	if (!ultravisor_enabled)
+		return true;
+
+	ppc_cap_bitmap = elf_getnote_desc(elf_open_image(image),
+					POWERPC_ELFNOTE_NAMESPACE,
+					PPC_ELFNOTE_CAPABILITIES);
+
+	if ((ppc_cap_bitmap) && (*ppc_cap_bitmap & PPCCAP_ULTRAVISOR_BIT)) {
+		pb_debug("kernel capabilities: ultravisor mode found.\n");
+	} else {
+		ret = false;
+		pb_log_fn("kernel capabilities failed:"
+			" IBM Ultravisor mode is required.\n");
+		*err_msg = talloc_strdup(platform, "IBM Ultravisor capability"
+						" not found");
+	}
+	free(ppc_cap_bitmap);
+
+	/* if preboot_check is disabled, continue the boot process */
+	if (!config->preboot_check_enabled)
+		return true;
+
+	return ret;
+}
+
 static void get_sysinfo_stb(struct platform_powerpc *platform,
 		struct system_info *sysinfo)
 {
@@ -1078,6 +1120,7 @@ static struct platform platform_powerpc = {
 	.get_sysinfo		= get_sysinfo,
 	.restrict_clients	= restrict_clients,
 	.set_password		= set_password,
+	.preboot_check		= preboot_check,
 };
 
 register_platform(platform_powerpc);
