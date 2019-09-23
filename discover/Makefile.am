@@ -80,7 +80,9 @@ discover_platform_ro_SOURCES = \
 	discover/ipmi.h \
 	discover/dt.c \
 	discover/dt.h \
-	discover/hostboot.h
+	discover/hostboot.h \
+	discover/elf.c \
+	discover/elf.h
 
 if PLATFORM_ARM64
 discover_platform_ro_SOURCES += discover/platform-arm64.c
