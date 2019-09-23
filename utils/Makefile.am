@@ -18,7 +18,8 @@ dist_pkglibexec_SCRIPTS = utils/pb-console
 sbin_PROGRAMS += utils/pb-event utils/pb-config
 
 utils_pb_config_LDADD = $(top_builddir)/lib/libpbcore.la \
-		  $(top_builddir)/discover/platform.ro
+		  $(top_builddir)/discover/platform.ro \
+		  $(ELF_LIBS)
 
 utils_hooks_30_dtb_updates_SOURCES = utils/hooks/30-dtb-updates.c
 utils_hooks_30_dtb_updates_LDADD = $(top_builddir)/lib/libpbcore.la \

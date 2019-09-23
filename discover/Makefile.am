@@ -58,7 +58,8 @@ discover_pb_discover_LDADD = \
 	discover/native/native-parser.ro \
 	discover/platform.ro \
 	$(core_lib) \
-	$(UDEV_LIBS)
+	$(UDEV_LIBS) \
+	$(ELF_LIBS)
 
 discover_pb_discover_LDFLAGS = \
 	$(AM_LDFLAGS) \

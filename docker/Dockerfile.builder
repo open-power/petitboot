@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y \
 	libncurses-dev \
 	libssl-dev \
 	libuv-dev \
+	libelf-dev \
+	libdw-dev \
 	pkg-config \
 	strace \
 	&& rm -rf /var/lib/apt/lists/*
