@@ -23,6 +23,7 @@ const char **common_known_params(void)
 		"petitboot,http_proxy",
 		"petitboot,https_proxy",
 		"petitboot,password",
+		"petitboot,preboot-check",
 		NULL,
 	};
 

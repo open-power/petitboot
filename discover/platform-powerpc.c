@@ -222,6 +222,13 @@ static void params_update_all(struct param_list *pl,
 
 	params_update_network_values(pl, "petitboot,network", config);
 	params_update_bootdev_values(pl, "petitboot,bootdevs", config);
+
+	if (config->preboot_check_enabled == defaults->preboot_check_enabled)
+		val = "";
+	else
+		val = config->preboot_check_enabled ? "true" : "false";
+
+	param_list_set_non_empty(pl, "petitboot,preboot-check", val, true);
 }
 
 static void config_set_ipmi_bootdev(struct config *config, enum ipmi_bootdev bootdev,

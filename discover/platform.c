@@ -159,6 +159,7 @@ void config_set_defaults(struct config *config)
 	else
 		config->lang = NULL;
 
+	config->preboot_check_enabled = true;
 }
 
 int platform_init(void *ctx)
@@ -572,6 +573,9 @@ void config_populate_all(struct config *config, const struct param_list *pl)
 	val = param_list_get_value(pl, "petitboot,https_proxy");
 	if (val)
 		config->https_proxy = talloc_strdup(config, val);
+
+	val = param_list_get_value(pl, "petitboot,preboot-check");
+	config->preboot_check_enabled = !val || strcmp(val, "false");
 }
 
 static char *interface_config_str(void *ctx, struct interface_config *config)

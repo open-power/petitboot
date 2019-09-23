@@ -344,6 +344,8 @@ int pb_protocol_config_len(const struct config *config)
 
 	len += 4 + optional_strlen(config->lang);
 
+	len += 4; /* preboot check */
+
 	return len;
 }
 
@@ -676,6 +678,9 @@ int pb_protocol_serialise_config(const struct config *config,
 	pos += 4;
 
 	pos += pb_protocol_serialise_string(pos, config->lang);
+
+	*(uint32_t *)pos = config->preboot_check_enabled;
+	pos += 4;
 
 	assert(pos <= buf + buf_len);
 
@@ -1334,6 +1339,10 @@ int pb_protocol_deserialise_config(struct config *config,
 		goto out;
 
 	config->lang = str;
+
+	if (read_u32(&pos, &len, &tmp))
+		goto out;
+	config->preboot_check_enabled = !!tmp;
 
 	rc = 0;
 

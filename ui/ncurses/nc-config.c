@@ -34,7 +34,7 @@
 #include "nc-config.h"
 #include "nc-widgets.h"
 
-#define N_FIELDS	51
+#define N_FIELDS	53
 
 extern struct help_text config_help_text;
 
@@ -69,6 +69,8 @@ struct config_screen {
 	bool			ipmi_override;
 	bool			ipmi_mailbox;
 	bool			net_override;
+
+	bool			preboot_check_enabled;
 
 	struct {
 		struct nc_widget_label		*autoboot_l;
@@ -123,6 +125,9 @@ struct config_screen {
 		struct nc_widget_label		*current_console_l;
 
 		struct nc_widget_button		*update_password_l;
+
+		struct nc_widget_label		*preboot_check_l;
+		struct nc_widget_select		*preboot_check_f;
 
 		struct nc_widget_label		*net_override_l;
 		struct nc_widget_label		*safe_mode;
@@ -363,6 +368,9 @@ static int screen_process_form(struct config_screen *screen)
 							config->consoles[idx]);
 		}
 	}
+
+	config->preboot_check_enabled = widget_select_get_value(
+						screen->widgets.preboot_check_f);
 
 	config->safe_mode = false;
 	rc = cui_send_config(screen->cui, config);
@@ -735,6 +743,17 @@ static void config_screen_layout_widgets(struct config_screen *screen)
 		y += 1;
 	}
 
+	wl = widget_label_base(screen->widgets.preboot_check_l);
+	widget_set_visible(wl, true);
+	widget_move(wl, y, screen->label_x);
+
+	wf = widget_select_base(screen->widgets.preboot_check_f);
+	widget_set_visible(wf, true);
+	widget_move(wf, y, screen->field_x);
+	y += widget_height(wf);
+
+	y += 1;
+
 	widget_move(widget_button_base(screen->widgets.ok_b),
 			y, screen->field_x);
 	widget_move(widget_button_base(screen->widgets.help_b),
@@ -765,6 +784,15 @@ static void config_screen_autoboot_change(void *arg, int value)
 {
 	struct config_screen *screen = arg;
 	screen->autoboot_enabled = !!value;
+	widgetset_unpost(screen->widgetset);
+	config_screen_layout_widgets(screen);
+	widgetset_post(screen->widgetset);
+}
+
+static void config_screen_preboot_check_change(void *arg, int value)
+{
+	struct config_screen *screen = arg;
+	screen->preboot_check_enabled = !!value;
 	widgetset_unpost(screen->widgetset);
 	config_screen_layout_widgets(screen);
 	widgetset_post(screen->widgetset);
@@ -1195,6 +1223,20 @@ static void config_screen_setup_widgets(struct config_screen *screen,
 	screen->widgets.update_password_l = widget_new_button(set, 0, 0, 30,
 			_("Update system password"), password_click, screen);
 #endif
+
+	screen->preboot_check_enabled = config->preboot_check_enabled;
+	screen->widgets.preboot_check_l = widget_new_label(set, 0, 0,
+			_("Pre-boot check:"));
+	screen->widgets.preboot_check_f = widget_new_select(set, 0, 0,
+					COLS - screen->field_x - 1);
+
+	widget_select_add_option(screen->widgets.preboot_check_f, 0, _("Disabled"),
+				!screen->preboot_check_enabled);
+	widget_select_add_option(screen->widgets.preboot_check_f, 1, _("Enabled"),
+				screen->preboot_check_enabled);
+
+	widget_select_on_change(screen->widgets.preboot_check_f,
+			config_screen_preboot_check_change, screen);
 
 	screen->widgets.ok_b = widget_new_button(set, 0, 0, 10, _("OK"),
 			ok_click, screen);

@@ -187,6 +187,8 @@ struct config {
 	unsigned int		autoboot_timeout_sec;
 	struct network_config	network;
 
+	bool			preboot_check_enabled;
+
 	struct autoboot_option	*autoboot_opts;
 	unsigned int		n_autoboot_opts;
 

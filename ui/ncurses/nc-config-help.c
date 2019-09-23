@@ -50,4 +50,10 @@ the pb-discover server will use these details.\n"
 "\n"
 "Disk R/W: Certain bootloader configurations may request write access to \
 disks to save information or update parameters (eg. GRUB2). "
-"Use this option to control access to disks.\n");
+"Use this option to control access to disks.\n"
+"\n"
+"Pre-boot check: Petitboot is able to check a payload for compatibility before \
+booting it. If this check fails, petitboot will determine that the payload will \
+not properly boot on this platform, and abort the boot. This configuration \
+option allows skipping this check.\n"
+"");
