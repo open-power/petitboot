@@ -79,15 +79,29 @@ static int kexec_load(struct boot_task *boot_task)
 	boot_task->local_dtb_override = NULL;
 	boot_task->local_image_override = NULL;
 
-	if ((result = validate_boot_files(boot_task))) {
-		if (result == KEXEC_LOAD_DECRYPTION_FALURE) {
-			pb_log("%s: Aborting kexec due to"
-				" decryption failure\n", __func__);
+	result = validate_boot_files(boot_task);
+	if (result) {
+		const char *msg;
+
+		switch (result) {
+		case KEXEC_LOAD_DECRYPTION_FALURE:
+			msg = _("decryption failed");
+			break;
+		case KEXEC_LOAD_SIGNATURE_FAILURE:
+			msg = _("signature verification failed");
+			break;
+		case KEXEC_LOAD_SIG_SETUP_INVALID:
+			msg = _("invalid signature configuration");
+			break;
+		default:
+			msg = _("unknown verification failure");
 		}
-		if (result == KEXEC_LOAD_SIGNATURE_FAILURE) {
-			pb_log("%s: Aborting kexec due to signature"
-				" verification failure\n", __func__);
-		}
+
+		update_status(boot_task->status_fn, boot_task->status_arg,
+				STATUS_ERROR,
+				_("Boot verification failure: %s"), msg);
+		pb_log_fn("Aborting kexec due to verification failure: %s",
+				msg);
 
 		validate_boot_files_cleanup(boot_task);
 		return result;
@@ -461,21 +475,6 @@ static void boot_process(struct load_url_result *result, void *data)
 			_("Performing kexec load"));
 
 	rc = kexec_load(task);
-	pb_log_fn("kexec_load returned %d\n", rc);
-	if (rc == KEXEC_LOAD_DECRYPTION_FALURE) {
-		update_status(task->status_fn, task->status_arg,
-				STATUS_ERROR, _("Decryption failed"));
-	}
-	else if (rc == KEXEC_LOAD_SIGNATURE_FAILURE) {
-		update_status(task->status_fn, task->status_arg,
-				STATUS_ERROR,
-				_("Signature verification failed"));
-	}
-	else if (rc == KEXEC_LOAD_SIG_SETUP_INVALID) {
-		update_status(task->status_fn, task->status_arg,
-				STATUS_ERROR,
-				_("Invalid signature configuration"));
-	}
 
 no_load:
 	list_for_each_entry(&task->resources, resource, list)
