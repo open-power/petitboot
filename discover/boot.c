@@ -25,6 +25,7 @@
 #include "paths.h"
 #include "resource.h"
 #include "platform.h"
+#include "sysinfo.h"
 
 #include <security/security.h>
 
@@ -60,14 +61,19 @@ static void __attribute__((format(__printf__, 4, 5))) update_status(
  */
 static int kexec_load(struct boot_task *boot_task)
 {
+	const char *load_args[] = {"-l", "-s"};
+	const struct system_info *sysinfo;
 	struct process *process;
 	char *s_initrd = NULL;
 	char *s_args = NULL;
 	const char *argv[8];
 	char *s_dtb = NULL;
 	const char **p;
+	char *err_buf;
 	int result;
+	size_t i;
 
+	sysinfo = system_info_get();
 
 	boot_task->local_initrd_override = NULL;
 	boot_task->local_dtb_override = NULL;
@@ -83,7 +89,8 @@ static int kexec_load(struct boot_task *boot_task)
 				" verification failure\n", __func__);
 		}
 
-		goto abort_kexec;
+		validate_boot_files_cleanup(boot_task);
+		return result;
 	}
 
 	const char* local_initrd = (boot_task->local_initrd_override) ?
@@ -93,20 +100,10 @@ static int kexec_load(struct boot_task *boot_task)
 	const char* local_image = (boot_task->local_image_override) ?
 		boot_task->local_image_override : boot_task->local_image;
 
-	process = process_create(boot_task);
-	if (!process) {
-		pb_log_fn("failed to create process\n");
-		return -1;
-	}
-
-	process->path = pb_system_apps.kexec;
-	process->argv = argv;
-	process->keep_stdout = true;
-	process->add_stderr = true;
-
+	/* set up process arguments */
 	p = argv;
 	*p++ = pb_system_apps.kexec;	/* 1 */
-	*p++ = "-l";			/* 2 */
+	*p++ = NULL;			/* 2; modified below */
 
 	if (pb_log_get_debug()) {
 		*p++ = "--debug";	/* 3 */
@@ -134,21 +131,57 @@ static int kexec_load(struct boot_task *boot_task)
 	*p++ = local_image;		/* 7 */
 	*p++ = NULL;			/* 8 */
 
-	result = process_run_sync(process);
-	if (result) {
-		pb_log_fn("failed to run process\n");
-		goto abort_kexec;
+	err_buf = NULL;
+
+	for (i = 0; i < ARRAY_SIZE(load_args); i++) {
+		/* our first argument is the action: -s or -l */
+		argv[1] = load_args[i];
+
+		/* if we're enforcing, we know a -l load will fail; skip */
+		if (sysinfo->stb_os_enforcing && argv[1][1] == 'l')
+			continue;
+
+		process = process_create(boot_task);
+		if (!process) {
+			result = -1;
+			pb_log_fn("failed to create process\n");
+			continue;
+		}
+
+		process->path = pb_system_apps.kexec;
+		process->argv = argv;
+		process->keep_stdout = true;
+		process->add_stderr = true;
+
+		result = process_run_sync(process);
+		if (result) {
+			pb_log_fn("failed to run process\n");
+			continue;
+		}
+
+		result = 0;
+
+		if (process_exit_ok(process))
+			break;
+
+		result = -1;
+
+		if (process->stdout_len)
+			err_buf = talloc_strndup(boot_task, process->stdout_buf,
+					process->stdout_len);
+
+		pb_log_fn("kexec load (%s) failed (rc %d): %s\n", argv[1],
+				WEXITSTATUS(process->exit_status),
+				err_buf ?: "");
+
+		process_release(process);
 	}
 
-	result = process->exit_status;
-
-	if (result) {
-		pb_log_fn("failed: (%d)\n", result);
+	if (result)
 		update_status(boot_task->status_fn, boot_task->status_arg,
-				STATUS_ERROR, "%s", process->stdout_buf);
-	}
+				STATUS_ERROR, _("kexec load failed: %s"),
+				err_buf ?: "(no output)");
 
-abort_kexec:
 	validate_boot_files_cleanup(boot_task);
 
 	return result;
