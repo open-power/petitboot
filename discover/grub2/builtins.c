@@ -1,4 +1,7 @@
 
+#define _GNU_SOURCE
+
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -106,18 +109,35 @@ static int builtin_initrd(struct grub2_script *script,
 	return 0;
 }
 
+static const struct option search_options[] = {
+	{
+		.name = "set",
+		.has_arg = required_argument,
+		.val = 's',
+	},
+	{ 0 },
+};
+
 static int builtin_search(struct grub2_script *script,
 		void *data __attribute__((unused)),
 		int argc, char *argv[])
 {
 	const char *env_var, *spec;
-	int i;
 
 	env_var = "root";
+	optind = 0;
 
-	for (i = 1; i < argc - 1; i++) {
-		if (!strncmp(argv[i], "--set=", strlen("--set="))) {
-			env_var = argv[i] + strlen("--set=");
+	for (;;) {
+		int c = getopt_long(argc, argv, ":", search_options, NULL);
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case 's':
+			env_var = optarg;
+			break;
+		case '?':
+		case ':':
 			break;
 		}
 	}
@@ -125,7 +145,10 @@ static int builtin_search(struct grub2_script *script,
 	if (!strlen(env_var))
 		return 0;
 
-	spec = argv[argc - 1];
+	if (optind >= argc)
+		return -1;
+
+	spec = argv[optind];
 
 	script_env_set(script, env_var, spec);
 
