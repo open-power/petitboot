@@ -113,7 +113,7 @@ static int builtin_search(struct grub2_script *script,
 	const char *env_var, *spec;
 	int i;
 
-	env_var = NULL;
+	env_var = "root";
 
 	for (i = 1; i < argc - 1; i++) {
 		if (!strncmp(argv[i], "--set=", strlen("--set="))) {
@@ -122,7 +122,7 @@ static int builtin_search(struct grub2_script *script,
 		}
 	}
 
-	if (!env_var)
+	if (!strlen(env_var))
 		return 0;
 
 	spec = argv[argc - 1];
