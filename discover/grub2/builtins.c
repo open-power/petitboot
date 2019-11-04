@@ -115,6 +115,21 @@ static const struct option search_options[] = {
 		.has_arg = required_argument,
 		.val = 's',
 	},
+	{
+		.name = "file",
+		.has_arg = no_argument,
+		.val = 'f',
+	},
+	{
+		.name = "label",
+		.has_arg = no_argument,
+		.val = 'l',
+	},
+	{
+		.name = "fs-uuid",
+		.has_arg = no_argument,
+		.val = 'u',
+	},
 	{ 0 },
 };
 
@@ -122,19 +137,34 @@ static int builtin_search(struct grub2_script *script,
 		void *data __attribute__((unused)),
 		int argc, char *argv[])
 {
-	const char *env_var, *spec;
+	const char *env_var, *spec, *res;
+	struct discover_device *dev;
+	enum {
+		LOOKUP_UUID = 'u',
+		LOOKUP_LABEL = 'l',
+		LOOKUP_FILE = 'f',
+	} lookup_type;
 
 	env_var = "root";
 	optind = 0;
 
+	/* Default to UUID, for backwards compat with earlier petitboot
+	 * versions. This argument is non-optional in GRUB. */
+	lookup_type = LOOKUP_UUID;
+
 	for (;;) {
-		int c = getopt_long(argc, argv, ":", search_options, NULL);
+		int c = getopt_long(argc, argv, ":flu", search_options, NULL);
 		if (c == -1)
 			break;
 
 		switch (c) {
 		case 's':
 			env_var = optarg;
+			break;
+		case LOOKUP_UUID:
+		case LOOKUP_LABEL:
+		case LOOKUP_FILE:
+			lookup_type = c;
 			break;
 		case '?':
 		case ':':
@@ -149,8 +179,27 @@ static int builtin_search(struct grub2_script *script,
 		return -1;
 
 	spec = argv[optind];
+	res = NULL;
 
-	script_env_set(script, env_var, spec);
+	switch (lookup_type) {
+	case LOOKUP_UUID:
+		dev = device_lookup_by_uuid(script->ctx->handler,
+				spec);
+		res = dev ? dev->device->id : spec;
+		break;
+	case LOOKUP_LABEL:
+		dev = device_lookup_by_label(script->ctx->handler,
+				spec);
+		if (dev)
+			res = dev->device->id;
+		break;
+	case LOOKUP_FILE:
+		/* not yet implemented */
+		break;
+	}
+
+	if (res)
+		script_env_set(script, env_var, res);
 
 	return 0;
 }
