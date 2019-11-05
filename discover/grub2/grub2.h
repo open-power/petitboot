@@ -107,6 +107,14 @@ struct grub2_parser {
 	bool			inter_word;
 };
 
+/* References to files in grub2 consist of an optional device and a path
+ * (specified here by UUID). If the dev is unspecified, we fall back to a
+ * default - usually the 'root' environment variable. */
+struct grub2_file {
+	char *dev;
+	char *path;
+};
+
 /* type for builtin functions */
 typedef int (*grub2_function)(struct grub2_script *script, void *data,
 				int argc, char *argv[]);

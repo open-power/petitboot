@@ -33,17 +33,12 @@ static const char *const grub2_conf_files[] = {
 	NULL
 };
 
-struct grub2_resource_info {
-	char *root;
-	char *path;
-};
-
 /* we use slightly different resources for grub2 */
 struct resource *create_grub2_resource(struct discover_boot_option *opt,
 		struct discover_device *orig_device,
 		const char *root, const char *path)
 {
-	struct grub2_resource_info *info;
+	struct grub2_file *file;
 	struct resource *res;
 
 	if (strstr(path, "://")) {
@@ -55,13 +50,12 @@ struct resource *create_grub2_resource(struct discover_boot_option *opt,
 	res = talloc(opt, struct resource);
 
 	if (root) {
-		info = talloc(res, struct grub2_resource_info);
-		talloc_reference(info, root);
-		info->root = talloc_strdup(info, root);
-		info->path = talloc_strdup(info, path);
+		file = talloc(res, struct grub2_file);
+		file->dev = talloc_strdup(file, root);
+		file->path = talloc_strdup(file, path);
 
 		res->resolved = false;
-		res->info = info;
+		res->info = file;
 
 	} else
 		resolve_resource_against_device(res, orig_device, path);
@@ -72,18 +66,18 @@ struct resource *create_grub2_resource(struct discover_boot_option *opt,
 bool resolve_grub2_resource(struct device_handler *handler,
 		struct resource *res)
 {
-	struct grub2_resource_info *info = res->info;
+	struct grub2_file *file = res->info;
 	struct discover_device *dev;
 
 	assert(!res->resolved);
 
-	dev = device_lookup_by_uuid(handler, info->root);
+	dev = device_lookup_by_uuid(handler, file->dev);
 
 	if (!dev)
 		return false;
 
-	resolve_resource_against_device(res, dev, info->path);
-	talloc_free(info);
+	resolve_resource_against_device(res, dev, file->path);
+	talloc_free(file);
 
 	return true;
 }
