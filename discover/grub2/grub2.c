@@ -82,6 +82,44 @@ bool resolve_grub2_resource(struct device_handler *handler,
 	return true;
 }
 
+struct grub2_file *grub2_parse_file(struct grub2_script *script,
+		const char *str)
+{
+	struct grub2_file *file;
+	size_t dev_len;
+	char *pos;
+
+	if (!str)
+		return NULL;
+
+	file = talloc_zero(script, struct grub2_file);
+
+	if (*str != '(') {
+		/* just a path - no device, return path as-is */
+		file->path = talloc_strdup(file, str);
+
+	} else {
+		/* device plus path - split into components */
+
+		pos = strchr(str, ')');
+
+		/* no closing bracket, or zero-length path? */
+		if (!pos || *(pos+1) == '\0') {
+			talloc_free(file);
+			return NULL;
+		}
+
+		file->path = talloc_strdup(file, pos + 1);
+
+		dev_len = pos - str - 1;
+		if (dev_len)
+			file->dev = talloc_strndup(file, str + 1, dev_len);
+	}
+
+	return file;
+}
+
+
 static int grub2_parse(struct discover_context *dc)
 {
 	const char * const *filename;
