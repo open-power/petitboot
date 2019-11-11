@@ -32,6 +32,7 @@ parser_TESTS = \
 	test/parser/test-grub2-search-args \
 	test/parser/test-grub2-search-uuid \
 	test/parser/test-grub2-search-label \
+	test/parser/test-grub2-devpath \
 	test/parser/test-grub2-load-env \
 	test/parser/test-grub2-save-env \
 	test/parser/test-grub2-save-env-dash-f \
