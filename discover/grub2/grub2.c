@@ -33,8 +33,8 @@ static const char *const grub2_conf_files[] = {
 	NULL
 };
 
-static struct discover_device *grub2_lookup_device(
-		struct device_handler *handler, const char *desc)
+struct discover_device *grub2_lookup_device(struct device_handler *handler,
+		const char *desc)
 {
 	struct discover_device *dev;
 

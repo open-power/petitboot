@@ -197,6 +197,32 @@ static int builtin_search(struct grub2_script *script,
 	return 0;
 }
 
+static int parse_to_device_path(struct grub2_script *script,
+		const char *desc, struct discover_device **devp,
+		char **pathp)
+{
+	struct discover_device *dev;
+	struct grub2_file *file;
+
+	file = grub2_parse_file(script, desc);
+	if (!file)
+		return -1;
+
+	dev = script->ctx->device;
+	if (file->dev)
+		dev = grub2_lookup_device(script->ctx->handler, file->dev);
+
+	if (!dev)
+		return -1;
+
+	*devp = dev;
+	*pathp = talloc_strdup(script, file->path);
+
+	talloc_free(file);
+
+	return 0;
+}
+
 /* Note that GRUB does not follow symlinks in evaluating all file
  * tests but -s, unlike below. However, it seems like a bad idea to
  * emulate GRUB's behavior (e.g., it would take extra work), so we
@@ -204,12 +230,17 @@ static int builtin_search(struct grub2_script *script,
 static bool builtin_test_op_file(struct grub2_script *script, char op,
 		const char *file)
 {
-	bool result;
-	int rc;
+	struct discover_device *dev;
 	struct stat statbuf;
+	bool result;
+	char *path;
+	int rc;
 
-	rc = parser_stat_path(script->ctx, script->ctx->device,
-			file, &statbuf);
+	rc = parse_to_device_path(script, file, &dev, &path);
+	if (rc)
+		return false;
+
+	rc = parser_stat_path(script->ctx, dev, path, &statbuf);
 	if (rc)
 		return false;
 
@@ -237,16 +268,21 @@ static bool builtin_test_op_file(struct grub2_script *script, char op,
 static bool builtin_test_op_dir(struct grub2_script *script, char op,
 		const char *dir)
 {
-	int rc;
+	struct discover_device *dev;
 	struct stat statbuf;
+	char *path;
+	int rc;
 
 	if (op != 'd')
 		return false;
 
-	rc = parser_stat_path(script->ctx, script->ctx->device, dir, &statbuf);
-	if (rc) {
+	rc = parse_to_device_path(script, dir, &dev, &path);
+	if (rc)
 		return false;
-	}
+
+	rc = parser_stat_path(script->ctx, dev, path, &statbuf);
+	if (rc)
+		return false;
 
 	return S_ISDIR(statbuf.st_mode);
 }
