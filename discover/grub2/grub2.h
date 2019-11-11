@@ -197,6 +197,12 @@ struct resource *create_grub2_resource(struct grub2_script *script,
 bool resolve_grub2_resource(struct device_handler *handler,
 		struct resource *res);
 
+/* grub-style device+path parsing */
+struct grub2_file *grub2_parse_file(struct grub2_script *script,
+		const char *str);
+struct discover_device *grub2_lookup_device(struct device_handler *handler,
+		const char *desc);
+
 /* external parser api */
 struct grub2_parser *grub2_parser_create(struct discover_context *ctx);
 void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
