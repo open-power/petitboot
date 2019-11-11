@@ -46,7 +46,6 @@ static int builtin_linux(struct grub2_script *script,
 		int argc, char *argv[])
 {
 	struct discover_boot_option *opt = script->opt;
-	const char *root;
 	int i;
 
 	if (!opt) {
@@ -61,10 +60,7 @@ static int builtin_linux(struct grub2_script *script,
 		return -1;
 	}
 
-	root = script_env_get(script, "root");
-
-	opt->boot_image = create_grub2_resource(opt, script->ctx->device,
-						root, argv[1]);
+	opt->boot_image = create_grub2_resource(script, opt, argv[1]);
 	opt->option->boot_args = NULL;
 
 	if (argc > 2)
@@ -77,8 +73,8 @@ static int builtin_linux(struct grub2_script *script,
 
 	char* args_sigfile_default = talloc_asprintf(opt,
 		"%s.cmdline.sig", argv[1]);
-	opt->args_sig_file = create_grub2_resource(opt, script->ctx->device,
-						root, args_sigfile_default);
+	opt->args_sig_file = create_grub2_resource(script, opt,
+						args_sigfile_default);
 	talloc_free(args_sigfile_default);
 	return 0;
 }
@@ -88,7 +84,6 @@ static int builtin_initrd(struct grub2_script *script,
 		int argc, char *argv[])
 {
 	struct discover_boot_option *opt = script->opt;
-	const char *root;
 
 	if (!opt) {
 		pb_log("grub2 syntax error: 'initrd' statement outside "
@@ -102,9 +97,7 @@ static int builtin_initrd(struct grub2_script *script,
 		return -1;
 	}
 
-	root = script_env_get(script, "root");
-	opt->initrd = create_grub2_resource(opt, script->ctx->device,
-						root, argv[1]);
+	opt->initrd = create_grub2_resource(script, opt, argv[1]);
 
 	return 0;
 }

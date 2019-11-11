@@ -33,13 +33,35 @@ static const char *const grub2_conf_files[] = {
 	NULL
 };
 
-/* we use slightly different resources for grub2 */
-struct resource *create_grub2_resource(struct discover_boot_option *opt,
-		struct discover_device *orig_device,
-		const char *root, const char *path)
+static struct discover_device *grub2_lookup_device(
+		struct device_handler *handler, const char *desc)
 {
+	struct discover_device *dev;
+
+	if (!desc || !*desc)
+		return NULL;
+
+	dev = device_lookup_by_id(handler, desc);
+	if (dev)
+		return dev;
+
+	/* for now, only lookup by UUID */
+	dev = device_lookup_by_uuid(handler, desc);
+	if (dev)
+		return dev;
+
+	return NULL;
+}
+
+/* we use slightly different resources for grub2 */
+struct resource *create_grub2_resource(struct grub2_script *script,
+		struct discover_boot_option *opt,
+		const char *path)
+{
+	struct discover_device *dev;
 	struct grub2_file *file;
 	struct resource *res;
+	const char *root;
 
 	if (strstr(path, "://")) {
 		struct pb_url *url = pb_url_parse(opt, path);
@@ -47,18 +69,29 @@ struct resource *create_grub2_resource(struct discover_boot_option *opt,
 			return create_url_resource(opt, url);
 	}
 
+	file = grub2_parse_file(script, path);
+	if (!file)
+		return NULL;
+
 	res = talloc(opt, struct resource);
+	root = script_env_get(script, "root");
 
-	if (root) {
-		file = talloc(res, struct grub2_file);
+	if (!file->dev && root && strlen(root))
 		file->dev = talloc_strdup(file, root);
-		file->path = talloc_strdup(file, path);
 
+	/* if we don't have a device specified, or the lookup succeeds now,
+	 * then we can resolve the resource right away */
+	if (file->dev)
+		dev = grub2_lookup_device(script->ctx->handler, file->dev);
+	else
+		dev = script->ctx->device;
+
+	if (dev) {
+		resolve_resource_against_device(res, dev, file->path);
+	} else {
 		res->resolved = false;
-		res->info = file;
-
-	} else
-		resolve_resource_against_device(res, orig_device, path);
+		res->info = talloc_steal(opt, file);
+	}
 
 	return res;
 }
@@ -71,8 +104,7 @@ bool resolve_grub2_resource(struct device_handler *handler,
 
 	assert(!res->resolved);
 
-	dev = device_lookup_by_uuid(handler, file->dev);
-
+	dev = grub2_lookup_device(handler, file->dev);
 	if (!dev)
 		return false;
 

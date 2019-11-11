@@ -166,7 +166,6 @@ static void bls_finish(struct conf_context *conf)
 	struct discover_context *dc = conf->dc;
 	struct discover_boot_option *opt = state->opt;
 	struct boot_option *option = opt->option;
-	const char *root;
 	char *filename;
 
 	if (!state->image) {
@@ -192,23 +191,21 @@ static void bls_finish(struct conf_context *conf)
 	else
 		option->name = talloc_strdup(option, state->image);
 
-	root = script_env_get(state->script, "root");
-
-	opt->boot_image = create_grub2_resource(opt, conf->dc->device,
-						root, state->image);
+	opt->boot_image = create_grub2_resource(state->script, opt,
+						state->image);
 
 	if (state->initrd)
-		opt->initrd = create_grub2_resource(opt, conf->dc->device,
-						    root, state->initrd);
+		opt->initrd = create_grub2_resource(state->script, opt,
+						    state->initrd);
 
 	if (state->dtb)
-		opt->dtb = create_grub2_resource(opt, conf->dc->device,
-						 root, state->dtb);
+		opt->dtb = create_grub2_resource(state->script, opt,
+						 state->dtb);
 
 	char* args_sigfile_default = talloc_asprintf(opt,
 		"%s.cmdline.sig", state->image);
-	opt->args_sig_file = create_grub2_resource(opt, conf->dc->device,
-						root, args_sigfile_default);
+	opt->args_sig_file = create_grub2_resource(state->script, opt,
+						args_sigfile_default);
 	talloc_free(args_sigfile_default);
 
 	option->is_default = option_is_default(state, option);
