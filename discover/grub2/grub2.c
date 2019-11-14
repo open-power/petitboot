@@ -169,7 +169,7 @@ static int grub2_parse(struct discover_context *dc)
 			continue;
 
 		parser = grub2_parser_create(dc);
-		grub2_parser_parse(parser, *filename, buf, len);
+		grub2_parser_parse_and_execute(parser, *filename, buf, len);
 		device_handler_status_dev_info(dc->handler, dc->device,
 				_("Parsed GRUB configuration from %s"),
 				*filename);
