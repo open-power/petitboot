@@ -229,7 +229,7 @@ static void process_expansions(struct grub2_script *script,
 		argv->argc--;
 }
 
-static int statements_execute(struct grub2_script *script,
+int statements_execute(struct grub2_script *script,
 		struct grub2_statements *stmts)
 {
 	struct grub2_statement *stmt;

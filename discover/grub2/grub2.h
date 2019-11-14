@@ -165,6 +165,9 @@ void word_append(struct grub2_word *w1, struct grub2_word *w2);
 /* script interface */
 void script_execute(struct grub2_script *script);
 
+int statements_execute(struct grub2_script *script,
+		struct grub2_statements *stmts);
+
 int statement_simple_execute(struct grub2_script *script,
 		struct grub2_statement *statement);
 int statement_block_execute(struct grub2_script *script,
