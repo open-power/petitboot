@@ -331,14 +331,15 @@ struct grub2_parser *grub2_parser_create(struct discover_context *ctx)
 	return parser;
 }
 
-void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
+/* performs a parse on buf, setting parser->script->statements */
+int grub2_parser_parse(struct grub2_parser *parser, const char *filename,
 		char *buf, int len)
 {
 	YY_BUFFER_STATE bufstate;
 	int rc;
 
 	if (!len)
-		return;
+		return -1;
 
 	parser->script->filename = filename;
 
@@ -348,6 +349,18 @@ void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
 	rc = yyparse(parser, parser->scanner);
 
 	yy_delete_buffer(bufstate, parser->scanner);
+
+	parser->inter_word = false;
+
+	return rc;
+}
+
+void grub2_parser_parse_and_execute(struct grub2_parser *parser,
+		const char *filename, char *buf, int len)
+{
+	int rc;
+
+	rc = grub2_parser_parse(parser, filename, buf, len);
 
 	if (!rc)
 		script_execute(parser->script);

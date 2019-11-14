@@ -204,9 +204,13 @@ struct grub2_file *grub2_parse_file(struct grub2_script *script,
 struct discover_device *grub2_lookup_device(struct device_handler *handler,
 		const char *desc);
 
+/* internal parse api */
+int grub2_parser_parse(struct grub2_parser *parser, const char *filename,
+		char *buf, int len);
+
 /* external parser api */
 struct grub2_parser *grub2_parser_create(struct discover_context *ctx);
-void grub2_parser_parse(struct grub2_parser *parser, const char *filename,
-		char *buf, int len);
+void grub2_parser_parse_and_execute(struct grub2_parser *parser,
+		const char *filename, char *buf, int len);
 #endif /* GRUB2_H */
 
