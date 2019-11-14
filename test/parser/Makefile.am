@@ -46,6 +46,10 @@ parser_TESTS = \
 	test/parser/test-grub2-lexer-error \
 	test/parser/test-grub2-parser-error \
 	test/parser/test-grub2-test-file-ops \
+	test/parser/test-grub2-source \
+	test/parser/test-grub2-source-functions \
+	test/parser/test-grub2-source-recursion \
+	test/parser/test-grub2-source-recursion-infinite \
 	test/parser/test-grub2-single-yocto \
 	test/parser/test-grub2-blscfg-default-filename \
 	test/parser/test-grub2-blscfg-default-index \

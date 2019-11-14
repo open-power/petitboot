@@ -100,6 +100,7 @@ struct grub2_script {
 	const char			*filename;
 	unsigned int			n_options;
 	struct list			options;
+	int				include_depth;
 };
 
 struct grub2_parser {
