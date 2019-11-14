@@ -401,6 +401,51 @@ static int builtin_test(struct grub2_script *script,
 	return rc ? 0 : 1;
 }
 
+static int builtin_source(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc, char *argv[])
+{
+	struct grub2_statements *statements;
+	struct discover_device *dev;
+	const char *filename;
+	char *path, *buf;
+	int rc, len;
+
+	if (argc != 2)
+		return false;
+
+	/* limit script recursion */
+	if (script->include_depth >= 10)
+		return false;
+
+	rc = parse_to_device_path(script, argv[1], &dev, &path);
+	if (rc)
+		return false;
+
+	rc = parser_request_file(script->ctx, dev, path, &buf, &len);
+	if (rc)
+		return false;
+
+	/* save current script state */
+	statements = script->statements;
+	filename = script->filename;
+	script->include_depth++;
+
+	rc = grub2_parser_parse(script->parser, argv[1], buf, len);
+
+	if (!rc)
+		statements_execute(script, script->statements);
+
+	talloc_free(script->statements);
+
+	/* restore state */
+	script->statements = statements;
+	script->filename = filename;
+	script->include_depth--;
+
+	return !rc;
+}
+
 static int builtin_true(struct grub2_script *script __attribute__((unused)),
 		void *data __attribute__((unused)),
 		int argc __attribute__((unused)),
@@ -491,7 +536,11 @@ static struct {
 	{
 		.name = "blscfg",
 		.fn = builtin_blscfg,
-	}
+	},
+	{
+		.name = "source",
+		.fn = builtin_source,
+	},
 };
 
 static const char *nops[] = {
