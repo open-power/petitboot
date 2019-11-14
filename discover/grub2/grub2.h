@@ -91,6 +91,7 @@ struct grub2_statement_for {
 };
 
 struct grub2_script {
+	struct grub2_parser		*parser;
 	struct grub2_statements		*statements;
 	struct list			environment;
 	struct list			symtab;

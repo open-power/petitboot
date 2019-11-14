@@ -518,6 +518,7 @@ struct grub2_script *create_script(struct grub2_parser *parser,
 	script = talloc_zero(parser, struct grub2_script);
 
 	script->ctx = ctx;
+	script->parser = parser;
 
 	list_init(&script->symtab);
 	list_init(&script->options);
