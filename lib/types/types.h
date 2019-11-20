@@ -138,6 +138,9 @@ struct system_info {
 	struct blockdev_info	**blockdevs;
 	unsigned int		n_blockdevs;
 	uint8_t			*bmc_mac;
+	bool			stb_fw_measurement;
+	bool			stb_fw_enforcing;
+	bool			stb_os_enforcing;
 };
 
 #define HWADDR_SIZE	6

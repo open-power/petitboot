@@ -272,6 +272,9 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 			4 + optional_strlen(bd_info->mountpoint);
 	}
 
+	/* stb info */
+	len += 3 * sizeof(bool);
+
 	return len;
 }
 
@@ -559,6 +562,13 @@ int pb_protocol_serialise_system_info(const struct system_info *sysinfo,
 	else
 		memset(pos, 0, HWADDR_SIZE);
 	pos += HWADDR_SIZE;
+
+	*(bool *)pos = sysinfo->stb_fw_measurement;
+	pos += sizeof(bool);
+	*(bool *)pos = sysinfo->stb_fw_enforcing;
+	pos += sizeof(bool);
+	*(bool *)pos = sysinfo->stb_os_enforcing;
+	pos += sizeof(bool);
 
 	assert(pos <= buf + buf_len);
 
@@ -1159,6 +1169,14 @@ int pb_protocol_deserialise_system_info(struct system_info *sysinfo,
 
 	pos += HWADDR_SIZE;
 	len -= HWADDR_SIZE;
+
+	sysinfo->stb_fw_measurement = !!*pos;
+	pos += sizeof(bool);
+	sysinfo->stb_fw_enforcing = !!*pos;
+	pos += sizeof(bool);
+	sysinfo->stb_os_enforcing = !!*pos;
+	pos += sizeof(bool);
+	len -= 3 * sizeof(bool);
 
 	rc = 0;
 out:
