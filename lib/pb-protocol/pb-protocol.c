@@ -253,6 +253,9 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 	for (i = 0; i < sysinfo->n_bmc_golden; i++)
 		len += 4 + optional_strlen(sysinfo->bmc_golden[i]);
 
+	/* BMC MAC */
+	len += HWADDR_SIZE;
+
 	for (i = 0; i < sysinfo->n_interfaces; i++) {
 		struct interface_info *if_info = sysinfo->interfaces[i];
 		len +=	4 + if_info->hwaddr_size +
@@ -268,9 +271,6 @@ int pb_protocol_system_info_len(const struct system_info *sysinfo)
 			4 + optional_strlen(bd_info->uuid) +
 			4 + optional_strlen(bd_info->mountpoint);
 	}
-
-	/* BMC MAC */
-	len += HWADDR_SIZE;
 
 	return len;
 }
