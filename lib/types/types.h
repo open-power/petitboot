@@ -133,11 +133,11 @@ struct system_info {
 	char			**bmc_golden;
 	unsigned int		n_bmc_current;
 	unsigned int		n_bmc_golden;
-	uint8_t			*bmc_mac;
 	struct interface_info	**interfaces;
 	unsigned int		n_interfaces;
 	struct blockdev_info	**blockdevs;
 	unsigned int		n_blockdevs;
+	uint8_t			*bmc_mac;
 };
 
 #define HWADDR_SIZE	6
