@@ -81,6 +81,15 @@ static void sysinfo_screen_populate(struct sysinfo_screen *screen,
 		}
 	}
 
+	line(NULL);
+	line("%s", _("Secure & trusted boot"));
+	line(" %-15s: %s", _("FW verification"), sysinfo->stb_fw_enforcing ?
+				_("enabled") : _("disabled"));
+	line(" %-15s: %s", _("FW measurement"), sysinfo->stb_fw_measurement ?
+				_("enabled") : _("disabled"));
+	line(" %-15s: %s", _("OS verification"), sysinfo->stb_os_enforcing ?
+				_("enforcing") : _("disabled"));
+
 	if (sysinfo->n_bmc_current) {
 		line(NULL);
 		line("%s", _("BMC current side:"));
