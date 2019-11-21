@@ -938,6 +938,31 @@ static void pre_boot(struct platform *p, const struct config *config)
 		platform->set_os_boot_sensor(platform);
 }
 
+static void get_sysinfo_stb(struct platform_powerpc *platform,
+		struct system_info *sysinfo)
+{
+	char *filename;
+	unsigned int i;
+	int rc;
+	struct {
+		const char *name;
+		bool *flag;
+	} props[] = {
+		{ "secure-enabled", &sysinfo->stb_fw_enforcing },
+		{ "trusted-enabled", &sysinfo->stb_fw_measurement },
+		{ "os-secureboot-enforcing", &sysinfo->stb_os_enforcing },
+	};
+
+	for (i = 0; i < ARRAY_SIZE(props); i++) {
+		struct stat statbuf;
+		filename = talloc_asprintf(platform, "%sibm,secureboot/%s",
+				devtree_dir, props[i].name);
+		rc = stat(filename, &statbuf);
+		*props[i].flag = (rc == 0);
+		talloc_free(filename);
+	}
+}
+
 static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 {
 	struct platform_powerpc *platform = p->platform_data;
@@ -965,6 +990,9 @@ static int get_sysinfo(struct platform *p, struct system_info *sysinfo)
 
 	if (platform->get_platform_versions)
 		platform->get_platform_versions(sysinfo);
+
+	get_sysinfo_stb(platform, sysinfo);
+
 
 	return 0;
 }
