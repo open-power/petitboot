@@ -137,4 +137,4 @@ cd "${TOP_DIR}"
 docker_args="${docker_base_args} ${docker_user_args}"
 run_cmd "docker run ${docker_args} ${DOCKER_TAG} /bin/bash \
 	-e ${bash_debug} \
-	-c './bootstrap && ${flags} ./configure ${configure_opts[@]} && ${makecmd} && ${docker_extra}'"
+	-c './bootstrap && d=\$(mktemp -d) && cd \$d && ${flags} /opt/pb/configure ${configure_opts[@]} && ${makecmd} && ${docker_extra}'"
