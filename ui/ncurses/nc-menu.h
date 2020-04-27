@@ -61,7 +61,6 @@ void pmenu_item_insert(struct pmenu *menu, struct pmenu_item *item,
 	unsigned int index);
 void pmenu_item_add(struct pmenu *menu, struct pmenu_item *item,
 	unsigned int insert_pt);
-void pmenu_item_delete(struct pmenu_item *item);
 
 static inline struct pmenu_item *pmenu_item_from_arg(void *arg)
 {
