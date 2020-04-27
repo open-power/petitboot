@@ -564,7 +564,7 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 			 * Enterprise ID number
 			 */
 			block_size -= CHASSIS_BOOT_MBOX_IANA_SZ;
-			boot_opt_data = &mailbox.b0.data;
+			boot_opt_data = mailbox.b0.data;
 
 			/* Check IANA matches the IBM number, '2' */
 			if (mailbox.b0.iana[0] != 0x02 ||
@@ -577,7 +577,7 @@ static int get_ipmi_boot_mailbox(struct platform_powerpc *platform,
 				return -1;
 			}
 		} else {
-			boot_opt_data = &mailbox.data;
+			boot_opt_data = mailbox.data;
 		}
 
 		mailbox_buffer = talloc_realloc(platform, mailbox_buffer,
