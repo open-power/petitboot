@@ -19,13 +19,13 @@ void run_test(struct parser_test *test)
 	check_unresolved_resource(opt->boot_image);
 	check_unresolved_resource(opt->initrd);
 	check_name(opt, "Kubuntu GNU/Linux");
-	check_args(opt, "root=UUID=29beca39-9181-4780-bbb2-ab5d4be59aaf ro quiet splash ");
+	check_args(opt, "root=UUID=29beca39-9181-4780-bbb2-ab5d4be59aaf ro quiet splash vt.handoff=7");
 
 	opt = get_boot_option(ctx, 1);
 	check_unresolved_resource(opt->boot_image);
 	check_unresolved_resource(opt->initrd);
 	check_name(opt, "Kubuntu GNU/Linux, with Linux 3.8.0-19-generic");
-	check_args(opt, "root=UUID=29beca39-9181-4780-bbb2-ab5d4be59aaf ro quiet splash ");
+	check_args(opt, "root=UUID=29beca39-9181-4780-bbb2-ab5d4be59aaf ro quiet splash vt.handoff=7");
 
 	opt = get_boot_option(ctx, 2);
 	check_name(opt, "Kubuntu GNU/Linux, with Linux 3.8.0-19-generic (recovery mode)");

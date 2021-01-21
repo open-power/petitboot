@@ -55,6 +55,28 @@ if [ ! -d / -a $status = success ]
 then status=fail_d_5
 fi
 
+if [ -e /file_that_does_not_exist -a $status = success ]
+then status=fail_e_1
+fi
+if [ ! -e /dir -a $status = success ]
+then status=fail_e_2
+fi
+if [ ! -e /empty_file -a $status = success ]
+then status=fail_e_3
+fi
+if [ -e "" -a $status = success ]
+then status=fail_e_4
+fi
+if [ ! -e / -a $status = success ]
+then status=fail_e_5
+fi
+if [ ! -e (00000000-0000-0000-0000-000000000001) -a $status = success ]
+then status=fail_e_6
+fi
+if [ -e (00000000-0000-0000-0000-000000000002) -a $status = success ]
+then status=fail_e_7
+fi
+
 menuentry $status {
   linux /vmlinux
 }
@@ -64,8 +86,13 @@ void run_test(struct parser_test *test)
 {
 	struct discover_boot_option *opt;
 	struct discover_context *ctx;
+	struct discover_device *dev;
 
 	ctx = test->ctx;
+
+	/* set local uuid */
+	dev = test->ctx->device;
+	dev->uuid = "00000000-0000-0000-0000-000000000001";
 
 	test_read_conf_embedded(test, "/grub2/grub.cfg");
 	test_add_dir(test, ctx->device, "/");

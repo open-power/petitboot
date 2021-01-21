@@ -245,6 +245,11 @@ static bool builtin_test_op_file(struct grub2_script *script, char op,
 		return false;
 
 	switch (op) {
+	case 'e':
+		/* -e: for grub, a special case is testing for the device
+		 * presence itself (e.g. allows null file). */
+		result = true;
+		break;
 	case 's':
 		/* -s: return true if file exists and has non-zero size */
 		result = !path ? false : statbuf.st_size > 0;
@@ -336,7 +341,7 @@ static bool builtin_test_op(struct grub2_script *script,
 			return strlen(a1) != 0;
 		}
 
-		if (!strcmp(op, "-s") || !strcmp(op, "-f")) {
+		if (!strcmp(op, "-s") || !strcmp(op, "-f") || !(strcmp(op, "-e"))) {
 			*consumed = 2;
 			return builtin_test_op_file(script, op[1], a1);
 		}
