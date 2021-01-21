@@ -51,13 +51,19 @@ const char *mount_base(void)
 char *join_paths(void *alloc_ctx, const char *a, const char *b)
 {
 	char *full_path;
+	size_t a_len = a ? strlen(a) : 0;
+	size_t b_len = b ? strlen(b) : 0;
 
-	full_path = talloc_array(alloc_ctx, char, strlen(a) + strlen(b) + 2);
+	full_path = talloc_zero_array(alloc_ctx, char, a_len + b_len + 2);
 
-	strcpy(full_path, a);
-	if (b[0] != '/' && a[strlen(a) - 1] != '/')
-		strcat(full_path, "/");
-	strcat(full_path, b);
+	if (a_len)
+		strcpy(full_path, a);
+
+	if (b_len) {
+		if (a_len && a[a_len - 1] != '/' && b[0] != '/')
+			strcat(full_path, "/");
+		strcat(full_path, b);
+	}
 
 	return full_path;
 }

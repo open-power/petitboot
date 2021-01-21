@@ -6,10 +6,10 @@
 #include <process/process.h>
 
 /**
- * Utility function for joining two paths. Adds a / between a and b if
- * required.
+ * Utility function for joining two paths. Allows either or
+ * both paths to be NULL. Adds a / between a and b if required.
  *
- * Returns a newly-allocated string.
+ * Returns a newly-allocated string (empty if both paths NULL)
  */
 char *join_paths(void *alloc_ctx, const char *a, const char *b);
 

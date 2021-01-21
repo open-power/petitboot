@@ -247,13 +247,13 @@ static bool builtin_test_op_file(struct grub2_script *script, char op,
 	switch (op) {
 	case 's':
 		/* -s: return true if file exists and has non-zero size */
-		result = statbuf.st_size > 0;
+		result = !path ? false : statbuf.st_size > 0;
 		break;
 	case 'f':
 		/* -f: return true if file exists and is not a directory. This is
 		 * different than the behavior of "test", but is what GRUB does
 		 * (though note as above that we follow symlinks unlike GRUB). */
-		result = !S_ISDIR(statbuf.st_mode);
+		result = !path ? false : !S_ISDIR(statbuf.st_mode);
 		break;
 	default:
 		result = false;
@@ -284,7 +284,7 @@ static bool builtin_test_op_dir(struct grub2_script *script, char op,
 	if (rc)
 		return false;
 
-	return S_ISDIR(statbuf.st_mode);
+	return !path ? false : S_ISDIR(statbuf.st_mode);
 }
 
 static bool builtin_test_op(struct grub2_script *script,
@@ -419,7 +419,8 @@ static int builtin_source(struct grub2_script *script,
 		return false;
 
 	rc = parse_to_device_path(script, argv[1], &dev, &path);
-	if (rc)
+	/* We need to have a valid (non-empty) path for sources */
+	if (rc || !path)
 		return false;
 
 	rc = parser_request_file(script->ctx, dev, path, &buf, &len);

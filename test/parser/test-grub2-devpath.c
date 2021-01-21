@@ -9,35 +9,40 @@ menuentry a {
 	linux /vmlinux
 }
 
+# local, with an empty device-string
+menuentry b {
+	linux ()/vmlinux
+}
+
 # local, specified by root env var
 root=00000000-0000-0000-0000-000000000001
-menuentry b {
+menuentry c {
 	linux /vmlinux
 }
 
 # remote, specified by root env var
 root=00000000-0000-0000-0000-000000000002
-menuentry c {
+menuentry d {
 	linux /vmlinux
 }
 
 # local, full dev+path spec
-menuentry d {
+menuentry e {
 	linux (00000000-0000-0000-0000-000000000001)/vmlinux
 }
 
 # remote, full dev+path spec
-menuentry e {
+menuentry f {
 	linux (00000000-0000-0000-0000-000000000002)/vmlinux
 }
 
 # invalid: incomplete dev+path spec
-menuentry f {
+menuentry g {
 	linux (00000000-0000-0000-0000-000000000001
 }
 
 # invalid: no path
-menuentry g {
+menuentry h {
 	linux (00000000-0000-0000-0000-000000000001)
 }
 
@@ -64,7 +69,7 @@ void run_test(struct parser_test *test)
 
 	test_run_parser(test, "grub2");
 
-	check_boot_option_count(ctx, 5);
+	check_boot_option_count(ctx, 6);
 
 	opt = get_boot_option(ctx, 0);
 	check_name(opt, "a");
@@ -76,13 +81,18 @@ void run_test(struct parser_test *test)
 
 	opt = get_boot_option(ctx, 2);
 	check_name(opt, "c");
-	check_resolved_local_resource(opt->boot_image, dev2, "/vmlinux");
+	check_resolved_local_resource(opt->boot_image, dev1, "/vmlinux");
 
 	opt = get_boot_option(ctx, 3);
 	check_name(opt, "d");
-	check_resolved_local_resource(opt->boot_image, dev1, "/vmlinux");
+	check_resolved_local_resource(opt->boot_image, dev2, "/vmlinux");
 
 	opt = get_boot_option(ctx, 4);
 	check_name(opt, "e");
+	check_resolved_local_resource(opt->boot_image, dev1, "/vmlinux");
+
+	opt = get_boot_option(ctx, 5);
+	check_name(opt, "f");
 	check_resolved_local_resource(opt->boot_image, dev2, "/vmlinux");
+
 }

@@ -70,7 +70,8 @@ struct resource *create_grub2_resource(struct grub2_script *script,
 	}
 
 	file = grub2_parse_file(script, path);
-	if (!file)
+	/* We need a non-empty path for resources */
+	if (!file || !file->path)
 		return NULL;
 
 	res = talloc(opt, struct resource);
@@ -135,19 +136,27 @@ struct grub2_file *grub2_parse_file(struct grub2_script *script,
 
 		pos = strchr(str, ')');
 
-		/* no closing bracket, or zero-length path? */
-		if (!pos || *(pos+1) == '\0') {
+		/* no closing bracket is not legal */
+		if (!pos) {
 			talloc_free(file);
 			return NULL;
 		}
 
-		file->path = talloc_strdup(file, pos + 1);
+		/* path is non-empty - copy it (otherwise keep it
+		 * NULL as it should be legal) */
+		if (*(pos+1) != '\0')
+			file->path = talloc_strdup(file, pos + 1);
 
 		dev_len = pos - str - 1;
 		if (dev_len)
 			file->dev = talloc_strndup(file, str + 1, dev_len);
 	}
 
+	/* if both dev and path are empty, this is probably an error */
+	if (!file->dev && !file->path) {
+		talloc_free(file);
+		return NULL;
+	}
 	return file;
 }
 

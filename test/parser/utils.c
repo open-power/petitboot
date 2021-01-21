@@ -257,7 +257,7 @@ int parser_stat_path(struct discover_context *ctx,
 	list_for_each_entry(&test->files, file, list) {
 		if (file->dev != dev)
 			continue;
-		if (strcmp(file->name, path))
+		if (path && strcmp(file->name, path))
 			continue;
 
 		statbuf->st_size = (off_t)file->size;
