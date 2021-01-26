@@ -1,0 +1,142 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Development and Submitting Patches &#8212; Petitboot v1.10.3 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Linux Image Requirements" href="linux-image.html" />
+    <link rel="prev" title="Design Topics" href="design.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="development-and-submitting-patches">
+<h1>Development and Submitting Patches<a class="headerlink" href="#development-and-submitting-patches" title="Permalink to this headline">¶</a></h1>
+<p>Petitboot is largely written in C and follows the <a class="reference external" href="https://github.com/torvalds/linux/blob/master/Documentation/process/coding-style.rst">Linux kernel coding style</a>.</p>
+<p>Development occurs on the <a class="reference external" href="https://lists.ozlabs.org/listinfo/petitboot">Petitboot mailing list</a>.</p>
+<p>Petitboot also has a <a class="reference external" href="http://patchwork.ozlabs.org/project/petitboot/list/">Patchwork instance</a> that watches the list.</p>
+<div class="section" id="patch-guidelines">
+<h2>Patch Guidelines<a class="headerlink" href="#patch-guidelines" title="Permalink to this headline">¶</a></h2>
+<p>Patches should be sent to the mailing list generally following what you would see in <a class="reference external" href="https://github.com/torvalds/linux/blob/master/Documentation/process/submitting-patches.rst">submitting-patches</a></p>
+<p>In general if you generate the patch with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">format-patch</span></code> or <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">send-email</span></code> you should be fine.</p>
+<p>Patches should have an obvious title and where necessary a clear commit message describing the changes.
+Avoid lumping unrelated changes together, instead putting them in separate patches in a logical order.
+If a patch is generally contained to one area (and it should be), it should generally be prefixed with the path of what it is changing, for example “discover/grub:” or “ui/ncurses:”.</p>
+<p>If sending a new revision of a patch update the title to mention the verson (hint: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">format-patch</span> <span class="pre">-v</span> <span class="pre">2</span></code>) and include a short changelog under the <code class="docutils literal notranslate"><span class="pre">---</span></code> describing what changed between versions. Check out the list archives for <a class="reference external" href="https://lists.ozlabs.org/pipermail/petitboot/2018-November/001188.html">some examples</a>.</p>
+</div>
+<div class="section" id="stable-patches">
+<h2>Stable Patches<a class="headerlink" href="#stable-patches" title="Permalink to this headline">¶</a></h2>
+<p>Patches or upstream commits that need to be applied to a stable branch should be restricted to small, self-contained fixes as much as possible. Avoid backporting new features or invasive changes.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Petitboot</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Petitboot Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components.html">Petitboot Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms.html">Platforms</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design Topics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Development and Submitting Patches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linux-image.html">Linux Image Requirements</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../func/parsers.html">Configuration Parsers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/user_interface.html">User Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/autoboot.html">Auto Boot Order</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/snapshots.html">Snapshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/ipmi.html">IPMI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/plugins.html">Plugins</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="design.html" title="previous chapter">Design Topics</a></li>
+      <li>Next: <a href="linux-image.html" title="next chapter">Linux Image Requirements</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Samuel Mendoza-Jonas, IBM.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/dev/submitting.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

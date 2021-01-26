@@ -1,0 +1,150 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Linux Image Requirements &#8212; Petitboot v1.10.3 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration Parsers" href="../func/parsers.html" />
+    <link rel="prev" title="Development and Submitting Patches" href="submitting.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="linux-image-requirements">
+<h1>Linux Image Requirements<a class="headerlink" href="#linux-image-requirements" title="Permalink to this headline">¶</a></h1>
+<p>Petitboot has a few requirements for the linux image it is built in to.
+For an in-practice example of how to build a Petitboot image see <a class="reference external" href="https://github.com/open-power/op-build/tree/master/openpower/package/petitboot">op-build</a>.</p>
+<p>For build-time dependencies see <a class="reference external" href="https://github.com/open-power/petitboot/blob/master/configure.ac">configure.ac</a>.</p>
+<div class="section" id="core-dependencies">
+<h2>Core dependencies<a class="headerlink" href="#core-dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>pb-discover expects to be run as root, or at least have permission for device management, executing kexec, etc.</li>
+<li>udev: pb-discover discovers devices via libudev enumeration so a udev implementation must be present.
+Following this any udev rules required for certain device types must also be present. Eg. op-build’s <a class="reference external" href="https://github.com/open-power/op-build/blob/master/openpower/package/petitboot/63-md-raid-arrays.rules">inclusions</a>.</li>
+<li>network utilities: pb-discover expects to have <code class="docutils literal notranslate"><span class="pre">udhcpc</span></code> available for DHCP, or a call-equivalent version. Similarly it expects <code class="docutils literal notranslate"><span class="pre">tftp</span></code> and <code class="docutils literal notranslate"><span class="pre">wget</span></code> binaries in order to download boot resources.</li>
+<li>kexec: A kexec binary must be available. This is commonly <a class="reference external" href="https://github.com/open-power/kexec-lite">kexec-lite</a> however kexec-tools should also work.</li>
+<li>LVM: Petitboot depends on libdevmapper, and also requires <code class="docutils literal notranslate"><span class="pre">vgscan</span></code> and <code class="docutils literal notranslate"><span class="pre">vgchange</span></code> to be available if order to setup logical volumes.</li>
+</ul>
+</div>
+<div class="section" id="optional-dependencies">
+<h2>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mdadm</span></code> for software RAID handling.</li>
+<li>libflash: On OPAL platforms Petitboot will use libflash to load firmware version information.</li>
+<li>ipmi: If <code class="docutils literal notranslate"><span class="pre">/dev/ipmi</span></code> is available Petitboot will use it to source information from the BMC.</li>
+<li>console setup: unless you have other requirements you probably want to be starting the UI through <code class="docutils literal notranslate"><span class="pre">pb-console</span></code> in which case it is useful to have this called by udev.
+For example: <a class="reference external" href="https://github.com/open-power/op-build/blob/master/openpower/package/petitboot/petitboot-console-ui.rules">petitboot-console-ui.rules</a>, or depending on if you’re using <code class="docutils literal notranslate"><span class="pre">agetty</span> <span class="pre">-l</span></code> to log in a user, <a class="reference external" href="https://github.com/open-power/op-build/blob/master/openpower/package/petitboot/shell_profile">shell_profile</a>.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Petitboot</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Petitboot Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components.html">Petitboot Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms.html">Platforms</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submitting.html">Development and Submitting Patches</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Linux Image Requirements</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../func/parsers.html">Configuration Parsers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/user_interface.html">User Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/autoboot.html">Auto Boot Order</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/snapshots.html">Snapshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/ipmi.html">IPMI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/plugins.html">Plugins</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="submitting.html" title="previous chapter">Development and Submitting Patches</a></li>
+      <li>Next: <a href="../func/parsers.html" title="next chapter">Configuration Parsers</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Samuel Mendoza-Jonas, IBM.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/dev/linux-image.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

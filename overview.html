@@ -1,0 +1,131 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Petitboot Overview &#8212; Petitboot v1.10.3 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Petitboot Components" href="components.html" />
+    <link rel="prev" title="Petitboot Documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="petitboot-overview">
+<h1>Petitboot Overview<a class="headerlink" href="#petitboot-overview" title="Permalink to this headline">¶</a></h1>
+<p>Petitboot is a set of userspace programs to implement a kexec-based bootloader in a small Linux image. Broadly speaking Petitboot is split into a ‘server’ half which manages devices and finds bootable images, and a ‘client’ half which provides a user interface.</p>
+<p>Petitboot uses udev to discover block devices and network interfaces and parses a set of known locations for bootloader configurations. Petitboot supports a number of configuration formats including GRUB, SYSLINUX, and Yaboot. Booting is performed via the kexec mechanism.</p>
+<p>Booting behaviour can be configured in a number of ways such as boot priority based on device, network-boot behaviour, user permissions, and platform-specific options.</p>
+<p>The primary user interface is a ncurses based menu which displays boot options and system information, and provides methods to change configuration options, execute plugins, and drop to a normal shell.</p>
+<p>Petitboot is intended to be built as part of a small Linux image, for example one built via tool such as Buildroot. A good example of such an environment is the op-build Buildroot layer used for OpenPOWER: <a class="reference external" href="https://github.com/open-power/op-build">https://github.com/open-power/op-build</a></p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Petitboot</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Petitboot Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Petitboot Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="platforms.html">Platforms</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/design.html">Design Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/submitting.html">Development and Submitting Patches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/linux-image.html">Linux Image Requirements</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="func/parsers.html">Configuration Parsers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="func/user_interface.html">User Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="func/autoboot.html">Auto Boot Order</a></li>
+<li class="toctree-l1"><a class="reference internal" href="func/snapshots.html">Snapshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="func/ipmi.html">IPMI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="func/plugins.html">Plugins</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Petitboot Documentation</a></li>
+      <li>Next: <a href="components.html" title="next chapter">Petitboot Components</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Samuel Mendoza-Jonas, IBM.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/overview.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

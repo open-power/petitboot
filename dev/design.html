@@ -1,0 +1,149 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Design Topics &#8212; Petitboot v1.10.3 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Development and Submitting Patches" href="submitting.html" />
+    <link rel="prev" title="Platforms" href="../platforms.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="design-topics">
+<h1>Design Topics<a class="headerlink" href="#design-topics" title="Permalink to this headline">¶</a></h1>
+<p>When considering new functionality or other changes to Petitboot there are a few guidelines we do our best to adhere to:</p>
+<div class="section" id="be-generic">
+<h2>Be Generic<a class="headerlink" href="#be-generic" title="Permalink to this headline">¶</a></h2>
+<p>Avoid adding code that ties Petitboot to a particular platform or functionality by default. Avoid making assumptions about the system that Petitboot may be running on. Platform specific functionality should as much as possible be confined to <cite>platform-</cite> files. Especially when thinking about dependencies on outside utilities or tools consider using the pb-plugin interface instead.</p>
+</div>
+<div class="section" id="don-t-surprise-the-user">
+<h2>Don’t Surprise The User<a class="headerlink" href="#don-t-surprise-the-user" title="Permalink to this headline">¶</a></h2>
+<p>Communicate clearly to the user what is happening. What the UI says is happening should be what actually happens.
+A particular example of this is the kernel command line: there are a few problems that would be easier to solve if we could modify the command line of the kernel to be booted, but this would be something that interferes with the users expectations and depending on their scenario could cause them problems.</p>
+</div>
+<div class="section" id="avoid-dependencies-on-the-target-operating-system">
+<h2>Avoid Dependencies On The Target Operating System<a class="headerlink" href="#avoid-dependencies-on-the-target-operating-system" title="Permalink to this headline">¶</a></h2>
+<p>Supporting multiple configuration formats means that Petitboot can be dropped in as the bootloader for most existing systems without any change in the target operating system or its bootloader configuration. Avoid any changes that would require a corresponding update in the target operating system or dependencies on any particular version of Petitboot.</p>
+</div>
+<div class="section" id="maintain-server-client-separation">
+<h2>Maintain Server-Client Separation<a class="headerlink" href="#maintain-server-client-separation" title="Permalink to this headline">¶</a></h2>
+<p>As much as possible the server should perform any actions, and the clients should only makes requests to the server. This is particularly true with the introduction of Petitboot “users” and password restrictions.
+An exception to this is the running of Petitboot plugins since these need to be run in the visible shell; however these are still subject to user permissions if enabled.</p>
+</div>
+<div class="section" id="abstract-dependencies">
+<h2>Abstract Dependencies<a class="headerlink" href="#abstract-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Avoid direct dependencies on certain utilities or versions of utilities. If there are several versions or interfaces to a utility that Petitboot might access, abstract these differences where possible. (See handling of different utilities such as tftp, udhcpc, etc).</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Petitboot</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Petitboot Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../components.html">Petitboot Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platforms.html">Platforms</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Design Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submitting.html">Development and Submitting Patches</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linux-image.html">Linux Image Requirements</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../func/parsers.html">Configuration Parsers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/user_interface.html">User Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/autoboot.html">Auto Boot Order</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/snapshots.html">Snapshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/ipmi.html">IPMI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../func/plugins.html">Plugins</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../platforms.html" title="previous chapter">Platforms</a></li>
+      <li>Next: <a href="submitting.html" title="next chapter">Development and Submitting Patches</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Samuel Mendoza-Jonas, IBM.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/dev/design.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
