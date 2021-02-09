@@ -49,6 +49,8 @@ struct pb_url * get_signature_url(void *ctx, struct pb_url *base_file)
 	talloc_free(signature_file->path);
 	signature_file->path = talloc_asprintf(signature_file,
 		"%s.sig", base_file->path);
+	talloc_free(signature_file->full);
+	signature_file->full = pb_url_to_string(signature_file);
 
 	return signature_file;
 }
