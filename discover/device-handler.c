@@ -775,6 +775,7 @@ static void countdown_status(struct device_handler *handler,
 			_("Booting in %d sec: [%s] %s"), sec,
 			opt->device->device->id, opt->option->name);
 	status.backlog = false;
+	status.boot_active = false;
 
 	device_handler_status(handler, &status);
 
