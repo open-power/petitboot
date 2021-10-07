@@ -25,6 +25,7 @@ struct discover_device {
 
 	const char		*uuid;
 	const char		*label;
+	const char		*id_path;
 
 	char			*mount_path;
 	char			*root_path;
@@ -36,6 +37,7 @@ struct discover_device {
 	bool			crypt_device;
 
 	bool			notified;
+	bool			dup_warn;
 
 	struct list		boot_options;
 	struct list		params;

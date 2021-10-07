@@ -20,6 +20,7 @@
 #include <waiter/waiter.h>
 #include <system/system.h>
 #include <process/process.h>
+#include <i18n/i18n.h>
 
 #include "event.h"
 #include "udev.h"
@@ -101,6 +102,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	const char *prop;
 	const char *type;
 	const char *devname;
+	const char *idpath;
 	const char *ignored_types[] = {
 		"linux_raid_member",
 		"swap",
@@ -179,11 +181,19 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	/* We may see multipath devices; they'll have the same uuid as an
 	 * existing device, so only parse the first. */
 	uuid = udev_device_get_property_value(dev, "ID_FS_UUID");
+	idpath = udev_device_get_property_value(dev, "ID_PATH");
 	if (uuid) {
 		ddev = device_lookup_by_uuid(udev->handler, uuid);
 		if (ddev) {
 			pb_log("SKIP: %s UUID [%s] already present (as %s)\n",
 					name, uuid, ddev->device->id);
+			/* Only warn once in petitboot status log to remind users */
+			if (strcmp(idpath, ddev->id_path) && !ddev->dup_warn) {
+				device_handler_status_info(udev->handler,
+					_("Duplicate filesystem as %s detected; skipping duplicates"),
+					ddev->device->id);
+					ddev->dup_warn = true;
+			}
 			return 0;
 		}
 	}
@@ -211,6 +221,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 		}
 	}
 
+	ddev->id_path = talloc_strdup(ddev, idpath);
 	ddev->device_path = talloc_strdup(ddev, node);
 	talloc_free(devlinks);
 
@@ -355,6 +366,7 @@ static int udev_handle_dev_remove(struct pb_udev *udev, struct udev_device *dev)
 {
 	struct discover_device *ddev;
 	const char *name;
+	const char *uuid;
 
 	name = udev_device_get_sysname(dev);
 	if (!name) {
@@ -363,8 +375,15 @@ static int udev_handle_dev_remove(struct pb_udev *udev, struct udev_device *dev)
 	}
 
 	ddev = device_lookup_by_id(udev->handler, name);
-	if (!ddev)
+	if (!ddev) {
+		uuid = udev_device_get_property_value(dev, "ID_FS_UUID");
+		if (uuid) {
+			ddev = device_lookup_by_uuid(udev->handler, uuid);
+			if (ddev)
+				ddev->dup_warn = false;
+		}
 		return 0;
+	}
 
 	device_handler_remove(udev->handler, ddev);
 
