@@ -9,7 +9,9 @@ See the petitboot [man pages](man) for more info.
 
 ## Development
 
-Petitboot's home is at [ozlabs.org](http://git.ozlabs.org/?p=petitboot); clone it with `git clone git://git.ozlabs.org/petitboot`.
+Petitboot's home is at [github.com](https://github.com/open-power/petitboot); clone it with:
+
+    git clone https://github.com/open-power/petitboot
 
 Development and discussion occurs on the Petitboot mailing list: [petitboot@lists.ozlabs.org](https://lists.ozlabs.org/listinfo/petitboot).
 
