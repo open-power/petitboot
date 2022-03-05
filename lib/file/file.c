@@ -45,6 +45,14 @@ int copy_file_secure_dest(void *ctx, const char *source_file,
 	ssize_t r;
 	size_t l1;
 
+	struct stat statbuf;
+	stat(source_file, &statbuf);
+	if (!S_ISREG(statbuf.st_mode)) {
+		pb_log("%s: unable to stat source file '%s': %m\n",
+		       __func__, source_file);
+		return -1;
+	}
+
 	source_handle = fopen(source_file, "r");
 	if (!source_handle) {
 		pb_log("%s: unable to open source file '%s': %m\n",
