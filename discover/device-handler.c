@@ -1552,7 +1552,7 @@ int device_handler_dhcp(struct device_handler *handler,
 
 	/* create our context */
 	ctx = device_handler_discover_context_create(handler, dev);
-	talloc_steal(ctx, event);
+	talloc_reference(ctx, event);
 	ctx->event = event;
 
 	device_handler_start_requery_timeout(handler, dev,
