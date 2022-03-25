@@ -678,10 +678,7 @@ static void user_event_handle_message(struct user_event *uev, char *buf,
 	if (result)
 		pb_log_fn("failed to handle action %d\n", event->action);
 
-	/* user_event_url() and user_event_dhcp() will steal the event context,
-	 * but all others still need to free */
-	if (talloc_parent(event) == uev)
-		talloc_free(event);
+	talloc_free(event);
 	return;
 }
 
