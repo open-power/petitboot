@@ -677,6 +677,14 @@ static int network_handle_nlmsg(struct network *network, struct nlmsghdr *nlmsg)
 
 		list_add(&network->interfaces, &interface->list);
 		create_interface_dev(network, interface);
+	} else {
+		/* The interface can be marked as ready before the MAC address is set. */
+		if (memcmp(interface->hwaddr, ifaddr,
+			   sizeof(interface->hwaddr)) != 0) {
+			pb_log("%s: %s has changed MAC address\n",
+			       __func__, interface->name);
+			memcpy(interface->hwaddr, ifaddr, sizeof(interface->hwaddr));
+		}
 	}
 
 	/* A repeated RTM_NEWLINK can represent an interface name change */
