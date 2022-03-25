@@ -350,7 +350,7 @@ static void configure_interface_dhcp(struct network *network,
 		"-O", "reboottime",
 		"-p", pidfile,
 		"-i", interface->name,
-		"-x", idv4, /* [11,12] - dhcp client identifier */
+		"-x", idv4, /* [13,14] - dhcp client identifier */
 		NULL,
 	};
 
@@ -381,7 +381,7 @@ static void configure_interface_dhcp(struct network *network,
 		snprintf(idv4, sizeof(idv4), "0x5d:%04x",
 				platform->dhcp_arch_id);
 	} else {
-		argv_ipv4[11] = argv_ipv6[15] =  NULL;
+		argv_ipv4[13] = argv_ipv6[15] =  NULL;
 	}
 
 	p_v4 = process_create(interface);
