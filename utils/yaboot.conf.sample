@@ -1,0 +1,13 @@
+# Sample yaboot.conf for petitboot
+# Copy to /etc/yaboot.conf and modify to match your system
+#
+
+# yaboot style samples:
+
+# image=/boot/vmlinux
+# 	label=yaboot-hdd
+# 	initrd=/boot/initrd.gz
+# 	append="root=/dev/sda1"
+# image=tftp://192.168.0.5/fire/boot/vmlinux.strip
+# 	label=yaboot-tftp
+# 	append="root=/dev/nfs rw ip=dhcp video=1080p"
