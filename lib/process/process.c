@@ -245,39 +245,29 @@ static int sigchld_pipe_event(void *arg)
 	struct process_info *procinfo;
 	struct procset *procset = arg;
 	struct process *process;
-	int pid, rc;
+	pid_t pid;
+	int rc;
 
+	/* Read the pid from the pipe */
 	rc = read(procset->sigchld_pipe[0], &pid, sizeof(pid));
 	if (rc != sizeof(pid))
 		return 0;
 
-	process = NULL;
+	/* More than 1 async process may have finished. Check them all. */
 	list_for_each_entry(&procset->async_list, procinfo, async_list) {
-		if (procinfo->process.pid == pid) {
-			process = &procinfo->process;
-			break;
+		process = &procinfo->process;
+		pid = waitpid(process->pid, &process->exit_status, WNOHANG);
+		if (pid > 0) {
+			/* ensure we have all of the child's stdout */
+			process_read_stdout(procinfo);
+
+			if (process->exit_cb)
+				process->exit_cb(process);
+
+			list_remove(&procinfo->async_list);
+			talloc_unlink(procset, procinfo);
 		}
 	}
-
-	/* We'll receive SIGCHLD for synchronous processes too; just ignore */
-	if (!process)
-		return 0;
-
-	rc = waitpid(process->pid, &process->exit_status, WNOHANG);
-
-	/* if the process is still running, ignore the event. We leave
-	 * the process in async_list so we can manage the final signal */
-	if (rc == 0)
-		return 0;
-
-	/* ensure we have all of the child's stdout */
-	process_read_stdout(procinfo);
-
-	if (process->exit_cb)
-		process->exit_cb(process);
-
-	list_remove(&procinfo->async_list);
-	talloc_unlink(procset, procinfo);
 
 	return 0;
 }
