@@ -181,7 +181,7 @@ static int udev_handle_block_add(struct pb_udev *udev, struct udev_device *dev,
 	/* We may see multipath devices; they'll have the same uuid as an
 	 * existing device, so only parse the first. */
 	uuid = udev_device_get_property_value(dev, "ID_FS_UUID");
-	idpath = udev_device_get_property_value(dev, "ID_PATH");
+	idpath = udev_device_get_property_value(dev, "ID_PATH") ?: "";
 	if (uuid) {
 		ddev = device_lookup_by_uuid(udev->handler, uuid);
 		if (ddev) {
