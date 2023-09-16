@@ -102,6 +102,29 @@ static int builtin_initrd(struct grub2_script *script,
 	return 0;
 }
 
+static int builtin_devicetree(struct grub2_script *script,
+		void *data __attribute__((unused)),
+		int argc, char *argv[])
+{
+	struct discover_boot_option *opt = script->opt;
+
+	if (!opt) {
+		pb_log("grub2 syntax error: 'devicetree' statement outside "
+				"a menuentry.\n");
+		return -1;
+	}
+
+	if (argc < 2) {
+		pb_log("grub2 syntax error: no filename provided to "
+				"devicetree statement\n");
+		return -1;
+	}
+
+	opt->dtb = create_grub2_resource(script, opt, argv[1]);
+
+	return 0;
+}
+
 static const struct option search_options[] = {
 	{
 		.name = "set",
@@ -510,6 +533,10 @@ static struct {
 	{
 		.name = "initrd16",
 		.fn = builtin_initrd,
+	},
+	{
+		.name = "devicetree",
+		.fn = builtin_devicetree,
 	},
 	{
 		.name = "search",
