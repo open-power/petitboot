@@ -55,6 +55,25 @@ static char *field_append(struct bls_state *state, int type, char *buffer,
 	return buffer;
 }
 
+static void field_trim(char *buffer)
+{
+        int i, j, end = 0;
+
+        if (!buffer)
+                return;
+
+        for (i = 0; isblank(buffer[i]); i++);
+
+        for (j = 0; buffer[i]; i++, j++) {
+                buffer[j] = buffer[i];
+
+                if (!isblank(buffer[j]))
+                        end = j + 1;
+        }
+
+        buffer[end] = '\0';
+}
+
 static char *expand_field(struct bls_state *state, char *value)
 {
 	char *buffer = NULL;
@@ -92,6 +111,8 @@ static char *expand_field(struct bls_state *state, char *value)
 		if (!buffer)
 			return NULL;
 	}
+
+	field_trim(buffer);
 
 	return buffer;
 }
