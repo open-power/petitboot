@@ -23,3 +23,15 @@ Change categories:
 
 1. GRUB parser: spaces are now trimmed from fields, which may result from
    empty-variable expansion
+
+2. Fix process exit detection; this resolves an issue where multiple payload
+   downloads may complete (near-)simultaneously.
+
+3. Network device MACs are now displayed in cases where the MAC address info
+   was received after the initial device detection
+
+4. Fix for talloc lifetime bug in the DHCP event handler
+
+5. Fix an issue where the UI would lockup while the countdown runs
+
+6. i18n: zh_CN: better wording for "golden side"
