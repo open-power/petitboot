@@ -13,7 +13,7 @@ Change categories:
 - Fixed
 - Security
 
-## [Unreleased]
+## [1.14] - 2023-09-20
 
 ### Added
 
