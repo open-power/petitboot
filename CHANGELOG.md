@@ -35,3 +35,5 @@ Change categories:
 5. Fix an issue where the UI would lockup while the countdown runs
 
 6. i18n: zh_CN: better wording for "golden side"
+
+7. Allow missing ID_PATH udev attribute
