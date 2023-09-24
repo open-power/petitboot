@@ -74,6 +74,13 @@ do
 	esac
 done
 
+# kernel messages may write over the ncurses ui - change log level to only
+# show particularly important messages
+if [ "$(id -u)" = "0" ]
+then
+	dmesg -n 1
+fi
+
 if [ "$use_getty" = 1 ]
 then
 	if [ -n "$getty_arg" ]
@@ -127,10 +134,6 @@ if $pb_config debug | grep -q enabled
 then
 	verbose_opt=--verbose
 fi
-
-# kernel messages may write over the ncurses ui - change log level to only
-# show particularly important messages
-dmesg -n 1
 
 trap '' SIGINT
 trap 'reset; echo "SIGTERM received, booting..."; sleep 2' SIGTERM
