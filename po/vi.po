@@ -1,0 +1,934 @@
+# Vietnamese translations for petitboot package.
+# This file is put in the public domain.
+# Trung Lê <8@tle.id.au>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: petitboot 20140623-g89bd2ed2-dirty\n"
+"Report-Msgid-Bugs-To: https://lists.ozlabs.org/listinfo/petitboot\n"
+"POT-Creation-Date: 2018-11-29 10:59+1100\n"
+"PO-Revision-Date: 2014-06-24 13:56+0800\n"
+"Last-Translator: Jeremy Kerr <jk@ozlabs.org>\n"
+"Language-Team: Vietnamese\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Running boot hooks"
+msgstr "Đang chạy các móc nối khởi động"
+
+#, c-format
+msgid "Loaded %s from %s"
+msgstr "Đã nạp %s từ %s"
+
+#, c-format
+msgid "Couldn't load %s from %s"
+msgstr "Không thể nạp %s từ %s"
+
+msgid "Performing kexec load"
+msgstr "Đang tiến hành nạp kexec"
+
+msgid "Decryption failed"
+msgstr "Giải mã thất bại"
+
+msgid "Signature verification failed"
+msgstr "Xác minh chữ ký thất bại"
+
+msgid "Invalid signature configuration"
+msgstr "Hiệu chỉnh chữ ký vô hiệu"
+
+msgid "Performing kexec reboot"
+msgstr "Đang tiến hành khởi động lại kexec"
+
+msgid "kexec reboot failed"
+msgstr "Khởi động lại kexec thất bại"
+
+#, c-format
+msgid "Error loading %s"
+msgstr "Lỗi nạp %s"
+
+msgid "(unknown)"
+msgstr "(không rõ)"
+
+#, c-format
+msgid "Booting %s"
+msgstr "Đang khởi động %s"
+
+msgid "Boot failed: no image specified"
+msgstr "Khởi động thất bại: không cung cấp hình ảnh"
+
+msgid "Boot failed: no command line signature file specified"
+msgstr "Khởi động thất bại: không có dòng lệnh cung cấp tập tin chữ ký"
+
+msgid "kernel image"
+msgstr "hình ảnh lõi nhân"
+
+msgid "initrd"
+msgstr ""
+
+msgid "dtb"
+msgstr ""
+
+msgid "kernel image signature"
+msgstr "chữ ký hình ảnh lõi"
+
+msgid "initrd signature"
+msgstr "chữ ký initrd"
+
+msgid "dtb signature"
+msgstr "chữ ký dtb"
+
+msgid "kernel command line signature"
+msgstr "dòng lệnh chữ ký của lõi"
+
+msgid "Boot cancelled"
+msgstr "Khởi động bị huỷ"
+
+#, c-format
+msgid "%u downloads in progress..."
+msgstr "Đang tải về %u ..."
+
+#, c-format
+msgid "%u %s downloading: %.0f%% - %<PRIu64>%cB"
+msgstr "Đang tải về %u %s: %.0f%% - %<PRIu64>%cB"
+
+msgid "item"
+msgid_plural "items"
+msgstr[0] "món"
+msgstr[1] "nhiều món"
+
+#, c-format
+msgid "Booting in %d sec: [%s] %s"
+msgstr "Đang khởi động trong %d giây: [%s] %s"
+
+msgid "device type"
+msgstr "kiểu thiết bị"
+
+msgid "device UUID"
+msgstr "UUID thiết bị"
+
+msgid "unknown specifier"
+msgstr "không rõ biến số nhất định"
+
+#, c-format
+msgid "Applying temporary autoboot override: %s"
+msgstr "Đang áp dụng autoboot override tạm thời: %s"
+
+#. TRANSLATORS: this string will be passed the type of the
+#. device (eg "disk" or "network"), which will be translated
+#. accordingly.
+#.
+#, c-format
+msgid "Processing new %s device"
+msgstr "Đang xử lý thiết bị %s"
+
+#, c-format
+msgid "Processing DHCP lease response (ip: %s)"
+msgstr "Đang xử lý thông điệp trả về từ quá trình thuê DHCP (ip: %s)"
+
+msgid "Default boot cancelled"
+msgstr "Khởi động mặc định bị huỷ"
+
+msgid "Invalid config URL!"
+msgstr "URL hiệu chỉnh không có hiệu lực!"
+
+#, c-format
+msgid "Unable to route to host %s"
+msgstr "Không thể tạo đường dẫn đến máy chủ %s"
+
+msgid "Failed to load URL!"
+msgstr "Đã thất bại nạp URL!"
+
+#, c-format
+msgid "Parsed GRUB configuration from %s"
+msgstr "Đã đoc hiệu chỉnh GRUB từ %s"
+
+#, c-format
+msgid "Parsed kboot configuration from %s"
+msgstr "Đã đọc hiệu chỉnh kboot từ %s"
+
+msgid "Configuring with DHCP"
+msgstr "Đang hiệu chỉnh với DHCP"
+
+#, c-format
+msgid "Configuring with static address (ip: %s)"
+msgstr "Đang hiệu chỉnh với địa chỉnh tĩnh (ip: %s)"
+
+#, c-format
+msgid "Download complete: %s"
+msgstr "Hoàn thành tải về: %s"
+
+#, c-format
+msgid "Failed to download %s"
+msgstr "Thất bại tải về %s"
+
+msgid "PXE autoconfiguration failed"
+msgstr "Tự động hiệu chỉnh PXE đã thất bại"
+
+#, c-format
+msgid "Parsed PXE config from %s"
+msgstr "Đã đọc hiệu chỉnh PXE từ %s"
+
+#, c-format
+msgid "Requesting config %s"
+msgstr "Đang yêu cầu hiệu chỉnh %s"
+
+#, c-format
+msgid "Probing from base %s"
+msgstr "Đang tra dò từ gốc %s"
+
+#, c-format
+msgid "Parsed yaboot configuration from %s"
+msgstr "Đã đọc hiệu chỉnh yaboot từ %s"
+
+msgid "None"
+msgstr "Không có gì"
+
+msgid "Network"
+msgstr "Mạng"
+
+msgid "Disk"
+msgstr "Đĩa"
+
+msgid "Safe Mode"
+msgstr "Chế độ an toàn"
+
+msgid "Optical"
+msgstr "Đĩa quang học"
+
+msgid "Setup Mode"
+msgstr "Chệ độ cài đặt"
+
+msgid "Unknown"
+msgstr "Không rõ"
+
+msgid "USB"
+msgstr ""
+
+msgid "CD/DVD"
+msgstr "CD/DVD"
+
+msgid "Any"
+msgstr "Bất kì"
+
+msgid "Retrieve Config"
+msgstr "Thu về Hiệu chỉnh"
+
+msgid "Configuration URL:"
+msgstr "URL Hiệu chỉnh:"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Help"
+msgstr "Giúp"
+
+msgid "Cancel"
+msgstr "Huỷ"
+
+msgid "Petitboot Config Retrieval"
+msgstr "Quá trì thu về hiệu chỉnh Petitboot"
+
+msgid "tab=next, shift+tab=previous, x=exit, h=help"
+msgstr "tab=tiếp, shift+tab=lùi, x=thoát, h=giúp"
+
+msgid "Boot Option Editor"
+msgstr "Trình sửa đổi các hiệu chỉnh khởi động"
+
+msgid "Specify paths/URLs manually"
+msgstr "Khai báo đường dẫn hoặc URL"
+
+msgid "Device:"
+msgstr "Thiết bị:"
+
+msgid "Kernel:"
+msgstr "Lõi:"
+
+msgid "Initrd:"
+msgstr "Initrd:"
+
+msgid "Device tree:"
+msgstr "Cây thiết bị:"
+
+msgid "Boot arguments:"
+msgstr "Tham biến khởi động:"
+
+msgid "Argument signature file:"
+msgstr "Tham biến tập tin chữ ký"
+
+msgid "Petitboot Option Editor"
+msgstr "Trình sửa đổi các hiệu chỉnh Petitboot"
+
+msgid "System Configuration"
+msgstr "Hiệu chỉnh hệ thống"
+
+msgid "No IP / mask values are set"
+msgstr "Không có giá trị IP hoặc mask"
+
+msgid "Select a boot device to add"
+msgstr "Chọn một thiết bị khởi động để thêm vào"
+
+msgid "Waiting for configuration data..."
+msgstr "Đang đợi dữ liệu hiệu chỉnh..."
+
+msgid "Autoboot:"
+msgstr "Tự động khởi động:"
+
+msgid "Disabled"
+msgstr "Vô hiệu lực"
+
+msgid "Enabled"
+msgstr "Có hiệu lực"
+
+msgid "Add Device"
+msgstr "Thêm Thiết bị"
+
+msgid "Clear"
+msgstr "Xoá"
+
+msgid "Clear & Boot Any"
+msgstr "Xoá & Khởi động bất kì"
+
+msgid "Boot Order:"
+msgstr "Trật tự khởi động:"
+
+msgid "(None)"
+msgstr "(Không có gì)"
+
+#, c-format
+msgid "disk: %s [uuid: %s]"
+msgstr "đĩa: %s [uuid: %s]"
+
+#, c-format
+msgid "net:  %s [mac: %s]"
+msgstr "mạng:  %s [mac: %s]"
+
+msgid "Any Device"
+msgstr "Bất kì thiết bị"
+
+#, c-format
+msgid "Any %s device"
+msgstr "Bất kì thiết bị %s"
+
+msgid "Timeout:"
+msgstr "Hết giờ:"
+
+msgid "seconds"
+msgstr "giây"
+
+#, c-format
+msgid "%s IPMI boot option: %s"
+msgstr "%s IPMI khởi tạo lựa chọn: %s"
+
+msgid "Persistent"
+msgstr "Vĩnh viễn"
+
+msgid "Temporary"
+msgstr "Tạm thời"
+
+msgid "Clear option:"
+msgstr "Xoá các lựa chọn:"
+
+msgid "Clear IPMI override now"
+msgstr "Xoá các hiệu chỉnh ghi đè của IPMI ngay bây giờ"
+
+msgid "Network:"
+msgstr "Mạng:"
+
+msgid "DHCP on all active interfaces"
+msgstr "DHCP trên toàn bộ các giao diện có hiệu lực"
+
+msgid "DHCP on a specific interface"
+msgstr "DHCP trên một giao diện nhất định"
+
+msgid "Static IP configuration"
+msgstr "Hiệu chỉnh IP tĩnh"
+
+msgid "link up"
+msgstr "đường dẫn lên"
+
+msgid "link down"
+msgstr "đường dẫn xuống"
+
+msgid "Network Override Active! 'OK' will overwrite interface config"
+msgstr "Chế độ ghi đè mạng đã có hiệu lực! 'OK' sẽ ghi đè các hiệu chỉnh giao diện"
+
+msgid "IP/mask:"
+msgstr "IP/mask:"
+
+msgid "(eg. 192.168.0.10 / 24)"
+msgstr "(eg. 192.168.0.10 / 24)"
+
+msgid "Gateway:"
+msgstr "Gateway:"
+
+msgid "(eg. 192.168.0.1)"
+msgstr "(eg. 192.168.0.1)"
+
+msgid "URL:"
+msgstr ""
+
+msgid "(eg. tftp://)"
+msgstr "(vd: tftp://)"
+
+msgid "DNS Server(s):"
+msgstr "Máy chủ DNS:"
+
+msgid "(eg. 192.168.0.2)"
+msgstr "(vd: 192.168.0.2)"
+
+msgid "(if not provided by DHCP server)"
+msgstr "(nếu không đc cung cấp bởi máy chủ DHCP)"
+
+msgid "HTTP Proxy:"
+msgstr ""
+
+msgid "HTTPS Proxy:"
+msgstr ""
+
+msgid "Selecting 'OK' will exit safe mode"
+msgstr "Lựa chọn 'OK' sẽ thoát khỏi chế độ an toàn"
+
+msgid "Disk R/W:"
+msgstr "Đĩa Đọc/Ghi:"
+
+msgid "Prevent all writes to disk"
+msgstr "Tránh ghi vào đĩa"
+
+msgid "Allow bootloader scripts to modify disks"
+msgstr "Cho phép các script bootloader thay đỗi đĩa"
+
+msgid "Boot console:"
+msgstr "Boot console:"
+
+#, c-format
+msgid "Manually set: '%s'"
+msgstr "Chỉnh thủ công: '%s'"
+
+#, c-format
+msgid "Current interface: %s"
+msgstr "Giao diện hiện tại: %s"
+
+msgid "Petitboot System Configuration"
+msgstr "Hiệu chỉnh hệ thống Petitboot"
+
+msgid "Returned from shell"
+msgstr "Đã trở về từ shell"
+
+#, c-format
+msgid "Running %s..."
+msgstr "Đang chạy %s..."
+
+#, c-format
+msgid "Failed: %s"
+msgstr "Thất bại: %s"
+
+#, c-format
+msgid "Booting %s..."
+msgstr "Đang khởi động %s..."
+
+#, c-format
+msgid "Failed: boot %s"
+msgstr "Thất bại: khởi động %s"
+
+#, c-format
+msgid "User item %u"
+msgstr "Món người dùng %u"
+
+#, c-format
+msgid "Plugins (%u)"
+msgstr "Plugins (%u)"
+
+#, c-format
+msgid "  %s [installed]"
+msgstr "  %s [đã cài đặt]"
+
+msgid "Plugins (0)"
+msgstr ""
+
+#, c-format
+msgid "SAFE MODE: select '%s' to continue"
+msgstr "Chế độ an toàn: chọn '%s' để tiếp tục"
+
+msgid "Rescan devices"
+msgstr "Quét lại thiết bị"
+
+msgid "Enter=accept, e=edit, n=new, x=exit, l=language, g=log, h=help"
+msgstr "Enter=chấp nhận, e=thay đổi, n=mới, x=thoát, l=ngôn ngữ, g=log, h=giúp"
+
+msgid "Welcome to Petitboot"
+msgstr "Chào mừng tới Petitboot"
+
+msgid "System information"
+msgstr "Thông tin hệ thống"
+
+msgid "System configuration"
+msgstr "Hiệu chỉnh hệ thống"
+
+msgid "System status log"
+msgstr ""
+
+msgid "Retrieve config from URL"
+msgstr "Thu về hiệu chỉnh từ URL"
+
+msgid "Reboot"
+msgstr "Khởi động lại"
+
+msgid "Exit to shell"
+msgstr "Thoát tới shell"
+
+msgid "main menu"
+msgstr "menu chính"
+
+msgid "Petitboot Plugins"
+msgstr "Petitboot Plugins"
+
+msgid "Enter=install, e=details, x=exit, h=help"
+msgstr "Enter=cài đặt, e=chi tiết, x=thoát, h=giúp"
+
+msgid "Available Petitboot Plugins"
+msgstr "Các plugin Petitboot hiện hữu"
+
+msgid "Return to Main Menu"
+msgstr "Trở về Menu Chính"
+
+msgid "plugin menu"
+msgstr "menu plugin"
+
+#, c-format
+msgid "%s: alloc cui failed.\n"
+msgstr "%s: alloc cui thất bại.\n"
+
+#, c-format
+msgid "%s: error: discover_client_init failed.\n"
+msgstr "%s: error: discover_client_init thất bại.\n"
+
+#, c-format
+msgid "could not start pb-discover, the petitboot daemon.\n"
+msgstr "không thể khởi động pb-discover (petitboot daemon).\n"
+
+#, c-format
+msgid "check that pb-discover, the petitboot daemon is running.\n"
+msgstr "kiểm tra pb-discover đấy, trình petitboot daemon đang chạy.\n"
+
+msgid "Petitboot help"
+msgstr "Petitboot trợ giúp"
+
+#, c-format
+msgid "Petitboot help: %s"
+msgstr "Petitboot giúp: %s"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+#, c-format
+msgid "Unknown language '%s'"
+msgstr "Không rõ ngôn ngữ '%s'"
+
+msgid "Petitboot Language Selection"
+msgstr "Lựa chọn ngôn ngữ Petitboot"
+
+msgid "tab=next, shift+tab=previous, x=exit"
+msgstr "tab=tiếp, shift+tab=lùi, x=thoát"
+
+#, c-format
+msgid "!Invalid option %d"
+msgstr "!Lựa chọn không hợp lệ %d"
+
+msgid "Unknown Device"
+msgstr "Không rõ thiết bị"
+
+msgid "Waiting for system information..."
+msgstr "Đang đợi cho thông tin hệ thống..."
+
+msgid "System type:"
+msgstr "Kiểu hệ thống:"
+
+msgid "System id:"
+msgstr "ID hệ thống:"
+
+msgid "Primary platform versions:"
+msgstr "Phiên bản nền tảng chính:"
+
+msgid "Alternate platform versions:"
+msgstr "Phiên bản nền tảng phụ:"
+
+msgid "BMC current side:"
+msgstr "Mặt hiện hữu của BMC:"
+
+msgid "BMC golden side:"
+msgstr "Mặt vàng của BMC:"
+
+msgid "Storage devices"
+msgstr "Các thiết bị lưu trữ"
+
+#, c-format
+msgid " UUID:       %s"
+msgstr " UUID:       %s"
+
+#, c-format
+msgid " mounted at: %s"
+msgstr " gán tại: %s"
+
+msgid "Management (BMC) interface"
+msgstr "Giao diện quản lý (BMC)"
+
+#, c-format
+msgid " MAC:  %s"
+msgstr " MAC:  %s"
+
+msgid "Network interfaces"
+msgstr "Giao diện mạng"
+
+#, c-format
+msgid " MAC:        %s"
+msgstr " MAC:        %s"
+
+#, c-format
+msgid " IP Address: %s"
+msgstr "Địa chỉ IP: %S"
+
+msgid "none"
+msgstr "không có"
+
+#, c-format
+msgid " IPv6 Address: %s"
+msgstr "Địa chỉ IPv6: %s"
+
+#. TRANSLATORS: these "up" / "down" strings refer to the
+#. * link status for a network connection.
+#, c-format
+msgid " link:       %s"
+msgstr " kết nối:       %s"
+
+msgid "up"
+msgstr "lên"
+
+msgid "down"
+msgstr "xuống"
+
+msgid "Petitboot System Information"
+msgstr "Thông tin hệ thống Petitboot"
+
+msgid "System Information"
+msgstr "Thông tin hệ thống"
+
+msgid "x=exit, h=help"
+msgstr "x=thoát, h=giúp"
+
+msgid "x=exit"
+msgstr "x=thoát"
+
+msgid ""
+"From the main menu screen, select a boot option. The options displayed are "
+"available on the system and the network.\n"
+"\n"
+"To select a boot option, press Enter.\n"
+"\n"
+"To make changes to an existing option, type E (edit).\n"
+"\n"
+"To add a new boot option, type N (new).\n"
+"\n"
+"To display information about the system, including the MAC addresses of each "
+"network interface, type I (information).\n"
+"\n"
+"To make changes to the system configuration, type C (configure).\n"
+"\n"
+"To set the language for the petitboot interface, type L (language).\n"
+"\n"
+"To view the log of status messages from the discovery process, type G "
+"(log).\n"
+"\n"
+"To find new or updated boot options on the system, select the 'Rescan "
+"devices' option.\n"
+"\n"
+"To retreive new boot options from a remote configuration file, select the "
+"'Thu về hiệu chỉnh từ URL' option.\n"
+"\n"
+"To close the Petitboot interface, type X (exit).\n"
+msgstr ""
+"Từ giao diện menu chính chọn một lựa chọn khởi động. Các lựa chọn sẽ được hiển thị "
+"hiện hữu trên hệ thống và mạng.\n"
+"\n"
+"Để dùng một lựa chọn khởi động xin ấn Enter.\n"
+"\n"
+"Để thay đổi lựa chọn hiện hữu xin ấn E.\n"
+"\n"
+"Để thêm vào lựa chọn mới ấn N.\n"
+"\n"
+"Để hiển thị thông tin hệ thống (bao gồm địa chỉ MAC của từng giao diện "
+"mạng xin ấn I.\n "
+"\n"
+"Để thay đổi hiệu chỉnh hệ thốn xin ấn C.\n"
+"\n"
+"Để chọn ngôn ngữ cho giao diện petitboot xin ấn L.\n"
+"\n"
+"Để xem log của thông điệp trạng thái từ công đoạn khám phá xin ấn G.\n"
+"\n"
+"Để tìm các lựa chọn cũ hay mới xin chọn 'Quét lại "
+"thiết bị'.\n"
+"\n"
+"Để thu về các lựa chọn khởi động mới từ một tập tin ở ngoài xin chọn "
+"'Thu về hiệu chỉnh từ URL'.\n"
+"\n"
+"Để hạn chế petitboot tự khởi động cho một loại thiết bị xin tham khảo "
+"một số phím sau:\n"
+"\n"
+"  F10: Chỉ tự khởi động từ đĩa\n"
+"  F11: Chỉ tự khởi động từ thiết bị USB\n"
+"  F12: Chỉ tự khởi động từ mạng\n"
+"\n"
+"Không giống các phím khác, các phím trên không huỷ bỏ chế độ tự khởi động.\n"
+"\n"
+"Để đống giao diện Petitboot xin ấn X.\n"
+
+msgid ""
+"Supply a valid URL here to retrieve a remote pxe-boot config file and parse "
+"it.\n"
+"\n"
+"URLs are of the form 'scheme://host/path/to/pxeconffile', such as tftp://"
+"host/pxeconffile or http://host/pxeconffile"
+msgstr ""
+"Cung cấp một URL có hiệu lực để thu về và đọc tập tin hiểu chỉnh pxe-boot.\n"
+"\n"
+"Các URL thuộc mẫu 'scheme://host/path/to/pxeconffile', vd tftp://"
+"host/pxeconffile hoặc http://host/pxeconffile"
+
+msgid ""
+"This screen allows you to edit or create boot options.\n"
+"\n"
+"Device: This is a list of block devices available on the system. Select the "
+"device which contains your boot resources (kernel, initrd and device tree), "
+"or \"Specify paths/URLs manually\" to use full URLs to the boot resources.\n"
+"\n"
+"Kernel: enter the path to the kernel to boot. This field is mandatory. This "
+"should be a kernel image that the kexec utility can handle. Generally, this "
+"will be a 'vmlinux'-type image.\n"
+"Example: /boot/vmlinux\n"
+"\n"
+"Initrd: enter the path to the initial RAM disk image. This is optional.\n"
+"Example: /boot/initrd.img\n"
+"\n"
+"Device tree: enter the path to the device tree blob file (.dtb). This is "
+"optional; if not specified, and your platform currently provides a device "
+"tree, the current one will be used.\n"
+"Example: /boot/device-tree.dtb\n"
+"\n"
+"Boot arguments: enter the kernel command-line arguments. This is optional.\n"
+"Example: root=/dev/sda1 console=hvc0\n"
+"\n"
+msgstr ""
+"Màn hình này cho phép thay đổi hoặc tạo một lựa chọn khởi động mới.\n"
+"\n"
+"Thiết bị: Đây là liệt kê các thiế bị khối hiện hành trên hệ thống. Chọn "
+"thiết bị có kèm các tài nguyên khởi động của bạn (lõi, initrd và cây thiết bị), "
+"hoặc \"Khai báo đường dẫn hoặc URL\" để sử dụng URL để khởi động tài nguyên.\n"
+"\n"
+"Lõi: nhập đường dẫn đến lõi để khởi động. Biến này bắt buộc. Lõi "
+"này là một hình ảnh mà kexec có thể đọc được. Nó thường là hình ảnn "
+"có mẫu 'vmlinux'.\n"
+"Ví dụ: /boot/vmlinux\n"
+"\n"
+"Initrd: nhập đường dẫn đến hình ảnh đĩa RAM đầu tiên. Biến này không bắt buộc.\n"
+"Ví dụ: /boot/initrd.img\n"
+"\n"
+"Cây thiết bị: nhập đường dẫn đến tập blob cây thiết bị (.dtb). Biến này không bắt buộc. "
+"nếu không khai bao thì nên tảng của bạn sẽ cung cấp một cây thiết bị hiện hành "
+"(cái đang được sử dụng).\n"
+"Ví dụ: /boot/device-tree.dtb\n"
+"\n"
+"Tham biến khởi động: nhập các tham biến cho lõi. Biến này không bắt buộc.\n"
+"Ví dụ: root=/dev/sda1 console=hvc0\n"
+"\n"
+
+msgid ""
+"Autoboot: Specify which devices to autoboot from.\n"
+"\n"
+"By selecting the 'Add Device' button new devices can be added to the "
+"autoboot list, either by UUID, MAC address, or device type. Once added to "
+"the boot order, the priority of devices can be changed with the '-' (minus) "
+"and '+' (plus) keys. Devices can be individually removed from the boot order "
+"with the 'delete' or 'backspace' keys. Use this option if you have multiple "
+"operating system images installed.\n"
+"\n"
+"To autoboot from any device, select the 'Clear & Boot Any' button. In this "
+"case, any boot option that is marked as a default (by bootloader "
+"configuration) will be booted automatically after a timeout. Use this option "
+"if you want to quickly boot your system without changing any boot option "
+"settings. This is the typical configuration.\n"
+"\n"
+"To disable autoboot, select the 'Clear' button, which will clear the boot "
+"order. With autoboot disabled, user interaction will be required to continue "
+"past the petitboot menu. Use this option if you want the machine to wait for "
+"an explicit boot selection, or want to interact with petitboot before "
+"booting the system\n"
+"\n"
+"Timeout: Specify the length of time, in seconds, that the main menu will be "
+"displayed before the default boot option is started. This option is only "
+"displayed if autoboot is enabled.\n"
+"\n"
+"Network options:\n"
+"\n"
+"DHCP on all active interfaces: Automatically assigns IP addresses to each "
+"network interface. Use this option if you have a DHCP server on your "
+"network.\n"
+"\n"
+"DHCP on a specific interface: Automatically assigns IP addresses to the "
+"selected network interface. The other interfaces are not configured. Select "
+"this option if you have multiple DHCP servers on different interfaces, but "
+"only want to configure a single interface during boot.\n"
+"\n"
+"Static IP configuration: Allows you to specify an IPv4 address and network "
+"mask, gateway, and a DNS server or servers for a network interface. Select "
+"this option if you do not have a DHCP server, or want explicit control of "
+"network settings.\n"
+"\n"
+"HTTP(S) Proxy: Allows you to specify an optional HTTP or HTTPS proxy server "
+"if required, for example: \"http://proxy:3128\". Any HTTP(S) requests made "
+"by the pb-discover server will use these details.\n"
+"\n"
+"Disk R/W: Certain bootloader configurations may request write access to "
+"disks to save information or update parameters (eg. GRUB2). Use this option "
+"to control access to disks.\n"
+msgstr ""
+"Tự khởi động: Khai báo thiết bị để tự khởi động.\n"
+"\n"
+"Khi chọn nút 'Thêm thiết bị' button, các thiết bị mới sẽ được thêm vào "
+"danh sách tự khởi động, có thể với UUID, địa chỉ MAC hoặc kiểu thiết bị. Khi đã "
+"được thêm vào trật tự khởi động, hiệu chỉnh ưu tiên của thiết bị có thể thay đổi với phím '-' (dấu trừ) "
+"hoặc '+' (dấu cộng). Các thiết bị có thể được xoá một cách riêng rẽ từ trật tự khởi động "
+"với phím 'delete' hoặc 'backspace'. Dùng lựa chọn này nếu bạn có nhiều hệ điều hành "
+"được cài đặt.\n"
+"\n"
+"Để tự khởi động từ bất kể thiết bị nào, chọn nút 'Xoá & Khởi động bất kì'. Trong trường hợp "
+"này bất kể lựa chọn nào được đánh dấu là mặc định (bởi bootloader) "
+"sẽ được tự kích hoạt sau khi đợi hết thời gian chờ. Dùng lựa chọn này "
+"nếu bạn muốn khởi động nhanh vào hệ thống mà không muốn thay đổi bất cứ hiệu chỉnh gì.\n"
+"\n"
+"Để vô hiệu tự khởi động, chọn nút 'Xoá' để xoá hết các trật tự khởi động. "
+"Khi tự khởi động đã bị vô hiệu hoá, người dùng phải tương tác để tiếp tục "
+"đi quá menu petitboot. Sử dụng lựa chọn này nếu bạn muốn máy đợi "
+"cho một lựa chọn khởi động cụ thể nào đó, hoặc chỉ đơn giản là muốn "
+"tương tác với petitboot trước khi khởi động hệ thống\n"
+"\n"
+"Hết giờ: Khai báo thời gian (giây) cho menu chính phải chờ "
+"trước khi ngả về lựa chọn khởi động mặc định. Lựa chọn này chỉ "
+"được hiển thị khi chức năng tự khởi động có hiệu lực.\n"
+"\n"
+"Các lựa chọn mạng:\n"
+"\n"
+"DHCP trên toàn bộ các giao diện có hiệu lực: Tự động cấp phép địa chỉ IP "
+"cho từng giao diện mạng. Dùng lựa chọn này nếu bạn có máy chủ DHCP.\n"
+"\n"
+"DHCP trên một giao diện nhất định: Tự động cấp phép địa chỉ IP "
+"cho giao diện mạng được chọn. Các giáo diện khác sẽ không được cấu hình. "
+"Dùng lựa chọn này nếu bạn có nhiểu máy chủ DHCP trên nhiều giao diện khác nhau nhưng "
+"chỉ muốn cấu hình một giao diện để khởi động.\n"
+"\n"
+"Cấu hình IP tĩnh: Cho phép khai báo địa chỉ IPv4 và mặt nạ, "
+"gateway và máy chủ DNS server hoặc các máy chủ cho một giao diện mạng. Chọn "
+"lựa này nếu bạn không có máy chủ DHCP hoặc bạn muốn cụ thể kiểm sát cấu hình "
+"mạng.\n"
+"\n"
+"HTTP(S) Proxy: Cho phép khai báo một máy chủ proxy HTTP / HTTPS"
+"nếu cần, vd: \"http://proxy:3128\". Tất cả request HTTP(S) mà được tạo "
+"bởi máy chủ pb-discover server sẽ dùng các chi tiết đấy.\n"
+"\n"
+"Đĩa Đọc/Ghi: Một số cấu hình bootloader nhất định có thể yêu cầu được ghi vào "
+"đĩa để lưu trữ thông tin hoặc các tham biến (vd: GRUB2). Dùng lựa chọn này "
+"nếu muốn quản lý truy cập vào đĩa.\n"
+
+msgid "Petitboot Plugin"
+msgstr "Petitboot Plugins"
+
+#, c-format
+msgid "Finished: %s"
+msgstr "Hoàn tất: %s"
+
+#, c-format
+msgid "Installing plugin %s"
+msgstr "Đang cài đặt plugin %s"
+
+msgid "Failed to send install request"
+msgstr "Thất bại trong việc gửi yêu cầu cài đặt"
+
+msgid "ID:"
+msgstr ""
+
+msgid "Name:"
+msgstr "Tên:"
+
+msgid "Vendor:"
+msgstr "Nhà sản xuất:"
+
+msgid "Vendor ID:"
+msgstr "ID nhà sx:"
+
+msgid "Version:"
+msgstr "Phiên bản:"
+
+msgid "Date"
+msgstr "Ngày"
+
+msgid "Commands:"
+msgstr "Lệnh:"
+
+msgid "Run selected command"
+msgstr "Chạy lệnh được chọn"
+
+msgid ""
+"This screen lists the details and available commands of an installed "
+"plugin.\n"
+"To run a plugin command choose it in the list and select the \"Run\" button. "
+"The Petitboot UI will temporarily exit to run the command, then return to "
+"this screen."
+msgstr ""
+"Màn hình này liệt kê các thông tin và lệnh hiện hành của một plugin đã được cài đặt.\n"
+"Để chạy một lệnh plugin xin chọn nó trong danh mục và chọn nút \"Chạy\". "
+"Giao diện Petitboot UI sẽ tạm thời thoát ra để chạy lệnh rồi sẽ trở về màn hình này."
+
+msgid ""
+"Plugins discovered by Petitboot are listed in this menu.\n"
+"Press Enter to install the selected plugin. Once installed the plugin "
+"details can be seen by pressing 'e'. From the detailed view plugin commands "
+"can also be run."
+msgstr ""
+"Các Plugin được khám phả bởi Petitboot sẽ được liệt kê trong menu này.\n"
+"Ấn Enter để cài đặt plugin lựa chọn. Khi cài xong plugin "
+"các thông tin có thể được truy xuất với nút ấn 'e'. Từ giao diện plugin các lệnh "
+"cũng có thể được chạy."
+
+msgid "Petitboot status log"
+msgstr "Log trạng thái Petitboot"
+
+msgid "Usage"
+msgstr "Cách sử dụng"
+
+#~ msgid "kexec load failed"
+#~ msgstr "Nạp kexec thất bại"
+
+#~ msgid "No network configured"
+#~ msgstr "Không có mạng nào được cấu hình"
+
+#~ msgid "Config file %s parsed"
+#~ msgstr "Tập tin cáu hình %s đã được đọc"
+
+#~ msgid "Error"
+#~ msgstr "Lỗi"
+
+#~ msgid "Info"
+#~ msgstr "Thông tin"
+
+#~ msgid "Don't autoboot"
+#~ msgstr "Không tự khởi động"
+
+#~ msgid "Autoboot from any disk/network device"
+#~ msgstr "Tự khởi động từ bất kể thiết bị đĩa hay mạng"
+
+#~ msgid "Only autoboot from a specific disk/network device"
+#~ msgstr "Chỉ tự khởi động từ một thiết bị đĩa hay mạng"
+
+#~ msgid "Unknown UUID: %s"
+#~ msgstr "Không rõ UUID: %s"
