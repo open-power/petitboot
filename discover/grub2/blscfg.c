@@ -124,6 +124,10 @@ static void bls_process_pair(struct conf_context *conf, const char *name,
 	struct discover_boot_option *opt = state->opt;
 	struct boot_option *option = opt->option;
 
+	/* ignore bare values */
+	if (!name)
+		return;
+
 	if (streq(name, "title")) {
 		state->title = expand_field(state, value);
 		return;
