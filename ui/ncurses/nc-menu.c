@@ -82,6 +82,7 @@ static void pmenu_resize(struct nc_scr *scr)
 static int pmenu_item_destructor(void *arg)
 {
 	struct pmenu_item *item = arg;
+	talloc_free((char *)item->label);
 	free_item(item->nci);
 	return 0;
 }
@@ -146,7 +147,9 @@ int pmenu_item_update(struct pmenu_item *item, const char *name)
 		talloc_free((char *)label);
 		return -1;
 	}
+	talloc_free((char *)item->label);
 	free_item(item->nci);
+	item->label = label;
 	item->nci = i;
 
 	return 0;
@@ -168,6 +171,7 @@ struct pmenu_item *pmenu_item_create(struct pmenu *menu, const char *name)
 
 	item->i_sig = pb_item_sig;
 	item->pmenu = menu;
+	item->label = label;
 	item->nci = new_item(label, NULL);
 
 	if (!item->nci) {

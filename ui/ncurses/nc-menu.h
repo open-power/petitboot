@@ -46,6 +46,7 @@ struct pmenu;
 
 struct pmenu_item {
 	enum pb_nc_sig i_sig;
+	const char *label;
 	ITEM *nci;
 	struct pmenu *pmenu;
 	void *data;
