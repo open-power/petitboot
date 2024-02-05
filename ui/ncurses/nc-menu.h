@@ -126,7 +126,7 @@ static inline struct pmenu *pmenu_from_scr(struct nc_scr *scr)
 
 static inline void pmenu_dump_item(const ITEM *item)
 {
-	pb_debug("%p %s\n", item, (item ? item->name.str : "(null)"));
+	pb_debug("%p %s\n", item, (item ? item_name(item) : "(null)"));
 }
 
 static inline void pmenu_dump_items(ITEM *const *items, unsigned int count)
@@ -135,7 +135,7 @@ static inline void pmenu_dump_items(ITEM *const *items, unsigned int count)
 
 	for (i = 0; i < count; i++)
 		pb_debug("%u: %p %s\n", i, items[i],
-			(items[i] ? items[i]->name.str : "(null)"));
+			(items[i] ? item_name(items[i]) : "(null)"));
 }
 
 #endif

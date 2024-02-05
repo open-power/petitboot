@@ -141,9 +141,13 @@ int pmenu_item_update(struct pmenu_item *item, const char *name)
 	if (!label)
 		return -1;
 
-	i = item->nci;
-	i->name.str = label;
-	i->name.length = strncols(label);
+	i = new_item(label, NULL);
+	if (!i) {
+		talloc_free((char *)label);
+		return -1;
+	}
+	free_item(item->nci);
+	item->nci = i;
 
 	return 0;
 }
@@ -358,7 +362,7 @@ static int pmenu_item_get_index(const struct pmenu_item *item)
 				return i;
 
 	pb_log_fn("not found: %p %s\n", item,
-		(item ? item->nci->name.str : "(null)"));
+		(item ? item_name(item->nci) : "(null)"));
 	return -1;
 }
 
