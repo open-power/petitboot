@@ -15,6 +15,10 @@ Change categories:
 
 ## [Unreleased]
 
+### Fixed
+
+1. GRUB parser: bls: Fix NULL pointer dereference on empty values
+
 ### Changed
 
 1. pb-console: we now silence the kernel log messages printed to console
