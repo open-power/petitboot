@@ -19,6 +19,8 @@ Change categories:
 
 1. GRUB parser: bls: Fix NULL pointer dereference on empty values
 
+2. GRUB parser: use new define syntax for yacc source
+
 ### Changed
 
 1. pb-console: we now silence the kernel log messages printed to console

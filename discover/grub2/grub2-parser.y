@@ -1,9 +1,9 @@
 
-%pure-parser
+%define api.pure
 %lex-param { yyscan_t scanner }
 %parse-param { struct grub2_parser *parser }
 %parse-param { void *scanner }
-%error-verbose
+%define parse.error verbose
 
 %{
 #include <talloc/talloc.h>
