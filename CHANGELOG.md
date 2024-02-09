@@ -13,6 +13,13 @@ Change categories:
 - Fixed
 - Security
 
+## [Unreleased]
+
+### Changed
+
+1. pb-console: we now silence the kernel log messages printed to console
+   earlier in setup
+
 ## [1.14] - 2023-09-20
 
 ### Added
