@@ -118,6 +118,7 @@ check_DATA += \
 	test/parser/data/grub2-ubuntu-13_04-x86.conf \
 	test/parser/data/grub2-rhel8.conf \
 	test/parser/data/grub2-rhcos-ootpa.conf \
+	test/parser/data/grub2-blscfg-fcos38.conf \
 	test/parser/data/yaboot-rh8-ppc64.conf \
 	test/parser/data/syslinux-include-root.cfg \
 	test/parser/data/syslinux-include-nest-1.cfg \
