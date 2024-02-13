@@ -56,6 +56,7 @@ parser_TESTS = \
 	test/parser/test-grub2-blscfg-default-filename \
 	test/parser/test-grub2-blscfg-default-index \
 	test/parser/test-grub2-blscfg-default-title \
+	test/parser/test-grub2-blscfg-fcos38 \
 	test/parser/test-grub2-blscfg-multiple-bls \
 	test/parser/test-grub2-blscfg-opts-config \
 	test/parser/test-grub2-blscfg-opts-grubenv \
