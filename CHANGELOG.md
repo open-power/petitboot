@@ -13,6 +13,12 @@ Change categories:
 - Fixed
 - Security
 
+## [Unreleased]
+
+### Added
+
+1. New Vietnamese translation, from Trung Lê <8@tle.id.au>.
+
 ## [1.15] - 2024-02-13
 
 ### Fixed
