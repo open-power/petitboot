@@ -15,6 +15,7 @@ Overview
    overview
    components
    platforms
+   config
 
 Development
 ===========
