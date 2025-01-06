@@ -19,6 +19,8 @@ Change categories:
 
 1. New Vietnamese translation, from Trung Lê <8@tle.id.au>.
 
+2. New documentation for configuration formats
+
 ## [1.15] - 2024-02-13
 
 ### Fixed
