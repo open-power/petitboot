@@ -21,6 +21,10 @@ Change categories:
 
 2. New documentation for configuration formats
 
+### Fixed
+
+1. Fix builds against ncurses with `NCURSES_OPAQUE_MENU`
+
 ## [1.15] - 2024-02-13
 
 ### Fixed
