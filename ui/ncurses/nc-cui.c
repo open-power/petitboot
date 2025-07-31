@@ -1365,8 +1365,8 @@ static void cui_update_status(struct status *status, void *arg)
  */
 static int cui_plugin_option_add(struct plugin_option *opt, void *arg)
 {
-	struct cui_opt_data *cod;
 	struct cui *cui = cui_from_arg(arg);
+	struct cui_opt_data *cod = NULL;
 	struct pmenu_item *item = NULL;
 	struct boot_option *dummy_opt;
 	struct device *dev;
@@ -1406,6 +1406,10 @@ fallback:
 		cui_boot_option_add(dev, dummy_opt, cui);
 		goto fallback;
 	}
+
+	/* this should always be present if we have an item */
+	if (!cod)
+		return -1;
 
 	/*
 	 * If this option was faked above move the context under
