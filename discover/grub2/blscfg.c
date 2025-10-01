@@ -3,9 +3,10 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <dirent.h>
+#include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 
 #include <log/log.h>
 #include <file/file.h>
