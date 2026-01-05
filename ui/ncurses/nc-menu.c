@@ -147,10 +147,13 @@ int pmenu_item_update(struct pmenu_item *item, const char *name)
 		talloc_free((char *)label);
 		return -1;
 	}
+
 	talloc_free((char *)item->label);
 	free_item(item->nci);
 	item->label = label;
 	item->nci = i;
+
+	set_item_userptr(item->nci, item);
 
 	return 0;
 }
@@ -630,4 +633,3 @@ int pmenu_setup(struct pmenu *menu)
 
 	return 0;
 }
-

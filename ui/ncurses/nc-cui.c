@@ -1062,6 +1062,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 			char *label = talloc_asprintf(item, _("Plugins (%u)"),
 					cui->n_plugins);
 			pmenu_item_update(item, label);
+			cui->main->items[j] = item->nci;
 			talloc_free(label);
 			break;
 		}
@@ -1083,6 +1084,7 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 					char *label =  talloc_asprintf(menu, "%s%s",
 							tab, tmp->name ? : "Unknown Name");
 					pmenu_item_update(item, label);
+					cui->main->items[j] = item->nci;
 					talloc_free(label);
 					break;
 				}
@@ -1435,8 +1437,10 @@ fallback:
 	/* This disconnects items array from menu. */
 	result = set_menu_items(cui->plugin_menu->ncm, NULL);
 
-	if (result == E_OK)
+	if (result == E_OK) {
 		pmenu_item_update(item, cod->name);
+		cui->plugin_menu->items[i] = item->nci;
+	}
 
 	/* Re-attach the items array. */
 	result = set_menu_items(cui->plugin_menu->ncm, cui->plugin_menu->items);
@@ -1497,6 +1501,7 @@ static int cui_plugins_remove(void *arg)
 			continue;
 		cui->n_plugins = 0;
 		pmenu_item_update(item, _("Plugins (0)"));
+		cui->main->items[i] = item->nci;
 		break;
 	}
 
