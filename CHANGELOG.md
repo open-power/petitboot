@@ -25,6 +25,8 @@ Change categories:
 
 1. Fix builds against ncurses with `NCURSES_OPAQUE_MENU`
 
+2. Fix menu item allocation bug in ncurses UI
+
 ## [1.15] - 2024-02-13
 
 ### Fixed
