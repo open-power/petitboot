@@ -127,7 +127,8 @@ static const char *pmenu_item_label(struct pmenu_item *item, const char *name)
 /**
  * pmenu_item_update - Update the label of an existing pmenu_item.
  *
- * The item array must be disconnected prior to calling.
+ * The item array must be disconnected prior to calling. This will update
+ * item->nci, so any references held there must be updated after calling.
  */
 int pmenu_item_update(struct pmenu_item *item, const char *name)
 {
